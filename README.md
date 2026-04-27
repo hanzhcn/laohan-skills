@@ -1,5 +1,7 @@
 # laohan-skills
 
+[English](./README.md) | [中文](./README.zh-CN.md)
+
 Claude Code / OpenClaw skills for AI content creators. Download videos, generate slides, audit docs — one command each.
 
 Built by [寒武纪AI](https://github.com/hanzhcn).
