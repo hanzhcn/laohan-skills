@@ -1,10 +1,13 @@
 # laohan-skills
 
+[![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+> AI 内容创作者的瑞士军刀 —— 下载视频、生成幻灯片、审查文档、筛选热点，一个命令搞定。
+
 [English](./README.en.md) | 中文
 
-Claude Code / OpenClaw 技能包，专为 AI 内容创作者打造。下载视频、生成幻灯片、审查文档——一个命令搞定。
-
-由 [寒武纪AI](https://github.com/hanzhcn) 出品。
+由 [寒武纪AI](https://github.com/hanzhcn) 出品，基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/hanzhcn/openclaw)。
 
 ## 技能列表
 
@@ -128,6 +131,6 @@ MIT
 **寒武纪AI** — AI 内容创作者，分享工具，造福社区。
 
 - GitHub: [@hanzhcn](https://github.com/hanzhcn)
-- 抖音: 寒武纪AI
+- 抖音: **寒武纪AI**（关注获取更多 AI 工具教程）
 
-如果觉得有用，欢迎 Star ⭐ 和关注！
+如果觉得有用，欢迎 Star ⭐ 和关注抖音，更多实用技能持续更新！

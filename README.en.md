@@ -1,10 +1,13 @@
 # laohan-skills
 
+[![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+> The Swiss Army Knife for AI content creators — download videos, generate slides, audit docs, filter trends, all in one command.
+
 English | [中文](./README.md)
 
-Claude Code / OpenClaw skills for AI content creators. Download videos, generate slides, audit docs — one command each.
-
-Built by [寒武纪AI](https://github.com/hanzhcn).
+Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/hanzhcn/openclaw).
 
 ## Skills
 
@@ -89,4 +92,6 @@ MIT
 **寒武纪AI** — AI content creator, sharing tools for the community.
 
 - GitHub: [@hanzhcn](https://github.com/hanzhcn)
-- Douyin: 寒武纪AI
+- Douyin: **寒武纪AI** (follow for more AI tool tutorials)
+
+If you find this useful, please Star ⭐ and follow on Douyin!
