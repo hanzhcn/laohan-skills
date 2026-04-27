@@ -15,7 +15,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn).
 | **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params against live sources | `/laohan-shencha` |
 | **laohan-hotdouyinai** | Filter Douyin trending for AI-related content (6000+ keyword matching) | `/laohan-hotdouyinai` |
 | **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (29 styles) | `/laohan-fengmianqiuzhi <script.md>` |
-| **laohan-fenjingtishici** | Scene-specific poetry generation | `/laohan-fenjingtishici` |
+| **laohan-fenjingtishici** | Generate storyboard prompts from reference videos for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` |
 
 ## Install
 
