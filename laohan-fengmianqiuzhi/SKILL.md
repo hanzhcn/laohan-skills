@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianqiuzhi
-description: 基于秋芝2046视频封面风格生成Gemini图片提示词。接收口播稿路径或主题描述，根据口播稿内容动态生成3种差异化风格的英文Gemini提示词，每篇都不同，输出到桌面。使用场景：(1) 用户说"生成封面提示词"、"做封面"、"封面" (2) 用户提供口播稿script.md要求生成视频封面提示词 (3) 视频制作需要封面设计参考。触发词：/laohan-fengmianqiuzhi
+description: 基于秋芝2046视频封面风格生成Gemini图片提示词。接收口播稿路径或主题描述，根据口播稿内容动态生成3种差异化风格的英文Gemini提示词，每篇都不同。使用场景：(1) 用户说"生成封面提示词"、"做封面"、"封面" (2) 用户提供口播稿script.md要求生成视频封面提示词 (3) 视频制作需要封面设计参考。触发词：/laohan-fengmianqiuzhi
 ---
 
 # 封面提示词生成（秋芝2046风格升级版）
@@ -17,12 +17,30 @@ description: 基于秋芝2046视频封面风格生成Gemini图片提示词。接
 
 1. 读取口播稿，提取核心主题、关键词和视觉意象
 2. 根据口播稿内容，设计3种**视觉上完全不同**的风格方案（不是换服装，是换整个画面故事）
-3. 从口播稿中提炼4-8个字的关键词，分成左右两半（每边2-4字），要短、要大、要有冲击力（如"饺子馆" / "变Skill"，不是把完整标题塞进去）
+3. **封面大字文案**（来源于标题，不是自造概念）：把口播稿标题拆成三部分——横式句子（TOP-CENTER）+ 左右关键词（MID-LEFT/MID-RIGHT）。原则：
+   - **来源：标题**，不是从正文提炼抽象概念。标题说啥，封面就说啥
+   - **必须保留主题**：读者看到封面大字就能猜到视频在讲什么
+   - **陌生人能看懂**：没看过视频的人扫一眼就知道在说什么，禁止自造词（如"贴墙站""拆标签""反哺飞轮"）
+   - **横式句子**：标题的核心问句或陈述，一句话完整表达主题，8-15字，放在顶部居中（红描边白色字）
+   - **左右关键词**：标题拆成两半，每边2-5字。左半=主题阐述，右半=情绪升华。两者不重复横式句子的内容
+   - **有力量感**：可以用疑问句、感叹句、对比、数字制造悬念
+   - **品牌名不能丢**：如果标题提到具体品牌/产品（DeepSeek、GLM、Claude），封面大字必须体现
+   
+   **好的例子**（从标题拆分，层次清晰）：
+   - 标题"每次立flag两天就倒？真不是你懒" → 横式"每次立flag两天就倒？真不是你懒" | 左"改变失败" | 右"不是你的错"
+   - 标题"月薪两万五被AI取代，法院判了" → 横式"月薪两万五被AI取代，法院判了" | 左"被AI开除" | 右"真话扎心"
+   - 标题"花大钱补课，考场都没了" → 横式"花大钱补课，考场都没了" | 左"AI拆考场" | 右"还在补课?"
+   
+   **坏的例子**（自造概念，陌生人看不懂）：
+   - "贴墙站" / "别追风" — 没看过视频的人完全不懂
+   - "拆标签" / "不设限" — 抽象概念，不知道在说什么
+   - "反哺飞轮" / "爱马仕" — 术语堆砌
 4. 推荐第1种风格（匹配度最高的），其余2种为备选
 5. **输出格式**：
-   - **每种风格（V1、V2、V3）**：全部输出3种比例（3:4 抖音 / 4:3 小红书B站 / 16:9 B站）
+   - **头部**：封面大字文案（横式句子 + 左右关键词 + 标签）+ 三种风格概览表（风格名 / 视觉故事 / 推荐理由）+ V1 推荐说明
+   - **正文**：每种风格（V1、V2、V3）全部输出3种比例（3:4 抖音 / 4:3 小红书B站 / 16:9 B站）
    - 总共 9 个提示词
-6. 输出到 `~/Desktop/fengmian_prompts/{标题}_prompts.md`
+6. 输出到 `{task_dir}/{标题}_prompts.md`（与 script.md 同级）
 
 ## 设计原则：每篇都不同
 
@@ -36,16 +54,17 @@ description: 基于秋芝2046视频封面风格生成Gemini图片提示词。接
 A 【比例描述】 video thumbnail cover image.
 
 LAYOUT: Large close-up head shot with symmetrical text framing.
-- TOP-LEFT: Large bold cartoon-style text "【标题左半】" in bright yellow (#FFD700) with thick black outline
-- TOP-RIGHT: Large bold cartoon-style text "【标题右半】" in bright yellow (#FFD700) with thick black outline, mirroring the left side
+- TOP-CENTER: Horizontal sentence text "【横式句子】" in white (#FFFFFF) with thick bright red (#FF3333) outline, spanning the full width above the person's head
+- MID-LEFT: Large bold cartoon-style text "【关键词左】" in bright yellow (#FFD700) with thick black outline
+- MID-RIGHT: Large bold cartoon-style text "【关键词右】" in bright yellow (#FFD700) with thick black outline, mirroring the left side
 - CENTER: 【完整场景描述】
-- BOTTOM: Tag text "【系列名#期号】" in white with black outline, bottom-center
+- BOTTOM: Tag text "【系列名】" in white with black outline
 
 BACKGROUND: Clean white (#FFFFFF) or very light gray (#F5F5F5), minimal and flat. No gradient.
 
-COLOR SCHEME: White background + bright yellow (#FFD700) or orange text + thick black outlines + colorful costume/props.
+COLOR SCHEME: White background + white text with red outline (top sentence) + bright yellow (#FFD700) text with black outline (side keywords) + colorful costume/props.
 
-TYPOGRAPHY: Extra bold cartoon-style Chinese font, very thick black stroke outline on all text. Rounded, playful letterforms. Very readable at thumbnail size. Text split symmetrically left and right of the person's head.
+TYPOGRAPHY: Extra bold cartoon-style Chinese font, very thick stroke outline on all text. Rounded, playful letterforms. Very readable at thumbnail size. Top sentence uses red outline, side keywords use black outline.
 
 STYLE: Photorealistic person with cosplay costume and exaggerated props. High energy storytelling vibe. The person must look like a real photograph, NOT cartoon, NOT anime, NOT illustration. Fun, youthful, Bilibili-style content creator thumbnail.
 
@@ -81,7 +100,7 @@ The person in the reference photo, large close-up head and upper body dominating
 
 - **英文提示词**：Gemini 对英文理解更准确，效果更好
 - **真实人物**：STYLE 必须写 "Photorealistic person... NOT cartoon, NOT anime, NOT illustration"，禁止生成卡通/动漫人物
-- **禁止描述外貌**：用 "The person in the reference photo, keep exact facial appearance"，Jeffrey 会在 Gemini 端上传自己的照片，绝对不要编造人物外貌
+- **禁止描述外貌**：用 "The person in the reference photo, keep exact facial appearance"，用户会在 Gemini 端上传自己的照片，绝对不要编造人物外貌
 - **三种比例**：3:4 竖版（抖音）/ 4:3 横版（小红书B站）/ 16:9 宽屏（B站）。每种风格全部输出3种比例
 - **切换比例时改开头**：3:4 → `A vertical (3:4 aspect ratio)`，4:3 → `A horizontal (4:3 aspect ratio)`，16:9 → `A widescreen (16:9 aspect ratio)`
 - **结构固定**：LAYOUT/BACKGROUND/COLOR SCHEME/TYPOGRAPHY/STYLE/DO NOT include 六层缺一不可
@@ -97,7 +116,7 @@ The person in the reference photo, large close-up head and upper body dominating
 ## 输出
 
 ```
-~/Desktop/fengmian_prompts/
+{task_dir}/（与 script.md 同级）
 └── {标题}_prompts.md
 ```
 
