@@ -18,7 +18,7 @@ opencli youtube transcript <url> --lang en --mode grouped -f plain
 备选 yt-dlp（返回 VTT 文件，需要清洗）：
 ```bash
 yt-dlp --cookies-from-browser chrome --write-auto-subs --sub-lang en --skip-download -o <prefix> <url>
-python3 ./tools/clean_vtt.py <input>.vtt <output>.txt
+python3 ~/.openclaw/workspace-shared/tools/clean_vtt.py <input>.vtt <output>.txt
 ```
 
 ## 提取音频
