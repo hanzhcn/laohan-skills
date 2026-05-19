@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> AI 内容创作者的瑞士军刀 —— 下载视频、生成幻灯片、审查文档、筛选热点，一个命令搞定。
+> AI 内容创作者的瑞士军刀 —— 从互联网拿内容、生成幻灯片、审查文档、筛选热点、录屏转口播、校准内容质量，一个命令搞定。
 
 [English](./README.en.md) | 中文
 
@@ -11,14 +11,32 @@
 
 ## 技能列表
 
+### 内容获取
+
 | 技能 | 功能 | 触发方式 |
 |------|------|---------|
-| **laohan-xiazai** | 视频/音频/内容下载，覆盖抖音、TikTok、YouTube、B站、小红书、知乎、微信公众号 7 大平台 | `/laohan-xiazai` 或说"下载视频" |
+| **laohan-xiazai** | 从互联网获取内容一站式——下载视频/音频/字幕、抓取网页/评论/搜索结果、阅读公众号/知乎/小红书，覆盖 7+ 平台自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
+| **laohan-aihotjingxuan** | 抓取 AIHOT 精选页当日 AI 高价值内容（168 个源头筛选），含精选分数、AI 摘要、标签 | `/laohan-aihotjingxuan` 或说"今日AI精选" |
+| **laohan-hotdouyinai** | 抖音热榜 AI 内容筛选（6000+ 关键词匹配，无需登录） | `/laohan-hotdouyinai` |
+
+### 内容创作
+
+| 技能 | 功能 | 触发方式 |
+|------|------|---------|
+| **laohan-luping** | 录屏转口播稿完整工作流——音频提取→语音转文字→结构化整理→口播稿写作→封面提示词 | `/laohan-luping` 或说"录屏转口播" |
+| **laohan-yuanchuang** | 热点转译原创选题——多平台抓取热点→老韩视角转译→差异化选题→扩写口播稿 | `/laohan-yuanchuang` 或说"找选题""写一篇" |
 | **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm <script.md>` |
-| **laohan-shencha** | 技术文档深度审查——联网验证仓库地址、版本号、参数值是否正确 | `/laohan-shencha` 或说"深度审查" |
-| **laohan-hotdouyinai** | 抖音热榜 AI 内容筛选（6000+ 关键词匹配） | `/laohan-hotdouyinai` |
-| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，29种样式） | `/laohan-fengmianqiuzhi <script.md>` |
-| **laohan-fenjingtishici** | 对标视频生成分镜提示词，用于扩散模型（FLUX/SDXL/Gemini）产出分镜图片 | `/laohan-fenjingtishici` |
+| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi <script.md>` |
+| **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` |
+
+### 质量与工具
+
+| 技能 | 功能 | 触发方式 |
+|------|------|---------|
+| **laohan-cheat** | 内容校准统一入口——打分、预测、复盘、趋势分析，自动路由到对应子流程 | `/laohan-cheat` 或说"校准""打分" |
+| **laohan-shencha** | 技术文档深度联网审查——验证仓库地址、版本号、参数值、硬件需求的准确性 | `/laohan-shencha` 或说"深度审查" |
+| **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
+| **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` |
 
 ## 安装
 
@@ -33,104 +51,69 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### 所有技能通用
 - [Claude Code](https://claude.ai/code) 或 [OpenClaw](https://github.com/hanzhcn/openclaw)
 
-### laohan-xiazai（视频/内容下载）
+### laohan-xiazai（从互联网拿内容）
 
 | 工具 | 安装方式 | 用途 |
 |------|---------|------|
 | [opencli](https://github.com/jackwener/opencli) | `npm install -g @jackwener/opencli` | 平台数据获取（B站下载、字幕、小红书下载等） |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | `brew install yt-dlp` | YouTube 视频下载 |
 | [ffmpeg](https://ffmpeg.org/) | `brew install ffmpeg` | 音视频转码 |
-| [whisper.cpp](https://github.com/ggerganov/whisper.cpp)（可选） | `brew install whisper.cpp` | 本地语音转文字 |
-| 硅基流动 API Key（可选，免费） | 注册 [siliconflow.cn](https://siliconflow.cn) 获取 | 云端语音转录，比本地更快更准 |
-
-设置硅基流动 API Key：
-```bash
-echo 'export SILICONFLOW_API_KEY="你的key"' >> ~/.zshrc
-```
+| 硅基流动 API Key（可选） | 注册 [siliconflow.cn](https://siliconflow.cn) | 云端语音转录（免费） |
 
 ### laohan-notebooklm（幻灯片生成）
-| 工具 | 安装方式 | 用途 |
-|------|---------|------|
-| [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) | `pip install notebooklm-mcp-cli` | NotebookLM 命令行工具 |
-| [poppler](https://poppler.freedesktop.org/) | `brew install poppler` | PDF 转图片 |
+- [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/)：`pip install notebooklm-mcp-cli`
+- [poppler](https://poppler.freedesktop.org/)：`brew install poppler`
+
+### laohan-luping（录屏转口播稿）
+- laohan-notebooklm 的全部依赖
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp)（可选）：`brew install whisper.cpp`
+
+### laohan-cheat（内容校准）
+- [cheat-on-content](https://github.com/hanzhcn/cheat-on-content) 项目
 
 ### laohan-hotdouyinai（抖音热榜筛选）
-- Node.js（运行内置脚本）
+- Node.js
 
 ## 使用示例
 
-### 下载视频
+### 从互联网拿内容
 ```
 你: 帮我下载这个B站视频 https://www.bilibili.com/video/BV1xxx
-→ 自动触发 laohan-xiazai → opencli bilibili download BV1xxx
+你: 读一下这个公众号文章
+你: 搜一下小红书上关于 Claude Code 的讨论
+→ 自动触发 laohan-xiazai，按平台自动选择最优方法
+```
 
-你: 下载这个抖音 https://v.douyin.com/xxx
-→ 自动触发 laohan-xiazai → 移动端 UA 方法下载
+### 录屏转口播稿
+```
+你: 把这个录屏视频转成口播稿 /path/to/recording.mp4
+→ 自动触发 laohan-luping，完整流水线输出
+```
 
-你: 下载这个YouTube https://youtube.com/watch?v=xxx
-→ 自动触发 laohan-xiazai → yt-dlp --cookies-from-browser chrome
-
-你: 获取这个B站视频的字幕
-→ opencli bilibili subtitle BV1xxx
+### 内容校准
+```
+你: 帮我校准这篇口播稿
+→ 自动触发 laohan-cheat，打分+预测+改进建议
 ```
 
 ### 口播稿生成幻灯片
 ```
 你: 帮我用口播稿生成PPT
 → /laohan-notebooklm script.md
-→ 创建笔记本 → 上传口播稿 → 生成幻灯片 → PDF → PNG图片
-→ 输出到 ~/Desktop/标题_slides/，剪映直接导入
 ```
 
-### 技术文档审查
+### 生成封面提示词
 ```
-你: 深度审查这个部署方案
-→ /laohan-shencha
-→ 提取声明 → 联网验证URL/版本/参数 → 交叉比对 → 修复错误
-```
-
-### 抖音热榜 AI 内容筛选
-```
-你: 看看抖音热榜有什么AI相关的内容
-→ /laohan-hotdouyinai
-→ 抓取热榜 → 6000+关键词匹配 → 筛选AI相关内容
+你: 给这个口播稿生成封面
+→ /laohan-fengmianqiuzhi script.md
 ```
 
-## 平台覆盖（laohan-xiazai）
+### 检查工具更新
+```
+你: 看看哪些工具该更新了
+→ /laohan-gengxin
+```
 
-| 平台 | 视频下载 | 字幕 | 音频提取 | 语音转录 |
-|------|---------|------|---------|---------|
-| 抖音 | 移动端 UA + iesdouyin | — | ffmpeg | 硅基流动 / whisper |
-| TikTok | tikwm API | — | ffmpeg | 硅基流动 / whisper |
-| YouTube | yt-dlp（需 Chrome cookies） | opencli youtube transcript | yt-dlp -x | 硅基流动 / whisper |
-| B站 | opencli bilibili download | opencli bilibili subtitle | ffmpeg | 硅基流动 / whisper |
-| 小红书 | opencli xiaohongshu download | — | — | — |
-| 知乎 | opencli zhihu | — | — | — |
-| 公众号 | fetch.py --stealth | — | — | — |
+## License
 
-## 降级策略
-
-每个平台都有降级链，首选方法失败会自动尝试备选：
-
-| 平台 | 首选 | 备选 | 兜底 |
-|------|------|------|------|
-| 抖音 | 移动端 UA | opencli douyin | Scrapling stealthy |
-| TikTok | tikwm API | yt-dlp | opencli tiktok |
-| YouTube | yt-dlp + cookies | opencli youtube transcript | — |
-| B站 | opencli bilibili download | Jina Reader | — |
-| 小红书 | opencli xiaohongshu download | agent-reach | Jina Reader |
-| 知乎 | opencli zhihu | Jina Reader | — |
-| 公众号 | fetch.py --stealth | agent-reach | Jina Reader |
-
-## 开源协议
-
-MIT
-
-## 作者
-
-**寒武纪AI** — AI 内容创作者，分享工具，造福社区。
-
-- GitHub: [@hanzhcn](https://github.com/hanzhcn)
-- 抖音: **寒武纪AI**（关注获取更多 AI 工具教程）
-
-如果觉得有用，欢迎 Star ⭐ 和关注抖音，更多实用技能持续更新！
+[MIT](./LICENSE) © 2026 寒武纪AI
