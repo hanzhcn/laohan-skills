@@ -60,6 +60,10 @@ opencli zhihu download --url <url>          # 专栏文章导出 Markdown
 ## 微信公众号
 
 ```bash
-python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth -o <output>
+python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth
 # 兜底：agent-reach → Jina Reader
 ```
+
+**必须用短链接格式**：`https://mp.weixin.qq.com/s/xxxxxxxx`（成功率极高）
+- 长链接 `?__biz=&mid=&sn=&poc_token=` 的 poc_token 会过期，触发验证码拦截
+- 短链接是永久映射，无 token 时效问题
