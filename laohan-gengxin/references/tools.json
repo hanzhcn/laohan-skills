@@ -1,0 +1,2048 @@
+[
+  {
+    "id": 1,
+    "category": "核心平台",
+    "name": "Claude Code",
+    "check_source": "cli",
+    "check_cmd": "~/.local/bin/claude --version 2>/dev/null | head -1",
+    "latest_cmd": "npm view @anthropic-ai/claude-code version 2>/dev/null",
+    "update_cmd": "claude update",
+    "description_zh": "Anthropic 官方 CLI，AI 编程助手",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "只允许官方安装（~/.local/bin/claude），禁止 npm 安装",
+    "deps": {
+      "needs": [
+        "bun"
+      ],
+      "needed_by": [
+        "ECC插件",
+        "PWF插件",
+        "web-access插件",
+        "claude-hud插件",
+        "glm-plan-usage插件"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "category": "核心平台",
+    "name": "openclaw",
+    "check_source": "npm",
+    "pkg": "openclaw",
+    "check_cmd": "openclaw --version 2>/dev/null | head -1",
+    "latest_cmd": "npm view openclaw version 2>/dev/null",
+    "update_cmd": "npm update -g openclaw",
+    "post_update": "openclaw维护清单（patch-health-timeout.sh + 补装memory依赖 + 重启gateway）",
+    "description_zh": "OpenClaw 多Agent内容工厂，8仓库项目核心",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "更新后必须跑维护清单：patch + deps + restart gateway",
+    "deps": {
+      "needs": [
+        "Node.js (nvm)",
+        "node-llama-cpp"
+      ],
+      "needed_by": [
+        "8个Agent运行时"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "category": "核心平台",
+    "name": "opencli",
+    "check_source": "npm",
+    "pkg": "@jackwener/opencli",
+    "check_cmd": "opencli --version 2>/dev/null",
+    "latest_cmd": "npm view @jackwener/opencli version 2>/dev/null",
+    "update_cmd": "npm update -g @jackwener/opencli",
+    "description_zh": "101平台624命令，新闻/热点/社交数据首选工具",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "高频发版（每周2-3次），新命令经常加。更新后顺便 npx skills update -g -y",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "opencli 4个辅助skill (opencli-usage/autofix/browser/adapter-author)"
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "category": "npm包",
+    "name": "playwright",
+    "check_source": "npm",
+    "pkg": "playwright",
+    "check_cmd": "npx playwright --version 2>/dev/null",
+    "latest_cmd": "npm view playwright version 2>/dev/null",
+    "update_cmd": "npm update -g playwright && npx playwright install",
+    "description_zh": "浏览器自动化，ECC Playwright MCP 依赖",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "更新后需跑 npx playwright install 装浏览器",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "ECC Playwright MCP",
+        "agent-browser",
+        "patchright (fork)"
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "category": "npm包",
+    "name": "agent-browser",
+    "check_source": "npm",
+    "pkg": "agent-browser",
+    "check_cmd": "npm ls -g agent-browser 2>/dev/null | grep agent-browser | sed 's/.*@//'",
+    "latest_cmd": "npm view agent-browser version 2>/dev/null",
+    "update_cmd": "npm update -g agent-browser",
+    "description_zh": "Vercel Agent Browser，E2E测试专用",
+    "frequency": "mid",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "GitHub: vercel-labs/agent-browser",
+    "deps": {
+      "needs": [
+        "playwright"
+      ],
+      "needed_by": [
+        "E2E测试流程"
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "category": "npm包",
+    "name": "get-shit-done-cc (GSD)",
+    "check_source": "npm",
+    "pkg": "get-shit-done-cc",
+    "check_cmd": "npm ls -g get-shit-done-cc 2>/dev/null | grep get-shit-done-cc | sed 's/.*@//'",
+    "latest_cmd": "npm view get-shit-done-cc version 2>/dev/null",
+    "update_cmd": "npm update -g get-shit-done-cc",
+    "description_zh": "GSD 编排框架，复杂功能规划和执行",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "GitHub: gsd-build/get-shit-done",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "复杂功能编排"
+      ]
+    }
+  },
+  {
+    "id": 7,
+    "category": "npm包",
+    "name": "mcporter",
+    "check_source": "npm",
+    "pkg": "mcporter",
+    "check_cmd": "npm ls -g mcporter 2>/dev/null | grep mcporter | sed 's/.*@//'",
+    "latest_cmd": "npm view mcporter version 2>/dev/null",
+    "update_cmd": "npm update -g mcporter",
+    "description_zh": "MCP 服务器桥接工具",
+    "frequency": "mid",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "GitHub: steipete/mcporter",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "MCP服务器桥接"
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "category": "npm包",
+    "name": "clawhub",
+    "check_source": "npm",
+    "pkg": "clawhub",
+    "check_cmd": "npm ls -g clawhub 2>/dev/null | grep clawhub | sed 's/.*@//'",
+    "latest_cmd": "npm view clawhub version 2>/dev/null",
+    "update_cmd": "npm update -g clawhub",
+    "description_zh": "OpenClaw Hub，Agent 市场",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "GitHub: openclaw/clawhub",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "OpenClaw Agent市场"
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "category": "Homebrew",
+    "name": "yt-dlp",
+    "check_source": "brew",
+    "pkg": "yt-dlp",
+    "check_cmd": "yt-dlp --version 2>/dev/null | sed 's/\\.0*\\([0-9]\\)/.\\1/g'",
+    "latest_cmd": "brew info yt-dlp --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall yt-dlp",
+    "description_zh": "视频下载主力，YouTube 必需",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "YouTube 需 --cookies-from-browser chrome",
+    "deps": {
+      "needs": [
+        "ffmpeg (格式转换时)",
+        "Python (部分extractor)"
+      ],
+      "needed_by": [
+        "旺财check.py (YouTube)"
+      ]
+    }
+  },
+  {
+    "id": 10,
+    "category": "Homebrew",
+    "name": "ffmpeg",
+    "check_source": "brew",
+    "pkg": "ffmpeg",
+    "check_cmd": "ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}'",
+    "latest_cmd": "brew info ffmpeg --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall ffmpeg",
+    "description_zh": "音视频转码处理，管线基础设施",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "编译慢，建议空闲时更新",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "yt-dlp",
+        "moviepy",
+        "openai-whisper (音频加载)",
+        "edge-tts (mp3输出)",
+        "内容管线"
+      ]
+    }
+  },
+  {
+    "id": 11,
+    "category": "Homebrew",
+    "name": "uv",
+    "check_source": "brew",
+    "pkg": "uv",
+    "check_cmd": "uv --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info uv --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall uv",
+    "description_zh": "Python 包管理（替代 pip），速度快",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "rust 写的，更新很快",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Python包管理"
+      ]
+    }
+  },
+  {
+    "id": 12,
+    "category": "Homebrew",
+    "name": "gh",
+    "check_source": "brew",
+    "pkg": "gh",
+    "check_cmd": "gh --version 2>/dev/null | head -1 | awk '{print $3}'",
+    "latest_cmd": "brew info gh --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall gh",
+    "description_zh": "GitHub CLI，PR/Issue/Release 操作",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "GitHub API 操作核心，PR/Issue/Release/checks 全靠它",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "所有GitHub操作"
+      ]
+    }
+  },
+  {
+    "id": 13,
+    "category": "Homebrew",
+    "name": "whisper-cpp",
+    "check_source": "brew",
+    "pkg": "whisper-cpp",
+    "check_cmd": "brew list whisper-cpp --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info whisper-cpp --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall whisper-cpp",
+    "description_zh": "C++ 原生语音转文字，本地备用方案。硅基流动 API 不可用时的降级方案，CLI 是 whisper-cli",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "whisper-cli 无 --version 参数，用 brew list 取版本",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "本地语音转录（降级方案）"
+      ]
+    }
+  },
+  {
+    "id": 14,
+    "category": "Homebrew",
+    "name": "tesseract",
+    "check_source": "brew",
+    "pkg": "tesseract",
+    "check_cmd": "tesseract --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info tesseract --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall tesseract",
+    "description_zh": "OCR 文字识别（chi_sim+eng）",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "OCR 引擎，支持中文(chi_sim)+英文，封面和截图文字提取用",
+    "deps": {
+      "needs": [
+        "poppler (PDF OCR路径)"
+      ],
+      "needed_by": [
+        "OCR文字提取"
+      ]
+    }
+  },
+  {
+    "id": 15,
+    "category": "Homebrew",
+    "name": "imagemagick",
+    "check_source": "brew",
+    "pkg": "imagemagick",
+    "check_cmd": "convert --version 2>/dev/null | head -1 | awk '{print $3}'",
+    "latest_cmd": "brew info imagemagick --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall imagemagick",
+    "description_zh": "图片处理（convert/identify），封面生成用",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "图片处理套件，convert/identify/mogrify，封面裁剪/格式转换用",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "封面裁剪/格式转换"
+      ]
+    }
+  },
+  {
+    "id": 16,
+    "category": "Homebrew",
+    "name": "bun",
+    "check_source": "cli",
+    "check_cmd": "~/.bun/bin/bun --version 2>/dev/null",
+    "latest_cmd": "npm view bun version 2>/dev/null",
+    "update_cmd": "~/.bun/bin/bun upgrade",
+    "description_zh": "JS 运行时，Claude Code hooks/statusLine 依赖，比 Node 快",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "自有安装器（~/.bun/bin/bun），不走 brew。bun.sh API 已变更，用 npm 查最新版",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Claude Code (hooks/statusLine)",
+        "openclaw (hooks)"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "category": "Homebrew",
+    "name": "deno",
+    "check_source": "brew",
+    "pkg": "deno",
+    "check_cmd": "deno --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info deno --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall deno",
+    "description_zh": "JS/TS 运行时，部分工具依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "部分Deno工具"
+      ]
+    }
+  },
+  {
+    "id": 18,
+    "category": "Python",
+    "name": "notebooklm-mcp-cli (nlm)",
+    "check_source": "pip",
+    "pkg": "notebooklm-mcp-cli",
+    "check_cmd": "nlm --version 2>/dev/null | awk '{print $3}'",
+    "latest_cmd": "pip3 index versions notebooklm-mcp-cli 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade notebooklm-mcp-cli",
+    "description_zh": "NotebookLM CLI，生成图文/音频/幻灯片素材",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "CDP 认证，曹操用。conda 和 pip 可能不同步，以 conda 为主",
+    "deps": {
+      "needs": [
+        "Python",
+        "Chrome CDP"
+      ],
+      "needed_by": [
+        "NotebookLM素材生成"
+      ]
+    }
+  },
+  {
+    "id": 19,
+    "category": "Python",
+    "name": "edge-tts",
+    "check_source": "pip",
+    "pkg": "edge-tts",
+    "check_cmd": "pip3 show edge-tts 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions edge-tts 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade edge-tts",
+    "description_zh": "微软 TTS 语音合成",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "微软 TTS，中文语音合成首选，zh-CN-XiaoxiaoNeural 音色自然",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "TTS语音合成"
+      ]
+    }
+  },
+  {
+    "id": 20,
+    "category": "Python",
+    "name": "scrapling",
+    "check_source": "pip",
+    "pkg": "scrapling",
+    "check_cmd": "pip3 show scrapling 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions scrapling 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade scrapling",
+    "description_zh": "反爬网页抓取，Scrapling MCP 后端",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "pip 0.4.3 vs conda 0.4.2 可能不一致",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "Scrapling MCP (stealthy_fetch)"
+      ]
+    }
+  },
+  {
+    "id": 21,
+    "category": "Python",
+    "name": "openai-whisper",
+    "check_source": "pip",
+    "pkg": "openai-whisper",
+    "check_cmd": "pip3 show openai-whisper 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions openai-whisper 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade openai-whisper",
+    "description_zh": "Python 语音转文字（本地最准，small 模型）",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "硅基流动 API 优先，本地 whisper 降级用",
+    "deps": {
+      "needs": [
+        "Python",
+        "ffmpeg"
+      ],
+      "needed_by": [
+        "本地语音转录（最准方案）"
+      ]
+    }
+  },
+  {
+    "id": 22,
+    "category": "Python",
+    "name": "douyin-tiktok-scraper",
+    "check_source": "pip",
+    "pkg": "douyin-tiktok-scraper",
+    "check_cmd": "pip3 show douyin-tiktok-scraper 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions douyin-tiktok-scraper 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade douyin-tiktok-scraper",
+    "description_zh": "抖音/TikTok/B站/直播数据抓取 Python 库",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "代码层替补，主力是 douyin-session adapter",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "抖音/TikTok代码层抓取（替补）"
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "category": "Python",
+    "name": "openai",
+    "check_source": "pip",
+    "pkg": "openai",
+    "check_cmd": "pip3 show openai 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions openai 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade openai",
+    "description_zh": "OpenAI Python SDK，whisper 等工具依赖",
+    "frequency": "mid",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "pip 2.30.0 vs conda 2.15.0 不一致",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "openai-whisper",
+        "各种OpenAI API调用"
+      ]
+    }
+  },
+  {
+    "id": 24,
+    "category": "Python",
+    "name": "moviepy",
+    "check_source": "pip",
+    "pkg": "moviepy",
+    "check_cmd": "pip3 show moviepy 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions moviepy 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade moviepy",
+    "description_zh": "Python 视频编辑",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [
+        "Python",
+        "ffmpeg"
+      ],
+      "needed_by": [
+        "视频编辑"
+      ]
+    }
+  },
+  {
+    "id": 25,
+    "category": "Python",
+    "name": "python-pptx",
+    "check_source": "pip",
+    "pkg": "python-pptx",
+    "check_cmd": "pip3 show python-pptx 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions python-pptx 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade python-pptx",
+    "description_zh": "Python 生成 PPT",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "PPT生成"
+      ]
+    }
+  },
+  {
+    "id": 26,
+    "category": "Python",
+    "name": "PyMuPDF",
+    "check_source": "pip",
+    "pkg": "PyMuPDF",
+    "check_cmd": "python3 -c 'import fitz; print(fitz.__version__)' 2>/dev/null",
+    "latest_cmd": "pip3 index versions PyMuPDF 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade PyMuPDF",
+    "description_zh": "PDF 处理（提取/合并/转换）",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "import 时是 fitz 不是 pymupdf",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "PDF处理"
+      ]
+    }
+  },
+  {
+    "id": 27,
+    "category": "uv工具",
+    "name": "huggingface-cli",
+    "check_source": "pip",
+    "pkg": "huggingface-hub",
+    "check_cmd": "hf version 2>/dev/null | head -1",
+    "latest_cmd": "pip3 index versions huggingface-hub 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "uv tool upgrade huggingface-hub",
+    "description_zh": "HuggingFace 模型下载管理，hf 命令行（uv tool 安装）",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "huggingface-cli version 已废弃，改用 hf version。已装 0.35.1，最新 1.14.0，跨大版本需谨慎",
+    "deps": {
+      "needs": [
+        "Python (uv tool)"
+      ],
+      "needed_by": [
+        "HuggingFace模型下载"
+      ]
+    }
+  },
+  {
+    "id": 28,
+    "category": "uv工具",
+    "name": "modelscope",
+    "check_source": "pip",
+    "pkg": "modelscope",
+    "check_cmd": "uv tool list 2>/dev/null | grep modelscope | head -1 | awk '{print $2}' | sed 's/^v//'",
+    "latest_cmd": "pip3 index versions modelscope 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "uv tool upgrade modelscope",
+    "description_zh": "ModelScope 模型下载（uv tool 安装）",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "pip show 为空，用 uv tool list 取版本",
+    "deps": {
+      "needs": [
+        "Python (uv tool)"
+      ],
+      "needed_by": [
+        "ModelScope模型下载"
+      ]
+    }
+  },
+  {
+    "id": 29,
+    "category": "插件",
+    "name": "everything-claude-code (ECC)",
+    "check_source": "plugins",
+    "check_cmd": "cat ~/.claude/plugins/installed_plugins.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(e['version']) for e in d['plugins']['everything-claude-code@everything-claude-code']]\"",
+    "latest_cmd": "echo '需 claude plugins marketplace update 后比对'",
+    "update_cmd": "claude plugins marketplace update && claude plugins update everything-claude-code@everything-claude-code",
+    "description_zh": "ECC 插件，48 agents + 182 skills + 26 hooks",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "更新后需 flat copy rules + 检查 settings.json hooks 残留",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": [
+        "48 agents + 182 skills + 26 hooks"
+      ]
+    }
+  },
+  {
+    "id": 30,
+    "category": "插件",
+    "name": "planning-with-files (PWF)",
+    "check_source": "plugins",
+    "check_cmd": "cat ~/.claude/plugins/installed_plugins.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(e['version']) for e in d['plugins']['planning-with-files@planning-with-files']]\"",
+    "latest_cmd": "echo '需 claude plugins marketplace update 后比对'",
+    "update_cmd": "claude plugins marketplace update && claude plugins update planning-with-files@planning-with-files",
+    "description_zh": "PWF 三文件任务管理，sanwenjian 依赖",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "PWF 三文件（task_plan/findings/progress），sanwenjian 依赖，hooks 自动注入",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": [
+        "sanwenjian三文件任务管理"
+      ]
+    }
+  },
+  {
+    "id": 31,
+    "category": "插件",
+    "name": "web-access",
+    "check_source": "plugins",
+    "check_cmd": "cat ~/.claude/plugins/installed_plugins.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(e['version']) for e in d['plugins']['web-access@web-access']]\"",
+    "latest_cmd": "echo '需 claude plugins marketplace update 后比对'",
+    "update_cmd": "claude plugins marketplace update && claude plugins update web-access@web-access",
+    "description_zh": "Web 访问插件",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "网页访问插件，WebSearch/WebFetch MCP 来源",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": [
+        "WebSearch/WebFetch MCP"
+      ]
+    }
+  },
+  {
+    "id": 32,
+    "category": "插件",
+    "name": "claude-hud",
+    "check_source": "plugins",
+    "check_cmd": "cat ~/.claude/plugins/installed_plugins.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(e['version']) for e in d['plugins']['claude-hud@claude-hud']]\"",
+    "latest_cmd": "echo '需 claude plugins marketplace update 后比对'",
+    "update_cmd": "claude plugins marketplace update && claude plugins update claude-hud@claude-hud",
+    "description_zh": "状态栏显示插件，终端底部显示 token 用量和任务进度",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "轻量插件，不常更新",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": [
+        "状态栏显示"
+      ]
+    }
+  },
+  {
+    "id": 33,
+    "category": "插件",
+    "name": "glm-plan-usage",
+    "check_source": "plugins",
+    "check_cmd": "cat ~/.claude/plugins/installed_plugins.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(e['version']) for e in d['plugins']['glm-plan-usage@zai-coding-plugins']]\"",
+    "latest_cmd": "echo '需 claude plugins marketplace update 后比对'",
+    "update_cmd": "claude plugins marketplace update && claude plugins update glm-plan-usage@zai-coding-plugins",
+    "description_zh": "GLM Coding Plan 用量查询",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "2026-02-05 至今未更新",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": [
+        "GLM用量查询"
+      ]
+    }
+  },
+  {
+    "id": 34,
+    "category": "Skills",
+    "name": "npx skills (全局)",
+    "check_source": "skills",
+    "check_cmd": "npx skills ls -g 2>/dev/null | grep -c '│' || echo '0'",
+    "latest_cmd": "echo 'skills 以 GitHub main 分支为准，不支持版本比对'",
+    "update_cmd": "npx skills update -g -y",
+    "description_zh": "全局 skills 集合（agent-browser/agent-reach/baoyu-*/laohan-*/等）",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "全量更新，不支持单个更新。来源是 GitHub repo main 分支",
+    "deps": {
+      "needs": [
+        "Node.js",
+        "opencli"
+      ],
+      "needed_by": [
+        "全局skills集合（agent-reach/summarize/laohan-*等）"
+      ]
+    }
+  },
+  {
+    "id": 35,
+    "category": "运行时",
+    "name": "Node.js",
+    "check_source": "cli",
+    "check_cmd": "node --version 2>/dev/null",
+    "latest_cmd": "brew info node --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "nvm install --lts && nvm alias default 'lts/*'",
+    "description_zh": "Node.js 运行时（nvm 管理）",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "nvm 管理，不轻易更新大版本。openclaw 和 native 模块可能不兼容",
+    "deps": {
+      "needs": [
+        "nvm"
+      ],
+      "needed_by": [
+        "openclaw",
+        "Claude Code",
+        "所有npm包",
+        "npx skills"
+      ]
+    }
+  },
+  {
+    "id": 36,
+    "category": "运行时",
+    "name": "Python",
+    "check_source": "cli",
+    "check_cmd": "python3 --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info python@3 --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall python@3.14",
+    "description_zh": "Python 运行时",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "3.14 较新，不轻易更新",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "所有pip包",
+        "openai-whisper",
+        "scrapling",
+        "yt-dlp (extractor)"
+      ]
+    }
+  },
+  {
+    "id": 37,
+    "category": "运行时",
+    "name": "Git",
+    "check_source": "cli",
+    "check_cmd": "git --version 2>/dev/null | awk '{print $3}'",
+    "latest_cmd": "brew info git --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall git",
+    "description_zh": "Git 版本控制",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "Apple Git 2.50.1，够用",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "所有git仓库",
+        "openclaw",
+        "git-filter-repo"
+      ]
+    }
+  },
+  {
+    "id": 38,
+    "category": "Homebrew",
+    "name": "git-filter-repo",
+    "check_source": "cli",
+    "check_cmd": "git-filter-repo --version 2>/dev/null",
+    "latest_cmd": "pip3 index versions git-filter-repo 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade git-filter-repo",
+    "description_zh": "Git 历史重写工具，清理敏感历史记录",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "装在 ~/.local/bin，--version 输出 commit hash 非 semver，用 pip show 取版本",
+    "deps": {
+      "needs": [
+        "Git"
+      ],
+      "needed_by": [
+        "Git历史重写"
+      ]
+    }
+  },
+  {
+    "id": 40,
+    "category": "npm包",
+    "name": "vercel",
+    "check_source": "npm",
+    "pkg": "vercel",
+    "check_cmd": "vercel --version 2>/dev/null | head -1",
+    "latest_cmd": "npm view vercel version 2>/dev/null",
+    "update_cmd": "npm update -g vercel",
+    "description_zh": "Vercel 部署 CLI",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "装在 /usr/local/bin",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "Vercel部署"
+      ]
+    }
+  },
+  {
+    "id": 41,
+    "category": "npm包",
+    "name": "mcp-chrome-bridge",
+    "check_source": "npm",
+    "pkg": "mcp-chrome-bridge",
+    "check_cmd": "mcp-chrome-bridge --version 2>/dev/null",
+    "latest_cmd": "npm view mcp-chrome-bridge version 2>/dev/null",
+    "update_cmd": "npm update -g mcp-chrome-bridge",
+    "description_zh": "Chrome MCP 桥接，浏览器自动化通信",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "装在 /usr/local/bin",
+    "deps": {
+      "needs": [
+        "Node.js",
+        "Chrome"
+      ],
+      "needed_by": [
+        "浏览器自动化通信"
+      ]
+    }
+  },
+  {
+    "id": 42,
+    "category": "npm包",
+    "name": "node-llama-cpp",
+    "check_source": "npm",
+    "pkg": "node-llama-cpp",
+    "check_cmd": "npm ls -g node-llama-cpp 2>/dev/null | grep node-llama-cpp | sed 's/.*@//'",
+    "latest_cmd": "npm view node-llama-cpp version 2>/dev/null",
+    "update_cmd": "npm update -g node-llama-cpp",
+    "description_zh": "本地 LLM 运行时，OpenClaw memory 插件依赖",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "OpenClaw plugin-runtime-deps 也会装一份，两份要同步版本",
+    "deps": {
+      "needs": [
+        "Node.js"
+      ],
+      "needed_by": [
+        "openclaw memory-core插件（本地embedding）"
+      ]
+    }
+  },
+  {
+    "id": 43,
+    "category": "Homebrew",
+    "name": "llama.cpp",
+    "check_source": "brew",
+    "pkg": "llama.cpp",
+    "check_cmd": "brew list llama.cpp --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info llama.cpp --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall llama.cpp",
+    "description_zh": "本地 LLM 推理引擎（llama/qwen 等），llama-cli 和 llama-server",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "llama-cli 无 --version 参数，用 brew list 取版本",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "本地LLM推理"
+      ]
+    }
+  },
+  {
+    "id": 44,
+    "category": "Homebrew",
+    "name": "poppler",
+    "check_source": "brew",
+    "pkg": "poppler",
+    "check_cmd": "pdftotext -v 2>&1 | head -1 | awk \"{print \\$NF}\"",
+    "latest_cmd": "brew info poppler --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall poppler",
+    "description_zh": "PDF 渲染/转换（pdftotext），tesseract PDF OCR 依赖",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "PDF 渲染引擎，pdftotext 命令，tesseract PDF OCR 和 PDF 文本提取依赖",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "tesseract (PDF OCR)",
+        "pdftotext"
+      ]
+    }
+  },
+  {
+    "id": 45,
+    "category": "Homebrew",
+    "name": "starship",
+    "check_source": "brew",
+    "pkg": "starship",
+    "check_cmd": "starship --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info starship --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall starship",
+    "description_zh": "终端提示符美化，显示 git 状态/语言版本/执行时间",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "配置型工具，~/.config/starship.toml 定制，不轻易更新",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 46,
+    "category": "Homebrew",
+    "name": "summarize",
+    "check_source": "brew",
+    "pkg": "summarize",
+    "check_cmd": "summarize --version 2>/dev/null",
+    "latest_cmd": "brew info summarize --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall summarize",
+    "description_zh": "URL/文件内容摘要",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "brew 安装的 summarize 工具，文本摘要",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "文本摘要"
+      ]
+    }
+  },
+  {
+    "id": 47,
+    "category": "Homebrew",
+    "name": "obsidian-cli",
+    "check_source": "brew",
+    "pkg": "obsidian-cli",
+    "check_cmd": "obsidian-cli --version 2>/dev/null | sed 's/obsidian-cli version //;s/^v//'",
+    "latest_cmd": "brew info obsidian-cli --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall obsidian-cli",
+    "description_zh": "Obsidian 笔记 CLI（非官方），笔记管理和搜索",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 48,
+    "category": "Homebrew",
+    "name": "mole",
+    "check_source": "brew",
+    "pkg": "mole",
+    "check_cmd": "mole --version 2>/dev/null | grep 'Mole version' | awk '{print $3}'",
+    "latest_cmd": "brew info mole --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall mole",
+    "description_zh": "系统信息/调试工具",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 49,
+    "category": "Python",
+    "name": "patchright",
+    "check_source": "pip",
+    "pkg": "patchright",
+    "check_cmd": "pip3 show patchright 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions patchright 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade patchright",
+    "description_zh": "Playwright 增强分支，camoufox 反检测用",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "和 playwright 版本需保持同步",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "camoufox反检测"
+      ]
+    }
+  },
+  {
+    "id": 50,
+    "category": "Python",
+    "name": "mcp",
+    "check_source": "pip",
+    "pkg": "mcp",
+    "check_cmd": "pip3 show mcp 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions mcp 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade mcp",
+    "description_zh": "MCP Python SDK，MCP Server 开发依赖",
+    "frequency": "mid",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "高频更新，MCP 生态核心包",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "MCP Server开发"
+      ]
+    }
+  },
+  {
+    "id": 51,
+    "category": "Python",
+    "name": "duckduckgo-search (ddgs)",
+    "check_source": "pip",
+    "pkg": "duckduckgo-search",
+    "check_cmd": "pip3 show duckduckgo-search 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions duckduckgo-search 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade duckduckgo-search",
+    "description_zh": "DuckDuckGo 搜索 Python 库",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "pip 8.1.1(ddgs 9.11.4) vs conda 可能有版本差",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "DuckDuckGo搜索"
+      ]
+    }
+  },
+  {
+    "id": 52,
+    "category": "Python",
+    "name": "html2text",
+    "check_source": "pip",
+    "pkg": "html2text",
+    "check_cmd": "pip3 show html2text 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions html2text 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade html2text",
+    "description_zh": "HTML 转 Markdown，网页内容处理",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "HTML转Markdown处理"
+      ]
+    }
+  },
+  {
+    "id": 53,
+    "category": "其他",
+    "name": "ralph",
+    "check_source": "cli",
+    "check_cmd": "stat -f '%Sm' -t '%Y-%m-%d' ~/.ralph/ralph_loop.sh 2>/dev/null || echo 'not-found'",
+    "latest_cmd": "echo 'ralph 无版本号和远程源，显示本地安装日期'",
+    "update_cmd": "echo 'ralph 无远程源，无法自动更新'",
+    "description_zh": "Claude Code 自动循环工具（Ralph Loop），脚本无版本号",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "装在 ~/.ralph/，非 git 仓库，无版本号，以安装日期代替",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 54,
+    "category": "Homebrew",
+    "name": "bat",
+    "check_source": "brew",
+    "pkg": "bat",
+    "check_cmd": "bat --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info bat --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall bat",
+    "description_zh": "cat 替代，语法高亮+行号，已 alias cat=bat",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "已 alias，日常无感使用",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "日常文件查看"
+      ]
+    }
+  },
+  {
+    "id": 55,
+    "category": "Homebrew",
+    "name": "eza",
+    "check_source": "brew",
+    "pkg": "eza",
+    "check_cmd": "eza --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info eza --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall eza",
+    "description_zh": "ls 替代，图标+颜色，已 alias ls=eza",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "已 alias，日常无感使用",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "日常目录查看"
+      ]
+    }
+  },
+  {
+    "id": 56,
+    "category": "Homebrew",
+    "name": "fd",
+    "check_source": "brew",
+    "pkg": "fd",
+    "check_cmd": "fd --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info fd --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall fd",
+    "description_zh": "find 替代，更快更直观",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "Claude Code 内部用 fd 搜索文件",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Claude Code 文件搜索",
+        "日常查找"
+      ]
+    }
+  },
+  {
+    "id": 57,
+    "category": "Homebrew",
+    "name": "ripgrep (rg)",
+    "check_source": "brew",
+    "pkg": "ripgrep",
+    "check_cmd": "rg --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "brew info ripgrep --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall ripgrep",
+    "description_zh": "grep 替代，极快，代码搜索首选",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "Claude Code 内部用 rg 搜索内容，核心依赖",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Claude Code 内容搜索",
+        "日常代码搜索"
+      ]
+    }
+  },
+  {
+    "id": 58,
+    "category": "Homebrew",
+    "name": "zoxide",
+    "check_source": "brew",
+    "pkg": "zoxide",
+    "check_cmd": "zoxide --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info zoxide --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall zoxide",
+    "description_zh": "cd 替代，记住常用目录，已 alias z=zoxide",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "已 alias z=zoxide",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "日常目录跳转"
+      ]
+    }
+  },
+  {
+    "id": 59,
+    "category": "Homebrew",
+    "name": "tmux",
+    "check_source": "brew",
+    "pkg": "tmux",
+    "check_cmd": "tmux -V 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info tmux --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall tmux",
+    "description_zh": "终端复用/分屏，ralph --monitor 和长时间任务依赖",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "auto-tmux-dev hook 和 ralph --monitor 依赖",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "auto-tmux-dev hook",
+        "ralph --monitor"
+      ]
+    }
+  },
+  {
+    "id": 60,
+    "category": "Homebrew",
+    "name": "tailscale",
+    "check_source": "brew-cask",
+    "pkg": "tailscale",
+    "check_cmd": "test -f /Applications/Tailscale.app/Contents/MacOS/tailscale && /usr/local/bin/tailscale --version 2>/dev/null | head -1 || echo 'app-uninstalled'",
+    "latest_cmd": "echo 'cask安装，用 brew info tailscale --json=v2 查'",
+    "update_cmd": "brew reinstall tailscale",
+    "description_zh": "组网 VPN，远程访问核心",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "cask 安装，但 GUI app 已不在 /Applications，CLI wrapper 失效。如需恢复：brew reinstall tailscale",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "远程访问"
+      ]
+    }
+  },
+  {
+    "id": 61,
+    "category": "Homebrew",
+    "name": "nginx",
+    "check_source": "brew",
+    "pkg": "nginx",
+    "check_cmd": "nginx -v 2>&1 | grep -oP '\\d+\\.\\d+\\.\\d+' || echo 'not-found'",
+    "latest_cmd": "brew info nginx --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall nginx",
+    "description_zh": "Web 服务器/反向代理，本地调试用",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "nginx -v 输出到 stderr",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "本地Web服务"
+      ]
+    }
+  },
+  {
+    "id": 62,
+    "category": "Homebrew",
+    "name": "gnupg (gpg)",
+    "check_source": "brew",
+    "pkg": "gnupg",
+    "check_cmd": "gpg --version 2>/dev/null | head -1 | awk '{print $3}'",
+    "latest_cmd": "brew info gnupg --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall gnupg",
+    "description_zh": "GPG 加密/签名，git commit 签名依赖",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "git commit GPG 签名依赖",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "git commit 签名"
+      ]
+    }
+  },
+  {
+    "id": 63,
+    "category": "Python",
+    "name": "pre-commit",
+    "check_source": "conda",
+    "pkg": "pre-commit",
+    "check_cmd": "pre-commit --version 2>/dev/null | awk '{print $NF}'",
+    "latest_cmd": "pip3 index versions pre-commit 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update pre-commit",
+    "description_zh": "Git hooks 管理框架",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda 安装",
+    "deps": {
+      "needs": [
+        "Python",
+        "Git"
+      ],
+      "needed_by": [
+        "Git hooks"
+      ]
+    }
+  },
+  {
+    "id": 64,
+    "category": "运行时",
+    "name": "Go",
+    "check_source": "brew",
+    "pkg": "go",
+    "check_cmd": "go version 2>/dev/null | awk '{print $3}' | sed 's/^go//'",
+    "latest_cmd": "brew info go --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall go",
+    "description_zh": "Go 语言运行时，部分工具编译依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "uv/ripgrep 等工具的编译依赖，日常不直接用",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "uv (编译依赖)",
+        "ripgrep (编译依赖)"
+      ]
+    }
+  },
+  {
+    "id": 65,
+    "category": "运行时",
+    "name": "Rust (rustc/cargo)",
+    "check_source": "cli",
+    "pkg": "rust",
+    "check_cmd": "rustc --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "rustup check 2>/dev/null | grep 'stable-' | sed 's/.*-> //' | awk '{print $1}'",
+    "update_cmd": "rustup update stable",
+    "description_zh": "Rust 语言，uv/ripgrep/bun 等工具的底层编译依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "rustup 管理，更新用 rustup update stable",
+    "deps": {
+      "needs": [
+        "rustup"
+      ],
+      "needed_by": [
+        "uv (编译)",
+        "ripgrep (编译)",
+        "bun (编译)"
+      ]
+    }
+  },
+  {
+    "id": 66,
+    "category": "Python",
+    "name": "whisper-timestamped",
+    "check_source": "pip",
+    "pkg": "whisper-timestamped",
+    "check_cmd": "pip3 show whisper-timestamped 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions whisper-timestamped 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade whisper-timestamped",
+    "description_zh": "whisper增强版，带精确时间戳，字幕制作用",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "依赖 torch + openai-whisper",
+    "deps": {
+      "needs": [
+        "torch",
+        "openai-whisper"
+      ],
+      "needed_by": [
+        "字幕制作"
+      ]
+    }
+  },
+  {
+    "id": 67,
+    "category": "Python",
+    "name": "torch (PyTorch)",
+    "check_source": "pip",
+    "pkg": "torch",
+    "check_cmd": "pip3 show torch 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions torch 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade torch",
+    "description_zh": "PyTorch 深度学习框架，whisper底层依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "被 openai-whisper 依赖，不是独立工具，体积大（几GB）",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "openai-whisper",
+        "whisper-timestamped"
+      ]
+    }
+  },
+  {
+    "id": 69,
+    "category": "Python",
+    "name": "fastmcp",
+    "check_source": "conda",
+    "pkg": "fastmcp",
+    "check_cmd": "conda list fastmcp 2>/dev/null | grep fastmcp | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions fastmcp 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update fastmcp",
+    "description_zh": "MCP服务器快速构建框架，nlm依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "被 notebooklm-mcp-cli 依赖",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "notebooklm-mcp-cli"
+      ]
+    }
+  },
+  {
+    "id": 70,
+    "category": "Python",
+    "name": "browser-use",
+    "check_source": "conda",
+    "pkg": "browser-use",
+    "check_cmd": "conda list browser-use 2>/dev/null | grep browser-use | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions browser-use 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update browser-use",
+    "description_zh": "AI驱动浏览器自动化，browser-harness调研时装",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "调研时装的，待确认是否还在用。依赖 litellm/patchright/camoufox",
+    "deps": {
+      "needs": [
+        "litellm",
+        "patchright",
+        "camoufox",
+        "playwright"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 71,
+    "category": "Python",
+    "name": "camoufox",
+    "check_source": "conda",
+    "pkg": "camoufox",
+    "check_cmd": "conda list camoufox 2>/dev/null | grep camoufox | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions camoufox 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update camoufox",
+    "description_zh": "反指纹浏览器，scrapling/browser-use依赖",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "被 scrapling、browser-use 依赖",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "scrapling",
+        "browser-use"
+      ]
+    }
+  },
+  {
+    "id": 72,
+    "category": "Homebrew",
+    "name": "zsh-autosuggestions",
+    "check_source": "brew",
+    "pkg": "zsh-autosuggestions",
+    "check_cmd": "brew list zsh-autosuggestions --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info zsh-autosuggestions --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall zsh-autosuggestions",
+    "description_zh": "zsh 命令自动补全建议，shell体验核心",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "zsh 插件，~/.zshrc source",
+    "deps": {
+      "needs": [
+        "zsh"
+      ],
+      "needed_by": [
+        "日常命令行体验"
+      ]
+    }
+  },
+  {
+    "id": 73,
+    "category": "Homebrew",
+    "name": "coreutils",
+    "check_source": "brew",
+    "pkg": "coreutils",
+    "check_cmd": "brew list coreutils --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info coreutils --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['formulae'][0]['versions']['stable'])\"",
+    "update_cmd": "brew reinstall coreutils",
+    "description_zh": "GNU 版本工具（date/ls 等），系统兼容",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "提供 GNU 版 date/ls/cat 等，前缀 g",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "系统兼容"
+      ]
+    }
+  },
+  {
+    "id": 74,
+    "category": "Python",
+    "name": "mypy",
+    "check_source": "conda",
+    "pkg": "mypy",
+    "check_cmd": "mypy --version 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions mypy 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update mypy",
+    "description_zh": "Python 类型检查工具",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda 安装",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "代码质量"
+      ]
+    }
+  },
+  {
+    "id": 75,
+    "category": "Python",
+    "name": "black",
+    "check_source": "conda",
+    "pkg": "black",
+    "check_cmd": "black --version 2>/dev/null | head -1 | awk '{print $3}'",
+    "latest_cmd": "pip3 index versions black 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update black",
+    "description_zh": "Python 代码格式化工具",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda 安装",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "代码质量"
+      ]
+    }
+  },
+  {
+    "id": 76,
+    "category": "Python",
+    "name": "pytest",
+    "check_source": "conda",
+    "pkg": "pytest",
+    "check_cmd": "pytest --version 2>/dev/null | head -1 | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions pytest 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update pytest",
+    "description_zh": "Python 测试框架",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda 安装",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "Python测试"
+      ]
+    }
+  },
+  {
+    "id": 77,
+    "category": "其他",
+    "name": "cc-switch",
+    "check_source": "brew-cask",
+    "pkg": "cc-switch",
+    "check_cmd": "brew list --cask cc-switch --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "brew info cc-switch --json=v2 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['casks'][0]['version'])\" 2>/dev/null || echo 'check-manually'",
+    "update_cmd": "brew reinstall cc-switch",
+    "description_zh": "Claude Code 版本切换工具",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "cask 安装",
+    "deps": {
+      "needs": [
+        "Claude Code"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 78,
+    "category": "其他",
+    "name": "VS Code",
+    "check_source": "app",
+    "pkg": "code",
+    "check_cmd": "code --version 2>/dev/null | head -1",
+    "latest_cmd": "echo 'App Store / 自动更新'",
+    "update_cmd": "code --update 2>/dev/null || echo '手动更新'",
+    "description_zh": "微软编辑器，通用IDE",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "App CLI，自动更新",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 79,
+    "category": "其他",
+    "name": "Cursor",
+    "check_source": "app",
+    "pkg": "cursor",
+    "check_cmd": "cursor --version 2>/dev/null | head -1 || echo 'installed'",
+    "latest_cmd": "echo 'App / 自动更新'",
+    "update_cmd": "echo 'App 自动更新'",
+    "description_zh": "AI 编辑器，Claude Code VSCode扩展运行在这里",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "当前会话运行环境",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Claude Code VSCode扩展"
+      ]
+    }
+  },
+  {
+    "id": 80,
+    "category": "其他",
+    "name": "Kiro",
+    "check_source": "app",
+    "pkg": "kiro",
+    "check_cmd": "ls /Applications/Kiro.app 2>/dev/null | head -1 && echo 'installed' || echo 'not-found'",
+    "latest_cmd": "echo 'App / 自动更新'",
+    "update_cmd": "echo 'App 自动更新'",
+    "description_zh": "Amazon AI编辑器",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "待确认是否还在用",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 81,
+    "category": "其他",
+    "name": "Qoder",
+    "check_source": "app",
+    "pkg": "qoder",
+    "check_cmd": "ls /Applications/Qoder.app 2>/dev/null | head -1 && echo 'installed' || echo 'not-found'",
+    "latest_cmd": "echo 'App / 自动更新'",
+    "update_cmd": "echo 'App 自动更新'",
+    "description_zh": "AI 编辑器",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "待确认是否还在用",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 82,
+    "category": "其他",
+    "name": "Trae",
+    "check_source": "app",
+    "pkg": "trae",
+    "check_cmd": "ls /Applications/Trae.app 2>/dev/null | head -1 && echo 'installed' || echo 'not-found'",
+    "latest_cmd": "echo 'App / 自动更新'",
+    "update_cmd": "echo 'App 自动更新'",
+    "description_zh": "字节跳动AI编辑器",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "待确认是否还在用",
+    "deps": {
+      "needs": [],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 84,
+    "category": "其他",
+    "name": "Docker",
+    "check_source": "app",
+    "pkg": "docker",
+    "check_cmd": "docker --version 2>/dev/null | awk '{print $3}' | tr -d ','",
+    "latest_cmd": "echo 'App / 自动更新'",
+    "update_cmd": "echo 'App 自动更新'",
+    "description_zh": "容器运行时",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "App CLI",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "容器化部署"
+      ]
+    }
+  },
+  {
+    "id": 85,
+    "category": "Python",
+    "name": "akshare",
+    "check_source": "conda",
+    "pkg": "akshare",
+    "check_cmd": "conda list akshare 2>/dev/null | grep akshare | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions akshare 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "conda update akshare",
+    "description_zh": "A股/期货/基金数据接口",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "四个金融数据包（akshare/tushare/efinance/yfinance），待确认保留哪个",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 90,
+    "category": "Python",
+    "name": "lancedb",
+    "check_source": "pip",
+    "pkg": "lancedb",
+    "check_cmd": "pip3 show lancedb 2>/dev/null | grep '^Version:' | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions lancedb 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade lancedb",
+    "description_zh": "向量数据库",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "待确认什么项目在用",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 91,
+    "category": "Python",
+    "name": "agent-reach",
+    "check_source": "conda",
+    "pkg": "agent-reach",
+    "check_cmd": "conda list agent-reach 2>/dev/null | grep agent-reach | awk '{print $2}'",
+    "latest_cmd": "echo 'conda editable install，随skill更新'",
+    "update_cmd": "conda update agent-reach",
+    "description_zh": "17平台搜索/阅读skill，核心抓取能力",
+    "frequency": "mid",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda editable install，随 ~/.agents/skills/ 更新",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "多平台搜索/阅读"
+      ]
+    }
+  },
+  {
+    "id": 92,
+    "category": "其他",
+    "name": "freeride",
+    "check_source": "conda-editable",
+    "pkg": "freeride",
+    "check_cmd": "conda list freeride 2>/dev/null | grep freeride | awk '{print $2}'",
+    "latest_cmd": "echo 'editable install'",
+    "update_cmd": "echo '手动管理'",
+    "description_zh": "OpenClaw skill（free-ride），待确认用途",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda editable，待确认",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 93,
+    "category": "其他",
+    "name": "nanobot",
+    "check_source": "conda-editable",
+    "pkg": "nanobot-ai",
+    "check_cmd": "conda list nanobot-ai 2>/dev/null | grep nanobot | awk '{print $2}'",
+    "latest_cmd": "echo 'editable install'",
+    "update_cmd": "echo '手动管理'",
+    "description_zh": "独立项目 ~/Documents/nanobot/",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda editable，待确认",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 94,
+    "category": "其他",
+    "name": "wechat-automation",
+    "check_source": "conda-editable",
+    "pkg": "wechat-automation",
+    "check_cmd": "conda list wechat-automation 2>/dev/null | grep wechat | awk '{print $2}'",
+    "latest_cmd": "echo 'editable install'",
+    "update_cmd": "echo '手动管理'",
+    "description_zh": "公众号自动化 ~/Documents/公众号自动化/",
+    "frequency": "low",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "conda editable，待确认是否还在用",
+    "deps": {
+      "needs": [
+        "Python",
+        "litellm"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 96,
+    "category": "其他",
+    "name": "font-jetbrains-mono-nerd-font",
+    "check_source": "brew-cask",
+    "pkg": "font-jetbrains-mono-nerd-font",
+    "check_cmd": "brew list --cask font-jetbrains-mono-nerd-font --versions 2>/dev/null | awk '{print $2}'",
+    "latest_cmd": "echo 'cask / brew info查'",
+    "update_cmd": "brew reinstall font-jetbrains-mono-nerd-font",
+    "description_zh": "编程字体（终端/编辑器），Ghostty/VSCode用",
+    "frequency": "high",
+    "recommend_update": false,
+    "recommend_uninstall": false,
+    "notes": "cask 安装，Ghostty 和 VSCode 依赖",
+    "deps": {
+      "needs": [],
+      "needed_by": [
+        "Ghostty",
+        "VS Code"
+      ]
+    }
+  },
+  {
+    "id": 97,
+    "category": "Python",
+    "name": "duckduckgo-search (ddgs)",
+    "check_source": "pip",
+    "pkg": "duckduckgo-search",
+    "check_cmd": "pip3 show duckduckgo-search 2>/dev/null | grep Version | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions duckduckgo-search 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade duckduckgo-search",
+    "description_zh": "DuckDuckGo 搜索引擎 API，支持网页/图片/新闻/地图搜索",
+    "frequency": "medium",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "pkg 名含连字符，pip 包名 duckduckgo-search，import 名 duckduckgo_search",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "duckduckgo_search CLI",
+        "agent-reach 搜索"
+      ]
+    }
+  },
+  {
+    "id": 98,
+    "category": "Python",
+    "name": "ipython",
+    "check_source": "pip",
+    "pkg": "ipython",
+    "check_cmd": "ipython --version 2>/dev/null",
+    "latest_cmd": "pip3 index versions ipython 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade ipython",
+    "description_zh": "交互式 Python shell，增强版 REPL",
+    "frequency": "high",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "conda 和 pip 可能不同步",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": []
+    }
+  },
+  {
+    "id": 99,
+    "category": "Python",
+    "name": "jieba",
+    "check_source": "pip",
+    "pkg": "jieba",
+    "check_cmd": "pip3 show jieba 2>/dev/null | grep Version | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions jieba 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade jieba",
+    "description_zh": "中文分词库，用于内容管线关键词提取",
+    "frequency": "medium",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "内容管线（旺财/进宝）中文分词依赖",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "OpenClaw 内容管线"
+      ]
+    }
+  },
+  {
+    "id": 100,
+    "category": "Python",
+    "name": "lark-oapi",
+    "check_source": "pip",
+    "pkg": "lark-oapi",
+    "check_cmd": "pip3 show lark-oapi 2>/dev/null | grep Version | awk '{print $2}'",
+    "latest_cmd": "pip3 index versions lark-oapi 2>/dev/null | head -1 | awk -F'[()]' '{print $2}'",
+    "update_cmd": "pip3 install --upgrade lark-oapi",
+    "description_zh": "飞书/Lark OpenAPI Python SDK",
+    "frequency": "low",
+    "recommend_update": true,
+    "recommend_uninstall": false,
+    "notes": "飞书集成预留（CLI 2026-05 调研），暂未启用",
+    "deps": {
+      "needs": [
+        "Python"
+      ],
+      "needed_by": [
+        "飞书集成（待启用）"
+      ]
+    }
+  }
+]
