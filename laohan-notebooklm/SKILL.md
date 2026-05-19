@@ -58,9 +58,9 @@ TITLE="<标题>"
 OUTPUT=~/Desktop/"${TITLE}_slides"
 
 for i in $(seq 1 20); do
-  status=$(nlm studio status "$NB" 2>&1 | grep -o '"status": "[^"]*"' | head -1)
-  echo "[$i] $status"
-  echo "$status" | grep -q "completed" && break
+  st=$(nlm studio status "$NB" 2>&1 | grep -o '"status": "[^"]*"' | head -1)
+  echo "[$i] $st"
+  echo "$st" | grep -q "completed" && break
   sleep 30
 done
 
