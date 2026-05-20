@@ -47,6 +47,8 @@
 | [claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆](./docs/claude-mem-litellm.md) | 用 LiteLLM 代理让 claude-mem 支持智谱 GLM / DeepSeek 等国产模型，替代 OpenRouter。含完整安装、patch、配置、验证步骤 |
 | [CLAUDE.md 配置指南：让 AI 编程助手少犯错的四个原则](./docs/claude-md-guide.md) | 来自 [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) 的四个核心原则（想清楚再动手/能50行别200行/只改该改的/目标驱动执行），含正反代码示例 |
 | [Chrome Gemini 侧边栏强制开启指南（国内修复版）](./docs/gemini-sidebar-fix.md) | Mac + Windows 双平台脚本，修复 Chrome Gemini 侧边栏在国内因地区限制丢失的问题。每次 Chrome 更新后可重复运行 |
+| [Claude Code + 智谱 GLM：国内大模型驱动 AI 编程助手](./docs/claude-code-glm.md) | 完整配置 Claude Code 使用智谱 GLM 作为后端：环境变量、thinking 模式、功能声明、超时配置、模型切换、常见问题 |
+| [ECC 插件安装维护完全指南](./docs/ecc-plugin-guide.md) | everything-claude-code 插件的安装、rules 分发、hooks 三种加载机制、升级 6 步清单、4 个常见坑及解决方案 |
 
 ## 安装
 

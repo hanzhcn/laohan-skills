@@ -47,6 +47,8 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | [claude-mem + LiteLLM: Drive Claude Code Cross-Session Memory with Local LLMs](./docs/claude-mem-litellm.md) | Use LiteLLM proxy to let claude-mem support GLM / DeepSeek instead of OpenRouter. Full install, patch, config, and verification steps |
 | [CLAUDE.md Configuration Guide: Four Principles to Reduce AI Coding Mistakes](./docs/claude-md-guide.md) | From [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills): Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution, with before/after code examples |
 | [Chrome Gemini Sidebar Fix (China)](./docs/gemini-sidebar-fix.md) | Mac + Windows scripts to fix Chrome Gemini sidebar disappearing in China due to region restrictions. Re-run after each Chrome update |
+| [Claude Code + ZhiPu GLM: Drive AI Coding with Domestic LLMs](./docs/claude-code-glm.md) | Full guide to configure Claude Code with ZhiPu GLM backend: env vars, thinking mode, capability declarations, timeout config, model switching, FAQ |
+| [ECC Plugin Install & Maintenance Guide](./docs/ecc-plugin-guide.md) | Everything-Claude-Code plugin: install, rules distribution, 3 hook loading mechanisms, 6-step upgrade checklist, 4 common pitfalls with solutions |
 
 ## Install
 
