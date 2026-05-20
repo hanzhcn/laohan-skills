@@ -45,6 +45,7 @@
 | 教程 | 说明 |
 |------|------|
 | [claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆](./docs/claude-mem-litellm.md) | 用 LiteLLM 代理让 claude-mem 支持智谱 GLM / DeepSeek 等国产模型，替代 OpenRouter。含完整安装、patch、配置、验证步骤 |
+| [CLAUDE.md 配置指南：让 AI 编程助手少犯错的四个原则](./docs/claude-md-guide.md) | 来自 [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) 的四个核心原则（想清楚再动手/能50行别200行/只改该改的/目标驱动执行），含正反代码示例 |
 
 ## 安装
 

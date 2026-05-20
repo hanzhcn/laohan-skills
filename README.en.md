@@ -45,6 +45,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | Tutorial | Description |
 |----------|-------------|
 | [claude-mem + LiteLLM: Drive Claude Code Cross-Session Memory with Local LLMs](./docs/claude-mem-litellm.md) | Use LiteLLM proxy to let claude-mem support GLM / DeepSeek instead of OpenRouter. Full install, patch, config, and verification steps |
+| [CLAUDE.md Configuration Guide: Four Principles to Reduce AI Coding Mistakes](./docs/claude-md-guide.md) | From [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills): Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution, with before/after code examples |
 
 ## Install
 
