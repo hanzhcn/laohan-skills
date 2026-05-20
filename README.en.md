@@ -11,14 +11,40 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 
 ## Skills
 
+### Content Acquisition
+
 | Skill | What it does | Trigger |
-|-------|-------------|---------|
-| **laohan-xiazai** | Video/audio/content download for 7 platforms (Douyin, TikTok, YouTube, Bilibili, Xiaohongshu, Zhihu, WeChat) | `/laohan-xiazai` |
+|-------|-------------|----------|
+| **laohan-xiazai** | One-stop content download — videos/audio/subtitles from 7+ platforms with auto-fallback | `/laohan-xiazai` |
+| **laohan-aihotjingxuan** | AIHOT daily picks — curated AI content from 168 sources | `/laohan-aihotjingxuan` |
+| **laohan-hotdouyinai** | Douyin trending AI filter — 6000+ keyword matching, no login needed | `/laohan-hotdouyinai` |
+
+### Content Creation
+
+| Skill | What it does | Trigger |
+|-------|-------------|----------|
+| **laohan-luping** | Screen recording to script — full pipeline: extract audio → transcribe → structure → write | `/laohan-luping` |
+| **laohan-yuanchuang** | Trend to original — multi-platform trend → unique angle → script | `/laohan-yuanchuang` |
 | **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm <script.md>` |
-| **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params against live sources | `/laohan-shencha` |
-| **laohan-hotdouyinai** | Filter Douyin trending for AI-related content (6000+ keyword matching) | `/laohan-hotdouyinai` |
-| **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (29 styles) | `/laohan-fengmianqiuzhi <script.md>` |
-| **laohan-fenjingtishici** | Generate storyboard prompts from reference videos for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` |
+| **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (3 styles × 3 ratios) | `/laohan-fengmianqiuzhi <script.md>` |
+| **laohan-fenjingtishici** | Storyboard prompts for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` |
+
+### Quality & Tools
+
+| Skill | What it does | Trigger |
+|-------|-------------|----------|
+| **laohan-cheat** | Content calibration — scoring, prediction, review, trend analysis | `/laohan-cheat` |
+| **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params | `/laohan-shencha` |
+| **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
+| **laohan-urlgaixie** | Manual URL rewrite queue | `/laohan-urlgaixie` |
+
+## Tutorials
+
+> Step-by-step guides, fully reproducible.
+
+| Tutorial | Description |
+|----------|-------------|
+| [claude-mem + LiteLLM: Drive Claude Code Cross-Session Memory with Local LLMs](./docs/claude-mem-litellm.md) | Use LiteLLM proxy to let claude-mem support GLM / DeepSeek instead of OpenRouter. Full install, patch, config, and verification steps |
 
 ## Install
 
@@ -35,53 +61,59 @@ npx skills add hanzhcn/laohan-skills -g -y
 - [opencli](https://github.com/jackwener/opencli) — `npm install -g @jackwener/opencli`
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) — `brew install yt-dlp` or `pip install yt-dlp`
 - [ffmpeg](https://ffmpeg.org/) — `brew install ffmpeg`
-- Optional: [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for local transcription
 - Optional: SiliconFlow API key for cloud transcription (free) — set `SILICONFLOW_API_KEY` env var
 
 ### laohan-notebooklm
 - [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) — `pip install notebooklm-mcp-cli`
 - [poppler](https://poppler.freedesktop.org/) — `brew install poppler`
 
+### laohan-luping
+- All laohan-notebooklm dependencies
+- Optional: [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for local transcription
+
+### laohan-cheat
+- [cheat-on-content](https://github.com/hanzhcn/cheat-on-content) project
+
 ### laohan-hotdouyinai
-- Node.js (for running the included script)
+- Node.js
 
 ## Quick Start
 
-### Download a video
+### Download content
 ```
-User: 帮我下载这个B站视频 https://www.bilibili.com/video/BV1xxx
-→ triggers laohan-xiazai → opencli bilibili download BV1xxx
-
-User: 下载这个抖音 https://v.douyin.com/xxx
-→ triggers laohan-xiazai → mobile UA method
-
-User: 下载这个YouTube https://youtube.com/watch?v=xxx
-→ triggers laohan-xiazai → yt-dlp --cookies-from-browser chrome
+You: 帮我下载这个B站视频 https://www.bilibili.com/video/BV1xxx
+→ triggers laohan-xiazai → auto-selects best method per platform
 ```
 
-### Generate slides from script
+### Screen recording to script
 ```
-User: 帮我用口播稿生成PPT /laohan-notebooklm script.md
-→ creates notebook → uploads script → generates slides → PDF → PNGs
-```
-
-### Audit technical docs
-```
-User: 深度审查这个部署方案 /laohan-shencha
-→ extracts claims → verifies URLs/versions/params → cross-references → fixes
+You: 把这个录屏视频转成口播稿 /path/to/recording.mp4
+→ triggers laohan-luping → full pipeline output
 ```
 
-## Platform Coverage (laohan-xiazai)
+### Content calibration
+```
+You: 帮我校准这篇口播稿
+→ triggers laohan-cheat → scoring + prediction + suggestions
+```
 
-| Platform | Download | Subtitles | Audio | Transcription |
-|----------|----------|-----------|-------|---------------|
-| Douyin (抖音) | Mobile UA + iesdouyin | — | ffmpeg | SiliconFlow / whisper |
-| TikTok | tikwm API | — | ffmpeg | SiliconFlow / whisper |
-| YouTube | yt-dlp (cookies) | opencli youtube transcript | yt-dlp -x | SiliconFlow / whisper |
-| Bilibili (B站) | opencli bilibili download | opencli bilibili subtitle | ffmpeg | SiliconFlow / whisper |
-| Xiaohongshu (小红书) | opencli xiaohongshu download | — | — | — |
-| Zhihu (知乎) | opencli zhihu | — | — | — |
-| WeChat (公众号) | fetch.py --stealth | — | — | — |
+### Script to slides
+```
+You: 帮我用口播稿生成PPT
+→ /laohan-notebooklm script.md
+```
+
+### Generate cover prompts
+```
+You: 给这个口播稿生成封面
+→ /laohan-fengmianqiuzhi script.md
+```
+
+### Check tool updates
+```
+You: 看看哪些工具该更新了
+→ /laohan-gengxin
+```
 
 ## License
 
