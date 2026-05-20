@@ -75,16 +75,42 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### laohan-notebooklm（幻灯片生成）
 - [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/)：`pip install notebooklm-mcp-cli`
 - [poppler](https://poppler.freedesktop.org/)：`brew install poppler`
+- Google 账号（NotebookLM 有地区限制，部分地区需网络切换）
 
 ### laohan-luping（录屏转口播稿）
 - laohan-notebooklm 的全部依赖
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp)（可选）：`brew install whisper.cpp`
+- 硅基流动 API Key 或本地 whisper（语音转文字）
 
 ### laohan-cheat（内容校准）
-- [cheat-on-content](https://github.com/hanzhcn/cheat-on-content) 项目
+- [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) 项目：`git clone https://github.com/XBuilderLAB/cheat-on-content.git`
+- 需创建执行目录并复制 rubric_notes.md、bridge.sh、.cheat-state.json，详见 SKILL.md 内的前置依赖说明
 
 ### laohan-hotdouyinai（抖音热榜筛选）
-- Node.js
+- Node.js（无其他依赖）
+
+### laohan-aihotjingxuan（AI精选）
+- [Scrapling MCP](https://github.com/nickbond/scrapling-server)（可选，用于网页抓取）
+
+### laohan-yuanchuang（热点转译原创）
+- ⚠️ **需要 OpenClaw 环境**：依赖 opencli + OpenClaw workspace 目录结构（style.md / follow_list.md）
+- 普通用户无法独立使用
+
+### laohan-urlgaixie（URL 改写队列）
+- ⚠️ **需要 OpenClaw 环境**：完全绑定 OpenClaw 管线（进宝/富贵 agent），无法独立使用
+- 仅在 OpenClaw 五虾管线内有意义
+
+### agent-reach（多平台搜索）
+- [mcporter](https://github.com/nickbond/mcporter)（MCP 桥接工具）
+- [twitter CLI](https://github.com/sferik/t)（Twitter 搜索，可选）
+- [rdt CLI](https://github.com/nickbond/rdt)（Reddit 搜索，可选）
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)（YouTube/B站字幕，可选）
+- [gh](https://cli.github.com/)（GitHub CLI，可选）
+- 各平台 CLI 为可选依赖，缺少时自动跳过对应平台
+
+### opencli-usage（opencli 命令参考）
+- [opencli](https://github.com/jackwener/opencli)：`npm install -g @jackwener/opencli`
+- 本技能是 opencli 的参考手册，没装 opencli 无意义
 
 ## 使用示例
 
