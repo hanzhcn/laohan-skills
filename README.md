@@ -83,7 +83,6 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### laohan-cheat（内容校准）
 - 无额外依赖（rubric 和状态模板已内置在 `references/` 目录中）
-- 可选：[Gemini](https://gemini.google.com) 账号（封面图生成需要）
 
 ### laohan-jiaocheng（教程路由器）
 - 无额外依赖
