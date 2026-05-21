@@ -22,12 +22,10 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 
 | Skill | What it does | Trigger |
 |-------|-------------|----------|
-| **laohan-luping** | Screen recording to script — full pipeline: extract audio → transcribe → structure → write | `/laohan-luping` or "录屏转口播""视频转口播稿" |
-| **laohan-yuanchuang** | Trend to original — multi-platform trend → unique angle → script | `/laohan-yuanchuang` or "找选题""写一篇""热点""不知道拍什么" |
+| **laohan-chuangzuo** | Unified creation engine — recording to script / trend to original / URL rewrite / free topic, all through one writing methodology | `/laohan-chuangzuo` or "录屏转口播""找选题""写一篇""根据链接改写""帮我写""不知道拍什么""改写文档" |
 | **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm` or "生成PPT""做幻灯片" |
 | **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (3 styles × 3 ratios) | `/laohan-fengmianqiuzhi` or "生成封面""做封面" |
 | **laohan-fenjingtishici** | Storyboard prompts for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` or "生成分镜""拆分镜" |
-| **laohan-urlgaixie** | Manual URL rewrite queue — read URLs from url.md, trigger full content rewrite | `/laohan-urlgaixie` or "根据链接改写""链接内容改写""改写文档" |
 
 ### Quality & Tools
 
@@ -71,9 +69,11 @@ npx skills add hanzhcn/laohan-skills -g -y
 - [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) — `pip install notebooklm-mcp-cli`
 - [poppler](https://poppler.freedesktop.org/) — `brew install poppler`
 
-### laohan-luping
-- All laohan-notebooklm dependencies
-- Optional: [whisper.cpp](https://github.com/ggml-org/whisper.cpp) for local transcription
+### laohan-chuangzuo (unified creation engine)
+- [ffmpeg](https://ffmpeg.org/): Audio extraction (recording mode) — `brew install ffmpeg`
+- SiliconFlow API key (optional): Transcription — register at [siliconflow.cn](https://siliconflow.cn)
+- [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (optional): Local transcription — `brew install whisper.cpp`
+- All laohan-notebooklm dependencies (slide mode)
 
 ### laohan-cheat
 - [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) project — `git clone https://github.com/XBuilderLAB/cheat-on-content.git`
@@ -102,18 +102,13 @@ You: 今天的AI精选
 → triggers laohan-redian → 3 sources merged & deduplicated
 ```
 
-### Trend to original script
-```
-You: 找选题
-You: 写一篇
-You: 不知道拍什么
-→ triggers laohan-yuanchuang → trend → angle → outline → script → cover
-```
-
-### Screen recording to script
+### Unified creation (recording / trends / URL / free topic)
 ```
 You: 把这个录屏视频转成口播稿 /path/to/recording.mp4
-→ triggers laohan-luping → full pipeline output
+You: 找选题 / 写一篇 / 不知道拍什么
+You: 根据链接改写 / 改写文档
+You: 帮我写个关于 Claude Code 配置的口播稿
+→ triggers laohan-chuangzuo, auto-selects mode based on input
 ```
 
 ### Content calibration

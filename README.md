@@ -22,12 +22,10 @@
 
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
-| **laohan-luping** | 录屏转口播稿完整工作流——音频提取→语音转文字→结构化整理→口播稿写作→封面提示词 | `/laohan-luping` 或说"录屏转口播""视频转口播稿""录屏素材写稿" |
-| **laohan-yuanchuang** | 热点转译原创选题——多平台抓取热点→老韩视角转译→差异化选题→扩写口播稿 | `/laohan-yuanchuang` 或说"找选题""写一篇""原创""热点""想做个视频""不知道拍什么" |
+| **laohan-chuangzuo** | 统一创作引擎——录屏转口播/热点转译/URL改写/自由主题，全部走同一套写作方法论 | `/laohan-chuangzuo` 或说"录屏转口播""找选题""写一篇""根据链接改写""帮我写""不知道拍什么""改写文档" |
 | **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm` 或说"生成PPT""做幻灯片""PPT图片" |
 | **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi` 或说"生成封面""做封面""封面提示词" |
 | **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` 或说"生成分镜""校验分镜""拆分镜" |
-| **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` 或说"根据链接改写""链接内容改写""改写文档" |
 
 ### 质量与工具
 
@@ -77,21 +75,15 @@ npx skills add hanzhcn/laohan-skills -g -y
 - [poppler](https://poppler.freedesktop.org/)：`brew install poppler`
 - Google 账号（NotebookLM 有地区限制，部分地区需网络切换）
 
-### laohan-luping（录屏转口播稿）
-- laohan-notebooklm 的全部依赖
-- [whisper.cpp](https://github.com/ggml-org/whisper.cpp)（可选）：`brew install whisper.cpp`
-- 硅基流动 API Key 或本地 whisper（语音转文字）
+### laohan-chuangzuo（统一创作引擎）
+- [ffmpeg](https://ffmpeg.org/)：音频提取（录屏模式需要）— `brew install ffmpeg`
+- 硅基流动 API Key（可选）：语音转文字 — 注册 [siliconflow.cn](https://siliconflow.cn)
+- [whisper.cpp](https://github.com/ggml-org/whisper.cpp)（可选）：本地语音转文字 — `brew install whisper.cpp`
+- laohan-notebooklm 的全部依赖（幻灯片模式需要）
 
 ### laohan-cheat（内容校准）
 - [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) 项目：`git clone https://github.com/XBuilderLAB/cheat-on-content.git`
 - 需创建执行目录并复制 rubric_notes.md、bridge.sh、.cheat-state.json，详见 SKILL.md 内的前置依赖说明
-
-### laohan-yuanchuang（热点转译原创）
-- 无额外依赖（已去 OpenClaw 依赖，独立可用）
-- 调用 laohan-redian 抓取热点（自动触发，无需手动）
-
-### laohan-urlgaixie（URL 改写队列）
-- ⚠️ **需要 OpenClaw 环境**：依赖 OpenClaw 管线（进宝/富贵 agent）
 
 ### laohan-jiaocheng（教程路由器）
 - 无额外依赖
@@ -119,18 +111,13 @@ npx skills add hanzhcn/laohan-skills -g -y
 → 自动触发 laohan-redian，三路并行输出热点简报
 ```
 
-### 热点转原创口播稿
-```
-你: 找选题
-你: 写一篇
-你: 不知道拍什么
-→ 自动触发 laohan-yuanchuang，热点→选题→大纲→口播稿→封面提示词
-```
-
-### 录屏转口播稿
+### 统一创作（录屏/热点/URL/自由主题）
 ```
 你: 把这个录屏视频转成口播稿 /path/to/recording.mp4
-→ 自动触发 laohan-luping，完整流水线输出
+你: 找选题 / 写一篇 / 不知道拍什么
+你: 根据链接改写 / 改写文档
+你: 帮我写个关于 Claude Code 配置的口播稿
+→ 自动触发 laohan-chuangzuo，按输入类型选择对应模式
 ```
 
 ### 内容校准
