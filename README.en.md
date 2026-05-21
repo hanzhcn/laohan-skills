@@ -27,6 +27,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm <script.md>` |
 | **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (3 styles × 3 ratios) | `/laohan-fengmianqiuzhi <script.md>` |
 | **laohan-fenjingtishici** | Storyboard prompts for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` |
+| **laohan-urlgaixie** | Manual URL rewrite queue — read URLs from url.md, trigger full content rewrite | `/laohan-urlgaixie` |
 
 ### Quality & Tools
 
@@ -35,7 +36,6 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | **laohan-cheat** | Content calibration — scoring, prediction, review, trend analysis | `/laohan-cheat` |
 | **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params | `/laohan-shencha` |
 | **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
-| **laohan-urlgaixie** | Manual URL rewrite queue | `/laohan-urlgaixie` |
 | **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
 
 ## Tutorials

@@ -26,6 +26,7 @@
 | **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm <script.md>` |
 | **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi <script.md>` |
 | **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` |
+| **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` |
 
 ### 质量与工具
 
@@ -34,7 +35,6 @@
 | **laohan-cheat** | 内容校准统一入口——打分、预测、复盘、趋势分析，自动路由到对应子流程 | `/laohan-cheat` 或说"校准""打分" |
 | **laohan-shencha** | 技术文档深度联网审查——验证仓库地址、版本号、参数值、硬件需求的准确性 | `/laohan-shencha` 或说"深度审查" |
 | **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
-| **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` |
 | **laohan-jiaocheng** | 教程路由器——按关键词加载配置教程并引导安装（claude-mem / GLM / ECC / Gemini 侧边栏等） | `/laohan-jiaocheng <关键词>` 或说"教程""怎么配置" |
 
 ## 教程
