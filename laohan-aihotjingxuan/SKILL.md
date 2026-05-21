@@ -1,11 +1,11 @@
 ---
 name: laohan-aihotjingxuan
-description: AIHOT 精选页当日内容抓取。基于官方 aihot skill 的公开 REST API（无需 API Key），拉取当日精选条目，输出结构化 markdown 到 OpenClaw 数据目录。使用场景：(1) 用户说"抓精选""aihot精选""今日AI精选" (2) 用户想了解今日AI圈发生了什么 (3) 用户需要AI热点素材做选题扫描。触发词：/laohan-aihotjingxuan。依赖：官方 aihot skill（KKKKhazix/khazix-skills），如未安装会自动用 curl 调 API。
+description: AIHOT 精选页当日内容抓取。基于官方 aihot skill 的公开 REST API（无需 API Key），拉取当日精选条目，输出结构化 markdown 到 OpenClaw 数据目录。API 失败时自动降级到 Scrapling 首页抓取。使用场景：(1) 用户说"抓精选""aihot精选""今日AI精选" (2) 用户想了解今日AI圈发生了什么 (3) 用户需要AI热点素材做选题扫描。触发词：/laohan-aihotjingxuan。依赖：官方 aihot skill（KKKKhazix/khazix-skills），如未安装会自动用 curl 调 API。
 ---
 
 # AIHOT 精选抓取（laohan-aihotjingxuan）
 
-基于 [AIHOT 官方 skill](https://github.com/KKKKhazix/khazix-skills/blob/main/aihot/SKILL.md) 的公开 REST API，拉取当日精选条目，输出结构化 markdown。
+基于 [AIHOT 官方 skill](https://github.com/KKKKhazix/khazix-skills/blob/main/aihot/SKILL.md) 的公开 REST API，拉取当日精选条目，输出结构化 markdown。API 不可用时自动降级到 Scrapling 首页抓取。
 
 ## 前置依赖
 
@@ -29,15 +29,37 @@ description: AIHOT 精选页当日内容抓取。基于官方 aihot skill 的公
 UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 ```
 
-### Step 2：拉取当日精选
+### Step 2：拉取当日精选（API 优先，Scrapling 降级）
+
+**方法 A（首选）：官方 REST API**
 
 ```bash
 # since=24小时前，只拉精选（mode=selected）
 since=$(date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-curl -sH "User-Agent: $UA" "https://aihot.virxact.com/api/public/items?mode=selected&since=$since&take=100"
+curl -sfH "User-Agent: $UA" --max-time 15 "https://aihot.virxact.com/api/public/items?mode=selected&since=$since&take=100"
 ```
 
+如果 curl 成功（返回非空 JSON 且有 items），直接用方法 A 的数据进 Step 3。
+
 如果用户说"全部"，改为 `mode=all`。
+
+**方法 B（降级）：Scrapling 首页抓取**
+
+当方法 A 失败时（403、超时、空 JSON、网络不可达），自动降级：
+
+```bash
+# 用 Scrapling MCP 抓取 AIHOT 首页 HTML，解析精选内容
+# 工具：mcp__ScraplingServer__get
+# URL: https://aihot.virxact.com/
+# 从返回的 markdown 中提取精选条目（标题、来源、链接、摘要）
+```
+
+降级触发条件：
+- curl 返回非 0（网络/超时）
+- HTTP 状态码非 200
+- JSON 解析失败或 items 为空数组
+
+降级后从首页 markdown 手动提取结构化数据（标题、链接、摘要），输出格式与方法 A 一致。
 
 ### Step 3：格式化输出
 
@@ -105,12 +127,14 @@ mkdir -p ~/.openclaw/workspace-shared/data/aihot/
 - 官方 skill 提供完整的 AIHOT API 能力（精选/日报/全量/分类/搜索/翻页）
 - 本 skill 固定场景：只抓当日精选 + 保存到 OpenClaw 数据目录 + 汇报
 - 如需更灵活查询（日报、关键词搜索、指定日期），直接用官方 aihot skill
+- API 不可用时自动降级到 Scrapling 首页抓取（方法 B）
 
 ## 常见错误
 
 - 403：curl 没带 UA → 加 `-H "User-Agent: $UA"`
-- 空结果：since 太早或当天还没更新 → 提示稍后重试
+- 空结果：since 太早或当天还没更新 → 降级到方法 B，或提示稍后重试
 - 429：超限流 → 串行调用，加间隔
+- API 完全不可用 → 自动降级到 Scrapling 首页抓取
 
 ## 注意事项
 
