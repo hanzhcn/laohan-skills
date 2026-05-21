@@ -16,8 +16,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | Skill | What it does | Trigger |
 |-------|-------------|----------|
 | **laohan-xiazai** | One-stop content download — videos/audio/subtitles from 7+ platforms with auto-fallback | `/laohan-xiazai` |
-| **laohan-aihotjingxuan** | AIHOT daily picks — curated AI content from 168 sources | `/laohan-aihotjingxuan` |
-| **laohan-hotdouyinai** | Douyin trending AI filter — 6000+ keyword matching, no login needed | `/laohan-hotdouyinai` |
+| **laohan-redian** | Unified AI trend aggregator — 3 parallel sources (AIHOT picks + 9-platform trending + Douyin AI filter), merged & deduplicated | `/laohan-redian` |
 
 ### Content Creation
 
@@ -78,9 +77,6 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### laohan-cheat
 - [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) project — `git clone https://github.com/XBuilderLAB/cheat-on-content.git`
-
-### laohan-hotdouyinai
-- Node.js
 
 ### laohan-jiaocheng
 - No extra dependencies

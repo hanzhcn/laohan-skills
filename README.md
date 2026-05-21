@@ -17,9 +17,6 @@
 |------|------|----------|
 | **laohan-xiazai** | 从互联网获取内容一站式——下载视频/音频/字幕、抓取网页/评论/搜索结果、阅读公众号/知乎/小红书，覆盖 7+ 平台自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
 | **laohan-redian** | AI 热点统一抓取——三路并行（[AIHOT](https://aihot.virxact.com/agent) 精选 + opencli 9 平台热榜 + 抖音 AI 筛选），合并去重，输出完整热点简报 | `/laohan-redian` 或说"抓热点""今日AI精选""找选题" |
-| laohan-aihotjingxuan | *已被 laohan-redian 整合（路 1：AIHOT 精选）* | 仍可用，建议迁移到 laohan-redian |
-| laohan-hotdouyinai | *已被 laohan-redian 整合（路 3：抖音 AI 筛选）* | 仍可用，建议迁移到 laohan-redian |
-
 ### 内容创作
 
 | 技能 | 功能 | 触发方式 |
@@ -88,15 +85,8 @@ npx skills add hanzhcn/laohan-skills -g -y
 - [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) 项目：`git clone https://github.com/XBuilderLAB/cheat-on-content.git`
 - 需创建执行目录并复制 rubric_notes.md、bridge.sh、.cheat-state.json，详见 SKILL.md 内的前置依赖说明
 
-### laohan-hotdouyinai（抖音热榜筛选）
-- Node.js（无其他依赖）
-
-### laohan-aihotjingxuan（AI精选）
-- 无额外依赖（使用公开 REST API）
-
 ### laohan-yuanchuang（热点转译原创）
-- ⚠️ **需要 OpenClaw 环境**：依赖 opencli + OpenClaw workspace 目录结构（style.md / follow_list.md）
-- 普通用户无法独立使用
+- 无额外依赖（已去 OpenClaw 依赖，独立可用）
 
 ### laohan-urlgaixie（URL 改写队列）
 - ⚠️ **需要 OpenClaw 环境**：完全绑定 OpenClaw 管线（进宝/富贵 agent），无法独立使用
