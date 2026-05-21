@@ -17,6 +17,7 @@
 |------|------|----------|
 | **laohan-xiazai** | 从互联网获取内容一站式——下载视频/音频/字幕、抓取网页/评论/搜索结果、阅读公众号/知乎/小红书，覆盖 7+ 平台自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
 | **laohan-redian** | AI 热点统一抓取——三路并行（[AIHOT](https://aihot.virxact.com/agent) 精选 + opencli 9 平台热榜 + 抖音 AI 筛选），合并去重，输出完整热点简报 | `/laohan-redian` 或说"抓热点""今日AI精选""找选题" |
+
 ### 内容创作
 
 | 技能 | 功能 | 触发方式 |
@@ -24,7 +25,7 @@
 | **laohan-luping** | 录屏转口播稿完整工作流——音频提取→语音转文字→结构化整理→口播稿写作→封面提示词 | `/laohan-luping` 或说"录屏转口播""视频转口播稿""录屏素材写稿" |
 | **laohan-yuanchuang** | 热点转译原创选题——多平台抓取热点→老韩视角转译→差异化选题→扩写口播稿 | `/laohan-yuanchuang` 或说"找选题""写一篇""原创""热点""想做个视频""不知道拍什么" |
 | **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm` 或说"生成PPT""做幻灯片""PPT图片" |
-| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi <script.md>` 或说"生成封面""做封面""封面提示词" |
+| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi` 或说"生成封面""做封面""封面提示词" |
 | **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` 或说"生成分镜""校验分镜""拆分镜" |
 | **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` 或说"根据链接改写""链接内容改写""改写文档" |
 
@@ -87,10 +88,10 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### laohan-yuanchuang（热点转译原创）
 - 无额外依赖（已去 OpenClaw 依赖，独立可用）
+- 调用 laohan-redian 抓取热点（自动触发，无需手动）
 
 ### laohan-urlgaixie（URL 改写队列）
-- ⚠️ **需要 OpenClaw 环境**：完全绑定 OpenClaw 管线（进宝/富贵 agent），无法独立使用
-- 仅在 OpenClaw 五虾管线内有意义
+- ⚠️ **需要 OpenClaw 环境**：依赖 OpenClaw 管线（进宝/富贵 agent）
 
 ### laohan-jiaocheng（教程路由器）
 - 无额外依赖
@@ -111,6 +112,21 @@ npx skills add hanzhcn/laohan-skills -g -y
 → 自动触发 laohan-xiazai，按平台自动选择最优方法
 ```
 
+### 抓取AI热点
+```
+你: 抓热点
+你: 今天的AI精选
+→ 自动触发 laohan-redian，三路并行输出热点简报
+```
+
+### 热点转原创口播稿
+```
+你: 找选题
+你: 写一篇
+你: 不知道拍什么
+→ 自动触发 laohan-yuanchuang，热点→选题→大纲→口播稿→封面提示词
+```
+
 ### 录屏转口播稿
 ```
 你: 把这个录屏视频转成口播稿 /path/to/recording.mp4
@@ -126,13 +142,13 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### 口播稿生成幻灯片
 ```
 你: 帮我用口播稿生成PPT
-→ /laohan-notebooklm script.md
+→ 自动触发 laohan-notebooklm
 ```
 
 ### 生成封面提示词
 ```
 你: 给这个口播稿生成封面
-→ /laohan-fengmianqiuzhi script.md
+→ 自动触发 laohan-fengmianqiuzhi
 ```
 
 ### 检查工具更新
