@@ -10,7 +10,7 @@ description: 统一创作引擎。多种输入→口播稿+封面提示词。支
 ## 知识来源（唯一正本，symlink 到 OpenClaw workspace）
 
 - **写作规则**：`references/style.md` → `~/.openclaw/workspace-writer/knowledge/style.md`（富贵 style.md v3.2）
-- **整理方法**：`references/organize.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
+- **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **热点转译法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）
 
@@ -73,7 +73,7 @@ STYLE_FILE = 检测顺序：
   1. <当前工作目录>/templates/style.md      ← 用户定制版（优先）
   2. <skill安装目录>/references/style.md    ← 标准版（symlink 到 OpenClaw）
 
-ORGANIZE_FILE = <skill安装目录>/references/organize.md  ← 标准版（symlink 到 OpenClaw）
+ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink 到 OpenClaw）
 
 OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 ```
@@ -103,7 +103,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 ## Step 1：素材模式 — Layer A/B 整理
 
-读 `references/organize.md`（进宝 Layer A/B v3.5），对原始素材执行：
+读 `references/skill.md`（进宝 Layer A/B v3.5），对原始素材执行：
 
 **Layer A（无损事实层）**：
 1. 素材信息表（来源/标题/作者/日期/时长）
@@ -322,7 +322,7 @@ Pre-A/B/C 按需依赖，不使用对应模式时无需安装。
 ## 注意事项
 
 - style.md 是唯一的写作规则来源，本 skill 不定义额外的写作规则
-- organize.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
+- skill.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
 - 热点转译法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
 - 二创脱敏规则（style.md 第十节）：素材来自他人内容时执行；原创内容（热点转译/自由模式）跳过
