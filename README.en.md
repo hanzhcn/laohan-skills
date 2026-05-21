@@ -76,7 +76,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 - All laohan-notebooklm dependencies (slide mode)
 
 ### laohan-cheat
-- [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) project — `git clone https://github.com/XBuilderLAB/cheat-on-content.git`
+- No extra dependencies (rubric and state templates are bundled in `references/`)
 
 ### laohan-jiaocheng
 - No extra dependencies

@@ -82,8 +82,8 @@ npx skills add hanzhcn/laohan-skills -g -y
 - laohan-notebooklm 的全部依赖（幻灯片模式需要）
 
 ### laohan-cheat（内容校准）
-- [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) 项目：`git clone https://github.com/XBuilderLAB/cheat-on-content.git`
-- 需创建执行目录并复制 rubric_notes.md、bridge.sh、.cheat-state.json，详见 SKILL.md 内的前置依赖说明
+- 无额外依赖（rubric 和状态模板已内置在 `references/` 目录中）
+- 可选：[Gemini](https://gemini.google.com) 账号（封面图生成需要）
 
 ### laohan-jiaocheng（教程路由器）
 - 无额外依赖
