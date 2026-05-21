@@ -74,7 +74,7 @@ ffmpeg -i "<视频路径>" -vn -acodec libmp3lame -q:a 2 "/tmp/录屏音频_$(da
 
 ### Step 5：规划（不写稿）
 
-读取 `references/writer-style.md`（老韩口播风格 v3.1），输出 11 项规划：
+读取 `references/writer-style.md`（老韩口播风格 v3.2），输出 11 项规划：
 
 1. 一句话论点
 2. 素材类型判断 + 对应结构
