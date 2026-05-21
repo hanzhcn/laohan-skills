@@ -24,10 +24,10 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 |-------|-------------|----------|
 | **laohan-luping** | Screen recording to script — full pipeline: extract audio → transcribe → structure → write | `/laohan-luping` or "录屏转口播""视频转口播稿" |
 | **laohan-yuanchuang** | Trend to original — multi-platform trend → unique angle → script | `/laohan-yuanchuang` or "找选题""写一篇""热点""不知道拍什么" |
-| **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm <script.md>` or "生成PPT""做幻灯片" |
+| **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm` or "生成PPT""做幻灯片" |
 | **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (3 styles × 3 ratios) | `/laohan-fengmianqiuzhi <script.md>` or "生成封面""做封面" |
 | **laohan-fenjingtishici** | Storyboard prompts for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` or "生成分镜""拆分镜" |
-| **laohan-urlgaixie** | Manual URL rewrite queue — read URLs from url.md, trigger full content rewrite | `/laohan-urlgaixie` |
+| **laohan-urlgaixie** | Manual URL rewrite queue — read URLs from url.md, trigger full content rewrite | `/laohan-urlgaixie` or "根据链接改写""链接内容改写""改写文档" |
 
 ### Quality & Tools
 
