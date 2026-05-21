@@ -7,7 +7,7 @@
 
 [English](./README.en.md) | 中文
 
-由 [寒武纪AI](https://github.com/hanzhcn) 出品，基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/hanzhcn/openclaw)。
+由 [寒武纪AI](https://github.com/hanzhcn) 出品，基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw)。
 
 ## 技能列表
 
@@ -37,6 +37,7 @@
 | **laohan-shencha** | 技术文档深度联网审查——验证仓库地址、版本号、参数值、硬件需求的准确性 | `/laohan-shencha` 或说"深度审查" |
 | **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
 | **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` |
+| **laohan-jiaocheng** | 教程路由器——按关键词加载配置教程并引导安装（claude-mem / GLM / ECC / Gemini 侧边栏等） | `/laohan-jiaocheng <关键词>` 或说"教程""怎么配置" |
 
 ## 教程
 
@@ -61,7 +62,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 ## 前置依赖
 
 ### 所有技能通用
-- [Claude Code](https://claude.ai/code) 或 [OpenClaw](https://github.com/hanzhcn/openclaw)
+- [Claude Code](https://claude.ai/code) 或 [OpenClaw](https://github.com/openclaw/openclaw)
 
 ### laohan-xiazai（从互联网拿内容）
 
@@ -79,7 +80,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### laohan-luping（录屏转口播稿）
 - laohan-notebooklm 的全部依赖
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp)（可选）：`brew install whisper.cpp`
+- [whisper.cpp](https://github.com/ggml-org/whisper.cpp)（可选）：`brew install whisper.cpp`
 - 硅基流动 API Key 或本地 whisper（语音转文字）
 
 ### laohan-cheat（内容校准）
@@ -99,6 +100,15 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### laohan-urlgaixie（URL 改写队列）
 - ⚠️ **需要 OpenClaw 环境**：完全绑定 OpenClaw 管线（进宝/富贵 agent），无法独立使用
 - 仅在 OpenClaw 五虾管线内有意义
+
+### laohan-jiaocheng（教程路由器）
+- 无额外依赖
+
+### laohan-shencha（深度审查）
+- 无额外依赖（使用 Claude Code 内置的 web search + gh CLI）
+
+### laohan-fengmianqiuzhi / laohan-fenjingtishici（提示词生成）
+- 无额外依赖，纯文本输出
 
 ## 使用示例
 

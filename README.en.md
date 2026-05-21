@@ -7,7 +7,7 @@
 
 English | [中文](./README.md)
 
-Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/hanzhcn/openclaw).
+Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw).
 
 ## Skills
 
@@ -37,6 +37,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params | `/laohan-shencha` |
 | **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
 | **laohan-urlgaixie** | Manual URL rewrite queue | `/laohan-urlgaixie` |
+| **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
 
 ## Tutorials
 
@@ -59,7 +60,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 ## Prerequisites
 
 ### All skills
-- [Claude Code](https://claude.ai/code) or [OpenClaw](https://github.com/hanzhcn/openclaw)
+- [Claude Code](https://claude.ai/code) or [OpenClaw](https://github.com/openclaw/openclaw)
 
 ### laohan-xiazai (video/content download)
 - [opencli](https://github.com/jackwener/opencli) — `npm install -g @jackwener/opencli`
@@ -73,13 +74,22 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### laohan-luping
 - All laohan-notebooklm dependencies
-- Optional: [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for local transcription
+- Optional: [whisper.cpp](https://github.com/ggml-org/whisper.cpp) for local transcription
 
 ### laohan-cheat
-- [cheat-on-content](https://github.com/hanzhcn/cheat-on-content) project
+- [cheat-on-content](https://github.com/XBuilderLAB/cheat-on-content) project — `git clone https://github.com/XBuilderLAB/cheat-on-content.git`
 
 ### laohan-hotdouyinai
 - Node.js
+
+### laohan-jiaocheng
+- No extra dependencies
+
+### laohan-shencha
+- No extra dependencies (uses Claude Code built-in web search + gh CLI)
+
+### laohan-fengmianqiuzhi / laohan-fenjingtishici
+- No extra dependencies, pure text output
 
 ## Quick Start
 
