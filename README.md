@@ -21,11 +21,11 @@
 
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
-| **laohan-luping** | 录屏转口播稿完整工作流——音频提取→语音转文字→结构化整理→口播稿写作→封面提示词 | `/laohan-luping` 或说"录屏转口播" |
-| **laohan-yuanchuang** | 热点转译原创选题——多平台抓取热点→老韩视角转译→差异化选题→扩写口播稿 | `/laohan-yuanchuang` 或说"找选题""写一篇" |
-| **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm <script.md>` |
-| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi <script.md>` |
-| **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` |
+| **laohan-luping** | 录屏转口播稿完整工作流——音频提取→语音转文字→结构化整理→口播稿写作→封面提示词 | `/laohan-luping` 或说"录屏转口播""视频转口播稿""录屏素材写稿" |
+| **laohan-yuanchuang** | 热点转译原创选题——多平台抓取热点→老韩视角转译→差异化选题→扩写口播稿 | `/laohan-yuanchuang` 或说"找选题""写一篇""原创""热点""想做个视频""不知道拍什么" |
+| **laohan-notebooklm** | 口播稿一键生成幻灯片图片（NotebookLM → PDF → PNG，剪映直接用） | `/laohan-notebooklm <script.md>` 或说"生成PPT""做幻灯片""PPT图片" |
+| **laohan-fengmianqiuzhi** | 口播稿生成 Gemini 封面提示词（秋芝2046风格，3种差异化×3比例） | `/laohan-fengmianqiuzhi <script.md>` 或说"生成封面""做封面""封面提示词" |
+| **laohan-fenjingtishici** | 生成专业分镜提示词，适配 FLUX/SDXL/Gemini 扩散模型 | `/laohan-fenjingtishici` 或说"生成分镜""校验分镜""拆分镜" |
 | **laohan-urlgaixie** | 手动 URL 改写队列——从 url.md 读取待处理 URL，触发完整内容改写流程 | `/laohan-urlgaixie` |
 
 ### 质量与工具
