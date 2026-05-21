@@ -55,32 +55,17 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 ## 完整流程
 
-### Step 1：全平台抓热点
+### Step 1：获取热点（读 laohan-redian 输出）
 
-用 opencli 批量抓取，尽量覆盖多平台。热点出现在越多平台，说明受众面越广，选题价值越高。
+如果 `output/热点-YYYY-MM-DD.md` 已存在（今天已抓过），直接读取，不重复抓取。
 
-```bash
-# 核心平台（必抓）
-opencli zhihu hot
-opencli weibo hot
-opencli 36kr hot
-opencli douyin hashtag hot --limit 30    # 注意：不是 opencli douyin hot
-opencli bilibili hot
+如果不存在，先调用 `/laohan-redian` 抓取热点，然后再继续下面的步骤。
 
-# 补充平台（扩大覆盖面）
-opencli toutiao hot
-opencli tieba hot
-opencli hupu hot
-opencli hackernews hot
-```
-
-抓取后做**交叉验证**：同一话题出现在 3 个以上平台 → 高价值选题。出现在 5 个以上 → 必做。
-
-**自动筛选规则**（处理 50+ 条热榜）：抓取后按以下规则快速缩减到 3-5 个候选：
-1. **第一轮过滤**：排除纯娱乐八卦、体育赛事（除非有 AI/科技角度）、地域性新闻、纯政治新闻
+从简报中按以下规则选出 3-5 个候选：
+1. **优先选高价值热点**（3+ 来源共振）
 2. **关键词匹配**：标题或摘要含 AI / GPT / Claude / 大模型 / 机器人 / 自动化 / 失业 / 裁员 / 编程 / 副业 / 赚钱 → 保留
 3. **间接相关打捞**：含 教育 / 职业 / 消费 / 创业 / 老龄化 / 年轻人 / 职场 / 35岁 → 可能找到 AI 连接点，保留
-4. **交叉验证排序**：按出现平台数降序排列，取 top 3-5 进入 Step 2
+4. **交叉验证排序**：按来源数降序排列，取 top 3-5 进入 Step 2
 
 ### Step 2：读热点内容（不能只看标题）
 

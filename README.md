@@ -16,8 +16,9 @@
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
 | **laohan-xiazai** | 从互联网获取内容一站式——下载视频/音频/字幕、抓取网页/评论/搜索结果、阅读公众号/知乎/小红书，覆盖 7+ 平台自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
-| **laohan-aihotjingxuan** | 抓取 [AIHOT](https://aihot.virxact.com/agent) 精选页当日 AI 高价值内容（公开 REST API，无需 API Key），含精选分数、AI 摘要、标签 | `/laohan-aihotjingxuan` 或说"今日AI精选" |
-| **laohan-hotdouyinai** | 抖音热榜 AI 内容筛选（抖音科技分类 tag + AI 关键词双匹配，无需登录） | `/laohan-hotdouyinai` |
+| **laohan-redian** | AI 热点统一抓取——三路并行（[AIHOT](https://aihot.virxact.com/agent) 精选 + opencli 9 平台热榜 + 抖音 AI 筛选），合并去重，输出完整热点简报 | `/laohan-redian` 或说"抓热点""今日AI精选""找选题" |
+| laohan-aihotjingxuan | *已被 laohan-redian 整合（路 1：AIHOT 精选）* | 仍可用，建议迁移到 laohan-redian |
+| laohan-hotdouyinai | *已被 laohan-redian 整合（路 3：抖音 AI 筛选）* | 仍可用，建议迁移到 laohan-redian |
 
 ### 内容创作
 
