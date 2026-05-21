@@ -90,7 +90,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 - Node.js（无其他依赖）
 
 ### laohan-aihotjingxuan（AI精选）
-- [Scrapling MCP](https://github.com/nickbond/scrapling-server)（可选，用于网页抓取）
+- 无额外依赖（使用公开 REST API）
 
 ### laohan-yuanchuang（热点转译原创）
 - ⚠️ **需要 OpenClaw 环境**：依赖 opencli + OpenClaw workspace 目录结构（style.md / follow_list.md）
@@ -99,18 +99,6 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### laohan-urlgaixie（URL 改写队列）
 - ⚠️ **需要 OpenClaw 环境**：完全绑定 OpenClaw 管线（进宝/富贵 agent），无法独立使用
 - 仅在 OpenClaw 五虾管线内有意义
-
-### agent-reach（多平台搜索）
-- [mcporter](https://github.com/nickbond/mcporter)（MCP 桥接工具）
-- [twitter CLI](https://github.com/sferik/t)（Twitter 搜索，可选）
-- [rdt CLI](https://github.com/nickbond/rdt)（Reddit 搜索，可选）
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp)（YouTube/B站字幕，可选）
-- [gh](https://cli.github.com/)（GitHub CLI，可选）
-- 各平台 CLI 为可选依赖，缺少时自动跳过对应平台
-
-### opencli-usage（opencli 命令参考）
-- [opencli](https://github.com/jackwener/opencli)：`npm install -g @jackwener/opencli`
-- 本技能是 opencli 的参考手册，没装 opencli 无意义
 
 ## 使用示例
 
