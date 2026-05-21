@@ -21,17 +21,24 @@ allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Skill, mcp__llm-chat__cha
 启动时检测运行环境，决定可用功能：
 
 ```
-CHEAT_ROOT = 检测顺序：
-  1. ~/.openclaw/workspace-shared/content-ops/     ← OpenClaw 模式
-  2. <当前工作目录>/.cheat/                        ← 独立模式（自动创建）
-
-RUBRIC = 检测顺序：
-  1. $CHEAT_ROOT/rubric_notes.md                   ← 用户自定义
-  2. <skill安装目录>/references/rubric_notes.md    ← skill 自带默认
+环境检测顺序（命中即停）：
+  1. ~/.openclaw/workspace-shared/content-ops/ 存在 → OpenClaw 模式
+  2. <当前工作目录>/output/ 存在               → 商业包模式
+  3. 以上都不匹配                               → 独立模式（自动创建 <cwd>/.cheat/）
 ```
 
-**OpenClaw 模式**（检测到 content-ops）：全部功能可用，含 IMPORT/SHOOT/PUBLISH。
-**独立模式**（未检测到）：SCORE + PREDICT + STATUS 可用。IMPORT 用手动复制替代。
+各模式路径：
+
+| | OpenClaw 模式 | 商业包模式 | 独立模式 |
+|---|---|---|---|
+| CHEAT_ROOT | `~/.openclaw/workspace-shared/content-ops/` | `<cwd>` | `<cwd>/.cheat/` |
+| 口播稿查找 | `$CHEAT_ROOT/scripts/` | `<cwd>/output/script*.md` | `$CHEAT_ROOT/scripts/` |
+| Rubric 查找 | `$CHEAT_ROOT/rubric_notes.md` | `<cwd>/templates/rubric_notes.md` | `$CHEAT_ROOT/rubric_notes.md` |
+| Rubric 兜底 | skill `references/rubric_notes.md` | skill `references/rubric_notes.md` | skill `references/rubric_notes.md` |
+
+**OpenClaw 模式**：全部功能可用，含 IMPORT/SHOOT/PUBLISH。
+**商业包模式**：SCORE + PREDICT + STATUS 可用。口播稿从 output/ 自动发现。
+**独立模式**：SCORE + PREDICT + STATUS 可用。IMPORT 用手动复制替代。
 
 首次独立模式使用时，自动创建目录结构：
 ```
@@ -90,7 +97,8 @@ RUBRIC = 检测顺序：
 
 1. 确定目标文件：
    - 用户指定了路径 → 用指定的
-   - 没指定 → 找 `$CHEAT_ROOT/scripts/` 下最新的未打分文件
+   - 商业包模式 → 找 `<cwd>/output/script*.md` 中最新的未打分文件
+   - 其他模式 → 找 `$CHEAT_ROOT/scripts/` 下最新的未打分文件
 
 2. 读取 rubric 拿当前评分维度（v2.0 六维：TS/OP/DF/CV/HP/EC）
 
@@ -131,7 +139,9 @@ RUBRIC = 检测顺序：
 1. 确定目标 script（同 SCORE 的定位方式）
 2. 检查是否有对应预测文件（防止重复）
 3. 读取 rubric，基于 SCORE 结果写盲预测
-4. 写入 `$CHEAT_ROOT/predictions/YYYY-MM-DD_<id>_<short>.md`
+4. 写入预测文件：
+   - 商业包模式 → `<cwd>/output/predictions/YYYY-MM-DD_<short>.md`
+   - 其他模式 → `$CHEAT_ROOT/predictions/YYYY-MM-DD_<id>_<short>.md`
 5. 更新 `.cheat-state.json`
 
 **关键**：预测必须在看到实际数据前写完。如果用户已看过数据，标记为 `_reconstructed`。
