@@ -7,6 +7,16 @@ description: 统一创作引擎，多种输入→口播稿+封面提示词。支
 
 所有涉及口播稿写作统一调用本 skill。一份方法论，一个入口。
 
+## 核心理念
+
+一份方法论、一个入口——所有写作走同一个管线，避免不同入口产出质量参差不齐。素材先整理（Layer A/B）再写稿，确保口播稿建立在结构化理解之上，而非对原始素材的直接改写。
+
+## 不适用场景
+
+- 纯文本摘要/总结 → 用 summarize skill，不走创作流程
+- 翻译 → 直接翻译，不需要口播稿格式
+- 学术论文/技术文档写作 → 输出格式是口播稿，不适合正式文档
+
 ## 知识来源（唯一正本，symlink 到 OpenClaw workspace）
 
 - **写作规则**：`references/style.md` → `~/.openclaw/workspace-writer/knowledge/style.md`（富贵 style.md v3.2）

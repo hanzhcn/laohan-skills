@@ -7,6 +7,15 @@ description: 工具版本检查与更新，扫描 npm/brew/pip/uv/GitHub/plugins
 
 扫描所有常用工具的版本状态，生成编号报告，等待选择后逐项更新。
 
+## 核心理念
+
+只检查不自动更新——报告给用户看，确认后才动。因为盲目更新可能破坏环境（openclaw 升级后需补装依赖、插件升级后需重启），每次更新都要用户知情。
+
+## 不适用场景
+
+- 只检查单个工具版本 → 直接跑 `--version` 或 `npm view <pkg> version`，不需要本 skill
+- 安装新工具 → 用 `brew install` / `npm install` / `uv tool install`，不走更新流程
+
 ## 工作流程
 
 ### 第0步：发现遗漏

@@ -134,6 +134,14 @@ allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Skill, mcp__llm-chat__cha
 
 **SCORE 不做的事：** 不写文件、不改 state、不预测。
 
+**打分反模式：**
+
+❌ 差（无引用、模糊）：
+"DF 6分 — 结尾不够好"
+
+✅ 好（引用原文、具体）：
+"DF 6分 — 固定结尾五件套缺了'可操作一步'，最后只有'好了今天就聊到这'就结束了，没给观众具体操作指引"
+
 ### PREDICT — 盲预测
 
 1. 确定目标 script（同 SCORE 的定位方式）
