@@ -64,7 +64,7 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
 ### 3. 写 SKILL.md
 
 按下面的骨架模板和规则写。先按骨架模板前的判断标准确定极简还是完整骨架，再填充。
-- **完成条件：** SKILL.md 包含完整的 frontmatter（name + description 含 "Use when"）和正文内容，目录结构正确
+- **完成条件：** SKILL.md 包含完整的 frontmatter（name + description 含 "Use when"）和正文内容
 
 ### 4. 测试迭代
 
@@ -379,6 +379,12 @@ description: 功能描述。Use when 触发场景列举。
 - 平台专属方法（如各平台抓取规则）
 - 长模板或配置示例
 - 不需要每次都加载的背景知识
+
+---
+
+## 输出格式
+
+最终产物是一个符合上述骨架模板和写作规则的 SKILL.md 文件，放在 `~/.agents/skills/<skill-name>/` 目录中。
 
 ---
 
