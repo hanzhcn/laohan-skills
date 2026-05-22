@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> AI 内容创作者的瑞士军刀 —— 从互联网拿内容、生成幻灯片、审查文档、筛选热点、录屏转口播、校准内容质量，一个命令搞定。
+> AI 内容创作者的瑞士军刀 —— 12 个 Claude Code 技能，从互联网拿内容、生成幻灯片、审查文档、筛选热点、录屏转口播、校准内容质量、检测文案违规，一个命令搞定。
 
 [English](./README.en.md) | 中文
 
@@ -33,8 +33,10 @@
 |------|------|----------|
 | **laohan-cheat** | 内容校准统一入口——打分、预测、复盘、趋势分析，自动路由到对应子流程 | `/laohan-cheat` 或说"校准""打分" |
 | **laohan-shencha** | 技术文档深度联网审查——验证仓库地址、版本号、参数值、硬件需求的准确性 | `/laohan-shencha` 或说"深度审查" |
+| **laohan-weigui** | 抖音文案违规检测——7类扫描（引流/极限词/医疗/金融/低质/敏感/平台限制），结构化报告+替换建议 | `/laohan-weigui` 或说"检测违规""检查文案""会不会被限流""发之前帮我看看" |
 | **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
 | **laohan-jiaocheng** | 教程路由器——按关键词加载配置教程并引导安装（claude-mem / GLM / ECC / Gemini 侧边栏等） | `/laohan-jiaocheng <关键词>` 或说"教程""怎么配置" |
+| **laohan-skillcreator** | 元技能——创建/修改/优化 Claude Code Skill，融合 Anthropic 官方 + Matt Pocock + 9arm 最佳实践 | `/laohan-skillcreator` 或说"创建skill""改skill""优化skill" |
 
 ## 教程
 
@@ -93,6 +95,12 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### laohan-fengmianqiuzhi / laohan-fenjingtishici（提示词生成）
 - 无额外依赖，纯文本输出
 
+### laohan-weigui（文案违规检测）
+- 无额外依赖（违规词库已内置在 `references/keywords.md` 中）
+
+### laohan-skillcreator（Skill 创建器）
+- 无额外依赖
+
 ## 使用示例
 
 ### 从互联网拿内容
@@ -141,6 +149,20 @@ npx skills add hanzhcn/laohan-skills -g -y
 ```
 你: 看看哪些工具该更新了
 → /laohan-gengxin
+```
+
+### 检测文案违规
+```
+你: 检查下这段口播稿有没有违规词
+你: 发之前帮我看看会不会被限流
+→ 自动触发 laohan-weigui，7类扫描输出结构化报告
+```
+
+### 创建自定义 Skill
+```
+你: 帮我创建一个 Skill
+你: 优化这个 Skill
+→ 自动触发 laohan-skillcreator，引导完整创建流程
 ```
 
 ## License

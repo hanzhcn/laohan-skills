@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> The Swiss Army Knife for AI content creators — download videos, generate slides, audit docs, filter trends, all in one command.
+> The Swiss Army Knife for AI content creators — 12 Claude Code skills for downloading videos, generating slides, auditing docs, filtering trends, detecting content violations, and more.
 
 English | [中文](./README.md)
 
@@ -33,8 +33,10 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 |-------|-------------|----------|
 | **laohan-cheat** | Content calibration — scoring, prediction, review, trend analysis | `/laohan-cheat` |
 | **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params | `/laohan-shencha` |
+| **laohan-weigui** | Douyin content compliance check — 7 categories (promo/extreme claims/medical/financial/low-quality/sensitive/platform rules), structured report with fix suggestions | `/laohan-weigui` or "检测违规""检查文案""会不会被限流""发之前帮我看看" |
 | **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
 | **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
+| **laohan-skillcreator** | Meta-skill — create/modify/optimize Claude Code Skills, combining best practices from Anthropic + Matt Pocock + 9arm | `/laohan-skillcreator` or "创建skill""改skill""优化skill" |
 
 ## Tutorials
 
@@ -87,6 +89,12 @@ npx skills add hanzhcn/laohan-skills -g -y
 ### laohan-fengmianqiuzhi / laohan-fenjingtishici
 - No extra dependencies, pure text output
 
+### laohan-weigui (content compliance)
+- No extra dependencies (keyword database bundled in `references/keywords.md`)
+
+### laohan-skillcreator (Skill creator)
+- No extra dependencies
+
 ## Quick Start
 
 ### Download content
@@ -133,6 +141,20 @@ You: 给这个口播稿生成封面
 ```
 You: 看看哪些工具该更新了
 → /laohan-gengxin
+```
+
+### Detect content violations
+```
+You: 检查下这段口播稿有没有违规词
+You: 发之前帮我看看会不会被限流
+→ triggers laohan-weigui → 7-category scan with structured report
+```
+
+### Create custom Skills
+```
+You: 帮我创建一个 Skill
+You: 优化这个 Skill
+→ triggers laohan-skillcreator → guided full creation workflow
 ```
 
 ## License
