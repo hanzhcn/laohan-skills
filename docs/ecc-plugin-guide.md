@@ -111,9 +111,11 @@ claude plugins marketplace update
 ### 步骤 2: 更新插件
 
 ```bash
-claude plugins update everything-claude-code@everything-claude-code
+claude plugins update everything-claude-code@ecc
 ```
 
+> **注意 marketplace 注册名**：ECC 在 `known_marketplaces.json` 中的 installLocation 是 `ecc`（非 `everything-claude-code`）。如果用 `everything-claude-code@everything-claude-code` 会报 "Plugin not found"。检查方法：`cat ~/.claude/plugins/known_marketplaces.json` 查看 ECC 的 installLocation 字段。
+>
 > 没有 `update --all` 命令，只能逐个更新。
 
 ### 步骤 3: 重新 flat copy rules
