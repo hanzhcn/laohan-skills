@@ -1,6 +1,6 @@
 ---
 name: laohan-notebooklm
-description: 口播稿一键生成幻灯片图片。接收 script.md 路径，通过 NotebookLM 生成中文幻灯片，PDF 转图片输出到桌面文件夹供剪映使用。使用场景：(1) 用户说"生成PPT"、"生成幻灯片"、"做PPT图片" (2) 用户提供口播稿 script.md 要求生成视觉素材 (3) 口播稿视频制作需要背景幻灯片。触发词：/laohan-notebooklm
+description: 口播稿一键生成幻灯片图片，通过 NotebookLM 生成中文幻灯片，PDF 转图片输出供剪映使用。Use when 用户说"生成PPT""生成幻灯片""做PPT图片""幻灯片""PPT"或提到口播稿背景图/视觉素材。
 ---
 
 # 口播稿幻灯片生成

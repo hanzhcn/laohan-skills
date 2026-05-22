@@ -1,6 +1,6 @@
 ---
 name: laohan-gengxin
-description: 工具版本检查与更新 skill。扫描 你的 Claude Code 环境下所有常用工具（npm/brew/pip/uv/GitHub/plugins/skills），逐项对比已装版本和最新版本，生成带编号的更新报告。不会自动更新任何工具——报告后等待用户按编号选择要更新的项目，确认后才执行更新。确保在以下场景触发：用户说"检查更新""看看哪些工具该更新了""工具版本检查""laohan-gengxin""/laohan-gengxin"，用户说"opencli是不是该更新了""brew有没有过期的""帮我看看工具版本"，用户提到工具版本落后或想确认环境是否最新。触发词：/laohan-gengxin
+description: 工具版本检查与更新，扫描 npm/brew/pip/uv/GitHub/plugins/skills 逐项对比已装和最新版本，生成带编号报告，确认后才执行更新。Use when 用户说"检查更新""工具版本""看看哪些该更新了""brew有没有过期的""opencli是不是该更新了"或提到工具版本/环境更新。
 ---
 
 # 工具版本检查与更新

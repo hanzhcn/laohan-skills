@@ -1,6 +1,6 @@
 ---
 name: laohan-jiaocheng
-description: 教程路由器。输入关键词加载对应配置教程并按步骤引导安装。覆盖 5 个教程：claude-mem 跨会话记忆、CLAUDE.md 配置指南、Chrome Gemini 侧边栏修复、Claude Code + 智谱 GLM、ECC 插件安装维护。触发场景：(1) 用户说"教程""怎么配置""安装教程""怎么装"(2) 用户提到具体工具名如"claude-mem""ecc""glm""gemini侧边栏"。使用场景：初次配置工具时按步骤引导+验证。
+description: 教程路由器，输入关键词加载对应配置教程并按步骤引导安装。覆盖 claude-mem、CLAUDE.md、Chrome Gemini 侧边栏、Claude Code + 智谱 GLM、ECC 插件安装维护。Use when 用户说"教程""怎么配置""安装教程""怎么装"或提到"claude-mem""ecc""glm""gemini侧边栏""CLAUDE.md"等具体工具名+配置需求。
 argument-hint: [教程关键词，如 claude-mem / ecc / glm / gemini / claude-md]
 ---
 
