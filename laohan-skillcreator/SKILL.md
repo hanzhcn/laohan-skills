@@ -379,6 +379,8 @@ description: 功能描述。Use when 触发场景列举。
 
 ## 改造已有 skill
 
+**只改造自研 skill（laohan 系列）。npx 安装的第三方 skill 应 fork 后新建，不要原地修改——`npx skills update` 会覆盖改动。**
+
 当需要优化现有 skill 时，重点检查：
 
 1. **description 是否有 "Use when"** — 没有，加
