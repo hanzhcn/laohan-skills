@@ -1,5 +1,6 @@
 ---
 name: laohan-skillcreator
+version: 1.0
 description: 创建、修改、优化 Claude Code agent skills。Use when 用户说"创建skill""写一个skill""新建skill""改skill""优化skill"或提到 skill 创建/修改相关的任何意图。
 ---
 
@@ -14,7 +15,6 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
 1. **anthropics/skills 的 skill-creator**
    - 仓库：https://github.com/anthropics/skills
    - 具体文件：`skill-creator/SKILL.md`（含 agents/、scripts/、eval-viewer/、references/ 子目录）
-   - 本地残留副本：`~/Documents/deepflow2/skills/public/skill-creator/`（v2 完整版，33KB）
    - 借鉴点：多文件结构规范、pushy description 策略、评估思路（简化为轻量级测试迭代，不含完整评估流水线）
    - 核心理念：description 要"主动推销"自己，因为 Claude 倾向于欠触发（undertriggering），需要 description 主动匹配用户意图
 
@@ -113,6 +113,7 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
 ```markdown
 ---
 name: caveman
+version: 1.0
 description: 极简回应模式，只输出关键信息。Use when 用户说"caveman mode""极简""少说废话""简短"。
 ---
 
@@ -126,6 +127,7 @@ description: 极简回应模式，只输出关键信息。Use when 用户说"cav
 ```markdown
 ---
 name: skill-name
+version: 1.0
 description: 一句话说清做什么。Use when 用户说"触发词1""触发词2""触发词3"或提到[相关场景]。  # 上限1024字符，3-8个触发词
 ---
 
@@ -201,6 +203,7 @@ skill-name/
 ```yaml
 ---
 name: skill-name          # kebab-case，与目录名一致
+version: 1.0
 description: 功能描述。Use when 触发场景列举。
 ---
 ```
@@ -400,7 +403,7 @@ description: 功能描述。Use when 触发场景列举。
 - [ ] 执行测试通过（输出符合预期）
 - [ ] 重复工作检查（无每次生成的相同辅助代码）
 - [ ] 推送安全检查（无硬编码绝对路径、无内部昵称、无 API key）
-- [ ] 复制到 ~/Documents/laohan-skills/<skill-name>/
+- [ ] 复制到本地 laohan-skills 仓库对应目录
 - [ ] git push
 
 ## 改造已有 skill

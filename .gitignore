@@ -2,3 +2,4 @@
 *.skill
 Thumbs.db
 */reports/
+*.cheat-state.json

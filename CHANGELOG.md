@@ -2,6 +2,19 @@
 
 所有重要变更都会记录在此文件中。
 
+## [1.1.0] - 2026-05-23
+
+### 新增
+
+- **laohan-weigui** — 抖音文案违规检测，7类扫描（引流/极限词/医疗/金融/低质/敏感/平台限制），结构化报告+替换建议
+
+### 变更
+
+- 合并 aihotjingxuan + hotdouyinai → **laohan-redian**（三路并行统一抓取）
+- 合并 yuanchuang + luping + urlgaixie → **laohan-chuangzuo**（统一创作引擎）
+- 新增 **laohan-skillcreator** 元技能（融合 Anthropic + Matt Pocock + 9arm 最佳实践）
+- README 中英文版更新为 12 个 skill 完整说明
+
 ## [1.0.0] - 2026-05-21
 
 ### 首次发布
