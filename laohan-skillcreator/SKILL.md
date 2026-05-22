@@ -15,14 +15,14 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
    - 仓库：https://github.com/anthropics/skills
    - 具体文件：`skill-creator/SKILL.md`（含 agents/、scripts/、eval-viewer/、references/ 子目录）
    - 本地残留副本：`~/Documents/deepflow2/skills/public/skill-creator/`（v2 完整版，33KB）
-   - 借鉴点：多文件结构规范、pushy description 策略、评估流水线思路（run_eval.py 自动触发测试 + grader/comparator 双 agent 对比评分）
+   - 借鉴点：多文件结构规范、pushy description 策略、评估思路（简化为轻量级测试迭代，不含完整评估流水线）
    - 核心理念：description 要"主动推销"自己，因为 Claude 倾向于欠触发（undertriggering），需要 description 主动匹配用户意图
 
 2. **mattpocock/skills**
    - 仓库：https://github.com/mattpocock/skills
    - 核心文件：`write-a-skill/SKILL.md`（元技能，本 skill 最直接的参考）、`tdd/SKILL.md`、`diagnose/SKILL.md`（阶段门控示范）
    - 安装命令：`npx skills add mattpocock/skills -g -y`
-   - 借鉴点："Use when" 触发精准度、阶段门控（Phase Gating）、反模式示例（WRONG/RIGHT 对比块）、参考仅限一层深度、100行拆分阈值、核心理念先行（Philosophy first）
+   - 借鉴点："Use when" 触发精准度、阶段门控（Phase Gating）、反模式示例（WRONG/RIGHT 对比块）、参考仅限一层深度、篇幅拆分阈值（100/500行）、核心理念先行（Philosophy first）
    - 核心理念：description 是 Claude 决定加载哪个 skill 的唯一依据——它在与所有已安装 skill 竞争，必须赢
 
 3. **thananon/9arm-skills**
@@ -33,6 +33,12 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
    - 核心理念：每个步骤都有硬停止条件，不确定就停下来而不是猜
 
 定期检查三个仓库是否有新 commit，看是否有新的可借鉴技巧。
+
+---
+
+## 核心理念
+
+本 skill 遵循三个原则：**description 决定生死**（触发精准度是一切的前提）、**结构引导行为**（好的骨架比好的指令更有效）、**精简优于完整**（每个章节都要证明自己存在的价值）。三个来源的技巧都服务于这三个原则。
 
 ---
 
@@ -67,7 +73,7 @@ laohan 系列专属的 skill 创建标准。从构思到发布全流程。
 
 ### 5. 发布
 
-推送到 `~/Documents/laohan-skills/` 仓库 → `git push`。
+推送前先按安装清单的安全检查项确认，然后推送到 `~/Documents/laohan-skills/` 仓库 → `git push`。
 
 ---
 
