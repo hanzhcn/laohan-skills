@@ -1,6 +1,6 @@
 ---
 name: laohan-skillcreator
-description: 创建、修改、优化 Claude Code agent skills。融合 skill-creator 结构规范 + Matt Pocock 触发精准度 + 9arm 结构化工作流写法。Use when 用户说"创建skill""写一个skill""新建skill""改skill""优化skill"或提到 skill 创建/修改相关的任何意图。
+description: 创建、修改、优化 Claude Code agent skills。Use when 用户说"创建skill""写一个skill""新建skill""改skill""优化skill"或提到 skill 创建/修改相关的任何意图。
 ---
 
 # laohan Skill 创建器
