@@ -157,3 +157,225 @@ asyncio.run(main())
 5. **区分限制来源**：返回少于 limit 可能是账号视频总数不够（如拉斐尔只有63条），不是工具限制
 
 **通用原则**：当工具文档说"最大 N"时，用 `--limit N+1` 跑一次验证。如果成功了，文档就是错的。
+
+## 获取视频发布时间（aweme_id 解码法）
+
+opencli `douyin user-videos` 不返回 `create_time` 字段，网页端需登录态才渲染视频列表。解决方案：**从 aweme_id 直接解码发布时间**，无需登录、无需额外 API。
+
+原理：aweme_id 是 64 位整数，**高 32 位是秒级时间戳**（+13s 校准偏移）。精度 ±13 秒，足够判断发布日期和时段。来源 [Evil0ctal/Douyin-TikTok-Video-ID-Decoder](https://github.com/Evil0ctal/Douyin-TikTok-Video-ID-Decoder)，73条真实数据验证。
+
+```python
+from datetime import datetime
+
+def decode_douyin_time(aweme_id):
+    """从 aweme_id 解码发布时间，精度 ±13 秒"""
+    ts = (int(aweme_id) >> 32) + 13  # 高32位 + 抖音校准偏移
+    return datetime.fromtimestamp(ts)
+
+# 用法示例
+print(decode_douyin_time("7481234567890123456"))
+# → 2026-02-25 19:26:xx
+```
+
+完整流程（获取博主最近3条发布时间）：
+
+```python
+import json, subprocess
+from datetime import datetime
+
+def decode_douyin_time(aweme_id):
+    ts = (int(aweme_id) >> 32) + 13
+    return datetime.fromtimestamp(ts)
+
+sec_uid = "MS4wLjABAAAA..."  # 博主 sec_uid
+r = subprocess.run(
+    ['opencli', 'douyin', 'user-videos', sec_uid, '--limit', '3', '-f', 'json'],
+    capture_output=True, text=True, timeout=30
+)
+videos = json.loads(r.stdout)
+for v in videos[:3]:
+    dt = decode_douyin_time(v['aweme_id']).strftime('%m-%d %H:%M')
+    print(f"{dt} | 赞{v['digg_count']} | {v['title'][:40]}")
+```
+
+为什么不用其他方法：
+- **opencli `user-videos`**：不返回 `create_time` 字段（注意：`videos` 命令返回自己作品的 create_time，但 `user-videos` 查别人的不返回）
+- **抖音网页**：未登录不渲染视频列表（显示"服务异常"）
+- **iesdouyin 移动端**：返回 72KB 空 HTML
+- **Scrapling stealthy**：同样需要登录态
+- **第三方 API（JustOneAPI 等）**：收费，aweme_id 解码法免费且精确
+
+## 账号与作品管理（需 Browser Bridge）
+
+以下命令通过创作者中心（creator.douyin.com）操作，需要 Browser Bridge 运行。
+
+### 获取自己账号信息
+
+```bash
+opencli douyin profile -f json
+# 返回：uid, nickname, follower_count, following_count, aweme_count
+```
+
+### 获取自己作品列表（含发布时间）
+
+```bash
+opencli douyin videos --limit 20 --status published -f json
+# 返回：aweme_id, title, status, play_count, digg_count, create_time
+```
+
+- `create_time` 是精确的发布时间（如 `2026/4/26 22:09:38`）
+- **注意区分**：`videos` 查自己作品（有 create_time），`user-videos` 查别人作品（没有 create_time，需用 aweme_id 解码法）
+- `--status` 过滤：`all`（默认）、`published`、`reviewing`、`scheduled`
+- `--page` 分页（默认第1页）
+
+### 单个作品数据分析
+
+```bash
+opencli douyin stats <aweme_id> -f json
+# 返回：metric, value 键值对
+```
+
+- 注意：部分作品可能返回 API error（隐私设置或创作者中心权限限制）
+
+## 话题与热点
+
+### 话题热点词
+
+```bash
+opencli douyin hashtag hot --keyword "AI" --limit 10 -f json
+# 返回：name, id, view_count
+```
+
+- `--keyword` 可选，不加则返回全站热点
+- 返回的是抖音热榜话题，不是视频搜索结果
+
+### 话题搜索
+
+```bash
+opencli douyin hashtag search --keyword "Claude Code" --limit 10 -f json
+# 返回：name, id, view_count
+```
+
+- 搜索话题标签，用于选题调研和话题关联
+
+### AI 推荐话题
+
+```bash
+opencli douyin hashtag suggest --cover <封面URI> -f json
+# 根据封面图片推荐关联话题
+```
+
+## 发布自动化
+
+### 定时发布（publish）
+
+```bash
+opencli douyin publish <video.mp4> \
+  --title "标题（≤30字）" \
+  --caption "正文内容（≤1000字，支持 #话题）" \
+  --cover <封面图片路径> \
+  --schedule "2026-05-24T18:15:00" \
+  --visibility public \
+  --hotspot "AI" \
+  --sync_toutiao true \
+  -f json
+# 返回：status, aweme_id, url, publish_time
+```
+
+**关键限制：必须设置定时，且至少 2 小时后、最多 14 天后。不能即时发布。**
+
+参数说明：
+- `--title`：视频标题，≤30 字
+- `--caption`：正文/描述，≤1000 字，支持 `#话题` 标签
+- `--cover`：封面图片路径（不提供时使用视频截帧）
+- `--schedule`：定时发布时间（ISO8601 或 Unix 秒）
+- `--visibility`：`public`（默认）/ `friends` / `private`
+- `--collection`：合集 ID
+- `--activity`：活动 ID
+- `--poi_id` + `--poi_name`：地理位置
+- `--hotspot`：关联热点词
+- `--allow_download`：是否允许下载（默认 false）
+- `--sync_toutiao`：同步发布到头条（默认 false）
+- `--no_safety_check`：跳过内容安全检测（默认 false）
+
+### 保存为草稿（draft）
+
+```bash
+opencli douyin draft <video.mp4> \
+  --title "标题" \
+  --caption "正文" \
+  --cover <封面图片路径> \
+  -f json
+# 返回：status, draft_id
+```
+
+- 不需要 `--schedule`，保存到草稿箱后可手动发布或改用 `update` 定时发布
+- 适合：先上传视频，再在手机端选封面/加音乐后手动发布
+
+### 获取草稿列表
+
+```bash
+opencli douyin drafts -f json
+```
+
+### 更新已发布/草稿作品
+
+```bash
+opencli douyin update <aweme_id> \
+  --caption "新的正文内容" \
+  --reschedule "2026-05-25T18:15:00" \
+  -f json
+```
+
+- 可修改正文和重新设置定时
+- 适合：发布前改文案，或调整发布时间
+
+### 发布自动化 vs 手动发布的区别
+
+| 维度 | opencli publish | 手动发布（APP/创作者中心） |
+|------|----------------|------------------------|
+| **即时性** | ❌ 必须定时（≥2h） | ✅ 可立即发布 |
+| **封面** | 上传一张图片或视频截帧 | AI 生成多张封面 + 自定义上传 + 视频帧选择 |
+| **背景音乐** | ❌ 不支持 | ✅ 音乐库 + 原声 |
+| **视频剪辑** | ❌ 不支持 | ✅ 裁剪/滤镜/特效 |
+| **互动设置** | 仅 visibility | 评论管理/合拍/拼接权限 |
+| **产品标签** | ❌ | ✅ 电商带货 |
+| **合集管理** | 通过 `--collection` | 可创建+管理 |
+| **同步头条** | `--sync_toutiao` | 手动勾选 |
+| **定时精度** | ISO8601 精确到秒 | 分钟级 |
+
+**实操建议**：
+- **推荐流程**：`draft` 上传视频 → 手机端选封面/加音乐 → 手动发布（兼顾自动化和质量）
+- **纯自动化流程**：`publish` 定时发布（适合封面对画质要求不高、不需要 BGM 的教程类视频）
+- **黄金时段**：定时 18:15，需在当天 16:15 前执行 publish 命令
+
+## 合集与活动
+
+```bash
+# 查看合集列表
+opencli douyin collections -f json
+# 返回：mix_id, name, item_count
+
+# 查看官方活动
+opencli douyin activities -f json
+```
+
+## opencli 抖音命令速查
+
+| 命令 | 用途 | 需登录 | 场景 |
+|------|------|--------|------|
+| `user-videos` | 获取指定用户视频列表 | Browser Bridge | 监测博主更新 |
+| `videos` | 获取自己作品列表 | Browser Bridge | 贤德数据分析 |
+| `profile` | 获取账号信息 | Browser Bridge | 贤德数据分析 |
+| `stats` | 单个作品数据分析 | Browser Bridge | 贤德数据分析 |
+| `hashtag hot` | 话题热点词 | Browser Bridge | 选题调研 |
+| `hashtag search` | 话题搜索 | Browser Bridge | 选题调研 |
+| `hashtag suggest` | AI推荐话题 | Browser Bridge | 选题辅助 |
+| `publish` | 定时发布视频 | Browser Bridge | 发布自动化 |
+| `draft` | 上传保存为草稿 | Browser Bridge | 发布流程 |
+| `drafts` | 获取草稿列表 | Browser Bridge | 发布管理 |
+| `update` | 更新作品信息 | Browser Bridge | 发布后管理 |
+| `delete` | 删除作品 | Browser Bridge | 发布后管理 |
+| `collections` | 合集列表 | Browser Bridge | 内容组织 |
+| `activities` | 官方活动列表 | Browser Bridge | 运营 |
+| `location` | 地理位置POI搜索 | Browser Bridge | 地理标签 |

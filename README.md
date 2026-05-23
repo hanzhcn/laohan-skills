@@ -3,13 +3,21 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> AI 内容创作者和开发者的 Claude Code 工具箱 —— 13 个技能 + 微信视频号下载工具。内容创作全流程 + Claude Code 必学配置 + 开发者效率工具，一个命令搞定。
+> Claude Code 超级技能包 —— 让你的 AI 编程助手拥有内容创作、多平台下载、技术审查、质量校准、自动化录屏的能力。一个命令，从选题到发布全搞定。
 
 [English](./README.en.md) | 中文
 
-由 [寒武纪AI](https://github.com/hanzhcn) 出品。抖音搜索「**寒武纪AI**」关注更多 AI 工具实战教程。
+由 [寒武纪AI](https://github.com/hanzhcn) 出品 · 抖音搜索「**寒武纪AI**」看实战教程 · 基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
-基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw)。
+---
+
+## 一句话亮点
+
+- **30+ 平台一键下载**：抖音、B站、YouTube、TikTok、小红书、知乎、公众号、视频号……说"下载"就行
+- **内容创作全流程**：选题 → 写稿 → 违规检测 → 质量校准 → 封面分镜 → 幻灯片 → 录屏，8 步全自动化
+- **Claude Code 必学配置**：claude-mem 跨会话记忆、智谱 GLM 接入、ECC 插件维护、Gemini 侧边栏修复……踩过的坑都帮你填了
+- **微信视频号下载**：独立安装包，[Mac + Windows 双平台](https://github.com/hanzhcn/laohan-skills/releases)，装完直接用
+- **持续进化**：AI 热点监控、技术文档审查、Skill 创建器、工具更新检查……更多能力持续加入
 
 ---
 
@@ -40,7 +48,7 @@
 
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
-| **laohan-xiazai** | 从互联网获取内容一站式——下载视频/音频/字幕、抓取网页/评论/搜索结果、阅读公众号/知乎/小红书，覆盖 7+ 平台自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
+| **laohan-xiazai** | 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews 等），自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
 
 ### 开发者工具
 
