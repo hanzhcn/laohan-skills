@@ -1,6 +1,5 @@
 ---
 name: laohan-xiazai
-version: 1.0
 description: 从互联网拿内容一站式，覆盖下载（视频/音频/字幕/博主数据）、抓取（网页/文章/评论/搜索结果）、阅读（公众号/知乎/小红书等），按降级链自动选择最优工具。Use when 用户说"下载""帮我抓""读一下""看看这个链接""搜一下"或给出任意URL要求获取内容，以及任何涉及从互联网拿内容的操作。
 ---
 
@@ -73,6 +72,7 @@ opencli doctor
 | 小红书 / xhs | 小红书 | `references/other-platforms.md` |
 | 知乎 / zhihu | 知乎 | `references/other-platforms.md` |
 | 公众号 / 微信文章 | 微信公众号 | `references/other-platforms.md` |
+| 视频号 / 微信视频号 | 微信视频号 | `references/other-platforms.md` |
 
 不确定平台时，默认尝试 `yt-dlp <url>`，失败再按平台路由。
 
@@ -108,6 +108,7 @@ opencli doctor
 | 小红书 | `opencli xiaohongshu download`（需 Browser Bridge） | agent-reach | Jina Reader | — |
 | 知乎 | `opencli zhihu` | Jina Reader | — | — |
 | 公众号 | `fetch.py` | agent-reach | Jina Reader | Scrapling stealthy |
+| 视频号 | wx_video_download（MITM 代理） | — | — | — |
 | 未知平台 | `yt-dlp` | Scrapling MCP（get） | Scrapling stealthy | Jina Reader |
 
 降级时注意：
