@@ -14,9 +14,11 @@ mkdir -p "$OUTPUT_DIR"
 
 SCREEN_INDEX="${1:-3}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+WORK_DIR="/tmp/lupingcli_${TIMESTAMP}"
 RAW_FILE="/tmp/cheat_raw_${TIMESTAMP}.mp4"
 MP4_FILE="$OUTPUT_DIR/cheat_segment_${TIMESTAMP}.mp4"
 SESSION="cheat_${TIMESTAMP}"
+mkdir -p "$WORK_DIR"
 
 echo "============================================"
 echo "  Cheat 评分单独录制"
@@ -41,7 +43,7 @@ fi
 echo "✅ 录屏已启动"
 
 # 启动 claude
-tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd /tmp && claude"
+tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd $WORK_DIR && claude"
 
 # 后台发送器
 (
@@ -110,4 +112,5 @@ tmux attach -t "$SESSION" || true
 
 wait $SENDER_PID 2>/dev/null || true
 rm -f "$RAW_FILE"
+rm -rf "$WORK_DIR"
 echo "最终文件: $MP4_FILE"

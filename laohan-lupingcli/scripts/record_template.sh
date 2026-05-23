@@ -15,9 +15,11 @@ OUTPUT_DIR="$SCRIPT_DIR/output"
 mkdir -p "$OUTPUT_DIR"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+WORK_DIR="/tmp/lupingcli_${TIMESTAMP}"
 RAW_FILE="/tmp/screen_raw_${TIMESTAMP}.mp4"
 MP4_FILE="$OUTPUT_DIR/${RECORD_NAME}_${TIMESTAMP}.mp4"
 SESSION="rec_${TIMESTAMP}"
+mkdir -p "$WORK_DIR"
 
 echo "============================================"
 echo "  CLI 录屏: $RECORD_NAME"
@@ -48,7 +50,7 @@ echo "✅ 录屏已启动 (PID: $FFMPEG_PID)"
 
 # 启动 claude
 echo "启动 Claude Code..."
-tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd /tmp && claude"
+tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd $WORK_DIR && claude"
 sleep 5
 
 # 辅助函数
@@ -165,4 +167,5 @@ echo ""
 echo "Claude Code 已退出"
 wait $SENDER_PID 2>/dev/null || true
 rm -f "$RAW_FILE"
+rm -rf "$WORK_DIR"
 echo "最终文件: $MP4_FILE"
