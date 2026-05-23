@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v2.0 | 日期: 2026-05-16 | 作者: 寒武纪AI & Jeffrey
+> 版本: v3.0 | 日期: 2026-05-24 | 作者: 寒武纪AI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:
@@ -254,13 +254,14 @@ model_list:
 EOF
 ```
 
-### 步骤 4: Patch claude-mem 的 OpenRouter URL
+### 步骤 4: Patch claude-mem 的 OpenRouter URL（⚠️ 最关键一步）
 
-**这是最关键的一步**。把硬编码的 OpenRouter URL 替换成本地 LiteLLM。
+**这是最关键的一步**。claude-mem 的 `worker-service.cjs` 硬编码了 `https://openrouter.ai/api/v1/chat/completions`，即使配置了本地 LiteLLM，请求仍会发到公网 OpenRouter。`sk-litellm-local` key 在公网会 401，导致 observation 写不进去——**这就是"新窗口上下文永远是同一批旧数据"的根因**。
 
 ```bash
-# 定位 worker-service.cjs（3.8MB 打包文件）
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+# 定位 worker-service.cjs（缓存目录，版本号会变）
+CLAUDE_MEM_DIR=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)
+WORKER_FILE="${CLAUDE_MEM_DIR}scripts/worker-service.cjs"
 
 # 确认文件存在
 if [ -z "$WORKER_FILE" ]; then
@@ -278,6 +279,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   sed -i 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
 fi
+
+# 重启 worker（必须重启才能生效）
+pkill -f "worker-service.cjs"
 
 # 验证替换成功
 if grep -q "localhost:4000" "$WORKER_FILE"; then
@@ -297,7 +301,8 @@ cat > ~/.claude-mem/patch-litellm.sh << 'SCRIPT'
 # claude-mem LiteLLM Patch — 每次更新后执行
 set -e
 
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+CLAUDE_MEM_DIR=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)
+WORKER_FILE="${CLAUDE_MEM_DIR}scripts/worker-service.cjs"
 
 if [ -z "$WORKER_FILE" ]; then
   echo "ERROR: worker-service.cjs 未找到，确认 claude-mem 已安装"
@@ -322,6 +327,9 @@ fi
 if grep -q "localhost:4000" "$WORKER_FILE"; then
   echo "PATCH SUCCESS: $WORKER_FILE"
   echo "备份保留: ${WORKER_FILE}.bak"
+  # 重启 worker
+  pkill -f "worker-service.cjs"
+  echo "Worker 已停止，新会话自动重启"
 else
   echo "PATCH FAILED — 恢复备份"
   mv "${WORKER_FILE}.bak" "$WORKER_FILE"
@@ -440,7 +448,7 @@ curl -s http://localhost:4000/v1/chat/completions \
 
 ```bash
 # 确认 worker-service.cjs 中不再有 openrouter.ai
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs
 grep -c "openrouter.ai" "$WORKER_FILE"
 # 预期: 0
 
@@ -463,7 +471,7 @@ curl -s http://localhost:$PORT/api/health
 # 3. 打开 Claude Code，开始一次新会话
 # 4. 执行一个简单操作（如 ls）
 # 5. 查看 claude-mem 日志，确认 observation 已写入
-tail -20 ~/.claude-mem/logs/worker-$(date +%Y-%m-%d).log
+tail -20 ~/.claude-mem/logs/claude-mem-$(date +%Y-%m-%d).log
 
 # 6. 打开 Web UI 查看记忆流
 open http://localhost:$PORT
@@ -571,20 +579,21 @@ npx claude-mem stop && sleep 2 && npx claude-mem start
 
 ## 六、升级 claude-mem 后的维护
 
+**⚠️ 每次升级后必须重新 patch，否则"上下文永远是旧的"问题会复现。**
+
 ```bash
-# 1. 正常更新
+# 方式 A: npx 更新（会覆盖 worker-service.cjs）
 npx claude-mem install
 
-# 2. 重新 patch
+# 方式 B: 插件管理器更新（同样会覆盖）
+claude plugins update claude-mem
+
+# 无论哪种方式，更新后立即重新 patch
 ~/.claude-mem/patch-litellm.sh
 
-# 3. 重新配置（如果 settings 被覆盖）
-# 检查 settings.json 中的关键配置是否还在
+# 检查 settings 是否被覆盖（偶尔会被重置）
 grep "CLAUDE_MEM_PROVIDER" ~/.claude-mem/settings.json
 grep "CLAUDE_MEM_OPENROUTER_MODEL" ~/.claude-mem/settings.json
-
-# 4. 重启
-npx claude-mem stop && sleep 2 && npx claude-mem start
 ```
 
 ---
@@ -611,7 +620,7 @@ claude-mem 硬编码发送 `temperature: 0.3` 和 `max_tokens: 4096`。部分国
 
 ### 7.4 升级后 patch 失效
 
-每次 `npx claude-mem install` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/patch-litellm.sh`。
+每次 `npx claude-mem install` 或 `claude plugins update claude-mem` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/patch-litellm.sh`。**症状：升级后发现新窗口上下文永远是旧的 → 基本可以确定 patch 被覆盖了。**
 
 ### 7.5 GLM Coding 端点限制
 
@@ -661,15 +670,26 @@ curl -s https://api.deepseek.com/v1/chat/completions \
   -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}]}'
 ```
 
-### Q4: claude-mem 日志显示 "OpenRouter API error"
+### Q4: claude-mem 日志显示 "OpenRouter API error" 或新窗口上下文永远是旧的
 
-检查 LiteLLM 是否在运行：`curl http://localhost:4000/health`。如果 LiteLLM 挂了，claude-mem 会报 OpenRouter 错误（因为请求发到了 localhost:4000 但没人响应）。
+**这是最常见的问题，有两层原因：**
+
+1. **LiteLLM 没启动**（`curl http://localhost:4000/health` 确认）。机器重启后 LiteLLM 不自启动。
+2. **Patch 被覆盖**（更隐蔽）。升级 claude-mem 后 `worker-service.cjs` 被覆盖，请求又发到公网 OpenRouter，`sk-litellm-local` key 401。**症状：LiteLLM 明明在跑，但 observation 写不进去，上下文永远是同一批旧数据。**
+
+```bash
+# 一键诊断：应该只有 localhost:4000，没有 openrouter.ai
+grep -o "http[^\"']*chat/completions[^\"']*" \
+  "$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs"
+# 预期: 只有 http://localhost:4000/v1/chat/completions
+# 如果看到 openrouter.ai → 重新执行 patch: ~/.claude-mem/patch-litellm.sh
+```
 
 ### Q5: 想切回 OpenRouter
 
 ```bash
 # 恢复备份
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs
 cp "${WORKER_FILE}.bak" "$WORKER_FILE"
 
 # 改 settings
@@ -728,11 +748,11 @@ uv tool uninstall litellm
 
 | 文件 | 说明 |
 |------|------|
-| `~/.claude/plugins/marketplaces/thedotmack/` | claude-mem 插件主目录 |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs` | Worker 主进程（patch 目标） |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/` | claude-mem 插件缓存目录（版本号会变） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/worker-service.cjs` | Worker 主进程（patch 目标） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
 | `~/.claude/plugins/marketplaces/thedotmack/plugin/hooks/hooks.json` | 6 个生命周期 hook |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs` | MCP 搜索服务器 |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/mcp-server.cjs` | MCP 搜索服务器 |
 | `~/.claude/plugins/marketplaces/thedotmack/plugin/skills/mem-search/` | mem-search 技能 |
 | `~/.claude/plugins/marketplaces/thedotmack/plugin/ui/viewer.html` | Web UI 查看器 |
 | `~/.claude-mem/settings.json` | 所有配置 |
@@ -741,7 +761,8 @@ uv tool uninstall litellm
 | `~/.claude-mem/litellm/config.yaml` | LiteLLM 配置 |
 | `~/.claude-mem/patch-litellm.sh` | 升级后 patch 脚本 |
 | `~/.claude-mem/litellm.pid` | LiteLLM 进程 PID |
-| `~/.claude-mem/logs/` | 日志目录 |
+| `~/.claude-mem/logs/claude-mem-YYYY-MM-DD.log` | claude-mem 日志 |
+| `~/.claude-mem/logs/litellm.log` | LiteLLM 日志 |
 
 ---
 
