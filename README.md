@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> AI 内容创作者的瑞士军刀 —— 12 个 Claude Code 技能，从互联网拿内容、生成幻灯片、审查文档、筛选热点、录屏转口播、校准内容质量、检测文案违规，一个命令搞定。
+> AI 内容创作者的瑞士军刀 —— 13 个 Claude Code 技能，从互联网拿内容、生成幻灯片、审查文档、筛选热点、录屏转口播、CLI录屏自动化、校准内容质量、检测文案违规，一个命令搞定。
 
 [English](./README.en.md) | 中文
 
@@ -37,6 +37,7 @@
 | **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
 | **laohan-jiaocheng** | 教程路由器——按关键词加载配置教程并引导安装（claude-mem / GLM / ECC / Gemini 侧边栏等） | `/laohan-jiaocheng <关键词>` 或说"教程""怎么配置" |
 | **laohan-skillcreator** | 元技能——创建/修改/优化 Claude Code Skill，融合 Anthropic 官方 + Matt Pocock + 9arm 最佳实践 | `/laohan-skillcreator` 或说"创建skill""改skill""优化skill" |
+| **laohan-lupingcli** | CLI 录屏自动化——口播稿转录屏脚本，ffmpeg 录物理屏幕 + tmux 运行 Claude Code + CPU 监控检测完成，输出 1080p MP4 | `/laohan-lupingcli` 或说"录屏""录制教程""录视频""补录" |
 
 ## 教程
 

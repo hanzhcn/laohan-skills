@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> The Swiss Army Knife for AI content creators — 12 Claude Code skills for downloading videos, generating slides, auditing docs, filtering trends, detecting content violations, and more.
+> The Swiss Army Knife for AI content creators — 13 Claude Code skills for downloading videos, generating slides, auditing docs, filtering trends, CLI screen recording, detecting content violations, and more.
 
 English | [中文](./README.md)
 
@@ -37,6 +37,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
 | **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
 | **laohan-skillcreator** | Meta-skill — create/modify/optimize Claude Code Skills, combining best practices from Anthropic + Matt Pocock + 9arm | `/laohan-skillcreator` or "创建skill""改skill""优化skill" |
+| **laohan-lupingcli** | CLI screen recording automation — script to recording script, ffmpeg captures physical screen + tmux runs Claude Code + CPU monitoring detects completion, outputs 1080p MP4 | `/laohan-lupingcli` or "录屏""录制教程""录视频""补录" |
 
 ## Tutorials
 
