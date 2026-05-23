@@ -107,7 +107,7 @@ sudo ~/.local/bin/wx_video_download
 
 ### 安装包分发
 
-下载地址：https://github.com/hanzhcn/wx_channels_download/releases
+下载地址：https://github.com/hanzhcn/laohan-skills/releases
 
 - Mac：`weixin-video-download-mac.dmg`（含 .app + 安装脚本 + 二进制 + 证书）
 - Windows：`weixin-video-download-windows.exe`（NSIS 安装器，含桌面快捷方式）
