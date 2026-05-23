@@ -6,7 +6,7 @@
 
 ### 新增
 
-- **laohan-lupingcli** — CLI 录屏自动化，口播稿转录屏脚本，ffmpeg 录物理屏幕 + tmux 运行 Claude Code + CPU 监控检测完成，输出 1080p MP4
+- **laohan-luping** — 录屏自动化（原 laohan-lupingcli），口播稿转录屏脚本（CLI+浏览器混合），ffmpeg 录物理屏幕 + tmux CLI 操作 + Playwright 浏览器操作 + 临时文件自动清理，输出 1080p MP4
 
 ### 变更
 

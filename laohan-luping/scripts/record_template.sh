@@ -1,5 +1,5 @@
 #!/bin/bash
-# CLI 录屏模板 — laohan-lupingcli 生成
+# 录屏模板（CLI+浏览器混合） — laohan-luping 生成
 #
 # 使用方法：
 #   bash record_<name>.sh [屏幕索引，默认3]
@@ -15,14 +15,16 @@ OUTPUT_DIR="$SCRIPT_DIR/output"
 mkdir -p "$OUTPUT_DIR"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-WORK_DIR="/tmp/lupingcli_${TIMESTAMP}"
+WORK_DIR="/tmp/luping_${TIMESTAMP}"
 RAW_FILE="/tmp/screen_raw_${TIMESTAMP}.mp4"
 MP4_FILE="$OUTPUT_DIR/${RECORD_NAME}_${TIMESTAMP}.mp4"
 SESSION="rec_${TIMESTAMP}"
 mkdir -p "$WORK_DIR"
 
+BROWSER_SCRIPT="$SCRIPT_DIR/browser_segment.js"
+
 echo "============================================"
-echo "  CLI 录屏: $RECORD_NAME"
+echo "  录屏: $RECORD_NAME"
 echo "============================================"
 echo ""
 echo "准备："
@@ -48,10 +50,14 @@ if ! kill -0 $FFMPEG_PID 2>/dev/null; then
 fi
 echo "✅ 录屏已启动 (PID: $FFMPEG_PID)"
 
-# 启动 claude
-echo "启动 Claude Code..."
-tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd $WORK_DIR && claude"
-sleep 5
+# CLI 段支持：如有 CLI 段则启动 tmux + claude
+START_CLI="${START_CLI:-1}"
+
+if [ "$START_CLI" = "1" ]; then
+  echo "启动 Claude Code..."
+  tmux new-session -d -s "$SESSION" -x 200 -y 50 "cd $WORK_DIR && claude"
+  sleep 5
+fi
 
 # 辅助函数
 send_cmd() {
@@ -102,23 +108,55 @@ wait_for_claude() {
   return 0
 }
 
+# 浏览器段函数
+browser_run() {
+  local json_file="$1"
+  echo "  → 浏览器段: $json_file"
+  tmux detach-client -s "$SESSION" 2>/dev/null || true
+  sleep 1
+  node "$BROWSER_SCRIPT" "$json_file"
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    sleep 1
+  fi
+}
+
+browser_goto() {
+  local url="$1"
+  local wait_ms="${2:-3000}"
+  echo "  → 浏览器打开: $url"
+  tmux detach-client -s "$SESSION" 2>/dev/null || true
+  sleep 1
+  node -e "
+    const { chromium } = require('playwright');
+    (async () => {
+      const b = await chromium.launch({ headless: false });
+      const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
+      await p.goto('$url', { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await p.waitForTimeout($wait_ms);
+      await b.close();
+    })();
+  "
+}
+
 # 后台命令发送器
 (
   echo ""
-  echo "后台发送器启动，等待 Claude Code..."
+  echo "后台发送器启动..."
   sleep 25
 
   # ============ COMMANDS START ============
-  # 以下内容由 laohan-lupingcli 根据口播稿自动生成
-  # 每段对应口播稿的一个段落
+  # 以下内容由 laohan-luping 根据口播稿自动生成
+  # 支持 send_cmd / wait_for_claude / browser_run / browser_goto / sleep
 
   ### PLACEHOLDER — 命令序列由 skill 生成时替换此区域 ###
 
   # ============ COMMANDS END ============
 
-  # 退出
-  send_cmd "/exit"
-  sleep 5
+  # 退出 tmux
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    tmux send-keys -t "$SESSION" "/exit" Enter
+    sleep 5
+  fi
 
   # 停止录屏
   echo ""
@@ -154,17 +192,19 @@ wait_for_claude() {
 
 SENDER_PID=$!
 
-# 前台 attach
-echo ""
-echo ">>> Claude Code 即将显示"
-echo ">>> 屏幕上看到的画面就是录屏画面"
-echo ">>> 如果弹出确认框，按回车继续"
-echo ""
+# 前台 attach（只有 CLI 段才需要）
+if [ "$START_CLI" = "1" ]; then
+  echo ""
+  echo ">>> Claude Code 即将显示"
+  echo ">>> 屏幕上看到的画面就是录屏画面"
+  echo ">>> 如果弹出确认框，按回车继续"
+  echo ""
 
-tmux attach -t "$SESSION" || true
+  tmux attach -t "$SESSION" || true
+fi
 
 echo ""
-echo "Claude Code 已退出"
+echo "录制流程结束"
 wait $SENDER_PID 2>/dev/null || true
 rm -f "$RAW_FILE"
 rm -rf "$WORK_DIR"

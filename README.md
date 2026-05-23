@@ -37,7 +37,7 @@
 | **laohan-gengxin** | 工具版本检查与更新——扫描 npm/brew/pip/uv/GitHub/plugins/skills，生成更新报告 | `/laohan-gengxin` 或说"检查更新" |
 | **laohan-jiaocheng** | 教程路由器——按关键词加载配置教程并引导安装（claude-mem / GLM / ECC / Gemini 侧边栏等） | `/laohan-jiaocheng <关键词>` 或说"教程""怎么配置" |
 | **laohan-skillcreator** | 元技能——创建/修改/优化 Claude Code Skill，融合 Anthropic 官方 + Matt Pocock + 9arm 最佳实践 | `/laohan-skillcreator` 或说"创建skill""改skill""优化skill" |
-| **laohan-lupingcli** | CLI 录屏自动化——口播稿转录屏脚本，ffmpeg 录物理屏幕 + tmux 运行 Claude Code + CPU 监控检测完成，输出 1080p MP4 | `/laohan-lupingcli` 或说"录屏""录制教程""录视频""补录" |
+| **laohan-luping** | 录屏自动化——口播稿转录屏脚本（CLI+浏览器），ffmpeg 录物理屏幕 + tmux CLI 操作 + Playwright 浏览器操作，输出 1080p MP4 | `/laohan-luping` 或说"录屏""录制教程""录视频""浏览器录屏""补录" |
 
 ## 教程
 

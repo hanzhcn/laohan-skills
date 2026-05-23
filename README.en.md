@@ -37,7 +37,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 | **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
 | **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
 | **laohan-skillcreator** | Meta-skill — create/modify/optimize Claude Code Skills, combining best practices from Anthropic + Matt Pocock + 9arm | `/laohan-skillcreator` or "创建skill""改skill""优化skill" |
-| **laohan-lupingcli** | CLI screen recording automation — script to recording script, ffmpeg captures physical screen + tmux runs Claude Code + CPU monitoring detects completion, outputs 1080p MP4 | `/laohan-lupingcli` or "录屏""录制教程""录视频""补录" |
+| **laohan-luping** | Screen recording automation — script to recording script (CLI + browser), ffmpeg captures physical screen + tmux CLI ops + Playwright browser ops, outputs 1080p MP4 | `/laohan-luping` or "录屏""录制教程""录视频""浏览器录屏""补录" |
 
 ## Tutorials
 
