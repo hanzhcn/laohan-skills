@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> AI 内容创作者的完整工具链 —— 13 个 Claude Code 技能 + 微信视频号下载工具。从选题、写稿、录屏、校准到发布，覆盖短视频创作全流程。
+> AI 内容创作者和开发者的 Claude Code 工具箱 —— 13 个技能 + 微信视频号下载工具。内容创作全流程 + Claude Code 必学配置 + 开发者效率工具，一个命令搞定。
 
 [English](./README.en.md) | 中文
 
@@ -15,12 +15,9 @@
 
 ## 内容创作全流程
 
-```
-选题 ─→ 写稿 ─→ 违规检测 ─→ 质量校准 ─→ 封面/分镜 ─→ 幻灯片 ─→ 录屏 ─→ 发布
- │        │        │           │            │          │         │
-redian  chuangzuo  weigui     cheat    fengmian     notebooklm  luping
-                                                  fenjingtishici
-```
+| 阶段 | 选题 → | 写稿 → | 审核 → | 校准 → | 封面/分镜 → | 素材 → | 录屏 → 发布 |
+|------|--------|--------|--------|--------|------------|--------|------------|
+| 技能 | redian | chuangzuo | weigui | cheat | fengmian / fenjing | notebooklm | luping |
 
 ## 技能列表
 
