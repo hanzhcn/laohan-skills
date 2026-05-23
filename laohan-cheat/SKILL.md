@@ -1,6 +1,5 @@
 ---
 name: laohan-cheat
-version: 1.0
 description: 内容校准统一入口，自动判断意图+状态路由到对应动作。支持 OpenClaw（完整管线）和独立模式（打分+预测）。Use when 用户说"校准""打分""预测""复盘""状态""下一步""到哪了"或提到内容质量评估/评分/校准相关的任何意图。
 argument-hint: [自然语言指令，如"校准""打分""下一步""复盘""状态"]
 allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Skill, mcp__llm-chat__chat
@@ -133,7 +132,7 @@ allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Skill, mcp__llm-chat__cha
 - **理由引用原文** — 理由列必须引用稿子里的具体词句
 - **反复打分检测** — 同一稿 ≥3 次 → 提示"决策疲劳，该决定了"
 
-**SCORE 不做的事：** 不写文件、不改 state、不预测。
+SCORE 输出：打分结果追加写入 script.md 同级的 cheat_report.md（含时间戳+总分+各维度分数）。文件不存在则创建。
 
 **打分反模式：**
 

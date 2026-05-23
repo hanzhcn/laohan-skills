@@ -1,6 +1,5 @@
 ---
 name: laohan-chuangzuo
-version: 1.0
 description: 统一创作引擎，多种输入→口播稿+封面提示词。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、热点转译(选题→大纲)、结构化大纲、原始文本、自由主题六种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""找选题""写一篇""热点""想做个视频""根据链接改写""改写文档""不知道拍什么"。
 ---
 
@@ -264,16 +263,16 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 用户要求生成幻灯片时，基于 script.md 用 NotebookLM 生成 PNG 图片：
 
-1. `mkdir -p ~/Desktop/<标题>_slides`
-2. `cp script.md ~/Desktop/<标题>_slides/script.md`
+1. `mkdir -p <script.md所在目录>/slides`
+2. `cp script.md <script.md所在目录>/slides/script.md`
 3. `nlm notebook create "<标题>PPT"`
-4. `nlm source add NOTEBOOK_ID --file ~/Desktop/<标题>_slides/script.md`
+4. `nlm source add NOTEBOOK_ID --file <script.md所在目录>/slides/script.md`
 5. `echo "y" | nlm slides create NOTEBOOK_ID --language zh-CN --length default`
 6. 轮询等待 completed（30秒间隔，最多20轮）
-7. `nlm download slide-deck --notebook NOTEBOOK_ID -o ~/Desktop/<标题>_slides/<标题>.pdf`
-8. `pdftoppm -png -r 200 ~/Desktop/<标题>_slides/<标题>.pdf ~/Desktop/<标题>_slides/slide`
+7. `nlm download slide-deck --notebook NOTEBOOK_ID -o <script.md所在目录>/slides/<标题>.pdf`
+8. `pdftoppm -png -r 200 <script.md所在目录>/slides/<标题>.pdf <script.md所在目录>/slides/slide`
 
-输出到 `~/Desktop/<标题>_slides/slide-*.png`
+输出到 `<script.md所在目录>/slides/slide-*.png`
 
 依赖：nlm CLI v0.5.25 + poppler
 
