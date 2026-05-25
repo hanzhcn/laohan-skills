@@ -237,6 +237,32 @@ opencli douyin stats <aweme_id> -f json
 
 - 注意：部分作品可能返回 API error（隐私设置或创作者中心权限限制）
 
+## 关键词搜索（DrissionPage）
+
+抖音搜索 API 有 a_bogus 签名校验，无法直接调接口。opencli 也没有视频搜索命令（`hashtag search` API 已失效）。唯一可靠方案：DrissionPage 监听浏览器数据包 + 滚动采集。
+
+```bash
+cd /tmp/douyin-test && source .venv/bin/activate
+python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 30 --scroll 10
+```
+
+- 首次需安装：`cd /tmp/douyin-test && python3 -m venv .venv && source .venv/bin/activate && pip install DrissionPage`
+- 需要登录态：首次扫码，后续自动复用 Chrome profile
+- 输出：按点赞排行 TOP 20 + JSON 保存到 `/tmp/douyin-test/{关键词}_results.json`
+- JSON 字段：title, author, likes, comments, shares, plays(始终0), create_time, create_time_str, aweme_id, url
+- 也可直接触发 `/laohan-douyinsousuo`（含选题分析）
+
+已知限制：
+- author_id 全部为空（搜索 API 不返回）
+- plays 全部为 0（搜索 API 不返回播放量）
+- 不支持排序/时间筛选（API 需 a_bogus 签名，UI 点击触发验证码）
+- 如需筛选，建议多采集后 Python 后处理
+
+其他搜索方案对比：
+- `opencli douyin hashtag search`：❌ API 端点已失效，返回空 JSON
+- ECC Playwright `browser_run_code`：✅ 可用但数据量少（约10条），适合快速预览
+- 纯 requests 调搜索 API：❌ a_bogus 签名校验
+
 ## 话题与热点
 
 ### 话题热点词
