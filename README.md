@@ -14,6 +14,7 @@
 ## 一句话亮点
 
 - **30+ 平台一键下载**：抖音、B站、YouTube、TikTok、小红书、知乎、公众号、视频号……说"下载"就行
+- **抖音关键词搜索**：搜竞品、看排行、分析选题，说"抖音搜索 xxx"直接出结果 + 选题分析报告
 - **内容创作全流程**：选题 → 写稿 → 违规检测 → 质量校准 → 封面分镜 → 幻灯片 → 录屏，8 步全自动化
 - **Claude Code 必学配置**：claude-mem 跨会话记忆、智谱 GLM 接入、ECC 插件维护、Gemini 侧边栏修复……踩过的坑都帮你填了
 - **微信视频号下载**：独立安装包，[Mac + Windows 双平台](https://github.com/hanzhcn/laohan-skills/releases)，装完直接用
@@ -49,6 +50,7 @@
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
 | **laohan-xiazai** | 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews 等），自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
+| **laohan-douyinsousuo** | 抖音关键词搜索——DrissionPage 监听 API 数据包 + 滚动采集，按点赞排行输出 TOP 20，自动附选题分析（内容类型分布、热门选题规律、差异化机会）。支持自定义采集量（`--min`）和滚动次数（`--scroll`），结果保存 JSON。需 Chrome + 首次扫码登录 | `/laohan-douyinsousuo` 或说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""抖音里xxx排行" |
 
 ### 开发者工具
 
@@ -126,6 +128,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ### 其他技能
 - **laohan-cheat / laohan-shencha / laohan-jiaocheng / laohan-skillcreator**：无额外依赖
+- **laohan-douyinsousuo**：[Chrome 浏览器](https://www.google.com/chrome/) + [DrissionPage](https://github.com/g1879/DrissionPage)（`pip install DrissionPage`）
 - **laohan-weigui**：无额外依赖（违规词库已内置在 `references/keywords.md`）
 - **laohan-fengmianqiuzhi / laohan-fenjingtishici**：无额外依赖，纯文本输出
 
@@ -148,6 +151,14 @@ npx skills add hanzhcn/laohan-skills -g -y
 你: 读一下这个公众号文章
 你: 搜一下小红书上关于 Claude Code 的讨论
 → 自动触发 laohan-xiazai，按平台自动选择最优方法
+```
+
+### 抖音搜索
+```
+你: 抖音搜索 Claude Code 教程
+你: 搜一下抖音上关于 Cursor 的视频
+你: 抖音里 AI 编程工具排行怎么样
+→ 自动触发 laohan-douyinsousuo，采集+排行+选题分析
 ```
 
 ## License
