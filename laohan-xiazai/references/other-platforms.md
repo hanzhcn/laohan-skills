@@ -74,26 +74,22 @@ python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth
 
 ### 工作原理
 
-1. 启动本地 HTTPS 代理（默认端口 3360）
+1. 启动本地 HTTPS 代理（系统代理端口 2023，API 端口 2022）
 2. 拦截微信客户端的视频号请求
 3. 在视频号页面注入下载按钮
 4. 视频流经代理时自动解密（WechatSphDecrypt）
 
 ### 启动方式
 
-**Mac（已安装）：**
+**Mac：**
 ```bash
-# 命令行一键启动（首次自动下载+装证书）
+# 一键启动（wrapper 内部处理 sudo + 自动下载 + 装证书）
 ~/.local/bin/视频号下载
-
-# 或手动启动
-sudo ~/.local/bin/wx_video_download
 ```
 
 **Windows：**
-```bash
-# 一键脚本（首次自动下载+装证书）
-视频号下载PC.bat
+```
+双击桌面「视频号下载」快捷方式（安装包自动生成）
 ```
 
 ### 注意事项
@@ -107,7 +103,7 @@ sudo ~/.local/bin/wx_video_download
 
 ### 安装包分发
 
-下载地址：https://github.com/hanzhcn/laohan-skills/releases
+下载地址：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.1.0
 
 - Mac：`weixin-video-download-mac.dmg`（含 .app + 安装脚本 + 二进制 + 证书）
 - Windows：`weixin-video-download-windows.exe`（NSIS 安装器，含桌面快捷方式）
