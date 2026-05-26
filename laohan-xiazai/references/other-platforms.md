@@ -81,16 +81,18 @@ python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth
 
 ### 启动方式
 
-**Mac：**
+**Mac（GUI）：**
+- 双击 DMG 里的「视频号下载.app」（首次运行会引导装证书）
+- 以后直接双击 app 启动
+
+**Mac（命令行）：**
 ```bash
-# 一键启动（wrapper 内部处理 sudo + 自动下载 + 装证书）
-~/.local/bin/视频号下载
+~/.local/bin/视频号下载  # wrapper 脚本，内部处理 sudo + 自动下载 + 装证书
 ```
 
 **Windows：**
-```
-双击桌面「视频号下载」快捷方式（安装包自动生成）
-```
+- 双击桌面「视频号下载」快捷方式（安装包自动生成）
+- 安装后直接用，不需要命令行
 
 ### 注意事项
 
@@ -105,11 +107,13 @@ python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth
 
 下载地址：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.1.0
 
-- Mac：`weixin-video-download-mac.dmg`（含 .app + 安装脚本 + 二进制 + 证书）
-- Windows：`weixin-video-download-windows.exe`（NSIS 安装器，含桌面快捷方式）
+- Mac：`weixin-video-download-mac.dmg`（磁盘映像，打开后里面有 .app 启动器 + 安装.sh + 二进制 + 证书）
+- Windows：`weixin-video-download-windows.exe`（NSIS 安装器，安装后自动生成桌面快捷方式）
 - 品牌：寒武纪AI
 
-用户指引：打开上方链接 → 下载对应系统安装包 → 双击安装 → 打开 app/快捷方式 → 微信视频号点视频即可下载。
+用户指引：
+- Mac：下载 DMG → 打开 → 双击「视频号下载.app」即可启动（首次会引导装证书）
+- Windows：下载 EXE → 运行安装 → 双击桌面「视频号下载」快捷方式启动
 
 ### 关键警告
 
