@@ -47,9 +47,43 @@
 
 ### 内容获取
 
+#### laohan-xiazai — 互联网内容获取引擎
+
+> 覆盖 30+ 平台，集成 20+ 工具，6 层智能降级。持续维护更新。
+
+**不只是一个下载器**——它是网页内容获取能力的终极集成。从互联网上拿内容的任何场景，都是它的地盘：
+
+- **视频下载**：抖音 / TikTok / YouTube / B站 / 小红书 / 视频号，30+ 平台
+- **搜索聚合**：全网搜索 / 垂直领域查询（股票/CVE/DOI/法律/学术）/ 多引擎对比 / 批量并行
+- **网页内容提取**：任意 URL 转 Markdown / 反爬绕过 / JS 渲染页面抓取
+- **社交平台数据**：评论采集 / 博主数据 / 关键词搜索 / 热榜抓取 / 话题分析
+- **语音转录**：云端秒级 / 本地 C++ / Python 三级降级
+- **浏览器自动化**：AI 自主操作 / CDP 登录态接管 / 反检测隐身 / 精确手动控制
+- **OCR / 音视频转码 / 字幕提取 / 公众号阅读** ……
+
+遇到新平台、新场景、新工具，持续适配。说出你的需求，它自动选择最优路径；失败后逐层降级，直到拿到内容。
+
+**6 层降级架构**（能浅不深，成本递增）：
+
+```
+Layer 1 平台封装      → opencli / agent-reach / yt-dlp / anysearch（优先用现成接口，不爬网页）
+Layer 2 轻量抓取      → Scrapling MCP get（普通 HTTP 请求，秒级）
+Layer 3 JS 渲染       → Scrapling MCP fetch（浏览器渲染，秒级）
+Layer 4 反检测隐身    → Scrapling stealthy_fetch（绕过 Cloudflare/WAF）
+Layer 5 AI 浏览器     → browser-use（AI 理解页面结构，自主操作）
+Layer 6 精确控制      → Playwright MCP / web-access CDP（代码级/登录态接管）
+```
+
+**集成工具**：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download · multi-search-engine · baidu-search
+
+**触发方式**：`/laohan-xiazai` 或说"下载""读一下""搜一下""转文字""帮我抓"
+
+---
+
+#### laohan-douyinsousuo — 抖音关键词搜索
+
 | 技能 | 功能 | 触发方式 |
 |------|------|----------|
-| **laohan-xiazai** | 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews 等），自动降级 | `/laohan-xiazai` 或说"下载""读一下""搜一下" |
 | **laohan-douyinsousuo** | 抖音关键词搜索——DrissionPage 监听 API 数据包 + 滚动采集，按点赞排行输出 TOP 20，自动附选题分析（内容类型分布、热门选题规律、差异化机会）。支持自定义采集量（`--min`）和滚动次数（`--scroll`），结果保存 JSON。需 Chrome + 首次扫码登录 | `/laohan-douyinsousuo` 或说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""抖音里xxx排行" |
 
 ### 开发者工具

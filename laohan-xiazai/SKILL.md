@@ -186,10 +186,13 @@ CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
 
 | 工具 | 场景 | 说明 |
 |------|------|------|
+| anysearch | 实时搜索+垂直领域+批量并行+URL全文提取 | 23 个垂直领域（股票/CVE/DOI/法律/学术等），`~/.agents/skills/anysearch/`，`/anysearch` |
 | smart-search | opencli 搜索路由 | 基于 opencli 的智能搜索，覆盖社交/技术/新闻/购物，`~/.agents/skills/smart-search/` |
 | web-search | 通用网页搜索 | DuckDuckGo API，轻量搜索，`~/.openclaw/skills/web-search/` |
 | multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.openclaw/skills/multi-search-engine/` |
 | baidu-search | 中文内容搜索 | 百度 AI 搜索，中文场景优于通用引擎，`~/.openclaw/skills/baidu-search/` |
+
+**anysearch 适用场景**：垂直领域查询（股票代码/CVE 漏洞/DOI 论文/专利/法律判例）、多意图批量搜索、URL 全文 Markdown 提取。通用搜索仍走 opencli/agent-reach 降级链。
 
 ### Scrapling 调用路径
 
