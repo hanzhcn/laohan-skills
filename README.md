@@ -21,7 +21,7 @@
 npx skills add hanzhcn/laohan-skills -g -y
 ```
 
-> `skills` CLI 来自 [Everything-Claude-Code](https://github.com/anthropics/ecc) 生态，无需单独安装。前提：已安装 [Claude Code](https://claude.ai/code)。
+> `skills` CLI 来自 [vercel-labs/skills](https://github.com/vercel-labs/skills)，`npx` 自动下载无需手动安装。前提：已安装 [Claude Code](https://claude.ai/code)。
 
 ```
 你: 抓热点                    → 三路并行输出 AI 热点简报
