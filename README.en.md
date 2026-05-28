@@ -60,6 +60,8 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 npx skills add hanzhcn/laohan-skills -g -y
 ```
 
+> The `skills` CLI is part of the [Everything-Claude-Code](https://github.com/anthropics/ecc) ecosystem — no separate install needed. Prerequisite: [Claude Code](https://claude.ai/code).
+
 ## Prerequisites
 
 ### All skills
