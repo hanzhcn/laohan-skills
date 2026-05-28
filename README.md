@@ -5,9 +5,10 @@
 [![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
 
+> Claude Code Skills Pack — Content creation pipeline + 30+ platform acquisition + dev tools
 > Claude Code 超级技能包 — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定。
 
-[English](./README.en.md) | 中文
+**[English](./README.en.md)** | 中文
 
 由 [寒武纪AI](https://github.com/hanzhcn) 出品 · 抖音搜索「**寒武纪AI**」看实战教程 · 基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
@@ -16,10 +17,13 @@
 ## Quick Start
 
 ```bash
-# 一键安装全部 14 个技能
+# 一键安装全部 14 个技能（需要 Claude Code 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills -g -y
+```
 
-# 然后在 Claude Code 或 OpenClaw 中直接用
+> `skills` CLI 来自 [Everything-Claude-Code](https://github.com/anthropics/ecc) 生态，无需单独安装。前提：已安装 [Claude Code](https://claude.ai/code)。
+
+```
 你: 抓热点                    → 三路并行输出 AI 热点简报
 你: 帮我写一篇关于 xxx 的口播稿  → 统一创作引擎输出完整稿件
 你: 下载这个 B站视频           → 自动选择最优方法下载
@@ -32,7 +36,16 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 **内容创作全流程** — 从选题到成片 8 步自动化：热点抓取 → 口播稿 → 违规检测 → 质量校准 → 封面分镜 → 幻灯片 → 录屏，每一步都有对应技能。
 
-**30+ 平台内容获取** — 抖音/B站/YouTube/TikTok/小红书/知乎/公众号/视频号，6 层智能降级架构（平台接口 → HTTP 抓取 → JS 渲染 → 反检测隐身 → AI 浏览器 → 手动控制），说"下载""搜一下"自动路由。
+**30+ 平台内容获取** — 抖音/B站/YouTube/TikTok/小红书/知乎/公众号/视频号，6 层智能降级架构，说"下载""搜一下"自动路由：
+
+```
+Layer 1  平台封装     → opencli / agent-reach / yt-dlp / anysearch
+Layer 2  轻量抓取     → Scrapling MCP（HTTP 请求，秒级）
+Layer 3  JS 渲染      → Scrapling fetch（浏览器渲染）
+Layer 4  反检测隐身   → Scrapling stealthy（绕 Cloudflare/WAF）
+Layer 5  AI 浏览器    → browser-use（AI 理解页面，自主操作）
+Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
+```
 
 **开发者工具箱** — claude-mem 记忆配置、智谱 GLM 接入、技术文档审查、Skill 创建器，踩过的坑都帮你填了。
 
@@ -47,7 +60,7 @@ redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm 
  选题      写稿       审核     校准      封面 / 分镜          幻灯片      录屏
 ```
 
-| 技能 | 一句话 | 说 |
+| 技能 | 一句话 | 说 (Trigger) |
 |------|--------|-----|
 | **redian** | AI 热点三路并行（AIHOT + 9平台热榜 + 抖音筛选） | "抓热点" |
 | **chuangzuo** | 统一创作引擎（录屏/热点/URL/自由 → 口播稿） | "写一篇" |
@@ -60,41 +73,27 @@ redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm 
 
 ### 内容获取（2 个）
 
-| 技能 | 一句话 | 说 |
+| 技能 | 一句话 | 说 (Trigger) |
 |------|--------|-----|
 | **xiazai** | 互联网内容获取引擎 — 30+ 平台，6 层智能降级，20+ 工具集成 | "下载""搜一下""读一下" |
 | **douyinsousuo** | 抖音关键词搜索 — 按点赞排行 TOP 20 + 选题分析 | "抖音搜索 xxx" |
 
 <details>
-<summary><strong>laohan-xiazai 详细能力</strong></summary>
-
-**不只是下载器** — 从互联网上拿内容的任何场景，都是它的地盘：
+<summary><strong>laohan-xiazai 覆盖能力</strong></summary>
 
 - **视频下载**：抖音 / TikTok / YouTube / B站 / 小红书 / 视频号，30+ 平台
 - **搜索聚合**：全网搜索 / 垂直领域（股票/CVE/DOI/法律/学术）/ 批量并行
 - **网页提取**：任意 URL 转 Markdown / 反爬绕过 / JS 渲染抓取
 - **社交数据**：评论采集 / 博主数据 / 热榜 / 话题分析
 - **语音转录**：云端秒级 / 本地 C++ / Python 三级降级
-- **浏览器自动化**：AI 自主操作 / CDP 登录态 / 反检测隐身 / 精确控制
 
-**6 层降级架构**（能浅不深，成本递增）：
-
-```
-Layer 1  平台封装     → opencli / agent-reach / yt-dlp / anysearch
-Layer 2  轻量抓取     → Scrapling MCP（HTTP 请求，秒级）
-Layer 3  JS 渲染      → Scrapling fetch（浏览器渲染）
-Layer 4  反检测隐身   → Scrapling stealthy（绕 Cloudflare/WAF）
-Layer 5  AI 浏览器    → browser-use（AI 理解页面，自主操作）
-Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
-```
-
-**集成工具**：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download
+集成工具：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download
 
 </details>
 
 ### 开发者工具（4 个）
 
-| 技能 | 一句话 | 说 |
+| 技能 | 一句话 | 说 (Trigger) |
 |------|--------|-----|
 | **shencha** | 技术文档联网审查 — 验证地址/版本/参数准确性 | "深度审查" |
 | **gengxin** | 工具版本检查更新 — npm/brew/pip/GitHub/plugins | "检查更新" |
