@@ -2,8 +2,10 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
 
-> The Swiss Army Knife for AI content creators — 13 Claude Code skills for downloading videos, generating slides, auditing docs, filtering trends, CLI screen recording, detecting content violations, and more.
+> The Swiss Army Knife for AI content creators — 14 Claude Code skills for content creation pipeline, 30+ platform content acquisition, and developer tooling.
 
 English | [中文](./README.md)
 
@@ -15,7 +17,8 @@ Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://cl
 
 | Skill | What it does | Trigger |
 |-------|-------------|----------|
-| **laohan-xiazai** | One-stop content download — videos/audio/subtitles from 7+ platforms with auto-fallback | `/laohan-xiazai` |
+| **laohan-xiazai** | One-stop content engine — 30+ platforms, 6-layer smart fallback, 20+ tool integration | `/laohan-xiazai` |
+| **laohan-douyinsousuo** | Douyin keyword search — rank by likes, TOP 20 + topic analysis | `/laohan-douyinsousuo` |
 | **laohan-redian** | Unified AI trend aggregator — 3 parallel sources (AIHOT picks + 9-platform trending + Douyin AI filter), merged & deduplicated | `/laohan-redian` |
 
 ### Content Creation
@@ -167,6 +170,7 @@ MIT
 **寒武纪AI** — AI content creator, sharing tools for the community.
 
 - GitHub: [@hanzhcn](https://github.com/hanzhcn)
-- Douyin: **寒武纪AI** (follow for more AI tool tutorials)
+- Douyin: **寒武纪AI** ([Hanzh1122](https://www.douyin.com/user/MS4wLjABAAAAH5yUDz1lRwM158jy-QNImv77MnxI7fcCyJDfciEdkvM))
+- Bilibili: [寒武纪AI](https://space.bilibili.com/3546393739478)
 
 If you find this useful, please Star ⭐ and follow on Douyin!
