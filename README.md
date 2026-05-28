@@ -1,3 +1,7 @@
+<div align="center">
+
+<img src="assets/logo.svg" alt="laohan-skills" width="96" height="96">
+
 # laohan-skills
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
@@ -5,8 +9,10 @@
 [![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
 
-> Claude Code Skills Pack — Content creation pipeline + 30+ platform acquisition + dev tools
-> Claude Code 超级技能包 — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定。
+**Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
+**Claude Code 超级技能包** — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定
+
+</div>
 
 **[English](./README.en.md)** | 中文
 
@@ -136,6 +142,14 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [Chrome Gemini 侧边栏修复](./docs/gemini-sidebar-fix.md) | Mac + Windows 双平台脚本 |
 | [Claude Code + 智谱 GLM 接入](./docs/claude-code-glm.md) | 环境变量、thinking、超时、模型切换 |
 | [ECC 插件安装维护指南](./docs/ecc-plugin-guide.md) | rules 分发、hooks 机制、升级清单 |
+
+## 关于
+
+我是寒武纪AI，一个用 AI 工具做内容创作的普通人。不是专业程序员，但相信好工具应该人人用得起。
+
+这些 skill 都是我自己每天在用的——从选题、写稿、审核到发布，全靠 Claude Code + 这套技能包跑通。踩过的坑、调过的参数、摸过的套路，全都塞进去了。
+
+觉得有用的话，给个 ⭐，抖音搜索「**寒武纪AI**」看我是怎么用这些工具的。
 
 ## License
 
