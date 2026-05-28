@@ -1,6 +1,7 @@
 ---
 name: laohan-douyinsousuo
 description: 抖音关键词搜索，采集视频数据按点赞排行。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"或提到"在抖音搜""抖音的xxx情况""抖音里xxx排行"。
+version: "1.2.0"
 ---
 
 # 抖音搜索

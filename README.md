@@ -7,7 +7,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
-[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
+[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
 **Claude Code 超级技能包** — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定
@@ -16,7 +16,7 @@
 
 **[English](./README.en.md)** | 中文
 
-由 [寒武纪AI](https://github.com/hanzhcn) 出品 · 抖音搜索「**寒武纪AI**」看实战教程 · 基于 [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw)
+由 [寒武纪AI](https://github.com/hanzhcn) 出品 · 抖音搜索「**寒武纪AI**」看实战教程 · 基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
 ---
 
@@ -27,7 +27,7 @@
 npx skills add hanzhcn/laohan-skills -g -y
 ```
 
-> `skills` CLI 来自 [vercel-labs/skills](https://github.com/vercel-labs/skills)，`npx` 自动下载无需手动安装。前提：已安装 [Claude Code](https://claude.ai/code)。
+> `skills` CLI 来自 [vercel-labs/skills](https://github.com/vercel-labs/skills)，`npx` 自动下载无需手动安装。前提：已安装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)。
 
 ```
 你: 抓热点                    → 三路并行输出 AI 热点简报
@@ -192,7 +192,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 ## 前置依赖
 
-> 只需 [Claude Code](https://claude.ai/code) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可使用全部技能。以下为可选增强。
+> 只需 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可使用全部技能。以下为可选增强。
 
 | 工具 | 安装 | 增强哪些技能 |
 |------|------|-------------|
@@ -204,6 +204,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | 硅基流动 API Key | 注册 [siliconflow.cn](https://siliconflow.cn)（免费） | xiazai（云端语音转录）、chuangzuo（语音转文字） |
 | [DrissionPage](https://github.com/g1879/DrissionPage) + Chrome | `pip install DrissionPage` | douyinsousuo（抖音搜索） |
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm（幻灯片生成） |
+| [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo（本地语音转录） |
 
 无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing
 

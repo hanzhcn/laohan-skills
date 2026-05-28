@@ -1,178 +1,240 @@
+<div align="center">
+
+<img src="assets/logo.svg" alt="laohan-skills" width="96" height="96">
+
 # laohan-skills
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
-[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
+[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
-> The Swiss Army Knife for AI content creators — 14 Claude Code skills for content creation pipeline, 30+ platform content acquisition, and developer tooling.
+**Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
 
-English | [中文](./README.md)
+</div>
 
-Built by [寒武纪AI](https://github.com/hanzhcn), for [Claude Code](https://claude.ai/code) / [OpenClaw](https://github.com/openclaw/openclaw).
+English | **[中文](./README.md)**
 
-## Skills
+Built by [寒武纪AI](https://github.com/hanzhcn) · Search **寒武纪AI** on Douyin for tutorials · Powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
-### Content Acquisition
-
-| Skill | What it does | Trigger |
-|-------|-------------|----------|
-| **laohan-xiazai** | One-stop content engine — 30+ platforms, 6-layer smart fallback, 20+ tool integration | `/laohan-xiazai` |
-| **laohan-douyinsousuo** | Douyin keyword search — rank by likes, TOP 20 + topic analysis | `/laohan-douyinsousuo` |
-| **laohan-redian** | Unified AI trend aggregator — 3 parallel sources (AIHOT picks + 9-platform trending + Douyin AI filter), merged & deduplicated | `/laohan-redian` |
-
-### Content Creation
-
-| Skill | What it does | Trigger |
-|-------|-------------|----------|
-| **laohan-chuangzuo** | Unified creation engine — recording to script / trend to original / URL rewrite / free topic, all through one writing methodology | `/laohan-chuangzuo` or "录屏转口播""找选题""写一篇""根据链接改写""帮我写""不知道拍什么""改写文档" |
-| **laohan-notebooklm** | Script to slides via NotebookLM (PDF → PNG for video editing) | `/laohan-notebooklm` or "生成PPT""做幻灯片" |
-| **laohan-fengmianqiuzhi** | Script to Gemini cover image prompts (3 styles × 3 ratios) | `/laohan-fengmianqiuzhi` or "生成封面""做封面" |
-| **laohan-fenjingtishici** | Storyboard prompts for diffusion models (FLUX/SDXL/Gemini) | `/laohan-fenjingtishici` or "生成分镜""拆分镜" |
-
-### Quality & Tools
-
-| Skill | What it does | Trigger |
-|-------|-------------|----------|
-| **laohan-cheat** | Content calibration — scoring, prediction, review, trend analysis | `/laohan-cheat` |
-| **laohan-shencha** | Deep audit for technical docs — verify URLs, versions, params | `/laohan-shencha` |
-| **laohan-weigui** | Douyin content compliance check — 7 categories (promo/extreme claims/medical/financial/low-quality/sensitive/platform rules), structured report with fix suggestions | `/laohan-weigui` or "检测违规""检查文案""会不会被限流""发之前帮我看看" |
-| **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | `/laohan-gengxin` |
-| **laohan-jiaocheng** | Tutorial router — load config tutorials by keyword (claude-mem / GLM / ECC / Gemini sidebar, etc.) | `/laohan-jiaocheng <keyword>` |
-| **laohan-skillcreator** | Meta-skill — create/modify/optimize Claude Code Skills, combining best practices from Anthropic + Matt Pocock + 9arm | `/laohan-skillcreator` or "创建skill""改skill""优化skill" |
-| **laohan-luping** | Screen recording automation — script to recording script (CLI + browser), ffmpeg captures physical screen + tmux CLI ops + Playwright browser ops, outputs 1080p MP4 | `/laohan-luping` or "录屏""录制教程""录视频""浏览器录屏""补录" |
-
-## Tutorials
-
-> Step-by-step guides, fully reproducible.
-
-| Tutorial | Description |
-|----------|-------------|
-| [claude-mem + LiteLLM: Drive Claude Code Cross-Session Memory with Local LLMs](./docs/claude-mem-litellm.md) | Use LiteLLM proxy to let claude-mem support GLM / DeepSeek instead of OpenRouter. Full install, patch, config, and verification steps |
-| [CLAUDE.md Configuration Guide: Four Principles to Reduce AI Coding Mistakes](./docs/claude-md-guide.md) | From [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills): Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution, with before/after code examples |
-| [Chrome Gemini Sidebar Fix (China)](./docs/gemini-sidebar-fix.md) | Mac + Windows scripts to fix Chrome Gemini sidebar disappearing in China due to region restrictions. Re-run after each Chrome update |
-| [Claude Code + ZhiPu GLM: Drive AI Coding with Domestic LLMs](./docs/claude-code-glm.md) | Full guide to configure Claude Code with ZhiPu GLM backend: env vars, thinking mode, capability declarations, timeout config, model switching, FAQ |
-| [ECC Plugin Install & Maintenance Guide](./docs/ecc-plugin-guide.md) | Everything-Claude-Code plugin: install, rules distribution, 3 hook loading mechanisms, 6-step upgrade checklist, 4 common pitfalls with solutions |
-
-## Install
-
-```bash
-npx skills add hanzhcn/laohan-skills -g -y
-```
-
-> The `skills` CLI is from [vercel-labs/skills](https://github.com/vercel-labs/skills) — auto-downloaded by `npx`, no manual install needed. Prerequisite: [Claude Code](https://claude.ai/code).
-
-## Prerequisites
-
-### All skills
-- [Claude Code](https://claude.ai/code) or [OpenClaw](https://github.com/openclaw/openclaw)
-
-### laohan-xiazai (video/content download)
-- [opencli](https://github.com/jackwener/opencli) — `npm install -g @jackwener/opencli`
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) — `brew install yt-dlp` or `pip install yt-dlp`
-- [ffmpeg](https://ffmpeg.org/) — `brew install ffmpeg`
-- Optional: SiliconFlow API key for cloud transcription (free) — set `SILICONFLOW_API_KEY` env var
-
-### laohan-notebooklm
-- [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) — `pip install notebooklm-mcp-cli`
-- [poppler](https://poppler.freedesktop.org/) — `brew install poppler`
-
-### laohan-chuangzuo (unified creation engine)
-- [ffmpeg](https://ffmpeg.org/): Audio extraction (recording mode) — `brew install ffmpeg`
-- SiliconFlow API key (optional): Transcription — register at [siliconflow.cn](https://siliconflow.cn)
-- [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (optional): Local transcription — `brew install whisper.cpp`
-- All laohan-notebooklm dependencies (slide mode)
-
-### laohan-cheat
-- No extra dependencies (rubric and state templates are bundled in `references/`)
-
-### laohan-jiaocheng
-- No extra dependencies
-
-### laohan-shencha
-- No extra dependencies (uses Claude Code built-in web search + gh CLI)
-
-### laohan-fengmianqiuzhi / laohan-fenjingtishici
-- No extra dependencies, pure text output
-
-### laohan-weigui (content compliance)
-- No extra dependencies (keyword database bundled in `references/keywords.md`)
-
-### laohan-skillcreator (Skill creator)
-- No extra dependencies
+---
 
 ## Quick Start
 
-### Download content
-```
-You: 帮我下载这个B站视频 https://www.bilibili.com/video/BV1xxx
-→ triggers laohan-xiazai → auto-selects best method per platform
-```
-
-### Fetch AI trends
-```
-You: 抓热点
-You: 今天的AI精选
-→ triggers laohan-redian → 3 sources merged & deduplicated
+```bash
+# Install all 14 skills (requires Claude Code or OpenClaw)
+npx skills add hanzhcn/laohan-skills -g -y
 ```
 
-### Unified creation (recording / trends / URL / free topic)
+> The `skills` CLI is from [vercel-labs/skills](https://github.com/vercel-labs/skills) — auto-downloaded by `npx`, no manual install needed. Prerequisite: [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+
 ```
-You: 把这个录屏视频转成口播稿 /path/to/recording.mp4
-You: 找选题 / 写一篇 / 不知道拍什么
-You: 根据链接改写 / 改写文档
-You: 帮我写个关于 Claude Code 配置的口播稿
-→ triggers laohan-chuangzuo, auto-selects mode based on input
+You: 抓热点                    → 3-source AI trend briefing
+You: 帮我写一篇关于 xxx 的口播稿  → Full script from unified creation engine
+You: 下载这个 B站视频           → Auto-select best download method
+You: 抖音搜索 Claude Code      → Ranked results + topic analysis
+You: 检查有没有违规词           → 7-category scan + fix suggestions
+You: 帮我校准打分              → 6-dimension scoring + view prediction
 ```
 
-### Content calibration
+---
+
+## Content Creation (8)
+
+> From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
+
 ```
-You: 帮我校准这篇口播稿
-→ triggers laohan-cheat → scoring + prediction + suggestions
+redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm → luping
+ trends    script     review   score    cover / storyboard    slides     recording
 ```
 
-### Script to slides
-```
-You: 帮我用口播稿生成PPT
-→ triggers laohan-notebooklm
-```
+<table>
+<tr><td>
 
-### Generate cover prompts
-```
-You: 给这个口播稿生成封面
-→ triggers laohan-fengmianqiuzhi
-```
+### 🔥 redian (Trends)
 
-### Check tool updates
+> *"Hundreds of AI news per day — by the time I see them, they're already stale."*
+
+3-source parallel AI trend aggregation: AIHOT picks + 9-platform trending + Douyin AI filter, merged & deduplicated into a daily briefing.
+
 ```
-You: 看看哪些工具该更新了
-→ /laohan-gengxin
+You: 抓热点 / 今天的AI精选 / 看看有什么热点
 ```
 
-### Detect content violations
+</td></tr>
+</table>
+
+<table>
+<tr><td>
+
+### ✍️ chuangzuo (Creation)
+
+> *"Six inputs, one output — whatever you have on hand can become a script."*
+
+Unified creation engine supporting 6 input modes: screen recording / URL queue / trend translation / structured outline / raw text / free topic. Outputs complete scripts following style rules.
+
 ```
-You: 检查下这段口播稿有没有违规词
-You: 发之前帮我看看会不会被限流
-→ triggers laohan-weigui → 7-category scan with structured report
+You: 帮我写一篇关于 xxx 的口播稿 / 不知道拍什么 / 把这个视频转成稿子
 ```
 
-### Create custom Skills
+</td></tr>
+</table>
+
+<table>
+<tr><td>
+
+### 🛡️ weigui (Compliance)
+
+> *"Looks fine when writing, gets shadowbanned after posting."*
+
+7-category scan: promo words / extreme claims / medical promises / financial promises / low-quality markers / sensitive words / platform restrictions. Structured report with fix suggestions — not just "you have a problem", but "here's how to fix it".
+
 ```
-You: 帮我创建一个 Skill
-You: 优化这个 Skill
-→ triggers laohan-skillcreator → guided full creation workflow
+You: 检测违规 / 检查有没有违规词 / 发之前帮我看看
 ```
 
-## License
+</td></tr>
+</table>
 
-MIT
+<table>
+<tr><td>
 
-## Author
+### 📊 cheat (Calibration)
 
-**寒武纪AI** — AI content creator, sharing tools for the community.
+> *"Bad views, but no idea what to change."*
 
-- GitHub: [@hanzhcn](https://github.com/hanzhcn)
-- Douyin: **寒武纪AI** ([Hanzh1122](https://www.douyin.com/user/MS4wLjABAAAAH5yUDz1lRwM158jy-QNImv77MnxI7fcCyJDfciEdkvM))
-- Bilibili: [寒武纪AI](https://space.bilibili.com/3546393739478)
+6-dimension scoring (title / hook / structure / pacing / info density / brand feel) + view prediction + post-mortem suggestions. Quantify your content quality — no more guessing.
 
-If you find this useful, please Star ⭐ and follow on Douyin!
+```
+You: 校准打分 / 帮我打分 / 预测一下播放量
+```
+
+</td></tr>
+</table>
+
+| Skill | One-liner | Say |
+|-------|-----------|-----|
+| 🎨 **fengmian** | Gemini cover prompts (Qiuzhi 2046 style, 3 styles × 3 ratios) | "生成封面" |
+| 🎬 **fenjing** | Storyboard prompts (FLUX / SDXL / Gemini, quality-validated) | "拆分镜" |
+| 📑 **notebooklm** | Script → slide images (NotebookLM, ready for video editors) | "做 PPT" |
+| 🎥 **luping** | Screen recording automation (ffmpeg physical screen + Playwright browser → 1080p MP4) | "录屏" |
+
+---
+
+## Content Acquisition (2)
+
+<table>
+<tr><td>
+
+### 📥 xiazai (Download)
+
+> *"More than a downloader — any scenario where you grab content from the internet is its territory."*
+
+30+ platforms, 6-layer smart fallback, 20+ tool integration. Say "下载" "搜一下" "读一下" and it auto-routes:
+
+```
+Layer 1  Platform wrappers    → opencli / agent-reach / yt-dlp / anysearch
+Layer 2  Lightweight fetch    → Scrapling MCP (HTTP requests, seconds)
+Layer 3  JS rendering         → Scrapling fetch (browser rendering)
+Layer 4  Anti-detection       → Scrapling stealthy (bypass Cloudflare/WAF)
+Layer 5  AI browser           → browser-use (AI understands page, autonomous)
+Layer 6  Precision control    → Playwright / web-access CDP (code-level control)
+```
+
+Covers: Video download / search aggregation / web extraction / comment scraping / speech transcription / creator data
+
+Integrated tools: opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download
+
+```
+You: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文字
+```
+
+</td></tr>
+</table>
+
+<table>
+<tr><td>
+
+### 🔍 douyinsousuo (Douyin Search)
+
+> *"No Douyin search API? Build one yourself."*
+
+DrissionPage packet listener + scroll collection, ranked by likes TOP 20 + topic analysis. Search competitors, discover topics, track trends.
+
+```
+You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
+```
+
+</td></tr>
+</table>
+
+---
+
+## Developer Tools (4)
+
+| Skill | One-liner | Say |
+|-------|-----------|-----|
+| 🔎 **shencha** | Technical doc deep audit — verify URLs, versions, params accuracy | "深度审查" |
+| 🔄 **gengxin** | Tool version checker — npm/brew/pip/GitHub/plugins | "检查更新" |
+| 📖 **jiaocheng** | Tutorial router — claude-mem / GLM / ECC / Gemini (5 tutorials) | "教程" |
+| 🛠️ **skillcreator** | Meta-skill — create / modify / optimize Claude Code Skills | "创建 skill" |
+
+---
+
+## Standalone Tool: WeChat Video Download
+
+Mac + Windows installer packages. Install and use directly. Based on MITM proxy intercepting video streams with auto-injected download button.
+
+👉 [Download installer](https://github.com/hanzhcn/laohan-skills/releases)
+
+---
+
+## Prerequisites
+
+> Only [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [OpenClaw](https://github.com/openclaw/openclaw) is required. Below are optional enhancements.
+
+| Tool | Install | Enhances which skills |
+|------|---------|----------------------|
+| [opencli](https://github.com/jackwener/opencli) | `npm i -g @jackwener/opencli` | xiazai (Bilibili/Xiaohongshu download, trending, search) |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp) | `brew install yt-dlp` | xiazai (YouTube download) |
+| [ffmpeg](https://ffmpeg.org/) | `brew install ffmpeg` | xiazai (audio/video transcoding), chuangzuo (audio extraction), luping (recording) |
+| [Playwright](https://playwright.dev/) | `npm i -g playwright && npx playwright install chromium` | xiazai (browser scraping), luping (browser recording) |
+| [tmux](https://github.com/tmux/tmux) | `brew install tmux` | luping (terminal recording) |
+| SiliconFlow API Key | Register at [siliconflow.cn](https://siliconflow.cn) (free) | xiazai (cloud transcription), chuangzuo (speech-to-text) |
+| [DrissionPage](https://github.com/g1879/DrissionPage) + Chrome | `pip install DrissionPage` | douyinsousuo (Douyin search) |
+| [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm (slide generation) |
+| [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo (local transcription) |
+
+Skills with no extra dependencies: redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing
+
+---
+
+## Tutorials
+
+| Tutorial | Description |
+|----------|-------------|
+| [claude-mem + LiteLLM: Drive Claude Code Cross-Session Memory with Local LLMs](./docs/claude-mem-litellm.md) | Use LiteLLM proxy to let claude-mem support GLM / DeepSeek instead of OpenRouter |
+| [CLAUDE.md Configuration Guide: Four Principles to Reduce AI Coding Mistakes](./docs/claude-md-guide.md) | Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution |
+| [Chrome Gemini Sidebar Fix (China)](./docs/gemini-sidebar-fix.md) | Mac + Windows scripts to fix Chrome Gemini sidebar in China |
+| [Claude Code + ZhiPu GLM: Drive AI Coding with Domestic LLMs](./docs/claude-code-glm.md) | Full guide: env vars, thinking mode, timeout, model switching |
+| [ECC Plugin Install & Maintenance Guide](./docs/ecc-plugin-guide.md) | Rules distribution, hooks mechanism, upgrade checklist |
+
+---
+
+## About
+
+I'm 寒武纪AI, a content creator using AI tools. Not a professional programmer, but I believe good tools should be accessible to everyone.
+
+These skills are what I use daily — from topic selection, writing, review to publishing, all powered by Claude Code + this skill pack. Every pitfall I've hit, every parameter I've tuned, every pattern I've learned — they're all baked in.
+
+If you find this useful, please ⭐ and search **寒武纪AI** on Douyin to see how I use these tools.
+
+---
+
+<div align="center">
+
+[MIT License](./LICENSE) · Free to use / modify / redistribute
+
+Made by [寒武纪AI](https://github.com/hanzhcn)
+
+</div>
