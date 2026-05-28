@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-13-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://claude.ai/code)
 
 > Claude Code 超级技能包 — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定。
@@ -16,7 +16,7 @@
 ## Quick Start
 
 ```bash
-# 一键安装全部 13 个技能
+# 一键安装全部 14 个技能
 npx skills add hanzhcn/laohan-skills -g -y
 
 # 然后在 Claude Code 或 OpenClaw 中直接用

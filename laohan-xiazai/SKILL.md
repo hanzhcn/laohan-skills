@@ -192,7 +192,7 @@ CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
 | multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.openclaw/skills/multi-search-engine/` |
 | baidu-search | 中文内容搜索 | 百度 AI 搜索，中文场景优于通用引擎，`~/.openclaw/skills/baidu-search/` |
 
-**anysearch 适用场景**：垂直领域查询（股票代码/CVE 漏洞/DOI 论文/专利/法律判例）、多意图批量搜索、URL 全文 Markdown 提取。通用搜索仍走 opencli/agent-reach 降级链。
+**搜索优先级**：通用搜索/事实查询/垂直领域 → **anysearch**（最轻最快）→ opencli（平台结构化数据）→ agent-reach（opencli 未覆盖的平台兜底）。
 
 ### Scrapling 调用路径
 

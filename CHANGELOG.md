@@ -2,15 +2,27 @@
 
 所有重要变更都会记录在此文件中。
 
+## [1.3.0] - 2026-05-28
+
+### 新增
+
+- **laohan-chuangzuo** 风格选择 — Step -1 强制选择写作风格（通用/教程型），风格文件自包含，`references/styles/` 目录自动发现
+
+### 变更
+
+- README badge 更新为 14 个 skill
+- laohan-xiazai 搜索优先级更新（anysearch 首选）
+
 ## [1.2.0] - 2026-05-23
 
 ### 新增
 
+- **laohan-douyinsousuo** — 抖音关键词搜索，采集视频数据按点赞排行
 - **laohan-luping** — 录屏自动化（原 laohan-lupingcli），口播稿转录屏脚本（CLI+浏览器混合），ffmpeg 录物理屏幕 + tmux CLI 操作 + Playwright 浏览器操作 + 临时文件自动清理，输出 1080p MP4
 
 ### 变更
 
-- README 中英文版更新为 13 个 skill 完整说明
+- README 中英文版更新为 14 个 skill 完整说明
 
 ## [1.1.0] - 2026-05-23
 

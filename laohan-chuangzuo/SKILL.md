@@ -23,6 +23,7 @@ description: 统一创作引擎，多种输入→口播稿+封面提示词。支
 - **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **热点转译法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）
+- **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -90,6 +91,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 ## 执行清单（每步完成后打勾）
 
+- [ ] Step -1: **风格选择（强制，不可跳过）**
 - [ ] Pre-A/B/C: 前置处理（如需）
 - [ ] Step 0: 判断输入模式（大纲/素材/自由）
 - [ ] Step 1: [素材模式] Layer A/B 整理
@@ -101,6 +103,33 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出 + 调用 /laohan-fengmianqiuzhi 生成封面
 - [ ] Post-A: [可选] NotebookLM 幻灯片
+
+---
+
+## Step -1：风格选择（强制，不可跳过）
+
+**在执行任何创作动作之前，必须先让用户选择写作风格。不选择不执行。**
+
+执行方式：
+1. 读取 `references/styles/` 目录下所有 `.md` 文件
+2. 列出所有可用风格，格式如下：
+
+```
+请选择本次口播稿的写作风格：
+
+1. 通用 — 观点型/热点评论/行业分析，使用 style.md 默认规则
+2. 教程型（五层模型）— 工具教程/操作指南，style.md + 五层结构+六要素+自检清单
+
+请输入编号或名称。
+```
+
+3. **等待用户选择**。用户不选择 → 不执行后续任何步骤，循环等待
+4. 用户选择后：
+   - **通用**：直接使用 style.md 作为唯一规则，不加载额外风格文件
+   - **教程型或其他**：只读取对应的 `references/styles/<选择>.md` 文件，**不加载 style.md**。风格文件完全自包含，内部已含结构规则+语言质量规则+技法+自检清单
+5. **默认不选**：没有"默认选项"，每次触发都必须选择。防止风格混用
+
+**新增风格**：往 `references/styles/` 目录添加新 `.md` 文件即可，自动被发现。不需要修改本文件。
 
 ---
 
@@ -331,7 +360,8 @@ Pre-A/B/C 按需依赖，不使用对应模式时无需安装。
 
 ## 注意事项
 
-- style.md 是唯一的写作规则来源，本 skill 不定义额外的写作规则
+- style.md 是通用模式的唯一写作规则来源。选择其他风格时，风格文件完全自包含，不需要加载 style.md
+- **风格文件**（`references/styles/`）是完全自包含的写作规范，每次创作前必须选择一个风格。通用模式无额外文件，直接用 style.md；其他模式只读对应风格文件
 - skill.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
 - 热点转译法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
