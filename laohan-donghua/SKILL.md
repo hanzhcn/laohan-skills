@@ -73,18 +73,19 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 
 这是最关键的步骤。三层规划决定视频质量。
 
-**4a. 语义分类**：给口播稿每段标记内容类型：
+**4a. 语义分类 + 默认技法映射**：给口播稿每段标记内容类型，并匹配默认技法（模型可覆盖，但默认选择已覆盖 80% 场景）：
 
-| 类型 | Overlay？ | 视觉强化方式 |
-|------|-----------|-------------|
-| 列举/枚举 | ✅ | 列表/标签/图标排列 |
-| 对比/VS | ✅ | 分屏/并列卡片 |
-| 数据/数字 | ✅ | 数字放大/进度条/图表 |
-| 概念解释 | ✅ | 关键词大字/示意图 |
-| 工具介绍 | ✅ | 命令行/界面截图/步骤 |
-| 总结/CTA | ✅ | 全屏 endcard |
-| 纯叙述/过渡 | ❌ | 保持真人全屏（HERO 模式） |
-| 情感/故事 | ❌ | 保持真人全屏 |
+| 类型 | Overlay？ | 默认技法 | 来源 |
+|------|-----------|---------|------|
+| 数据/数字 | ✅ | Counter count-up + 数字 glow | may-shorts-6 scene1 |
+| 列举/枚举 | ✅ | Stagger list + strike-through（否定项） | may-shorts-6 scene3 |
+| 概念解释 | ✅ | Chrome gradient sweep + text-shadow glow | may-shorts-6 scene6 |
+| 对比/VS | ✅ | 分栏卡片 + mask-image feather | may-shorts-6 scene4 |
+| 重点强调 | ✅ | Clip-path reveal + underline sweep | may-shorts-6 scene1 |
+| 工具介绍 | ✅ | 命令行/步骤列表 + accent 色 glow | — |
+| 总结/CTA | ✅ | 全屏 endcard + shimmer sweep | may-shorts-6 scene8 |
+| 纯叙述/过渡 | ❌ | 保持真人全屏（HERO 模式） | — |
+| 情感/故事 | ❌ | 保持真人全屏 | — |
 
 **4b. B-Roll 占比计算**：
 
@@ -163,11 +164,20 @@ ffmpeg -i raw.mov -c:v libx264 -preset medium -crf 20 -c:a aac -b:a 192k -movfla
 
 📖 **读取**：`~/.claude/skills/hyperframes-media/SKILL.md`（transcribe 命令详情）
 
-用官方转录拿时间戳（overlay 模式必需 word-level timestamps）：
+**字幕系统选择（固定优先级）**：
+
+| 优先级 | 方案 | 条件 | 说明 |
+|--------|------|------|------|
+| ★ 首选 | word-level 逐词字幕 | 官方转录输出含 word timestamps | 三态颜色（未读→accent→白色）+ 逐词 scale 弹跳 + 8 方向 text-shadow 描边。参考 may-shorts-6 captions.html |
+| ↓ 降级 | sentence-level 整句字幕 | word 数据缺失 | 28px 毛玻璃条底板 |
+
+用官方转录拿时间戳：
 
 ```bash
 npx hyperframes transcribe assets/<video>.mp4 --model small --language zh --json
 ```
+
+**字幕文本来源**：用 Whisper 转录原文，手动修正识别错误（如"翻热节"→"翻热点"）。不用口播稿精简版。字幕是屏幕底部的口播内容，不是场景动画里的文字。
 
 **中文识别准确率校验**（可选）：如官方识别质量不满意，用硅基流动做对照参考：
 
@@ -194,7 +204,7 @@ curl -s -X POST https://api.siliconflow.cn/v1/audio/transcriptions \
 #### 步骤 9：构建 compositions
 
 📖 **必读**：`references/broll-architecture.md`（架构约束 + 常见错误速查）
-📖 **查阅**：`references/broll-techniques.md`（8 种常用动画技法代码片段，按场景需要选用）
+📖 **查阅**：`references/broll-techniques.md`（10 种常用动画技法代码片段，按场景需要选用）
 📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 模式、8 种视觉风格、face 美化）
 📖 **参考**：`scene-index.md`（按内容类型 + 文字量匹配视觉结构模式）
 📖 **必读**：`~/.claude/skills/hyperframes/references/typography.md`（字体排版规则，每个场景都有文字）
@@ -231,7 +241,17 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 
 原则：先确定容器宽度 → 用 fitTextFontSize 算字号 → 写入 CSS。不要反过来先猜字号再发现溢出。
 
-**最小模板**：
+**完整场景示例**（改文字/颜色即用，不需要从片段组装）：
+
+| 示例文件 | 覆盖内容类型 | 包含技法 |
+|---------|------------|---------|
+| `references/example-a-data.html` | 数据/数字 | panel + counter count-up + underline + vignette breathing + anchor |
+| `references/example-b-list.html` | 列举/枚举 | panel + stagger list + strike-through + mask-image + vignette breathing + anchor |
+| `references/example-c-concept.html` | 概念解释 | panel + chrome gradient sweep + clip-path reveal + text-shadow glow + vignette breathing + anchor |
+
+**用法**：复制最匹配的示例 → 改 `data-composition-id`、文字内容、颜色、DURATION → 按需增减元素。
+
+**最小模板**（极简骨架，仅用于无法匹配上述 3 种示例时）：
 
 ```html
 <template id="<scene-name>-template">
@@ -291,12 +311,14 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 □ CSS 全部用 [data-composition-id="xxx"] scope
 □ 文件有 <template> 包装 + <script src="gsap.min.js">
 □ 背景最低 3 层：渐变底 + vignette + 至少一个漂移/呼吸元素
+□ 所有彩色文字有匹配色 text-shadow glow
 □ 按 DESIGN.md motion token 选 easing/duration
 □ 两阶段：build（入场）+ breathe（ambient）
 □ overlay 模式不写退场/resolve 动画（outro 除外）
 □ 禁止 Math.random() / Date.now() / repeat: -1
 □ 文字尺寸已用 fitTextFontSize 或 pretext 验证，不溢出容器
 □ 每个场景的文字内容来自步骤 4c 的内容提取表
+□ INSET 场景 bg 用全宽（1920px 或 inset:0），SIDE 场景用 960px + mask-image
 ```
 
 #### 步骤 10：构建 index.html
@@ -322,7 +344,7 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
       background: #050b13; font-family: "Noto Sans SC", sans-serif; color: #fff; }
     #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
 
-    /* Face-wrapper */
+    /* Face-wrapper — 三种模式（固定，不改） */
     #face-wrapper {
       position: absolute; top: 0; left: 0; width: 1920px; height: 1080px;
       transform-origin: 0 0; transform: translate(0px, 0px) scale(1);
@@ -330,7 +352,7 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
     }
     #face-video {
       display: block; width: 100%; height: 100%; object-fit: cover;
-      filter: contrast(1.04) saturate(1.02) brightness(0.99); /* 按实拍调整 */
+      filter: contrast(1.04) saturate(1.02) brightness(0.99);
     }
     #face-wrapper::after {
       content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -338,19 +360,18 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
         rgba(5,11,19,0.3) 88%, rgba(5,11,19,0.7) 100%);
     }
 
-    /* 字幕（可选，也可后期剪映配） */
-    .cap {
-      position: absolute; bottom: 72px; left: 0; right: 0; margin: 0 auto;
-      width: fit-content; max-width: 90%; padding: 12px 22px; border-radius: 14px;
-      background: rgba(10, 8, 5, 0.55); backdrop-filter: blur(8px);
-      font: 500 28px/1.3 "Noto Sans SC", sans-serif; color: #fff;
-      white-space: nowrap;
+    .scene-layer {
+      position: absolute; top: 0; left: 0; width: 1920px; height: 1080px;
     }
   </style>
 </head>
 <body>
   <div id="root" data-composition-id="<project-id>" data-start="0"
-       data-duration="TOTAL" data-width="1920" data-height="1080">
+       data-width="1920" data-height="1080">
+
+    <!-- Poster frame（GSAP-managed, not a clip） -->
+    <img id="poster" src="assets/clip-poster.jpg"
+         style="position:absolute;top:0;left:0;width:1920px;height:1080px;object-fit:cover;">
 
     <!-- Face video (muted, audio from sibling <audio>) -->
     <div id="face-wrapper">
@@ -359,28 +380,32 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
              playsinline></video>
     </div>
 
+    <!-- Last frame（GSAP-managed, not a clip） -->
+    <img id="lastframe" src="assets/clip-lastframe.jpg"
+         style="position:absolute;top:0;left:0;width:1920px;height:1080px;object-fit:cover;opacity:0;">
+
     <!-- Audio track -->
     <audio src="assets/audio.wav" data-start="0" data-duration="TOTAL"
            data-volume="1" data-track-index="2"></audio>
 
-    <!-- Scene overlays（每个 mount div 必须有 data-track-index + data-width + data-height）-->
-    <!-- 可选：ambient-bg（全时长背景粒子/网格，取消注释即用）-->
-    <!-- <div data-composition-id="ambient-bg" data-composition-src="compositions/ambient-bg.html"
+    <!-- Ambient background（全时长舞台层：grid 漂移 + 粒子 + vignette） -->
+    <div class="scene-layer" data-composition-id="ambient-bg"
+         data-composition-src="compositions/ambient-bg.html"
          data-start="0" data-duration="TOTAL" data-track-index="0"
-         data-width="1920" data-height="1080"></div> -->
-    <div data-composition-id="s1-hook" data-composition-src="compositions/s1-hook.html"
-         data-start="3.5" data-duration="8.0" data-track-index="3"
          data-width="1920" data-height="1080"></div>
 
-    <div data-composition-id="s2-data" data-composition-src="compositions/s2-data.html"
-         data-start="38.3" data-duration="6.6" data-track-index="3"
+    <!-- Scene overlays（每个 mount div 必须有 data-track-index + data-width + data-height） -->
+    <div class="scene-layer" data-composition-id="s1-hook"
+         data-composition-src="compositions/s1-hook.html"
+         data-start="17.0" data-duration="4.8" data-track-index="3"
          data-width="1920" data-height="1080"></div>
-
     <!-- ...更多场景... -->
 
-    <!-- 字幕（可选，body-level .clip，track-index ≥ 20）-->
-    <div class="cap clip" data-start="0" data-duration="5.67" data-track-index="30">第一句话</div>
-    <div class="cap clip" data-start="5.67" data-duration="3.6" data-track-index="30">第二句话</div>
+    <!-- Captions（word-level 逐词字幕，独立 sub-composition） -->
+    <div class="scene-layer" data-composition-id="captions"
+         data-composition-src="compositions/captions.html"
+         data-start="0" data-duration="TOTAL" data-track-index="4"
+         data-width="1920" data-height="1080"></div>
   </div>
 
   <script>
@@ -388,34 +413,31 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
     const mainTl = gsap.timeline({ paused: true });
     const TOTAL = <总时长>;
 
-    // ── Face-wrapper 模式 ──
-    // 选策略 A（scale+translate）或 B（translate-only），见 broll-design-reference.md
-    const HERO   = { x: 0,     y: 0,   scale: 1,    opacity: 1 };
-    const SIDE_R = { x: 1050,  y: 150, scale: 0.45, opacity: 1 };  // 策略 A
-    // const SIDE = { x: 480, y: 0, scale: 1, opacity: 1 };        // 策略 B
+    // ── Face-wrapper 三种模式（固定参数，不改） ──
+    const HERO   = { x: 0,    y: 0,   scale: 1,    opacity: 1 }; // 全屏人脸
+    const SIDE   = { x: 480,  y: 0,   scale: 1,    opacity: 1 }; // 左右分屏（默认）
+    const INSET  = { x: 1340, y: 760, scale: 0.27, opacity: 1 }; // 小窗右下角
     const MODE_DUR = 0.4;
 
-    // 初始状态
+    // 初始状态：HERO（开场全屏人脸）
     mainTl.set("#face-wrapper", HERO, 0);
 
     // ── Face 过渡时间表 ──
-    // t = 场景开始/结束时间，mode = 目标模式
     const transitions = [
-      { t: 3.5,  mode: SIDE_R },  // s1 开始
-      { t: 11.5, mode: HERO   },  // s1 结束
-      { t: 38.3, mode: SIDE_R },  // s2 开始
-      { t: 44.9, mode: HERO   },  // s2 结束
+      { t: 17.0,  mode: SIDE  }, // s1 开始
+      { t: 21.8,  mode: HERO  }, // s1 结束
       // ...按场景填充...
+      { t: 174.3, mode: INSET }, // outro 开始（INSET 替代 fade out）
     ];
-
-    // t - 0.15：提前 150ms，让 face 在场景到来时已就位
     transitions.forEach(({ t, mode }) => {
       mainTl.to("#face-wrapper",
         { ...mode, duration: MODE_DUR, ease: "expo.inOut" }, t - 0.15);
     });
 
-    // ── Face fade-out（outro 前全屏 endcard）──
-    // mainTl.to("#face-wrapper", { opacity: 0, duration: 0.6, ease: "power2.in" }, TOTAL - 10);
+    // ── Poster → video handoff ──
+    mainTl.to("#poster", { opacity: 0, duration: 0.15, ease: "power2.out" }, 0.1);
+    // ── Lastframe hold after video ends ──
+    mainTl.set("#lastframe", { opacity: 1 }, TOTAL - 0.5);
 
     // ── Ken Burns 缓慢缩放 ──
     mainTl.to("#face-video", { scale: 1.03, duration: TOTAL, ease: "none" }, 0);
@@ -430,11 +452,14 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 
 关键规则：
 - `<video>` 不加 `class="clip"`
+- poster/lastframe 由 GSAP 管理 opacity（不是 class="clip" + data 属性）
 - mount div 缺 `data-track-index` / `data-width` / `data-height` 任一 = 黑帧
 - **index.html 不用 `<template>` 包装**（只有 sub-composition 文件才用）
 - Face-wrapper 过渡时间表与场景 data-start 对齐，`t - 0.15` 提前
 - Google Fonts CDN 保留（Studio preview 需要，渲染时编译器自动嵌入）
-- **字幕可选**：`.cap.clip` body-level 元素（track-index ≥ 20）。也可跳过，后期剪映配
+- **字幕用独立 captions.html sub-composition**（track-index 4），不用 inline .cap div
+- **outro 用 INSET 模式**，不直接 fade out face
+- **ambient-bg 常开**（track-index 0，全时长舞台层）
 
 **🚧 GATE 3**：步骤 9 的构建检查清单全部 ✅ 后才能进入 lint。逐场景检查，任何一项未通过 → 返回修改对应 composition。
 
@@ -490,17 +515,54 @@ npx hyperframes render --quality standard --output renders/final.mp4
 
 以下规则仅适用于 B-roll overlay 模式，通用规则见 `rules/hyperframes.md`。
 
+### Face-wrapper 模式选择（固定优先级）
+
+| 模式 | 参数 | 何时用 | 说明 |
+|------|------|--------|------|
+| **SIDE** | `x:480, y:0, scale:1` | 日常讲解场景（默认） | 左右分屏，960px 内容区 + 右侧全尺寸人脸 |
+| **INSET** | `x:1340, y:760, scale:0.27` | outro/CTA、多栏对比、需要全屏宽度的内容 | 小窗人脸，释放完整画面空间 |
+| **HERO** | `x:0, y:0, scale:1` | 无场景 overlay 时、冲击/强调时刻 | 全屏人脸 |
+
+**禁止**：直接 fade out face（用 INSET 替代，保留人格存在感）。
+
+**使用逻辑**：
+- SIDE → INSET 转换用于 outro（人脸缩小但一直在）
+- INSET 场景的 bg 必须用全宽（1920px 或 `inset: 0`），因为人脸只占右下角
+- 多栏/多内容需要全屏宽度时选 INSET，不是 SIDE
+
+### 场景视觉规则
+
 | 规则 | 原因 |
 |------|------|
-| bg 宽度按需设计（参考 may-shorts-6 用 960px），右侧留给 face-wrapper | 全宽 bg 会遮住人脸 |
-| outro 全屏场景 bg 用 `inset: 0`（全宽），可以有退场 fade（0.8-1.2s） | outro 不需要给 face-wrapper 留空间 |
-| overlay 不写退场/resolve 动画（outro 除外） | face-wrapper 缩放回 1.0 自然掩盖 |
-| face-wrapper 过渡用 t - 0.15（提前 0.15s） | 让 face 在场景到来时已就位 |
+| bg 宽度：SIDE 场景用 960px + mask-image feather，INSET 场景用 1920px 或 inset:0 | SIDE 留空间给 face，INSET 人脸在角落 |
 | bg 用深色渐变（非 `#000` 纯黑） | overlay 叠加后纯黑不可见 |
+| 所有彩色文字加匹配色 text-shadow glow（如 `0 0 30px rgba(accent,0.5)`） | 视觉层次感，may-shorts-6 标配 |
 | vignette opacity 0.15-0.3 | 默认 0.75 太重 |
 | 不需要 grain overlay | 视频背景已有纹理 |
 | overlay bg 右边缘加 mask-image feather（60-100px） | 避免和 face-wrapper 硬切 |
-| INSET 模式（scale:0.27-0.30, 右下角画中画）用于代码/大段文字场景 | 需要最大 overlay 面积时 |
+| overlay 不写退场/resolve 动画（outro 除外） | face-wrapper 缩放回 1.0 自然掩盖 |
+| outro 可以有退场 fade（0.8-1.2s） | outro 是最后一个场景 |
+
+### 字幕系统规则
+
+| 规则 | 原因 |
+|------|------|
+| 首选 word-level 逐词字幕（独立 captions.html sub-composition） | 视觉冲击力远超整句字幕 |
+| 字幕文本用 Whisper 转录原文 + 手动修正 | 不是口播稿精简版 |
+| 8 方向 text-shadow 描边（非毛玻璃底板） | 在任何背景上都清晰 |
+| 逐词三态颜色：未读(dim) → 当前(accent) → 已读(white) | Alex Hormozi 风格 |
+| 逐词 scale 1.06 微弹跳 + back.out(3) | 视觉节奏感 |
+| 行级 fade in/out + SWAP_GAP 0.06s | 前后行不重叠 |
+| 特殊关键词可标 accent: "warn" 切换橙色 | 情感强调 |
+
+### 场景密度策略
+
+| 原则 | 说明 |
+|------|------|
+| B-Roll 占比 > 30% | 总 overlay 时长 / 总视频时长 |
+| 每 10-15s 至少一个场景 | 避免长时间无动画 |
+| 场景时长跟口播段落匹配 | 不能太短（看不完）也不能太长（想关掉） |
+| 长口播段落拆分多个场景 | 不在一个场景里塞 15s+ 内容 |
 
 ---
 
@@ -520,7 +582,7 @@ video-projects/<project-slug>/
 **本 skill 自带：**
 - `references/broll-architecture.md` — sub-composition 结构、CSS scope、常见错误
 - `references/broll-design-reference.md` — face-wrapper 模式、8 种视觉风格、face 美化、边缘 feather
-- `references/broll-techniques.md` — 8 种常用动画技法代码片段（counter/chrome-gradient/stagger-list/strike-through/clip-path 等）
+- `references/broll-techniques.md` — 10 种常用动画技法代码片段（counter/chrome-gradient/stagger-list/strike-through/clip-path/stamp-badge/logo-crystallize 等）
 
 **项目级（自动加载）：**
 - `rules/hyperframes.md` — 完整规则约束 + 渲染器踩坑

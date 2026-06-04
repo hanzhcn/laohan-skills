@@ -1,0 +1,118 @@
+<!--
+  完整场景示例 C：概念场景（概念解释）
+  覆盖技法：panel + chrome gradient sweep + clip-path reveal + text-shadow glow + vignette breathing + anchor
+  改文字/颜色即可复用。
+
+  用法：复制 → 改 data-composition-id、hero word 文字、副标题、DURATION
+  颜色来源：DESIGN.md（accent=#0066FF）
+-->
+<template id="s1-hook-template">
+<div data-composition-id="s1-hook"
+     data-start="0" data-duration="4.8"
+     data-width="1920" data-height="1080">
+
+  <div class="panel">
+    <div class="vignette"></div>
+
+    <!-- Chrome gradient hero 大字 -->
+    <div class="hero-word" id="hero">数据结构化</div>
+
+    <!-- 副标题（clip-path 揭示） -->
+    <div class="stamp" id="stamp">不是网页 · 是干净数据</div>
+
+    <!-- 装饰线 -->
+    <div class="line" id="line"></div>
+  </div>
+
+</div>
+
+<style>
+[data-composition-id="s1-hook"] .panel {
+  position: absolute; top: 0; left: 0;
+  width: 960px; height: 1080px;
+  background: linear-gradient(135deg, #07121c 0%, #0a1828 70%, #0d2031 100%);
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  gap: 36px; padding: 80px 100px;
+  box-sizing: border-box; overflow: hidden;
+  mask-image: linear-gradient(90deg, #000 0%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 88%, transparent 100%);
+}
+
+[data-composition-id="s1-hook"] .vignette {
+  position: absolute; top: 0; left: 0;
+  width: 960px; height: 1080px;
+  background: radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,0.4) 100%);
+  opacity: 0.15; pointer-events: none;
+}
+
+/* Chrome gradient：8-stop 金属渐变 + text-fill 透明 */
+[data-composition-id="s1-hook"] .hero-word {
+  font: 900 160px/0.95 "Noto Sans SC", sans-serif;
+  background: linear-gradient(90deg,
+    #0a0a1a 0%, #1a2a4a 25%, #2a5a8a 40%,
+    #0066FF 55%, #a5d8ff 65%, #ffffff 80%, #0a0a1a 100%
+  );
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  opacity: 0; transform: translateY(20px);
+}
+
+/* clip-path 揭示：初始右侧裁切 100% */
+[data-composition-id="s1-hook"] .stamp {
+  font: 700 36px/1.2 "Noto Sans SC", sans-serif;
+  color: #f5f5f5;
+  text-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-composition-id="s1-hook"] .line {
+  width: 200px; height: 3px;
+  background: #0066FF;
+  transform: scaleX(0); transform-origin: left center;
+  box-shadow: 0 0 10px rgba(0, 102, 255, 0.4);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+(() => {
+  window.__timelines = window.__timelines || {};
+  const DURATION = 4.8;
+  const S = '[data-composition-id="s1-hook"] ';
+  const tl = gsap.timeline({ paused: true });
+
+  // ── Build ──
+  // 1. Hero word 入场 + chrome gradient 扫光
+  tl.to(S + '.hero-word',
+    { opacity: 1, y: 0, duration: 0.42, ease: 'power3.out' }, 0.2);
+  tl.to(S + '.hero-word',
+    { backgroundPosition: '0% 0', duration: 0.7, ease: 'power2.out' }, 0.4);
+
+  // 2. 副标题 clip-path 揭示
+  tl.to(S + '.stamp',
+    { clipPath: 'inset(0 0% 0 0)', duration: 0.32, ease: 'power3.out' }, 0.8);
+
+  // 3. 装饰线生长
+  tl.to(S + '.line',
+    { scaleX: 1, duration: 0.32, ease: 'power2.out' }, 1.1);
+
+  // ── Breathe ──
+  const vc = Math.ceil(DURATION / 4) - 1;
+  tl.to(S + '.vignette',
+    { opacity: '+=0.08', duration: 2, repeat: vc, yoyo: true, ease: 'sine.inOut' }, 2.0);
+
+  const hc = Math.ceil(DURATION / 6) - 1;
+  tl.to(S + '.hero-word',
+    { scale: '+=0.015', duration: 3, repeat: hc, yoyo: true, ease: 'sine.inOut' }, 2.2);
+
+  // ── Anchor ──
+  tl.to({}, { duration: DURATION }, 0);
+
+  window.__timelines['s1-hook'] = tl;
+})();
+</script>
+</template>

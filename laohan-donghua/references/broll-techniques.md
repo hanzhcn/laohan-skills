@@ -265,3 +265,166 @@ tl.to('.title', {
 ```
 
 不需要用全部技法——每个场景选 2-3 个组合即可。选的依据是步骤 4 的内容类型和情绪。
+
+
+## 9. Stamp Badge + Backdrop-filter（倾斜印章徽章）
+
+**适合**：价格标签、核心卖点、重要数据强调（"$20"、"PRO会员"、"已验证"）
+
+来源：`may-shorts-6/scene7-pay-for.html`
+
+```html
+<!-- HTML -->
+<div class="stamp" id="stamp">
+  <span class="stamp-amount">$20</span>
+  <span class="stamp-label">PRO会员</span>
+</div>
+<div class="banner" id="banner">
+  <div class="banner-bar" id="banner-bar"></div>
+  <div class="banner-text">这是企业愿意付费的</div>
+</div>
+
+<!-- CSS -->
+.stamp {
+  position: absolute; top: 80px; left: 90px;
+  padding: 30px 56px;
+  border: 6px solid #f09025;          /* accent 色边框 */
+  border-radius: 22px;
+  background: rgba(7, 18, 28, 0.78);  /* 半透明深色底 */
+  backdrop-filter: blur(12px);         /* 毛玻璃效果 */
+  -webkit-backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0;
+  transform: rotate(-6deg) scale(0.8); /* 初始倾斜+缩小 */
+  box-shadow:
+    0 0 60px rgba(240, 144, 37, 0.45),       /* 外 glow */
+    inset 0 0 30px rgba(240, 144, 37, 0.12);  /* 内 glow */
+}
+.stamp-amount {
+  font-weight: 900; font-size: 140px;
+  color: #f09025; letter-spacing: -0.04em;
+  text-shadow: 0 0 32px rgba(240, 144, 37, 0.65);
+}
+.stamp-label {
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700; font-size: 46px; letter-spacing: 0.18em; color: #fff;
+}
+.banner {
+  position: absolute; bottom: 230px; left: 0; width: 100%; height: 88px;
+  display: flex; align-items: center; justify-content: center; opacity: 0;
+}
+.banner-bar {
+  position: absolute; left: 50%; top: 50%;
+  height: 88px; width: 940px; margin-left: -470px; margin-top: -44px;
+  background: linear-gradient(90deg, transparent 0%, rgba(7,18,28,0.92) 12%, rgba(7,18,28,0.92) 88%, transparent 100%);
+  border-top: 2px solid rgba(240, 144, 37, 0.55);
+  border-bottom: 2px solid rgba(240, 144, 37, 0.55);
+  transform: scaleX(0); transform-origin: center center;
+}
+.banner-text {
+  position: relative; z-index: 1;
+  font-family: "Roboto Mono", monospace; font-weight: 700; font-size: 40px;
+  letter-spacing: 0.08em; color: #fff;
+  text-shadow: 0 0 24px rgba(240, 144, 37, 0.6); opacity: 0;
+}
+
+<!-- JS — stamp 弹入 → banner 展开 → 文字淡入 -->
+tl.to(SCOPE + "#stamp",
+  { opacity: 1, scale: 1, rotate: -6, duration: 0.34, ease: "back.out(2.6)" }, 0.05);
+tl.to(SCOPE + "#banner",
+  { opacity: 1, duration: 0.28, ease: "power2.out" }, 0.35);
+tl.to(SCOPE + "#banner-bar",
+  { scaleX: 1, duration: 0.42, ease: "power3.out" }, 0.35);
+tl.to(SCOPE + ".banner-text",
+  { opacity: 1, duration: 0.28, ease: "power2.out" }, 0.6);
+```
+
+**关键点**：
+- `backdrop-filter: blur(12px)` 创造毛玻璃效果，让背景透过来
+- `rotate(-6deg) scale(0.8)` 初始状态，`back.out(2.6)` 弹入时保留倾斜角度
+- 外 glow + 内 glow 双层 box-shadow 增加立体感
+- Banner 条从中心 scaleX 展开，两端渐变透明
+
+## 10. Logo Crystallize + Shimmer Sweep（品牌 logo 弹入 + 光泽扫过）
+
+**适合**：outro/endcard 品牌露出、logo reveal
+
+来源：`may-shorts-6/scene8-cta-outro.html`
+
+```html
+<!-- HTML -->
+<img class="logo" id="logo" src="assets/logo.png" alt="品牌" />
+<div class="cta" id="cta">
+  <span class="cta-pre">评论区</span>
+  <span class="cta-key" id="cta-key">自取</span>
+</div>
+<div class="wordmark" id="wordmark">
+  <span>品牌名</span>
+  <span class="wordmark-bar" id="wordmark-bar"></span>
+</div>
+<div class="shimmer" id="shimmer"></div>
+
+<!-- CSS -->
+.logo {
+  width: 220px; height: auto;
+  opacity: 0; transform: translateY(40px) scale(0.92);
+  filter: drop-shadow(0 0 24px rgba(55, 189, 248, 0.55));
+}
+.cta {
+  display: flex; align-items: baseline; gap: 36px;
+  font-weight: 900; font-size: 220px; line-height: 0.95;
+  color: #fff; opacity: 0; transform: translateY(30px);
+  text-shadow: 0 0 60px rgba(55, 189, 248, 0.35), 0 6px 20px rgba(0,0,0,0.55);
+}
+.cta-key {
+  color: #f09025;
+  text-shadow: 0 0 36px rgba(240, 144, 37, 0.6), 0 0 80px rgba(240, 144, 37, 0.35);
+}
+.wordmark {
+  position: relative;
+  font-family: "Roboto Mono", monospace; font-weight: 700; font-size: 52px;
+  letter-spacing: 0.08em; color: #fff; opacity: 0; padding-bottom: 16px;
+}
+.wordmark-bar {
+  position: absolute; left: 0; bottom: 0;
+  height: 3px; width: 100%;
+  background: linear-gradient(90deg, #37bdf8 0%, #f09025 100%);
+  transform: scaleX(0); transform-origin: left center;
+}
+.shimmer {
+  position: absolute; top: 0; left: -40%;
+  width: 30%; height: 100%;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  opacity: 0; pointer-events: none; filter: blur(6px);
+}
+
+<!-- JS — logo 弹入 → CTA 落地 → 关键词 pop → wordmark 淡入 + bar wipe → shimmer 扫过 -->
+// Logo crystallizes from below
+tl.to(SCOPE + "#logo",
+  { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, 0.1);
+// CTA lands
+tl.to(SCOPE + "#cta",
+  { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 0.45);
+// Accent word pop
+tl.fromTo(SCOPE + "#cta-key",
+  { scale: 0.92 }, { scale: 1.06, duration: 0.22, ease: "back.out(3)" }, 0.78);
+tl.to(SCOPE + "#cta-key",
+  { scale: 1, duration: 0.32, ease: "power2.out" }, 1.0);
+// Wordmark + bar wipe
+tl.to(SCOPE + "#wordmark",
+  { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.0);
+tl.to(SCOPE + "#wordmark-bar",
+  { scaleX: 1, duration: 0.55, ease: "power3.out" }, 1.15);
+// Shimmer sweep
+tl.set(SCOPE + "#shimmer", { opacity: 1 }, 1.8);
+tl.fromTo(SCOPE + "#shimmer",
+  { x: 0 }, { x: "1500%", duration: 1.0, ease: "power2.inOut" }, 1.8);
+tl.set(SCOPE + "#shimmer", { opacity: 0 }, 2.85);
+```
+
+**关键点**：
+- Logo 用 `translateY(40px) scale(0.92)` 初始状态，`back.out(1.6)` 弹入——"结晶"感
+- CTA 关键词用 `fromTo scale 0.92→1.06→1` 三段式 pop，比单纯 fade 有冲击力
+- Shimmer 用 `left: -40%` 起点 + `x: "1500%"` 终点，确保扫过整个画面
+- `filter: blur(6px)` 让 shimmer 边缘柔和，不像硬切割
+- 所有时间点基于 4.14s 的 outro 时长，按需调整
