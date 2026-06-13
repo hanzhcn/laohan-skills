@@ -34,17 +34,6 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
 ```
 
-> The `skills` CLI is from [vercel-labs/skills](https://github.com/vercel-labs/skills) — auto-downloaded by `npx`, no manual install needed. Prerequisite: [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
-
-```
-You: 抓热点                    → 3-source AI trend briefing
-You: 帮我写一篇关于 xxx 的口播稿  → Full script from unified creation engine
-You: 下载这个 B站视频           → Auto-select best download method
-You: 抖音搜索 Claude Code      → Ranked results + topic analysis
-You: 检查有没有违规词           → 7-category scan + fix suggestions
-You: 帮我校准打分              → 6-dimension scoring + view prediction
-```
-
 ---
 
 ## Install on demand
@@ -87,8 +76,8 @@ npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ C
 > From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
 
 ```
-redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm → luping
- trends    script     review   score    cover / storyboard    slides     recording
+redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm → luping / donghua
+ trends    script     review   score    cover / storyboard    slides     recording / B-roll
 ```
 
 <table>
@@ -155,13 +144,28 @@ You: 校准打分 / 帮我打分 / 预测一下播放量
 </td></tr>
 </table>
 
+<table>
+<tr><td>
+
+### 🎞️ donghua (B-roll Video)
+
+> *"Script written, real-person video shot — how do I composite a polished final cut?"*
+
+Script + real-person video → B-roll overlay final video. Built on Hyperframes: one index.html + one render. 10-technique library (grain / vignette / stagger / 3D / cinematic-zoom / glitch / glow / shimmer, etc.).
+
+```
+你: 做 B-roll / 给视频加特效 / 生成动画片段
+```
+
+</td></tr>
+</table>
+
 | Skill | One-liner | Say |
 |-------|-----------|-----|
 | 🎨 **fengmian** | Gemini cover prompts (Qiuzhi 2046 style, 3 styles × 3 ratios) | "生成封面" |
 | 🎬 **fenjing** | Storyboard prompts (FLUX / SDXL / Gemini, quality-validated) | "拆分镜" |
 | 📑 **notebooklm** | Script → slide images (NotebookLM, ready for video editors) | "做 PPT" |
 | 🎥 **luping** | Screen recording automation (ffmpeg physical screen + Playwright browser → 1080p MP4) | "录屏" |
-| 🎞️ **donghua** | Script + real-person video → B-roll overlay final video (Hyperframes, one render) | "做 B-roll" |
 
 ---
 
