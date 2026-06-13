@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-15-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -21,9 +21,17 @@ Built by [寒武纪AI](https://github.com/hanzhcn) · Search **寒武纪AI** on 
 
 ## Quick Start
 
+> **Don't install all** — pick only the skills you need. Full per-skill commands in [Install on demand](#install-on-demand).
+
 ```bash
-# Install all 14 skills (requires Claude Code or OpenClaw)
+# Install all 15 skills (requires Claude Code or OpenClaw)
 npx skills add hanzhcn/laohan-skills -g -y
+
+# Install one (recommended: pick what you need)
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
+
+# Pick several
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
 ```
 
 > The `skills` CLI is from [vercel-labs/skills](https://github.com/vercel-labs/skills) — auto-downloaded by `npx`, no manual install needed. Prerequisite: [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
@@ -39,7 +47,42 @@ You: 帮我校准打分              → 6-dimension scoring + view prediction
 
 ---
 
-## Content Creation (8)
+## Install on demand
+
+No need to install all. Pick what you need and copy the command (requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code)):
+
+**Content Creation (9)**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 3-source AI trend aggregation
+npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (6 inputs → script)
+npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
+npx skills add hanzhcn/laohan-skills --skill laohan-cheat            # 📊 Content calibration scoring
+npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 Cover image prompts
+npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Storyboard prompts
+npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 Slide images
+npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 Screen recording automation
+npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay video
+```
+
+**Content Acquisition (2)**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai           # 📥 30+ platform download/scrape/search
+npx skills add hanzhcn/laohan-skills --skill laohan-douyinsousuo     # 🔍 Douyin keyword search
+```
+
+**Developer Tools (4 · self-use/advanced, content creators can skip)**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 Technical doc audit
+npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 Tool version checker
+npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 Config tutorial router
+npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ Create/modify skills
+```
+
+> Install all: `npx skills add hanzhcn/laohan-skills -g -y`
+
+---
+
+## Content Creation (9)
 
 > From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
 
@@ -118,6 +161,7 @@ You: 校准打分 / 帮我打分 / 预测一下播放量
 | 🎬 **fenjing** | Storyboard prompts (FLUX / SDXL / Gemini, quality-validated) | "拆分镜" |
 | 📑 **notebooklm** | Script → slide images (NotebookLM, ready for video editors) | "做 PPT" |
 | 🎥 **luping** | Screen recording automation (ffmpeg physical screen + Playwright browser → 1080p MP4) | "录屏" |
+| 🎞️ **donghua** | Script + real-person video → B-roll overlay final video (Hyperframes, one render) | "做 B-roll" |
 
 ---
 
@@ -170,7 +214,9 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 
 ---
 
-## Developer Tools (4)
+## Developer Tools (4 · self-use/advanced)
+
+> ⚠️ Below are for developers (maintenance/config/audit). **Content creators can skip this section.**
 
 | Skill | One-liner | Say |
 |-------|-----------|-----|

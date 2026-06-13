@@ -22,9 +22,17 @@
 
 ## Quick Start
 
+> **不必全装**——挑你要的技能单独装，避免装一堆用不上的。完整单装命令见「[按需安装](#按需安装)」。
+
 ```bash
-# 一键安装全部 15 个技能（需要 Claude Code 或 OpenClaw）
+# 一键全装（15 个技能，需要 Claude Code 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills -g -y
+
+# 单装一个（推荐：按需挑）
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
+
+# 多选几个
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
 ```
 
 > `skills` CLI 来自 [vercel-labs/skills](https://github.com/vercel-labs/skills)，`npx` 自动下载无需手动安装。前提：已安装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)。
@@ -37,6 +45,41 @@ npx skills add hanzhcn/laohan-skills -g -y
 你: 检查有没有违规词           → 7 类扫描 + 替换建议
 你: 帮我校准打分              → 6 维打分 + 播放量预测
 ```
+
+---
+
+## 按需安装
+
+不必全装。挑你要的，复制对应命令（前提：已装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)）：
+
+**内容创作（9 个）**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 AI 热点三路并行抓取
+npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
+npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
+npx skills add hanzhcn/laohan-skills --skill laohan-cheat            # 📊 内容校准打分+预测
+npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封面提示词
+npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词
+npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 幻灯片图片
+npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 录屏自动化
+npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay 成片
+```
+
+**内容获取（2 个）**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai           # 📥 30+平台下载/抓取/搜索
+npx skills add hanzhcn/laohan-skills --skill laohan-douyinsousuo     # 🔍 抖音关键词搜索
+```
+
+**开发者工具（4 个 · 自用/进阶，内容创作者可跳过）**
+```bash
+npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 技术文档联网审查
+npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 工具版本检查
+npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 配置教程路由
+npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ 创建/修改 skill
+```
+
+> 一键全装：`npx skills add hanzhcn/laohan-skills -g -y`
 
 ---
 
@@ -172,7 +215,9 @@ DrissionPage 监听 + 滚动采集，按点赞排行 TOP 20 + 选题分析。搜
 
 ---
 
-## 开发者工具（4 个）
+## 开发者工具（4 个 · 自用/进阶）
+
+> ⚠️ 以下为开发者维护、配置、审查用，**内容创作者可跳过此板块**。
 
 | 技能 | 一句话 | 说 |
 |------|--------|-----|
