@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-14-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-15-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -23,7 +23,7 @@
 ## Quick Start
 
 ```bash
-# 一键安装全部 14 个技能（需要 Claude Code 或 OpenClaw）
+# 一键安装全部 15 个技能（需要 Claude Code 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills -g -y
 ```
 
@@ -40,7 +40,7 @@ npx skills add hanzhcn/laohan-skills -g -y
 
 ---
 
-## 内容创作（8 个）
+## 内容创作（9 个）
 
 > 从选题到成片，8 步全流程覆盖。每一步都有对应技能，说一句就能触发。
 
@@ -119,6 +119,7 @@ redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm 
 | 🎬 **fenjing** | 分镜提示词（FLUX / SDXL / Gemini，质量校验后拆分） | "拆分镜" |
 | 📑 **notebooklm** | 口播稿 → 幻灯片图片（NotebookLM，剪映直接用） | "做 PPT" |
 | 🎥 **luping** | 录屏自动化（ffmpeg 物理屏 + Playwright 浏览器 → 1080p MP4） | "录屏" |
+| 🎞️ **donghua** | 口播稿 + 真人视频 → B-roll overlay 成片（Hyperframes，一次 render 出片） | "做 B-roll" |
 
 ---
 

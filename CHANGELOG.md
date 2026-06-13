@@ -2,6 +2,16 @@
 
 所有重要变更都会记录在此文件中。
 
+## [1.4.0] - 2026-06-14
+
+### 新增
+
+- **laohan-donghua** v9.0.0 — 口播稿 + 真人视频 → B-roll overlay 成片（Hyperframes，index.html + 一次 render 出片），技法库扩展至 10 种 + 3 个完整场景示例，face-wrapper 统一为 SIDE 策略
+
+### 变更
+
+- README badge 更新为 15 个 skill（内容创作板块补 donghua，8→9）
+
 ## [1.3.0] - 2026-05-28
 
 ### 新增
