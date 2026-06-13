@@ -22,7 +22,7 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 - **纯动画/PPT（无真人出镜）** → `/hyperframes`
 - **竖屏短视频（9:16）** → 需额外适配，本 skill 按 16:9
 
-`make-a-video` 是完整视频创作流程（8-gate，从选题到渲染），laohan-donghua 是 B-roll overlay 专项流程（17-step，口播稿+真人视频→overlay 成片）。两者并行，不嵌套。
+`make-a-video` 是完整视频创作流程（8-gate，从选题到渲染），laohan-donghua 是 B-roll overlay 专项流程（18-step，口播稿+真人视频→overlay 成片）。两者并行，不嵌套。
 
 ## 委托关系
 
@@ -32,7 +32,9 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 | CLI 命令 | `/hyperframes-cli` | lint/render |
 | 媒体处理 | `/hyperframes-media` | 转录 |
 | GSAP 动画 | `/gsap` | 复杂动画 |
+| Catalog blocks 安装 | `/hyperframes-registry` | 需要官方预制组件时 |
 | 规则约束 | `rules/hyperframes.md` | 自动加载 |
+| Render Contract + workspace | `CLAUDE.md` | 自动加载（11 条硬规则 + 项目结构） |
 | 架构/设计参数 | `references/` | 构建时查阅 |
 
 **写 composition 前，先调用 `/hyperframes` 获取框架规则。**
@@ -48,10 +50,10 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 | G1 | 步骤 4 后 | 场景规划表（编号+口播段落+提取文字+布局+情绪+语义类型）| 禁止进入步骤 6 |
 | G2 | 步骤 8 后 | 时间戳校准表（帧对齐 data-start/duration，场景间 ≥0.3s 间隔）| 禁止构建 compositions |
 | G3 | 步骤 10 后 | 全场景构建检查清单全部 ✅ | 禁止 lint |
-| G4 | 步骤 11 后 | lint 0 error + inspect 无溢出 | 禁止 preview |
-| G5 | 步骤 14 后 | 用户在 Studio 明确说"可以" | 禁止 draft render |
-| G6 | 步骤 15 后 | 每个 hero 帧 Read 确认无黑帧/裁切/溢出 | 禁止 standard render |
-| G7 | 步骤 16 后 | 用户在 MP4 明确说"可以" | 禁止 final render |
+| G4 | 步骤 12 后 | lint 0 error + validate 通过 + inspect 无溢出 | 禁止 preview |
+| G5 | 步骤 15 后 | 用户在 Studio 明确说"可以" | 禁止 draft render |
+| G6 | 步骤 16 后 | 每个 hero 帧 Read 确认无黑帧/裁切/溢出 | 禁止 standard render |
+| G7 | 步骤 17 后 | 用户在 MP4 明确说"可以" | 禁止 final render |
 
 **强制规则**：
 1. 跳过任何 Gate → 停止执行，回到未完成的步骤。没有例外。
@@ -80,8 +82,11 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 | 数据/数字 | ✅ | Counter count-up + 数字 glow | may-shorts-6 scene1 |
 | 列举/枚举 | ✅ | Stagger list + strike-through（否定项） | may-shorts-6 scene3 |
 | 概念解释 | ✅ | Chrome gradient sweep + text-shadow glow | may-shorts-6 scene6 |
-| 对比/VS | ✅ | 分栏卡片 + mask-image feather | may-shorts-6 scene4 |
-| 重点强调 | ✅ | Clip-path reveal + underline sweep | may-shorts-6 scene1 |
+| 对比/VS | ✅ | 分栏卡片 + mask-image feather | — |
+| 重点强调 | ✅ | Slam + micro-tremor + scan-line sweep | may-shorts-18 scene1 |
+| 冲击/反转 | ✅ | Hero slam + spark burst + glow pulse | may-shorts-18 scene5 |
+| 标签/功能名 | ✅ | Chip/pill badge pop + glow pulse | may-shorts-18 scene2 |
+| 紧张/倒计时 | ✅ | Letter-spacing breath + vignette breathing | may-shorts-18 scene5 |
 | 工具介绍 | ✅ | 命令行/步骤列表 + accent 色 glow | — |
 | 总结/CTA | ✅ | 全屏 endcard + shimmer sweep | may-shorts-6 scene8 |
 | 纯叙述/过渡 | ❌ | 保持真人全屏（HERO 模式） | — |
@@ -204,8 +209,8 @@ curl -s -X POST https://api.siliconflow.cn/v1/audio/transcriptions \
 #### 步骤 9：构建 compositions
 
 📖 **必读**：`references/broll-architecture.md`（架构约束 + 常见错误速查）
-📖 **查阅**：`references/broll-techniques.md`（10 种常用动画技法代码片段，按场景需要选用）
-📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 模式、8 种视觉风格、face 美化）
+📖 **查阅**：`references/broll-techniques.md`（24 种常用动画技法 + 3 大基础设施系统，按场景需要选用）
+📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 4 种架构、8 种视觉风格、face 美化）
 📖 **参考**：`scene-index.md`（按内容类型 + 文字量匹配视觉结构模式）
 📖 **必读**：`~/.claude/skills/hyperframes/references/typography.md`（字体排版规则，每个场景都有文字）
 📖 **参考**：`~/.claude/skills/hyperframes/references/css-patterns.md`（文字强调效果）
@@ -248,10 +253,15 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 | `references/example-a-data.html` | 数据/数字 | panel + counter count-up + underline + vignette breathing + anchor |
 | `references/example-b-list.html` | 列举/枚举 | panel + stagger list + strike-through + mask-image + vignette breathing + anchor |
 | `references/example-c-concept.html` | 概念解释 | panel + chrome gradient sweep + clip-path reveal + text-shadow glow + vignette breathing + anchor |
+| `references/example-d-negate.html` | 否定/反转 | X-mark pop + global strike + mask-image feather + vignette breathing |
+| `references/example-e-affirm.html` | 肯定列表 | check-list stagger + dual-accent + mask-image feather + vignette breathing |
+| `references/example-f-punch.html` | 短冲击强调 | burst flash + punch card + text-stroke outline（<1s，带退场） |
+| `references/example-g-cta.html` | CTA/Outro | logo crystallize + shimmer sweep + underline scale + wordmark fade |
+| `references/example-h-stamp.html` | 价格/印章强调 | stamp badge（旋转弹入）+ banner bar（横向展开）+ backdrop blur |
 
 **用法**：复制最匹配的示例 → 改 `data-composition-id`、文字内容、颜色、DURATION → 按需增减元素。
 
-**最小模板**（极简骨架，仅用于无法匹配上述 3 种示例时）：
+**最小模板**（极简骨架，仅用于无法匹配上述 8 种示例时）：
 
 ```html
 <template id="<scene-name>-template">
@@ -324,7 +334,7 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 #### 步骤 10：构建 index.html
 
 📖 **必读**：`references/broll-architecture.md`（mount div 属性要求）
-📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 模式和过渡时序）
+📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 4 种架构和过渡时序）
 
 **完整模板**：
 
@@ -417,7 +427,7 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
     const HERO   = { x: 0,    y: 0,   scale: 1,    opacity: 1 }; // 全屏人脸
     const SIDE   = { x: 480,  y: 0,   scale: 1,    opacity: 1 }; // 左右分屏（默认）
     const INSET  = { x: 1340, y: 760, scale: 0.27, opacity: 1 }; // 小窗右下角
-    const MODE_DUR = 0.4;
+    const MODE_DUR = 0.32;
 
     // 初始状态：HERO（开场全屏人脸）
     mainTl.set("#face-wrapper", HERO, 0);
@@ -458,12 +468,12 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 - Face-wrapper 过渡时间表与场景 data-start 对齐，`t - 0.15` 提前
 - Google Fonts CDN 保留（Studio preview 需要，渲染时编译器自动嵌入）
 - **字幕用独立 captions.html sub-composition**（track-index 4），不用 inline .cap div
-- **outro 用 INSET 模式**，不直接 fade out face
+- **outro 用 INSET 模式**（结尾最后 ~0.6s 可 fade out face 让锁屏画面独占）
 - **ambient-bg 常开**（track-index 0，全时长舞台层）
 
 **🚧 GATE 3**：步骤 9 的构建检查清单全部 ✅ 后才能进入 lint。逐场景检查，任何一项未通过 → 返回修改对应 composition。
 
-#### 步骤 11-16：验证管线
+#### 步骤 11-18：验证管线
 
 📖 **读取**：`~/.claude/skills/hyperframes-cli/SKILL.md`（命令参数详解）
 
@@ -471,33 +481,35 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 # 11. 静态检查
 npx hyperframes lint                                    # 修 error，triage warning（含对比度检查）
 
-# 12. 布局检查
+# 12. 运行时检查（lint 看不到 JS 异常、音频同步等运行时问题）
+npx hyperframes validate                                # headless Chrome 运行时验证
+
+# 13. 布局检查
 npx hyperframes inspect                                 # headless Chrome 视觉布局
 
-# 13. 动画编排分析（新场景或重大改动时运行）
+# 14. 动画编排分析（新场景或重大改动时运行）
 node .claude/skills/hyperframes/scripts/animation-map.mjs compositions/ --out compositions/.hyperframes/anim-map
 # 输出：per-tween 摘要、ASCII 时间线、stagger 检测、dead zone 标记、元素生命周期、场景快照
 
-# 14. Gate 1: Studio preview（强制）
+# 15. Gate 1: Studio preview（强制）
 npx hyperframes preview                                 # localhost:3002
 # → 用户确认布局后才进下一步
 
-# 15. Draft 渲染 + 抽帧验证
+# 16. Draft 渲染 + 抽帧验证
 npx hyperframes render --quality draft --output renders/draft.mp4
-# 抽帧验证（二选一）：
-# 官方 snapshot（如可用）：
-npx hyperframes snapshot --at t1,t2,t3,...
-# ffmpeg fallback（官方不可用时）：
-mkdir -p renders/frames
-for t in <scene1-t> <scene2-t> ...; do
-  ffmpeg -y -ss $t -i renders/draft.mp4 -frames:v 1 -q:v 2 "renders/frames/t${t}.png"
-done
+# 抽帧验证（snapshot 优先，ffmpeg fallback）：
+npx hyperframes snapshot --at <scene1-t>,<scene2-t>,<scene3-t> --timeout 10000
+# fallback（snapshot 不可用时）：
+# mkdir -p renders/frames
+# for t in <scene1-t> <scene2-t> ...; do
+#   ffmpeg -y -ss $t -i renders/draft.mp4 -frames:v 1 -q:v 2 "renders/frames/t${t}.png"
+# done
 # 每个 PNG 必须 Read 确认无黑帧/裁切/溢出
 
-# 16. Gate 2: MP4 preview（强制）
+# 17. Gate 2: MP4 preview（强制）
 # npx serve renders -p 8080 -n → 用户确认节奏+音频同步
 
-# 17. Standard 渲染
+# 18. Standard 渲染
 npx hyperframes render --quality standard --output renders/final.mp4
 # 性能选项（按需）：
 #   --workers <n>    并行 worker（默认 CPU/2 上限4，短视频用 1）
@@ -523,7 +535,7 @@ npx hyperframes render --quality standard --output renders/final.mp4
 | **INSET** | `x:1340, y:760, scale:0.27` | outro/CTA、多栏对比、需要全屏宽度的内容 | 小窗人脸，释放完整画面空间 |
 | **HERO** | `x:0, y:0, scale:1` | 无场景 overlay 时、冲击/强调时刻 | 全屏人脸 |
 
-**禁止**：直接 fade out face（用 INSET 替代，保留人格存在感）。
+**禁止**：中途直接 fade out face（用 INSET 替代，保留人格存在感）。结尾最后 0.6s 可以 fade out（may-shorts-6 在 CTA 锁定后 fade face 让锁屏画面独占结尾）。
 
 **使用逻辑**：
 - SIDE → INSET 转换用于 outro（人脸缩小但一直在）
@@ -532,28 +544,23 @@ npx hyperframes render --quality standard --output renders/final.mp4
 
 ### 场景视觉规则
 
-| 规则 | 原因 |
-|------|------|
-| bg 宽度：SIDE 场景用 960px + mask-image feather，INSET 场景用 1920px 或 inset:0 | SIDE 留空间给 face，INSET 人脸在角落 |
-| bg 用深色渐变（非 `#000` 纯黑） | overlay 叠加后纯黑不可见 |
-| 所有彩色文字加匹配色 text-shadow glow（如 `0 0 30px rgba(accent,0.5)`） | 视觉层次感，may-shorts-6 标配 |
-| vignette opacity 0.15-0.3 | 默认 0.75 太重 |
-| 不需要 grain overlay | 视频背景已有纹理 |
-| overlay bg 右边缘加 mask-image feather（60-100px） | 避免和 face-wrapper 硬切 |
-| overlay 不写退场/resolve 动画（outro 除外） | face-wrapper 缩放回 1.0 自然掩盖 |
-| outro 可以有退场 fade（0.8-1.2s） | outro 是最后一个场景 |
+📖 **详细规则见 `rules/hyperframes.md`** overlay 美学规范章节。核心要点：
+
+- bg 深色渐变（非纯黑 `#000`），vignette opacity 0.15-0.3，不需要 grain overlay
+- SIDE 场景 bg 960px + mask-image feather（60-100px 右边缘），INSET 场景全宽（1920px 或 inset:0）
+- 所有彩色文字加匹配色 text-shadow glow（如 `0 0 30px rgba(accent,0.5)`）
+- overlay 不写退场/resolve 动画（outro 除外）— face-wrapper 缩回 scale 1.0 自然掩盖
+- outro 可以有退场 fade（0.8-1.2s）
 
 ### 字幕系统规则
 
-| 规则 | 原因 |
-|------|------|
-| 首选 word-level 逐词字幕（独立 captions.html sub-composition） | 视觉冲击力远超整句字幕 |
-| 字幕文本用 Whisper 转录原文 + 手动修正 | 不是口播稿精简版 |
-| 8 方向 text-shadow 描边（非毛玻璃底板） | 在任何背景上都清晰 |
-| 逐词三态颜色：未读(dim) → 当前(accent) → 已读(white) | Alex Hormozi 风格 |
-| 逐词 scale 1.06 微弹跳 + back.out(3) | 视觉节奏感 |
-| 行级 fade in/out + SWAP_GAP 0.06s | 前后行不重叠 |
-| 特殊关键词可标 accent: "warn" 切换橙色 | 情感强调 |
+📖 **详细规则见 `rules/hyperframes.md`** Captions 章节。核心要点：
+
+- 首选 word-level 逐词字幕（独立 captions.html sub-composition），降级用整句字幕
+- 字幕文本用 Whisper 转录原文 + 手动修正（不是口播稿精简版）
+- 逐词三态颜色：未读(dim) → 当前(accent) → 已读(white) + scale 1.06 微弹跳 back.out(3)
+- 8 方向 text-shadow 描边（非毛玻璃底板）
+- 特殊关键词可标 accent 色切换（如"warn"切橙色）
 
 ### 场景密度策略
 
@@ -581,17 +588,23 @@ video-projects/<project-slug>/
 
 **本 skill 自带：**
 - `references/broll-architecture.md` — sub-composition 结构、CSS scope、常见错误
-- `references/broll-design-reference.md` — face-wrapper 模式、8 种视觉风格、face 美化、边缘 feather
-- `references/broll-techniques.md` — 10 种常用动画技法代码片段（counter/chrome-gradient/stagger-list/strike-through/clip-path/stamp-badge/logo-crystallize 等）
+- `references/broll-design-reference.md` — face-wrapper 4 种架构、8 种视觉风格、face 美化、边缘 feather
+- `references/broll-techniques.md` — 24 种常用动画技法 + 3 大基础设施系统（ambient-bg/captions/face-wrapper）
 
 **项目级（自动加载）：**
-- `rules/hyperframes.md` — 完整规则约束 + 渲染器踩坑
-- `MOTION_PHILOSOPHY.md` — 官方美学体系
+- `CLAUDE.md` — **Render Contract（11 条硬规则）+ workspace layout + 全部 CLI 命令**。构建前必读
+- `rules/hyperframes.md` — B-roll overlay 完整规则 + 渲染器踩坑 + 性能优化
+- `MOTION_PHILOSOPHY.md` — 官方美学体系（10 Laws + pre-flight checklist）
+- `DESIGN.ais-example.md` — 完整 DESIGN.md 结构模板
 - `video-projects/may-shorts-6/` — 官方 overlay 参考项目
-- `scene-index.md` — 52 个内容场景的视觉灵感库（7 横屏模板，按内容类型速查）。按内容类型匹配视觉结构，不是复制模板
+- `scene-index.md` — 52 个内容场景的视觉灵感库（7 横屏模板，按内容类型速查）
 
 **委托 skill：**
-- `/hyperframes` `/hyperframes-cli` `/hyperframes-media` `/gsap`
+- `/hyperframes` — Composition 编写规则，写 HTML 前调用
+- `/hyperframes-cli` — init / lint / inspect / preview / render / doctor
+- `/hyperframes-media` — 转录 / TTS / 背景移除
+- `/hyperframes-registry` — 安装 catalog blocks（`npx hyperframes add <name>`）
+- `/gsap` — GSAP 动画参考
 
 **官方源码仓库（本地权威文档）：**
 - `/Users/hanzhmacbookair/Documents/hyperframes/hyperframes-repo/docs/` — 超越 skill 文件的官方文档

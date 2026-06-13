@@ -1,0 +1,65 @@
+<!--
+  短冲击强调场景模板 — 改文字/颜色/DURATION 即用
+  内容类型：情绪转折、"就是这样"、冲击时刻
+  使用技法：#11 Burst Flash + Punch Card + #12 Text-stroke Outline
+  Face 模式：HERO（全屏人脸，无 panel，文字叠在人脸上）
+  特殊：唯一带退场动画的 overlay 场景（<1s）
+  来源：may-shorts-6/scene5-thats-it
+-->
+<template id="example-punch-template">
+<div data-composition-id="example-punch" data-start="0"
+     data-duration="1.0" data-width="1920" data-height="1080">
+  <!-- 无 panel — 直接叠在 HERO 模式的人脸上 -->
+  <div class="burst" id="burst"></div>
+  <div class="punch-card" id="punch-card">
+    <div class="punch-text">就是<br/>这样。</div>
+  </div>
+
+<style>
+[data-composition-id="example-punch"] { position: absolute; inset: 0; }
+[data-composition-id="example-punch"] .burst {
+  position: absolute; left: 50%; top: 22%;
+  width: 800px; height: 800px;
+  margin-left: -400px; margin-top: -400px;
+  background: radial-gradient(circle,
+    rgba(240,144,37,0.45) 0%, rgba(240,144,37,0.18) 30%, transparent 65%);
+  opacity: 0; transform: scale(0.4);
+  will-change: transform, opacity;
+}
+[data-composition-id="example-punch"] .punch-card {
+  position: absolute; left: 50%; top: 18%;
+  transform: translateX(-50%) translateY(20px) scale(0.85);
+  opacity: 0; text-align: center;
+  font-weight: 900; font-size: 200px; line-height: 0.95;
+  letter-spacing: -0.04em; color: #fff;
+  text-shadow:
+    -4px -4px 0 #07121c, 4px -4px 0 #07121c,
+    -4px 4px 0 #07121c, 4px 4px 0 #07121c,
+    -5px 0 0 #07121c, 5px 0 0 #07121c,
+    0 -5px 0 #07121c, 0 5px 0 #07121c,
+    0 0 60px rgba(240,144,37,0.55);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+(() => {
+  const DURATION = 1.0;
+  const SCOPE = '[data-composition-id="example-punch"] ';
+  const tl = gsap.timeline({ paused: true });
+
+  // BUILD（入场 — 爆闪 + 卡片几乎同时）
+  tl.to(SCOPE + "#burst", { opacity: 1, scale: 1, duration: 0.22, ease: "power3.out" }, 0);
+  tl.to(SCOPE + "#burst", { opacity: 0, scale: 1.3, duration: 0.55, ease: "power2.in" }, 0.22);
+  tl.to(SCOPE + "#punch-card", { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(2.4)" }, 0.05);
+
+  // RESOLVE（退场 — 向上飘退）
+  tl.to(SCOPE + "#punch-card", { opacity: 0, y: -16, duration: 0.22, ease: "power2.in" }, 0.78);
+
+  // Anchor
+  tl.set({}, {}, DURATION);
+  window.__timelines["example-punch"] = tl;
+})();
+</script>
+</div>
+</template>

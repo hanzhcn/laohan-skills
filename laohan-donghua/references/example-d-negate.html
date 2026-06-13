@@ -1,0 +1,91 @@
+<!--
+  否定/反转场景模板 — 改文字/颜色/DURATION 即用
+  内容类型：否定、反转、"不需要"、"已经过时"
+  使用技法：#9 X-mark Pop + Global Strike + #6 Mask-image Feather + #7 Vignette Breathing
+  Face 模式：SIDE（左右分屏）
+  来源：may-shorts-6/scene2-not-needed
+-->
+<template id="example-negate-template">
+<div data-composition-id="example-negate" data-start="0"
+     data-duration="2.0" data-width="1920" data-height="1080">
+  <div class="panel">
+    <div class="label">BUT MOST</div>
+    <div class="big">
+      <span class="x-mark" id="x-mark">✕</span>
+      <span class="text" id="neg-text">不需要<br/>这些</span>
+    </div>
+    <div class="global-strike" id="global-strike"></div>
+  </div>
+  <div class="vignette"></div>
+
+<style>
+[data-composition-id="example-negate"] { position: absolute; inset: 0; }
+[data-composition-id="example-negate"] .panel {
+  position: absolute; top: 0; left: 0;
+  width: 960px; height: 1080px;
+  background: linear-gradient(135deg, #07121c 0%, #0a1828 70%, #0d2031 100%);
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  gap: 30px; padding: 80px 100px;
+  box-sizing: border-box; overflow: hidden;
+  mask-image: linear-gradient(90deg, #000 0%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 88%, transparent 100%);
+}
+[data-composition-id="example-negate"] .label {
+  font-family: "Roboto Mono", monospace;
+  font-weight: 500; font-size: 44px; letter-spacing: 0.18em;
+  color: #96a2b6; opacity: 0;
+}
+[data-composition-id="example-negate"] .big {
+  display: flex; align-items: center; gap: 36px;
+  font-weight: 900; font-size: 130px; line-height: 0.96;
+  letter-spacing: -0.02em; color: #fff;
+}
+[data-composition-id="example-negate"] .x-mark {
+  color: #f09025; font-size: 260px; line-height: 0.8;
+  opacity: 0; transform: scale(0.4);
+  text-shadow: 0 0 60px rgba(240,144,37,0.55);
+}
+[data-composition-id="example-negate"] .text {
+  opacity: 0; transform: translateY(20px);
+}
+[data-composition-id="example-negate"] .global-strike {
+  position: absolute; bottom: 320px; left: 100px;
+  height: 8px; width: 460px;
+  background: #f09025;
+  transform-origin: left center; transform: scaleX(0);
+  box-shadow: 0 0 24px rgba(240,144,37,0.5);
+}
+[data-composition-id="example-negate"] .vignette {
+  position: absolute; top: 0; left: 0; width: 960px; height: 1080px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%);
+  opacity: 0.2;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+(() => {
+  const DURATION = 2.0;
+  const SCOPE = '[data-composition-id="example-negate"] ';
+  const tl = gsap.timeline({ paused: true });
+
+  // BUILD（入场）
+  tl.to(SCOPE + ".label", { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.05);
+  tl.to(SCOPE + ".x-mark", { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2.4)" }, 0.32);
+  tl.to(SCOPE + ".text", { opacity: 1, y: 0, duration: 0.34, ease: "power2.out" }, 0.55);
+  tl.to(SCOPE + ".global-strike", { scaleX: 1, duration: 0.4, ease: "power3.out" }, 1.3);
+
+  // BREATHE（ambient）
+  const cycles = Math.ceil(DURATION / 4) - 1;
+  tl.to(SCOPE + ".vignette", { opacity: "+=0.08", duration: 2,
+    repeat: cycles, yoyo: true, ease: "sine.inOut" }, 1.5);
+
+  // Anchor
+  tl.set({}, {}, DURATION);
+  window.__timelines["example-negate"] = tl;
+})();
+</script>
+</div>
+</template>

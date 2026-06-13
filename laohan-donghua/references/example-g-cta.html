@@ -1,0 +1,109 @@
+<!--
+  CTA/Outro 场景模板 — 改文字/颜色/DURATION 即用
+  内容类型：行动号召、品牌收尾、关注引导
+  使用技法：#14 Logo Crystallize + Shimmer Sweep + #3 Underline Scale + #12 Text-stroke Outline
+  Face 模式：INSET（人脸缩小到右下角，释放全屏空间）
+  来源：may-shorts-6/scene8-cta-outro
+-->
+<template id="example-cta-template">
+<div data-composition-id="example-cta" data-start="0"
+     data-duration="4.2" data-width="1920" data-height="1080">
+  <div class="stage">
+    <!-- Logo — 替换为你的品牌 logo -->
+    <img class="logo" id="logo" src="assets/logo.png" alt="品牌" />
+
+    <!-- 主 CTA -->
+    <div class="cta" id="cta">
+      <span class="cta-pre">评论区</span>
+      <span class="cta-key" id="cta-key">自取</span>
+    </div>
+
+    <!-- 品牌名 + 下划线 -->
+    <div class="wordmark" id="wordmark">
+      <span>你的品牌名</span>
+      <span class="wordmark-bar" id="wordmark-bar"></span>
+    </div>
+
+    <!-- 光泽扫过 -->
+    <div class="shimmer" id="shimmer"></div>
+  </div>
+
+<style>
+[data-composition-id="example-cta"] { position: absolute; inset: 0; }
+[data-composition-id="example-cta"] .stage {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  gap: 28px; padding: 100px 120px;
+  box-sizing: border-box; overflow: hidden;
+}
+[data-composition-id="example-cta"] .logo {
+  width: 220px; height: auto;
+  opacity: 0; transform: translateY(40px) scale(0.92);
+  filter: drop-shadow(0 0 24px rgba(55,189,248,0.55));
+}
+[data-composition-id="example-cta"] .cta {
+  display: flex; align-items: baseline; gap: 36px;
+  font-weight: 900; font-size: 220px; line-height: 0.95;
+  letter-spacing: -0.03em; color: #fff;
+  text-shadow: 0 0 60px rgba(55,189,248,0.35), 0 6px 20px rgba(0,0,0,0.55);
+  opacity: 0; transform: translateY(30px);
+}
+[data-composition-id="example-cta"] .cta-pre {
+  color: rgba(255,255,255,0.78);
+  font-weight: 700; font-size: 130px;
+}
+[data-composition-id="example-cta"] .cta-key {
+  color: #f09025;
+  text-shadow: 0 0 36px rgba(240,144,37,0.6), 0 0 80px rgba(240,144,37,0.35);
+}
+[data-composition-id="example-cta"] .wordmark {
+  position: relative;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700; font-size: 48px; letter-spacing: 0.22em;
+  color: #fff; opacity: 0; padding-bottom: 16px;
+}
+[data-composition-id="example-cta"] .wordmark-bar {
+  position: absolute; left: 0; bottom: 0;
+  height: 3px; width: 100%;
+  background: linear-gradient(90deg, #37bdf8 0%, #f09025 100%);
+  transform: scaleX(0); transform-origin: left center;
+}
+[data-composition-id="example-cta"] .shimmer {
+  position: absolute; top: 0; left: -40%;
+  width: 30%; height: 100%;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  opacity: 0; pointer-events: none; filter: blur(6px);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+(() => {
+  const DURATION = 4.2;
+  const SCOPE = '[data-composition-id="example-cta"] ';
+  const tl = gsap.timeline({ paused: true });
+
+  // BUILD（入场）
+  // Logo crystallizes from below
+  tl.to(SCOPE + "#logo", { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, 0.1);
+  // CTA lands
+  tl.to(SCOPE + "#cta", { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 0.45);
+  // Accent word pop
+  tl.fromTo(SCOPE + "#cta-key", { scale: 0.92 }, { scale: 1.06, duration: 0.22, ease: "back.out(3)" }, 0.78);
+  tl.to(SCOPE + "#cta-key", { scale: 1, duration: 0.32, ease: "power2.out" }, 1.0);
+  // Wordmark + bar wipe
+  tl.to(SCOPE + "#wordmark", { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.0);
+  tl.to(SCOPE + "#wordmark-bar", { scaleX: 1, duration: 0.55, ease: "power3.out" }, 1.15);
+  // Shimmer sweep
+  tl.set(SCOPE + "#shimmer", { opacity: 1 }, 1.8);
+  tl.fromTo(SCOPE + "#shimmer", { x: 0 }, { x: "1500%", duration: 1.0, ease: "power2.inOut" }, 1.8);
+  tl.set(SCOPE + "#shimmer", { opacity: 0 }, 2.85);
+
+  // Anchor
+  tl.set({}, {}, DURATION);
+  window.__timelines["example-cta"] = tl;
+})();
+</script>
+</div>
+</template>
