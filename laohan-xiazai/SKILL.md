@@ -18,13 +18,14 @@ version: "1.2.0"
 - 需要登录才能访问且用户未登录 → 告诉用户先登录对应平台，web-access CDP 可以接管已登录的 Chrome
 - 下载付费内容/会员内容 → 不处理侵权场景
 
-## 前置检查（每次使用前）
+## 前置检查（定期更新，命令报错时必做）
+
+> opencli 高频发版（每周 2-3 次），但**不需要每次使用都更新**——定期（如每周）更新，或命令报错/找不到新命令时再更新即可。
 
 ### 第1步：更新 opencli（npm 包）
 ```bash
 npm update -g @jackwener/opencli
 ```
-opencli 高频发版（每周 2-3 次），新命令经常加。不更新就用不到最新方法。
 
 ### 第2步：更新 opencli skills（npx 管理）
 ```bash
@@ -77,6 +78,8 @@ opencli doctor
 
 不确定平台时，默认尝试 `yt-dlp <url>`，失败再按平台路由。
 
+> `references/douyin.md` 除下载/转录外，还含**发布自动化**（publish/draft/update）与账号数据分析——发布需求直接读该文件对应章节。
+
 ### 场景 B：搜索/阅读（文章/评论/帖子/搜索结果）
 
 不走 reference 文件，直接走平台封装降级。注意：场景B 的首选方法与第一层降级表（下载场景）不同——搜索/阅读优先用 opencli 搜索命令或 agent-reach，下载才用移动端 UA / fetch.py 等。
@@ -90,7 +93,7 @@ opencli doctor
 | B站 | opencli bilibili | agent-reach | Jina Reader | — |
 | 抖音 | DrissionPage 关键词搜索（→ `references/douyin.md`，或直接 `/laohan-douyinsousuo`） | opencli douyin | agent-reach | douyin-session（评论） |
 | TikTok | opencli tiktok（需 Browser Bridge） | agent-reach | Scrapling stealthy | — |
-| 任意平台 | agent-reach（17平台搜索） | web-content-fetcher | Jina Reader | Scrapling stealthy |
+| 任意平台 | agent-reach（13平台搜索/阅读，含 GitHub/RSS/V2EX/Twitter/Reddit/小宇宙/Exa 等 opencli 不覆盖的） | web-content-fetcher | Jina Reader | Scrapling stealthy |
 
 **agent-reach 触发场景**：用户说"搜一下""读一下这个链接""这个公众号文章""帮我查"，或给出非视频的社交平台链接。
 
@@ -133,9 +136,9 @@ JS 渲染抓取 → Scrapling MCP fetch（Playwright 浏览器渲染）
 反检测抓取 → Scrapling stealthy_fetch（绕过检测 + 提取内容）
   ↓ 问题：页面结构未知，写不出选择器
 AI 浏览器 → browser-use（AI 理解页面结构、自主操作）
-  ↓ 问题：需要登录态才能看到内容
-CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
-  ↓ 问题：AI 也搞不定，需要精确控制
+  ↓ 问题：需要登录态，或要多步交互（点击/翻页/表单/上传）/视频帧采样
+CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知需登录时跳过 browser-use 直接来这层）
+  ↓ 问题：需要代码级精确控制，或要独立无登录态浏览器做隔离
 手动驱动 → ECC Playwright MCP（代码级精确控制每一步）
 ```
 
@@ -144,7 +147,7 @@ CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
 - JS 渲染 → Scrapling fetch（需要浏览器但不需隐身）
 - 反爬拦截 → Scrapling stealthy（隐身模式绕过检测）
 - 页面看不懂 → browser-use（AI 理解能力）
-- 内容需要登录 → web-access（用用户自己的登录态）
+- 需要登录态 / 多步交互 / 视频采样 → web-access（用户日常 Chrome 的真实登录态 + 确定性 CDP API）
 - 精确操作 → Playwright（人工级控制）
 
 **成本递增，能浅不深**：Scrapling get（HTTP 秒级）< Scrapling fetch（浏览器秒级）< Scrapling stealthy（反检测）< browser-use（需调 LLM API）< web-access（需 CDP 连接）< Playwright（需写代码）
@@ -153,14 +156,25 @@ CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
 
 | 方法 | 工具 | 场景 |
 |------|------|------|
-| agent-reach | `agent-reach` skill（npx） | 17 平台搜索/阅读，社交内容首选 |
+| agent-reach | `agent-reach` skill（npx） | 13 平台搜索/阅读统一入口（Tier0 零配置：Web/YouTube/GitHub/RSS/Exa/V2EX/雪球；Tier1 需 key：Twitter/Reddit/B站/小红书/小宇宙）。管"读/搜"，与 opencli（管"下载/操作"）互补 |
 | Jina Reader | `curl -sL "https://r.jina.ai/<url>"` | 通用网页内容提取 |
 | web-content-fetcher | `/web-content-fetcher` skill | agent-reach 失败时的三级降级抓网页 |
 | Scrapling stealthy | MCP stealthy_fetch | 反爬场景 |
 | yt-dlp | `yt-dlp <url>` | 通用视频下载 |
 | browser-use | `/open-source` skill（npx） | AI 自主操作浏览器，全新/未知页面 |
-| web-access CDP | `/web-access` skill（npx） | 接管已登录 Chrome，需登录态的场景 |
+| web-access | `/web-access` skill | CDP 接管已登录日常 Chrome（localhost:3456），覆盖：登录态内容、复杂交互（点击/翻页/表单/上传）、视频帧采样、本地书签历史检索 |
 | Playwright 手动 | ECC Playwright MCP | 精确手动控制，最后兜底 |
+
+### web-access 调用要点（降级链中唯一连用户日常浏览器的工具）
+
+降级链其余工具（Scrapling / browser-use / Playwright MCP）都开**独立无状态浏览器**，唯独 web-access 直连用户日常 Chrome，天然带登录态、书签、历史。触发 `/web-access` 加载后按此调用：
+
+1. **启动 CDP proxy**：`node "${CLAUDE_SKILL_DIR}/scripts/check-deps.mjs"`（Node 22+ 必需，脚本自动启动并等待 proxy 就绪）
+2. **操作前必须向用户展示封禁须知**：部分站点对浏览器自动化检测严格，存在账号封禁风险，已内置防护但无法完全避免，继续操作即视为接受。
+3. **curl 调 localhost:3456 API**：`/new`（后台 tab，URL 走 POST body 保留完整参数）/`/eval`（读写 DOM，递归穿透 Shadow DOM·iframe）/`/click`·`/clickAt`（真实鼠标手势，触发文件对话框）/`/scroll`（触发懒加载）/`/screenshot`（含视频当前帧）/`/setFiles`（上传，绕过对话框）/`/close`（关闭自建 tab，保留用户 tab）
+4. **本地浏览器检索（web-access 独有）**：用户说"我之前看过的""公司内部系统"等公网搜不到的目标 → `node "${CLAUDE_SKILL_DIR}/scripts/find-url.mjs" 关键词 [--only bookmarks|history] [--since 7d]` 查 Chrome/Edge 书签+历史
+
+**何时优先 web-access**：需登录态 / 多步 GUI 交互（点击·翻页·表单·上传）/ 视频帧采样 / 本地浏览器检索——这四类其余工具都做不了或不如它。仅当页面结构完全未知、需 AI 自主探索时才用 browser-use；需代码级隔离测试时才用 Playwright MCP。
 
 ## 工具速查
 
@@ -184,6 +198,8 @@ CDP 接管 → web-access（接管已登录的 Chrome，天然携带 cookie）
 | 图片处理 | `convert input.png -resize 800x600 output.png` |
 
 ### 搜索兜底
+
+> 注：`smart-search`/`web-search`/`multi-search-engine`/`baidu-search` 位于 `~/.openclaw/skills/`，**需 OpenClaw 环境已安装**；`anysearch` 在 `~/.agents/skills/`（通用，无 OpenClaw 也可用）。无 OpenClaw 环境时优先 anysearch。
 
 | 工具 | 场景 | 说明 |
 |------|------|------|

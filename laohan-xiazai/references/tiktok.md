@@ -1,6 +1,18 @@
 # TikTok 下载方法
 
-TikTok 用 tikwm.com API，无需认证，无需 Browser Bridge。**不支持抖音**。
+> ⚠️ **2026-06 实测**：tikwm.com 已启用 Cloudflare 防护，**curl 直连被拦截**（返回 Cloudflare 验证页而非 JSON）。tikwm 不再可靠，**优先用 opencli（需 Browser Bridge）或 yt-dlp**；下方 tikwm 方法仅作降级尝试，可能失败。**不支持抖音**。
+
+## 推荐方法
+
+```bash
+# yt-dlp（无需 Browser Bridge）
+yt-dlp -o "%(title)s.%(ext)s" <tiktok-url>
+
+# opencli（需 Browser Bridge，完整命令见文末）
+opencli tiktok user <username> --limit 10 -f json
+```
+
+## 备选：tikwm API（curl 直连可能被 Cloudflare 拦截）
 
 ## 搜索视频
 

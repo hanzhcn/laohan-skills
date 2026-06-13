@@ -123,8 +123,8 @@ async with Scraper() as s:
 `~/.claude/skills/adapters/perf-data/douyin-session/crawler.py` 提供基于 Playwright 的评论抓取，支持任意公开视频。
 
 ```python
-import sys, asyncio
-sys.path.insert(0, '~/.claude/skills/adapters/perf-data/douyin-session')
+import sys, asyncio, os
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/adapters/perf-data/douyin-session'))
 from crawler import Session, fetch_comments
 
 async def main():
@@ -239,7 +239,7 @@ opencli douyin stats <aweme_id> -f json
 
 ## 关键词搜索（DrissionPage）
 
-抖音搜索 API 有 a_bogus 签名校验，无法直接调接口。opencli 也没有视频搜索命令（`hashtag search` API 已失效）。唯一可靠方案：DrissionPage 监听浏览器数据包 + 滚动采集。
+抖音搜索 API 有 a_bogus 签名校验，无法直接调接口。opencli 的 `hashtag search` 只搜话题标签（返回热门话题 + view_count，**不返回视频流**），没有视频流搜索命令。视频搜索唯一可靠方案：DrissionPage 监听浏览器数据包 + 滚动采集。
 
 ```bash
 cd /tmp/douyin-test && source .venv/bin/activate
@@ -259,7 +259,7 @@ python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 
 - 如需筛选，建议多采集后 Python 后处理
 
 其他搜索方案对比：
-- `opencli douyin hashtag search`：❌ API 端点已失效，返回空 JSON
+- `opencli douyin hashtag search`：✅ 有效，但只搜话题标签（热门话题 + view_count），不返回视频流
 - ECC Playwright `browser_run_code`：✅ 可用但数据量少（约10条），适合快速预览
 - 纯 requests 调搜索 API：❌ a_bogus 签名校验
 

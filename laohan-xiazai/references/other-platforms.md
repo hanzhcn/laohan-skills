@@ -46,6 +46,12 @@ opencli xiaohongshu note <note-url-with-xsec-token> -f json
 opencli xiaohongshu user <id> -f json
 ```
 
+获取创作者全部已发布笔记（1.8.x 新增，突破 10 条上限）：
+```bash
+opencli xiaohongshu creator-notes-all <creator-id> -f json
+# 原 creator-notes 上限 10 条；creator-notes-all 分页获取完整列表
+```
+
 典型流程：search → 拿 URL → download 下载图片/视频 或 note 读正文
 
 ## 知乎
@@ -105,7 +111,7 @@ python3 ~/.agents/skills/web-content-fetcher/scripts/fetch.py <url> --stealth
 
 ### 安装包分发
 
-下载地址：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.1.0
+下载地址：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.2.0
 
 - Mac：`weixin-video-download-mac.dmg`（磁盘映像，打开后里面有 .app 启动器 + 安装.sh + 二进制 + 证书）
 - Windows：`weixin-video-download-windows.exe`（NSIS 安装器，安装后自动生成桌面快捷方式）

@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v2.0 | 日期: 2026-05-16 | 作者: 寒武纪AI & Jeffrey
+> 版本: v2.1 | 日期: 2026-05-31 | 作者: 寒武纪AI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:
@@ -260,7 +260,7 @@ EOF
 
 ```bash
 # 定位 worker-service.cjs（3.8MB 打包文件）
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
 
 # 确认文件存在
 if [ -z "$WORKER_FILE" ]; then
@@ -297,7 +297,7 @@ cat > ~/.claude-mem/patch-litellm.sh << 'SCRIPT'
 # claude-mem LiteLLM Patch — 每次更新后执行
 set -e
 
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
 
 if [ -z "$WORKER_FILE" ]; then
   echo "ERROR: worker-service.cjs 未找到，确认 claude-mem 已安装"
@@ -343,7 +343,7 @@ chmod +x ~/.claude-mem/patch-litellm.sh
   "CLAUDE_MEM_OPENROUTER_MODEL": "glm-5.1",
   "CLAUDE_MEM_MODE": "code--zh",
   "CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES": "20",
-  "CLAUDE_MEM_OPENROUTER_MAX_TOKENS": "100000",
+  "CLAUDE_MEM_OPENROUTER_MAX_TOKENS": "131072",
   "CLAUDE_MEM_CONTEXT_OBSERVATIONS": "30",
   "CLAUDE_MEM_CHROMA_ENABLED": "true",
   "CLAUDE_MEM_LOG_LEVEL": "INFO"
@@ -360,7 +360,7 @@ chmod +x ~/.claude-mem/patch-litellm.sh
 | `CLAUDE_MEM_MODE` | `code--zh` | 中文编码模式（其他: `code` 英文, `code--ja` 日文, `code--es` 西班牙文） |
 | `CLAUDE_MEM_CONTEXT_OBSERVATIONS` | `30` | 会话开始时注入的历史观察数（默认 50，可调低节省 token） |
 | `CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES` | `20` | 每次调用发送的最大上下文消息数（控制 token 消耗） |
-| `CLAUDE_MEM_OPENROUTER_MAX_TOKENS` | `100000` | 每次调用的最大 token 预算（上游模型会自行限制） |
+| `CLAUDE_MEM_OPENROUTER_MAX_TOKENS` | `131072` | 每次调用的最大 token 预算（上游模型会自行限制） |
 | `CLAUDE_MEM_CHROMA_ENABLED` | `true` | 向量搜索（默认开启，需 uv 已安装） |
 | `CLAUDE_MEM_LOG_LEVEL` | `INFO` | 日志级别（调试时可改为 `DEBUG`） |
 
@@ -373,6 +373,51 @@ python3 -c "import json; json.load(open('$HOME/.claude-mem/settings.json'))" && 
 **注意**: claude-mem 安装器会自动设置 `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`（写入 `~/.claude/settings.json` 的 env 字段），禁用 Claude Code 自带的 auto-memory，避免两套记忆系统冲突。这是正常行为。
 
 ### 步骤 6: 启动 LiteLLM Proxy
+
+**推荐方式：launchd 自启动**（开机自动运行，崩溃自动重启）
+
+```bash
+# 创建包装脚本（source ~/.zshrc 获取 API Key）
+cat > ~/.local/bin/claude-mem-litellm.sh << 'EOF'
+#!/bin/bash
+source ~/.zshrc 2>/dev/null
+exec litellm --config ~/.claude-mem/litellm/config.yaml --port 4000 --host 127.0.0.1
+EOF
+chmod +x ~/.local/bin/claude-mem-litellm.sh
+
+# 创建 launchd plist
+cat > ~/Library/LaunchAgents/com.claude-mem.litellm.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-mem.litellm</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/YOUR_USERNAME/.local/bin/claude-mem-litellm.sh</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/.claude-mem/logs/litellm.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/.claude-mem/logs/litellm.log</string>
+</dict>
+</plist>
+EOF
+# ⚠️ 记得把 YOUR_USERNAME 替换为你的实际用户名
+
+# 加载服务（立即启动）
+launchctl load ~/Library/LaunchAgents/com.claude-mem.litellm.plist
+
+# 验证
+curl -s http://localhost:4000/health | python3 -m json.tool
+```
+
+**备选方式：nohup 手动启动**（临时测试用）
 
 ```bash
 # 设置 API Key（按需选择）
@@ -440,7 +485,7 @@ curl -s http://localhost:4000/v1/chat/completions \
 
 ```bash
 # 确认 worker-service.cjs 中不再有 openrouter.ai
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
 grep -c "openrouter.ai" "$WORKER_FILE"
 # 预期: 0
 
@@ -524,7 +569,10 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/
 > **启动顺序**: 必须先启动 LiteLLM，再启动 claude-mem worker。Worker 启动后会立即尝试连接 LiteLLM，如果 LiteLLM 没就绪，worker 会报 OpenRouter API error。
 
 ```bash
-# 1. 先启动 LiteLLM
+# 1. 先启动 LiteLLM（launchd 方式，推荐）
+launchctl kickstart -k gui/$(id -u)/com.claude-mem.litellm
+
+# 或 nohup 方式（临时）
 nohup litellm --config ~/.claude-mem/litellm/config.yaml --port 4000 --host 127.0.0.1 > ~/.claude-mem/logs/litellm.log 2>&1 &
 echo $! > ~/.claude-mem/litellm.pid
 
@@ -538,7 +586,10 @@ npx claude-mem start
 # 停 claude-mem
 npx claude-mem stop
 
-# 停 LiteLLM
+# 停 LiteLLM（launchd 方式）
+launchctl bootout gui/$(id -u)/com.claude-mem.litellm
+
+# 停 LiteLLM（nohup 方式）
 kill $(cat ~/.claude-mem/litellm.pid) 2>/dev/null
 ```
 
@@ -571,6 +622,12 @@ npx claude-mem stop && sleep 2 && npx claude-mem start
 
 ## 六、升级 claude-mem 后的维护
 
+### auto-patch hook（推荐）
+
+已配置 SessionStart hook（`~/.claude-mem/hooks/auto-patch.sh`），每次 Claude Code 启动时自动检查 worker-service.cjs 是否被升级覆盖，发现 openrouter.ai URL 则自动替换为 localhost:4000。**无需手动 patch**。
+
+### 手动 patch（备选）
+
 ```bash
 # 1. 正常更新
 npx claude-mem install
@@ -601,9 +658,9 @@ claude-mem 每次 hook 触发都会调用 LLM 生成 observation。一次 Claude
 
 ### 7.2 进程管理
 
-claude-mem worker 不会随系统自启动，只在 Claude Code 启动时通过 SessionStart hook 触发。LiteLLM 也不会自启动。
+claude-mem worker 不会随系统自启动，只在 Claude Code 启动时通过 SessionStart hook 触发。LiteLLM 已配置为 launchd 服务（`~/Library/LaunchAgents/com.claude-mem.litellm.plist`），开机自动运行，崩溃自动重启。
 
-**建议**: 如果机器重启，需手动先启动 LiteLLM，再启动 Claude Code（触发 worker）。或将 LiteLLM 配置为 launchd 服务。
+**建议**: 如果 LiteLLM 未配置 launchd，机器重启后需手动先启动 LiteLLM，再启动 Claude Code（触发 worker）。
 
 ### 7.3 LiteLLM 参数兼容性
 
@@ -616,6 +673,35 @@ claude-mem 硬编码发送 `temperature: 0.3` 和 `max_tokens: 4096`。部分国
 ### 7.5 GLM Coding 端点限制
 
 Coding 端点 `https://open.bigmodel.cn/api/coding/paas/v4` 仅限 Coding 场景。如果需要通用场景（非 coding），需切换到通用端点 `https://open.bigmodel.cn/api/paas/v4`。
+
+### 7.6 Restart Guard 死锁（2026-05-31 发现）
+
+**现象**: hooks 正常触发（PostToolUse 事件写入 pending_messages），但 observation 不再生成，上下文注入停止。
+
+**根因**: worker 的 generator 有 restart guard 机制——连续失败 ≥5 次后 session 被标记为 dead，停止处理 pending_messages。但 hooks 继续写入队列，导致 pending_messages 无限积压。这是保护机制（防死循环）的副作用——dead session 后无自动恢复路径。
+
+**检测**:
+```bash
+# pending_messages 堆积（pending > 50 且持续不降 = 死锁）
+sqlite3 ~/.claude-mem/claude-mem.db "SELECT status, COUNT(*) FROM pending_messages GROUP BY status;"
+
+# 今日 observation 数量（应持续增长）
+sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM observations WHERE created_at_epoch > $(date -v-8H +%s)000;"
+```
+
+**修复**: 清除旧会话孤儿消息 + 重启 worker
+```bash
+# 查看哪些 session 有 stuck 消息
+sqlite3 ~/.claude-mem/claude-mem.db "SELECT session_db_id, status, COUNT(*) FROM pending_messages GROUP BY session_db_id, status;"
+
+# 删除旧 session 的孤儿消息（替换 130 为当前 session ID）
+sqlite3 ~/.claude-mem/claude-mem.db "DELETE FROM pending_messages WHERE session_db_id != 130;"
+
+# 重启 worker
+pkill -f "worker-service.cjs"
+```
+
+**注意**: 多开 Claude Code 终端时更容易触发——不同终端分配不同 session ID，exit 后旧 session 的消息残留变成孤儿，导致队列看似卡死（pending 数量不变）。
 
 ---
 
@@ -669,7 +755,7 @@ curl -s https://api.deepseek.com/v1/chat/completions \
 
 ```bash
 # 恢复备份
-WORKER_FILE=$(find ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" | head -1)
+WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
 cp "${WORKER_FILE}.bak" "$WORKER_FILE"
 
 # 改 settings
@@ -728,13 +814,15 @@ uv tool uninstall litellm
 
 | 文件 | 说明 |
 |------|------|
-| `~/.claude/plugins/marketplaces/thedotmack/` | claude-mem 插件主目录 |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs` | Worker 主进程（patch 目标） |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/hooks/hooks.json` | 6 个生命周期 hook |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/mcp-server.cjs` | MCP 搜索服务器 |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/skills/mem-search/` | mem-search 技能 |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/ui/viewer.html` | Web UI 查看器 |
+| `~/.claude/plugins/marketplaces/thedotmack/` | claude-mem 插件源目录（git repo） |
+| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs` | Worker 源文件（未 patch，openrouter.ai） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/` | **运行时目录**（hooks 实际解析到这里） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/worker-service.cjs` | Worker 运行时副本（**patch 目标**） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/hooks/hooks.json` | 6 个生命周期 hook |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/mcp-server.cjs` | MCP 搜索服务器 |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/skills/mem-search/` | mem-search 技能 |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/ui/viewer.html` | Web UI 查看器 |
 | `~/.claude-mem/settings.json` | 所有配置 |
 | `~/.claude-mem/claude-mem.db` | SQLite 数据库（observations/sessions） |
 | `~/.claude-mem/chroma/` | Chroma 向量数据库（自动创建） |
