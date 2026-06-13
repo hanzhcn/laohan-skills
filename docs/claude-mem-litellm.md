@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v3.0 | 日期: 2026-05-24 | 作者: 寒武纪AI & Jeffrey
+> 版本: v3.1 | 日期: 2026-06-10 | 作者: 寒武纪AI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:
@@ -76,7 +76,7 @@ DeepSeek / GLM-5.1 / 任意模型
 
 **已知限制**:
 - GLM-5 的 `enable_thinking` 推理模式无法通过 LiteLLM 激活（[Issue #25697](https://github.com/BerriAI/litellm/issues/25697)）
-- 每次 claude-mem 更新后需要重新 patch
+- 每次 claude-mem 更新后需要重新 patch，并同时检查 installed cache 与 marketplace plugin 两处 worker
 - claude-mem 硬编码了 `temperature: 0.3`、`max_tokens: 4096`，不可配置（已通过 `drop_params: True` 兼容）
 
 ---
@@ -259,86 +259,46 @@ EOF
 **这是最关键的一步**。claude-mem 的 `worker-service.cjs` 硬编码了 `https://openrouter.ai/api/v1/chat/completions`，即使配置了本地 LiteLLM，请求仍会发到公网 OpenRouter。`sk-litellm-local` key 在公网会 401，导致 observation 写不进去——**这就是"新窗口上下文永远是同一批旧数据"的根因**。
 
 ```bash
-# 定位 worker-service.cjs（缓存目录，版本号会变）
-CLAUDE_MEM_DIR=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)
-WORKER_FILE="${CLAUDE_MEM_DIR}scripts/worker-service.cjs"
+# 修补两个可能的 worker 来源：installed cache + marketplace plugin。
+# 只修 cache 会产生假阳性：cache 已 patched，但实际运行 worker 可能仍来自 marketplace。
+python3 - <<'PY'
+import json
+from pathlib import Path
 
-# 确认文件存在
-if [ -z "$WORKER_FILE" ]; then
-  echo "ERROR: worker-service.cjs 未找到"
-  exit 1
-fi
-echo "目标文件: $WORKER_FILE"
+old = 'https://openrouter.ai/api/v1/chat/completions'
+new = 'http://localhost:4000/v1/chat/completions'
+paths = []
 
-# 备份原文件
-cp "$WORKER_FILE" "${WORKER_FILE}.bak"
+installed = Path.home() / '.claude/plugins/installed_plugins.json'
+if installed.exists():
+    data = json.loads(installed.read_text())
+    item = data.get('plugins', {}).get('claude-mem@thedotmack', [{}])[0]
+    install_path = item.get('installPath')
+    if install_path:
+        paths.append(Path(install_path) / 'scripts/worker-service.cjs')
 
-# 执行替换（macOS 用 sed -i ''，Linux 用 sed -i）
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-else
-  sed -i 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-fi
+paths.append(Path.home() / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs')
 
-# 重启 worker（必须重启才能生效）
-pkill -f "worker-service.cjs"
+seen = set()
+for path in paths:
+    if path in seen or not path.exists():
+        continue
+    seen.add(path)
+    text = path.read_text()
+    patched = text.replace(old, new)
+    if patched != text:
+        path.with_suffix(path.suffix + '.bak').write_text(text)
+        path.write_text(patched)
+    final = path.read_text()
+    print(path)
+    print('  openrouter=', final.count(old), 'localhost=', final.count(new))
+PY
 
-# 验证替换成功
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "PATCH SUCCESS"
-else
-  echo "PATCH FAILED — 恢复备份"
-  mv "${WORKER_FILE}.bak" "$WORKER_FILE"
-  exit 1
-fi
+# 重启 worker（必须重启才能生效；也可等新会话 hook 自动拉起）
+pkill -f "worker-service.cjs" || true
 ```
 
-**写一个持久化 patch 脚本**（每次 claude-mem 更新后执行）：
-
-```bash
-cat > ~/.claude-mem/patch-litellm.sh << 'SCRIPT'
-#!/bin/bash
-# claude-mem LiteLLM Patch — 每次更新后执行
-set -e
-
-CLAUDE_MEM_DIR=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)
-WORKER_FILE="${CLAUDE_MEM_DIR}scripts/worker-service.cjs"
-
-if [ -z "$WORKER_FILE" ]; then
-  echo "ERROR: worker-service.cjs 未找到，确认 claude-mem 已安装"
-  exit 1
-fi
-
-# 检查是否已经 patched
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "ALREADY PATCHED: $WORKER_FILE"
-  exit 0
-fi
-
-# 备份 + 替换（兼容 macOS 和 Linux）
-cp "$WORKER_FILE" "${WORKER_FILE}.bak"
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-else
-  sed -i 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-fi
-
-# 验证
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "PATCH SUCCESS: $WORKER_FILE"
-  echo "备份保留: ${WORKER_FILE}.bak"
-  # 重启 worker
-  pkill -f "worker-service.cjs"
-  echo "Worker 已停止，新会话自动重启"
-else
-  echo "PATCH FAILED — 恢复备份"
-  mv "${WORKER_FILE}.bak" "$WORKER_FILE"
-  exit 1
-fi
-SCRIPT
-
-chmod +x ~/.claude-mem/patch-litellm.sh
-```
+**持久化自动 patch 脚本**：当前个人环境使用 `~/.claude-mem/hooks/auto-patch.sh`，在 Claude Code `SessionStart` 自动执行。脚本应同时覆盖 installed cache 和 marketplace plugin 两处路径；无补丁需求时保持静默。
 
 ### 步骤 5: 配置 claude-mem Settings
 
@@ -447,13 +407,22 @@ curl -s http://localhost:4000/v1/chat/completions \
 ### 4.2 Patch 验证
 
 ```bash
-# 确认 worker-service.cjs 中不再有 openrouter.ai
-WORKER_FILE=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs
-grep -c "openrouter.ai" "$WORKER_FILE"
-# 预期: 0
-
-grep -c "localhost:4000" "$WORKER_FILE"
-# 预期: ≥1
+python3 - <<'PY'
+import json
+from pathlib import Path
+old = 'https://openrouter.ai/api/v1/chat/completions'
+new = 'http://localhost:4000/v1/chat/completions'
+data = json.loads((Path.home() / '.claude/plugins/installed_plugins.json').read_text())
+paths = [
+    Path(data['plugins']['claude-mem@thedotmack'][0]['installPath']) / 'scripts/worker-service.cjs',
+    Path.home() / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for path in paths:
+    text = path.read_text()
+    print(path)
+    print('  openrouter=', text.count(old), 'localhost=', text.count(new))
+PY
+# 预期：两处都是 openrouter=0 / localhost=1
 ```
 
 ### 4.3 端到端验证
@@ -586,10 +555,10 @@ npx claude-mem stop && sleep 2 && npx claude-mem start
 npx claude-mem install
 
 # 方式 B: 插件管理器更新（同样会覆盖）
-claude plugins update claude-mem
+claude plugins update claude-mem@thedotmack
 
 # 无论哪种方式，更新后立即重新 patch
-~/.claude-mem/patch-litellm.sh
+~/.claude-mem/hooks/auto-patch.sh
 
 # 检查 settings 是否被覆盖（偶尔会被重置）
 grep "CLAUDE_MEM_PROVIDER" ~/.claude-mem/settings.json
@@ -620,7 +589,7 @@ claude-mem 硬编码发送 `temperature: 0.3` 和 `max_tokens: 4096`。部分国
 
 ### 7.4 升级后 patch 失效
 
-每次 `npx claude-mem install` 或 `claude plugins update claude-mem` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/patch-litellm.sh`。**症状：升级后发现新窗口上下文永远是旧的 → 基本可以确定 patch 被覆盖了。**
+每次 `npx claude-mem install` 或 `claude plugins update claude-mem@thedotmack` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/hooks/auto-patch.sh`，并确认 installed cache 与 marketplace plugin 两处都已替换。**症状：升级后发现新窗口上下文永远是旧的 → 基本可以确定 patch 被覆盖了。**
 
 ### 7.5 GLM Coding 端点限制
 
@@ -678,19 +647,49 @@ curl -s https://api.deepseek.com/v1/chat/completions \
 2. **Patch 被覆盖**（更隐蔽）。升级 claude-mem 后 `worker-service.cjs` 被覆盖，请求又发到公网 OpenRouter，`sk-litellm-local` key 401。**症状：LiteLLM 明明在跑，但 observation 写不进去，上下文永远是同一批旧数据。**
 
 ```bash
-# 一键诊断：应该只有 localhost:4000，没有 openrouter.ai
-grep -o "http[^\"']*chat/completions[^\"']*" \
-  "$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs"
-# 预期: 只有 http://localhost:4000/v1/chat/completions
-# 如果看到 openrouter.ai → 重新执行 patch: ~/.claude-mem/patch-litellm.sh
+# 一键诊断：installed cache 与 marketplace plugin 都应只有 localhost:4000，没有 openrouter.ai
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+home = Path.home()
+installed = json.loads((home / '.claude/plugins/installed_plugins.json').read_text())
+install_path = Path(installed['plugins']['claude-mem@thedotmack'][0]['installPath'])
+files = [
+    install_path / 'scripts/worker-service.cjs',
+    home / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for f in files:
+    s = f.read_text()
+    print(f'{f}: openrouter={s.count("https://openrouter.ai/api/v1/chat/completions")} localhost={s.count("http://localhost:4000/v1/chat/completions")}')
+PY
+# 预期: 两行都为 openrouter=0 localhost=1
+# 如果看到 openrouter>0 → 重新执行 patch: ~/.claude-mem/hooks/auto-patch.sh
 ```
 
 ### Q5: 想切回 OpenRouter
 
+不推荐切回。若确实要切回，不能只恢复 cache；需要同时恢复 installed cache 与 marketplace plugin 两处备份，否则运行中的 worker 可能仍走 localhost 或 OpenRouter，状态不一致。
+
 ```bash
-# 恢复备份
-WORKER_FILE=$(ls -td ~/.claude/plugins/cache/thedotmack/claude-mem/[0-9]*/ | head -1)scripts/worker-service.cjs
-cp "${WORKER_FILE}.bak" "$WORKER_FILE"
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+home = Path.home()
+installed = json.loads((home / '.claude/plugins/installed_plugins.json').read_text())
+install_path = Path(installed['plugins']['claude-mem@thedotmack'][0]['installPath'])
+files = [
+    install_path / 'scripts/worker-service.cjs',
+    home / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for f in files:
+    bak = Path(str(f) + '.bak')
+    if not bak.exists():
+        raise SystemExit(f'缺少备份: {bak}')
+    f.write_text(bak.read_text())
+    print(f'已恢复: {f}')
+PY
 
 # 改 settings
 # CLAUDE_MEM_OPENROUTER_API_KEY: 你的真实 OpenRouter Key
@@ -759,7 +758,7 @@ uv tool uninstall litellm
 | `~/.claude-mem/claude-mem.db` | SQLite 数据库（observations/sessions） |
 | `~/.claude-mem/chroma/` | Chroma 向量数据库（自动创建） |
 | `~/.claude-mem/litellm/config.yaml` | LiteLLM 配置 |
-| `~/.claude-mem/patch-litellm.sh` | 升级后 patch 脚本 |
+| `~/.claude-mem/hooks/auto-patch.sh` | SessionStart 自动 patch 脚本，覆盖 installed cache 与 marketplace plugin 两处 worker |
 | `~/.claude-mem/litellm.pid` | LiteLLM 进程 PID |
 | `~/.claude-mem/logs/claude-mem-YYYY-MM-DD.log` | claude-mem 日志 |
 | `~/.claude-mem/logs/litellm.log` | LiteLLM 日志 |
