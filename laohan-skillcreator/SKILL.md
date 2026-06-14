@@ -1,114 +1,102 @@
 ---
 name: laohan-skillcreator
-version: 1.0
-description: 创建、修改、优化 Claude Code agent skills。Use when 用户说"创建skill""写一个skill""新建skill""改skill""优化skill"或提到 skill 创建/修改相关的任何意图。
+version: 2.0
+description: 创建、优化、评分 Claude Code agent skills 的元 skill（三位一体）。创建从构思到发布全流程；6 维量化评分（frontmatter/工作流/失败模式/检查点/具体性/反例）；迭代优化只保留涨分改动。Use when 用户说"创建skill""写一个skill""新建skill""改skill""优化skill""给skill打分""评分""评估skill质量""skill体检""review skill"或提到 skill 创建/优化/评分相关任何意图。
 ---
 
-# laohan Skill 创建器
+# laohan Skill 创建·优化·评分器
 
-laohan 系列专属的 skill 创建标准。从构思到发布全流程。
+v2.0 三位一体：**创建** skill → **评分** skill → **优化** skill。融合 4 个来源最佳实践。
 
 ## 参考来源
 
-本 skill 融合了三个来源的最佳实践：
+融合 4 个来源（定期检查有无新 commit 可借鉴）：
 
-1. **anthropics/skills 的 skill-creator**
-   - 仓库：https://github.com/anthropics/skills
-   - 具体文件：`skill-creator/SKILL.md`（含 agents/、scripts/、eval-viewer/、references/ 子目录）
-   - 借鉴点：多文件结构规范、pushy description 策略、评估思路（简化为轻量级测试迭代，不含完整评估流水线）
-   - 核心理念：description 要"主动推销"自己，因为 Claude 倾向于欠触发（undertriggering），需要 description 主动匹配用户意图
+1. **anthropics/skills · skill-creator**（https://github.com/anthropics/skills）
+   - 借鉴：渐进式披露（metadata→body→bundled 三层）、并行 spawn with/baseline 对比、盲比较、description 优化器、从 transcript 找重复工作、更新保持原名
+   - 核心理念：好的 skill 分三层渐进披露，不是一坨
 
-2. **mattpocock/skills**
-   - 仓库：https://github.com/mattpocock/skills
-   - 核心文件：`write-a-skill/SKILL.md`（元技能，本 skill 最直接的参考）、`tdd/SKILL.md`、`diagnose/SKILL.md`（阶段门控示范）
-   - 安装命令：`npx skills add mattpocock/skills -g -y`
-   - 借鉴点："Use when" 触发精准度、阶段门控（Phase Gating）、反模式示例（WRONG/RIGHT 对比块）、参考仅限一层深度、篇幅拆分阈值（100/500行）、核心理念先行（Philosophy first）
-   - 核心理念：description 是 Claude 决定加载哪个 skill 的唯一依据——它在与所有已安装 skill 竞争，必须赢
+2. **mattpocock/skills · write-a-skill**（https://github.com/mattpocock/skills）
+   - 借鉴：Use when 触发精准、阶段门控、WRONG/RIGHT 反模式块、6 项极简检查清单、第三人称描述、scripts 判断标准
+   - 核心理念：description 是 agent 看到的唯一东西，在与所有 installed skill 竞争
 
-3. **thananon/9arm-skills**
-   - 仓库：https://github.com/thananon/9arm-skills
-   - 核心文件：`skills/engineering/debug-mantra/SKILL.md`（口诀植入示范）、`skills/engineering/post-mortem/SKILL.md`（跨 skill 组合示范）
-   - 安装命令：`npx skills add thananon/9arm-skills -g -y`
-   - 借鉴点：编号步骤 + 操作规则分离、口诀植入（verbatim recitation）、明确拒绝/门控条件、跨 skill 组合调用、反模式枚举
-   - 核心理念：每个步骤都有硬停止条件，不确定就停下来而不是猜
+3. **thananon/9arm-skills · debug-mantra/post-mortem/scrutinize**（https://github.com/thananon/9arm-skills）
+   - 借鉴：verbatim recitation（首次一次+逐字+silent apply）、硬门控措辞、refuse to draft、跨 skill offer 非自动、先质疑意图、cite or it didn't happen
+   - 核心理念：不确定就停下来，每个 claim 要有引用
 
-定期检查三个仓库是否有新 commit，看是否有新的可借鉴技巧。
+4. **alchaincyf/darwin-skill**（https://github.com/alchaincyf/darwin-skill）
+   - 借鉴：9 维评分体系、反例黑名单 8 条、棘轮机制（git ratchet）、独立子 agent 复评、人在回路 5 阶段
+   - 核心理念：skill 质量可量化，只保留有改进的改动（SkillLens 实证 LLM 自评仅 46.4% 准确率）
 
 ---
 
 ## 核心理念
 
-本 skill 遵循三个原则：**description 决定生死**（触发精准度是一切的前提）、**结构引导行为**（好的骨架比好的指令更有效）、**精简优于完整**（每个章节都要证明自己存在的价值）。三个来源的技巧都服务于这三个原则。
+四原则：
+
+1. **description 决定生死** — 触发精准度是一切前提。Claude 倾向欠触发，description 要主动推销
+2. **结构引导行为** — 好骨架比好指令有效
+3. **精简优于完整** — 每个章节都要证明存在的价值
+4. **质量可量化**（v2 新）— skill 不是写完即可，要能评分 + 迭代改进
 
 ---
 
 ## 创建流程
 
-### 1. 捕获意图
+### Step 0 · 先质疑意图（硬门控，scrutinize 模式）
 
-从对话中提取（或直接问用户）：
-1. 这个 skill 让 Claude 能做什么？
-2. 什么时候该触发？（用户会说什么关键词/在什么场景下？）
-3. 期望的输出格式是什么？
+**新建前强制问三个问题，任何一问答 yes 就停下来不新建：**
+
+1. 能不能**扩展现有 skill**？（读 `~/.agents/skills/` 和 `~/.claude/skills/` 找重叠/可扩展的）
+2. 能不能**不建**？（做 nothing 行不行？手动一次性操作够不够？）
+3. 确认必须新建 → 进入 Step 1
+
+**如果 1 或 2 答 yes → 告诉用户替代方案（扩展哪个 skill / 为什么不必建），不新建。**
+
+### Step 1 · 捕获意图
+
+从对话提取（或问用户）：
+1. 这个 skill 让 agent 能做什么？
+2. 什么时候触发？（用户会说什么关键词/什么场景？）
+3. 期望输出格式？
 4. 是否需要 scripts/ 或 references/ 子目录？
 
-如果对话中已包含这些信息，跳过提问直接确认即可。
-- **如果用户说不清要做什么 → 停下来，列出不明确的部分，等用户补充**
+用户说不清 → 停下来，列出不明确的部分，等补充。**不要猜。**
 
-### 2. 调研
+### Step 2 · 调研
 
-如果现有 skill 有类似功能，先读它的 SKILL.md 看能否扩展而非新建。
-检查 `~/.claude/skills/` 是否有重叠 skill。
-- **完成条件：** 确认没有可扩展的已有 skill，或已决定新建并说明理由
+确认 Step 0 的"不能扩展已有"结论（再扫一遍 `~/.agents/skills/`）。如发现可扩展 → 回 Step 0。
+- **完成条件：** 确认新建并说明理由
 
-### 3. 写 SKILL.md
+### Step 3 · 写 SKILL.md
 
-按下面的骨架模板和规则写。先按骨架模板前的判断标准确定极简还是完整骨架，再填充。
-- **完成条件：** SKILL.md 包含完整的 frontmatter（name + description 含 "Use when"）和正文内容
+按下方骨架模板和写法规则。先判断极简还是完整骨架，再填。
+- **完成条件：** frontmatter（name + version + description 含 "Use when"）+ 正文完整
 
-### 4. 测试迭代
+### Step 4 · 测试迭代
 
-1. 放入 `~/.agents/skills/<skill-name>/`，symlink 到 `~/.claude/skills/<skill-name>`
-2. **触发测试**：新开对话，说触发词，确认 Claude 加载了该 skill
-3. **反触发测试**：说相似但无关的词，确认不会误触发
-4. **执行测试**：实际运行 skill 流程，验证输出符合预期
-5. **重复工作检查**：如果 Claude 每次执行都生成相同的辅助代码，提取到 scripts/
-6. 不通过 → 回到第3步修改 → 重新测试
-7. 如果 3 轮迭代仍未通过 → 停下来，可能是 SKILL.md 的结构有问题，不是小修补能解决的。重新审视核心理念和工作流设计
+1. 放入 `~/.agents/skills/<name>/`，symlink 到 `~/.claude/skills/<name>`
+2. **触发测试**：新开对话说触发词，确认加载该 skill
+3. **反触发测试**：说相似但无关的词，确认不误触发
+4. **执行测试**：实际跑流程，验证输出
+5. **重复工作检查**：读执行 transcript，若每次生成相同辅助代码 → 提取到 scripts/
+6. 不通过 → 回 Step 3 改 → 重新测试
+7. 3 轮未过 → 停，可能是结构问题不是小补，重审核心理念
 
-### 5. 发布
+### Step 5 · 6 维自评 + 发布
 
-推送前先按安装清单的安全检查项确认。展示将要推送的文件清单和 commit 内容，**等用户说"推""确认""yes"后再执行** `git push`。
-
----
-
-## 操作规则
-
-创建过程中的全局约束，贯穿所有步骤：
-
-- **保持精简**：每个指令都要产生价值。写完后逐条审查——删掉不影响输出的指令
-- **Lazy creation**：只在有内容要写时才创建文件和目录，不要先建空结构"占位"
-- **通用化而非过拟合**：测试发现问题时，不要针对单个用例做过于小众的调整
-- **解释 why**："因为 A，所以做 B"优于"MUST 做 B"——用因果解释而非命令
-- **匹配目标用户语言**：laohan 系列默认中文，技术术语保留英文
-
----
-
-## 不适用场景
-
-- 创建 Claude Code agent（agent 和 skill 是不同概念） → 直接手动编写 agent 配置
-- 创建非 Claude Code 平台的插件/扩展 → 本 skill 只适用于 Claude Code skill 格式
-- 修改 npx 安装的第三方 skill → fork 后新建（`npx skills update` 会覆盖原地改动）
+1. 用下方 6 维评分卡自评（应 ≥80）
+2. 🔴 **CHECKPOINT**：展示评分 + 安装清单 + 将推送的文件，**等用户说"推""确认""yes"再 push**
 
 ---
 
 ## SKILL.md 骨架模板
 
-不是每个 skill 都需要完整骨架。Matt Pocock 证明了 **3-5 行指令式 skill 完全合法**——如果一个 skill 的逻辑简单到一句话能说清，直接写指令，不要为了"看起来专业"而加多余的章节结构。
+不是每个 skill 都需完整骨架。Matt Pocock 证明 3-5 行指令式 skill 合法——逻辑简单到一句话说清，直接写指令，别为"专业"加多余章节。
 
-**判断标准**：单步、无复杂条件分支（简单回退除外）、无角色区分 → 极简。多步、有条件分支、有多角色 → 完整骨架。
+**判断标准**：单步、无复杂条件分支（简单回退除外）、无角色区分 → 极简。多步/有条件分支/多角色 → 完整骨架。
 
-### 极简 skill 示例（5行）
+### 极简示例（5 行）
 
 ```markdown
 ---
@@ -120,306 +108,220 @@ description: 极简回应模式，只输出关键信息。Use when 用户说"cav
 所有回应控制在 3 句话以内。只给结论和关键依据，不解释过程。如果用户要求详细解释，恢复正常模式。
 ```
 
-### 完整骨架模板
-
-以下骨架列出核心章节。实际 skill 只需包含相关的——标了"可选"的不加也行，不要为了"完整"而填空。口诀植入、降级级联、跨 skill 调用也是可选章节，按需在合适位置加入。
+### 完整骨架模板（v2 升级）
 
 ```markdown
 ---
 name: skill-name
 version: 1.0
-description: 一句话说清做什么。Use when 用户说"触发词1""触发词2""触发词3"或提到[相关场景]。  # 上限1024字符，3-8个触发词
+description: 一句话说清做什么。Use when 用户说"触发词1""触发词2""触发词3"或提到[相关场景]。  # ≤1024字符，3-8触发词，第三人称
 ---
 
 # Skill 标题
 
 一句话定位。
 
-## 核心理念（复杂 skill 必加，简单 skill 可省）
+## 核心理念（复杂 skill 必加，简单可省）
 
-为什么这个 skill 存在、它遵循什么原则。
-先告诉 Claude "为什么"，再告诉它"怎么做"——这比直接列步骤更能引导正确行为。
+为什么存在、遵循什么原则。先讲 why 再讲 how——比直接列步骤更有效。
 
 ## 工作流
 
 ### 1. [步骤名]
 - 做什么
 - **完成条件：** [怎么判断这步做完了]
-- **如果无法确定 X → 停下来，明确告诉用户缺什么，不要跳过**
+- **🔴 CHECKPOINT：** [关键决策点，停下来等用户确认]（v2：显性标记，非"建议"措辞）
+- **🛑 STOP：** [强制停止条件]
 
 ### 2. [步骤名]
 - 做什么
-- **完成条件：** [怎么判断这步做完了]
+- **失败处理（三段式 fallback，v2）：**
+
+  | 触发条件 | 一线修复 | 仍失败兜底 |
+  |---------|---------|-----------|
+  | [X 失败] | [Y] | [Z] |
 
 ### 3. [步骤名]
 - 做什么
-- **涉及外部动作时 → 等用户确认再执行**
+- **涉及外部动作 → 🔴 等用户确认再执行**
 
 ## 操作规则
 
-跨步骤的常驻约束，独立于工作流步骤：
+跨步骤常驻约束：
 
 - [规则1]
 - [规则2]
-- 遇到 [异常情况] → [怎么处理]
+- 遇到 [异常] → [怎么处理]（不静默跳过）
 
-## 不适用场景
+## 不适用场景（refuse to draft 硬拒绝，v2 升级）
 
-- [场景 A] → 改用 [其他 skill] 或直接告诉用户
-- 缺少 [必要输入] → 列出缺少项，不硬编
+- 场景 A → 改用 [其他 skill]
+- **缺 [必要输入 X] → 列出缺什么并停，不硬编、不猜**（9arm post-mortem 模式）
 
-## 输出格式
+## 反模式（复杂 skill 必加，v2 从可选升级）
+
+❌ 差：
+"[反例]"
+
+✅ 好：
+"[正例]"
+
+## 输出格式（可选）
 
 # [标题模板]
 ## [章节1]
-## [章节2]
-
-## 反模式（可选，核心规则处加）
-
-❌ 差：
-"反例"
-
-✅ 好：
-"正例"
 ```
-
-## 目录结构
-
-```
-skill-name/
-├── SKILL.md           # 必须，主体指令
-├── references/        # 可选，超长内容拆分（仅一层深度）
-│   └── platform-x.md
-└── scripts/           # 可选，确定性操作脚本
-    └── helper.py
-```
-
-不要创建 assets/、evals/、agents/ 等子目录——laohan 系列不需要。
 
 ---
 
-## Frontmatter 规则
+## 评分体系（6 维快速评分卡）
+
+精简自 darwin 9 维（完整 9 维见 [references/scoring-rubric.md](references/scoring-rubric.md)）。给任何 skill 打分：
+
+| # | 维度 | 权重 | 评分标准 |
+|---|------|------|---------|
+| 1 | **frontmatter 质量** | 10 | name 规范；description 含做什么+Use when+3-8 触发词；≤1024 字符；**无"灵活应用/根据情况判断"等空话尾巴** |
+| 2 | **工作流清晰度** | 20 | 编号步骤+明确完成条件+输入输出清晰 |
+| 3 | **失败模式编码** ⭐ | 20 | 显式 if-then fallback（三段式表）；**只写正向不写失败分支扣 ≥3 分** |
+| 4 | **检查点设计** ⭐ | 15 | 关键决策有 🔴/🛑 **显性标记**；仅"建议/如果...可以考虑"措辞不算 |
+| 5 | **可执行具体性** ⭐ | 25 | 有具体参数/格式/示例可直接执行；**禁用"建议/可以考虑/根据情况/灵活把握/视情况而定"软化措辞**（完整黑名单见 references/blacklist-phrases.md，出现 ≥3 处扣 ≥3 分） |
+| 6 | **反例黑名单** ⭐ | 10 | 有"不要做什么"章节；危险动作（rm/reset --hard/force push）显式列禁 |
+
+**算分**：每维 1-10 分，总分 = Σ(维度分/10 × 权重)，满分 100。
+
+**cite or it didn't happen（9arm）**：每个扣分必须引用 SKILL.md 具体行号或段落原文。不允许泛泛"这里不够好"。
+
+**评分档位**：
+- 85-100：可发布
+- 70-84：需优化（找最低维改）
+- <70：结构有问题，重审核心理念
+
+---
+
+## 优化流程
+
+优化已有 skill（只改自研 laohan 系列；npx 第三方 fork 后改）：
+
+### 1. 6 维评分（找最低维）
+- 主 agent 打分结构维度（1-6）
+- **扣分引行号**，输出评分卡 + 最弱维度
+
+### 2. 改最低维度（一轮一维，darwin 反例第 5 条）
+- 只改得分最低那一维，不动其他（多变量同变无法归因）
+- 改完 git commit
+
+### 3. 独立复评（darwin 反例第 1 条：不自评）
+- **另起一个子 agent** 重新 6 维打分（避免"我刚改的肯定更好"乐观偏差，实证 46.4%）
+- 新分 > 旧分 → 保留；否则 → `git revert HEAD`（**不用 reset --hard**）
+
+### 4. 棘轮轻量版
+- 改进才 commit，退步 revert，分数只升不降
+- 单轮涨幅 < 1 分 → 停手（见好就收，不凑分堆冗余，darwin 反例第 3 条）
+
+### 5. 深度优化路由（不在这做）
+需要 dim8 实测（with_skill vs baseline 双跑）/ 棘轮多轮循环 / runtime 红灯 gate → **用 darwin-skill**（如已装 `npx skills add alchaincyf/darwin-skill`），或读 references/scoring-rubric.md 跑完整 9 维。
+
+---
+
+## 操作规则
+
+创建/优化/评分全程约束：
+
+- **保持精简**：写完逐条审查，删不影响输出的指令
+- **Lazy creation**：有内容才建文件/目录，不先建空结构占位
+- **通用化非过拟合**：不为单个用例做小众调整
+- **解释 why**："因为 A 所以 B" 优于 "MUST 做 B"——LLM 聪明，给理由比硬规则有效（anthropics）
+- **匹配目标用户语言**：laohan 系列默认中文，技术术语保留英文
+- **更新保持原名**：installed 是 `research-helper` 就输出同名，不是 v2（anthropics）
+
+### dim5 软化措辞黑名单（v2 新，darwin）
+
+**禁用以下措辞**（出现 ≥3 处，dim5 扣 ≥3 分）：
+- "建议" / "可以考虑" / "根据情况" / "灵活把握" / "视情况而定" / "酌情" / "适当"
+
+改用具体指令："做 X"（祈使句 + 具体参数/示例）。完整禁用词表见 references/blacklist-phrases.md。
+
+### 反例黑名单（v2 新，darwin 8 条精简）
+
+创建/优化时禁止：
+1. **不自评自改** — 同一 session 又改又评有乐观偏差；评分必须 spawn 独立子 agent
+2. **不用 `git reset --hard`** 回滚 — 用 `git revert HEAD`
+3. **不为凑分堆冗余** — 触顶（连续 2 轮 Δ<2 分）就停
+4. **不跳过测试打分** — 没跑测试不算分
+5. **一轮只改一维** — 多维同变无法归因
+6. **不静默跳过异常** — fallback 失败必须先告知用户
+
+---
+
+## 不适用场景（refuse to draft，v2 升级为硬拒绝）
+
+- 创建 Claude Code **agent**（agent ≠ skill）→ 手动写 agent 配置
+- 非 Claude Code 平台插件 → 本 skill 只适用 SKILL.md 格式
+- 修改 **npx 第三方 skill** → fork 后新建（`npx skills update` 覆盖原地改动）
+- **缺必要输入**（用户说不清要做什么）→ **列出缺什么并停**，不硬编、不猜（9arm refuse to draft）
+
+---
+
+## 写法规则
+
+### Frontmatter
 
 ```yaml
 ---
 name: skill-name          # kebab-case，与目录名一致
 version: 1.0
-description: 功能描述。Use when 触发场景列举。
+description: 功能描述。Use when 触发场景列举。  # ≤1024字符，第三人称
 ---
 ```
 
-### description 写法（最关键）
+**description 是 agent 决定加载哪个 skill 的唯一依据**（mattpocock）。必须含：
+1. 功能描述（一句话做什么）
+2. "Use when" + 3-8 个触发词（用户会说的自然语言，不只技术术语）
+3. 第三人称（mattpocock）
+4. 如有竞争 skill，明确区分
 
-**description 是 Claude 决定是否加载该 skill 的唯一依据。** 它在与所有已安装 skill 竞争——必须赢。Claude 倾向于欠触发，所以 description 要"主动推销"自己。
+### 正文写法
 
-必须包含两部分：
-
-1. **功能描述**（一句话说清做什么）
-2. **"Use when" 触发条件**（列举具体触发词和场景）
-
-```
-好的 description:
-从互联网拿内容一站式（7+平台自动降级）。Use when 用户说"下载""帮我抓""读一下这个链接"或提到抖音/B站/YouTube等平台名。
-
-差的 description:
-下载工具
-```
-
-规则：
-- 上限 1024 字符
-- "Use when" 后列举 3-8 个常见触发词
-- 包含用户可能说的自然语言，不只是技术术语
-- 如果 skill 之间有竞争关系，在 description 里明确区分
-
----
-
-## 正文写法规则
-
-### 篇幅控制
-
-| 行数 | 策略 |
+| 规则 | 说明 |
 |------|------|
-| < 100 行 | 单文件即可 |
-| 100-500 行 | 考虑拆 references/ |
-| > 500 行 | 必须拆，SKILL.md 只保留工作流和规则 |
+| 篇幅控制 | <100 行单文件；100-500 考虑拆 references/；>500 必须拆（SKILL.md 只留工作流+规则）|
+| 核心理念先行 | 3 步以上 skill 在工作流前加核心理念章节（先 why 后 how）|
+| 工作流+操作规则分离 | 工作流=步骤序列；操作规则=跨步骤约束，独立章节 |
+| 阶段门控 | 关键步骤间硬停止："如果无法确定 X → 停下来" / 🔴 CHECKPOINT / 🛑 STOP |
+| 反模式 WRONG/RIGHT | 核心规则用对比块（❌差/✅好）|
+| 口诀植入（verbatim） | 核心纪律用口诀：**首次响应输出一次、逐字不改写、用户说跳过则不输出但仍 silent apply**（9arm debug-mantra）|
+| 输出格式 | 用模板定义，不给模糊指令 |
+| 降级级联 | 多方案用严格优先级（依次尝试），非菜单 |
+| 跨 skill 调用 | 完成后 **offer** 衔接另一个 skill（不自动 handoff，9arm post-mortem）|
+| 写作原则 | 祈使句 + 具体例子 + 不用 ALL CAPS ALWAYS/NEVER + 内容创作类定义语气 |
+| scripts/ 判断 | 确定性操作/重复生成的相同代码/需显式错误处理 → scripts（mattpocock）|
+| references/ 判断 | 平台专属方法/长模板/不需每次加载的背景知识 → references（仅一层深）|
 
-元 skill（如本 skill）因使用频率低、每次需全量参考，可例外保持单文件。
+> **渐进式披露（anthropics）**：metadata（常驻）→ SKILL.md body（触发加载）→ bundled resources（按需）。SKILL.md 别一坨塞完，重的拆 references/scripts。
 
-拆分时在 SKILL.md 中明确指向：详见 [references/douyin.md](references/douyin.md) 的抓取方法。
-参考文件仅限一层深度——不要 references/ 下面再嵌套子目录。
+### 6 项极简自检清单（创建后快速过，mattpocock）
 
-### 核心理念先行
-
-复杂 skill（3步以上）在工作流之前加"核心理念"章节。
-
-这比在工作流中穿插解释更有效——先告诉 Claude 为什么这样做，让它带着理解执行步骤，而不是机械地走流程。简单 skill（1-2步）不需要。
-
-### 工作流 + 操作规则分离
-
-工作流是步骤序列，操作规则是跨步骤的常驻约束——两者是独立章节：
-
-- **工作流**：编号步骤，每步有完成条件和门控
-- **操作规则**：独立章节，放在工作流之后，包含"不要做X""遇到Y做Z"等全局约束
-
-不要把操作规则写在某个步骤内部——它们应该在任何步骤中都生效。
-
-### 阶段门控
-
-关键步骤之间加硬停止条件——不确定就停下来，不要猜：
-
-```markdown
-### 2. 执行
-- **如果无法确定 X → 停下来明确告诉用户缺什么，不要跳过**
-```
-
-门控写法：
-- "如果无法确定 X → 停下来，说出来"
-- "不要在步骤 N 完成前进入步骤 N+1"
-- "缺少 Y → 列出来，等用户补充"
-
-### 明确拒绝条件
-
-定义 skill 什么时候不该触发或该拒绝执行：
-
-```markdown
-## 不适用场景
-- 场景 A → 改用其他 skill 或直接告诉用户
-- 缺少必要输入 X → 列出缺少项，不硬编
-```
-
-### 人为干预门
-
-涉及外部动作（发布内容、调用 API、写入关键文件）时，先展示将执行的操作，等用户确认再执行：
-
-```markdown
-### 5. 发布
-- 展示将发布的内容和目标
-- **等用户说"发""确认""yes"后再执行**
-```
-
-### 反模式示例
-
-重要规则用 WRONG/RIGHT 对比块，比纯文字更清晰：
-
-```markdown
-❌ 差（模糊）：
-"AI工具推荐"
-
-✅ 好（动词+工具+结果）：
-"3步用Claude Code创建自定义Skill，告别重复劳动"
-```
-
-### 口诀植入
-
-如果 skill 有核心纪律需要每次强调，用 verbatim 格式——Claude 输出这段话时会"锚定"自己的行为：
-
-> **口诀：** 每次执行前先确认：1) 输入格式正确 2) 输出目标明确 3) 不跳步骤
-
-规则：
-- 口诀只输出一次（首次响应），不在会话中途重复
-- 用户说"跳过口诀"→ 不输出但仍然遵守规则
-
-### 输出格式
-
-用模板定义输出，不给模糊指令：
-
-```markdown
-## 输出格式
-# [标题]
-## 概要
-## 正文
-## 下一步
-```
-
-模板要克制——只在真正增加价值的部分加模板，不要为了"看起来完整"而填充每个段落。
-
-### 降级级联（可选）
-
-如果 skill 涉及多方案选择（如多平台抓取），用严格优先级而非菜单：
-
-```markdown
-## 降级策略
-1. 方案A（最快）→ 失败时
-2. 方案B（较慢）→ 失败时
-3. 方案C（兜底）
-```
-
-不是"选一个"，而是"从上到下依次尝试"。
-
-### 跨 skill 调用（可选）
-
-如果 skill 完成后自然衔接另一个 skill，在正文中注明：
-
-```markdown
-## 下一步
-完成后可触发 `/laohan-notebooklm <script.md>` 生成幻灯片。
-```
-
-### 写作原则
-
-- 用祈使句（"做 X"而非"你应该做 X"）
-- 给具体例子（Input/Output 对）
-- 不用 ALL CAPS 的 ALWAYS/NEVER——改用自然的因果解释
-- 不确定是否需要的功能，标注"可选"
-- **内容创作类 skill 需定义语气**：如果 skill 输出面向读者的内容（口播稿、标题、文案），用具体规则定义语气（如"不用'众所周知'开头""不用感叹号"），而不是笼统说"口语化"
-
-> 跨步骤的全局约束（保持精简、Lazy creation、通用化、解释 why、匹配语言）见上方"操作规则"章节。
-
----
-
-## 何时用 scripts/
-
-把确定性操作写成脚本：
-- 格式转换、数据验证、文件处理
-- 每次 Claude 都会重新生成的相同代码
-- 需要精确控制的步骤（如 API 调用参数）
-
-**判断标准**：如果测试中发现 Claude 每次执行都生成几乎一样的辅助代码，那应该提取到 scripts/——省 token、提可靠性。
-
-## 何时用 references/
-
-把参考内容拆出去：
-- 平台专属方法（如各平台抓取规则）
-- 长模板或配置示例
-- 不需要每次都加载的背景知识
-
----
-
-## 输出格式
-
-最终产物是一个符合上述骨架模板和写作规则的 SKILL.md 文件，放在 `~/.agents/skills/<skill-name>/` 目录中。
+- [ ] description 含 Use when + 触发词
+- [ ] SKILL.md < 100 行（或 >500 已拆 references）
+- [ ] 无时效信息（具体日期/版本号除非必要）
+- [ ] 术语一致
+- [ ] 有具体例子
+- [ ] references 仅一层深
 
 ---
 
 ## 安装清单
 
-创建完成后按此清单操作：
+创建/优化完成后：
 
-- [ ] SKILL.md 写好，frontmatter 含 name + description（含 "Use when"）
-- [ ] 目录在 ~/.agents/skills/<skill-name>/
-- [ ] symlink: ln -s ~/.agents/skills/<skill-name> ~/.claude/skills/<skill-name>
-- [ ] 触发测试通过（说触发词能加载 skill）
-- [ ] 反触发测试通过（说相似无关词不误触发）
-- [ ] 执行测试通过（输出符合预期）
+- [ ] SKILL.md 写好，frontmatter 含 name + version + description（含 Use when）
+- [ ] 目录在 `~/.agents/skills/<name>/`
+- [ ] symlink: `ln -s ~/.agents/skills/<name> ~/.claude/skills/<name>`（自研 skill 用 symlink→git仓库，见 rules/skills.md v1.3）
+- [ ] 触发测试通过
+- [ ] 反触发测试通过
+- [ ] 执行测试通过
 - [ ] 重复工作检查（无每次生成的相同辅助代码）
+- [ ] **6 维自评 ≥80**（v2 新）
+- [ ] runtime 红灯扫描通过（`bash scripts/redlight-scan.sh`，无硬编码平台绑定路径）
 - [ ] 推送安全检查（无硬编码绝对路径、无内部昵称、无 API key）
-- [ ] 复制到本地 laohan-skills 仓库对应目录
-- [ ] git push
-
-## 改造已有 skill
-
-**只改造自研 skill（laohan 系列）。npx 安装的第三方 skill 应 fork 后新建，不要原地修改——`npx skills update` 会覆盖改动。**
-
-当需要优化现有 skill 时，重点检查：
-
-1. **description 是否有 "Use when"** — 没有，加
-2. **SKILL.md 是否超过 500 行** — 超了，拆 references/
-3. **是否有核心理念章节** — 3步以上的 skill 必加
-4. **工作流是否有编号步骤 + 独立的操作规则** — 没有或混在一起，重构
-5. **关键步骤是否有门控条件** — 没有，加硬停止
-6. **是否有不适用场景** — 没有，加拒绝条件
-7. **输出格式是否用模板定义** — 没有，加
-8. **是否解释了 why** — 没有，补
-9. **核心规则是否有反模式示例** — 加 WRONG/RIGHT 对比块
-10. **涉及外部动作是否有人为干预门** — 没有，加确认步骤
-11. **涉及多方案选择是否有降级级联** — 没有，加优先级级联（非菜单）
+- [ ] 复制到 laohan-skills 仓库（自研）+ git push
