@@ -1,6 +1,6 @@
 ---
 name: laohan-donghua
-version: "9.0.0"
+version: "10.0.0"
 description: "从口播稿+真人视频生成带B-roll overlay的最终视频。一个index.html+一次render出成片。Use when 用户说生成B-roll、做视频片段、配图动画、Hyperframes动画、教程配图、给视频加特效、做overlay、加动效。"
 ---
 
@@ -14,13 +14,13 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 2. **从零构建，不复制模板。** 按 DESIGN.md 从零写每个场景 HTML
 3. **时间戳驱动。** 官方 `npx hyperframes transcribe` 拿真实时间戳
 4. **每个场景不同视觉风格。** 在 DESIGN.md 框架内做变体
-5. **B-Roll 占视频 30% 时长。** 按内容密度分配，不是均分
+5. **B-Roll 覆盖率按内容密度决定。** AI/教程密集型通常 30-45%，策略评论 25-35%，个人叙事 15-25%，UI 证据型可到 40-55%
 
 ## 不适用场景
 
 - **从零做视频（无口播稿+无视频）** → `/make-a-video`
 - **纯动画/PPT（无真人出镜）** → `/hyperframes`
-- **竖屏短视频（9:16）** → 需额外适配，本 skill 按 16:9
+- **竖屏短视频（9:16）** → 先明确目标画布和 face-wrapper 架构，再继续；不要默认按 16:9 裁切
 
 `make-a-video` 是完整视频创作流程（8-gate，从选题到渲染），laohan-donghua 是 B-roll overlay 专项流程（18-step，口播稿+真人视频→overlay 成片）。两者并行，不嵌套。
 
@@ -38,6 +38,19 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 | 架构/设计参数 | `references/` | 构建时查阅 |
 
 **写 composition 前，先调用 `/hyperframes` 获取框架规则。**
+
+## HyperFrames student-kit 项目内优先级
+
+如果当前工作目录是 `/Users/hanzhmacbookair/Documents/hyperframes/hyperframes-student-kit` 或其 `video-projects/*` 子项目，本 skill 必须让位给项目内权威流程：
+
+1. `docs/AI_TALKING_HEAD_OVERLAY_SYSTEM.md`
+2. 生成项目的 `PROJECT_BRIEF.md`
+3. 生成项目的 `SCRIPT_ANALYSIS.md`
+4. 生成项目的 `ASSET_PLAN.md`
+5. 生成项目的 `AI_SCENE_INDEX.md` / `STYLE_PROFILE.md` / `style-profile.json`
+6. 生成项目的 `OVERLAY_PLAN.md`
+
+在该项目内，禁止继续引用不存在的 `scene-index.md`；禁止写死 30% 覆盖率；禁止把参考账号下载帧、封面、logo 或精确布局作为项目素材。
 
 ---
 
@@ -57,7 +70,7 @@ description: "从口播稿+真人视频生成带B-roll overlay的最终视频。
 
 **强制规则**：
 1. 跳过任何 Gate → 停止执行，回到未完成的步骤。没有例外。
-2. 每完成一步，先输出该步产出物，标注 Gate 状态（✅ 通过 / ❌ 未通过），再问用户是否继续。
+2. 默认由 agent 自主推进，不要每步都让用户记命令或确认。只有源视频内容问题、素材缺失会改变真实性、Studio/MP4 预览放行、最终渲染放行时才问用户。
 3. "我觉得大概是这样" ≠ 通过。必须有具体的表格/文件/命令输出。
 
 ### 用户侧（模型不参与）
@@ -90,7 +103,7 @@ npm run input:inspect -- <video.mp4>
 #### 步骤 4：读口播稿 → 插入点设计 + 内容规划 + 场景规划
 
 📖 **读取**：口播稿全文
-📖 **查阅**：`scene-index.md`（52 个内容场景 + 速查表，按内容类型匹配视觉结构）
+📖 **查阅**：项目内 `AI_SCENE_INDEX.md` / `style-profile.json`；非 student-kit 项目则使用本 skill 的 `references/` 作为备用技法库
 
 这是最关键的步骤。三层规划决定视频质量。
 
@@ -111,11 +124,17 @@ npm run input:inspect -- <video.mp4>
 | 纯叙述/过渡 | ❌ | 保持真人全屏（HERO 模式） | — |
 | 情感/故事 | ❌ | 保持真人全屏 | — |
 
-**4b. B-Roll 占比计算**：
+**4b. B-Roll 覆盖率计算**：
 
 ```
-总视频时长 × 30% = overlay 总时长
-overlay 总时长 ÷ 场景数 = 平均场景时长（目标 4-8s）
+先按内容类型选择覆盖率：
+- AI/教程密集型：30-45%
+- 策略评论：25-35%
+- 个人叙事：15-25%
+- UI 证据型：40-55%
+
+总视频时长 × 选定覆盖率 = overlay 总时长范围
+overlay 总时长 ÷ 场景数 = 平均场景时长（普通 2-4.5s，证据场景 4-8s）
 ```
 
 场景数由内容密度决定，不是均分。密集段落可以连续多个场景，稀疏段落保持全屏。
@@ -139,20 +158,20 @@ s1   | "终端输一行..." | "opencli" + "一行命令搞定" + "标题·播放
 s2   | "想抓知乎热榜..." | "知乎热榜" + "50条" + "链接+摘要" | 标题+数据 | 数据展示 | 专业
 ```
 
-**4d. 视觉结构匹配**：根据内容类型 + 文字量，从 `scene-index.md` 找视觉结构模式。
+**4d. 视觉结构匹配**：根据内容类型 + 文字量，从项目内 `AI_SCENE_INDEX.md` / `style-profile.json` 找视觉结构模式；没有这些文件时才用本 skill 的 `references/` 技法库。
 
 这不是复制模板——是参考空间分配和布局方式。用实际文字长度重新设计具体位置和字号。
 
 **完成条件：**
 - 场景清单（编号 + 口播段落 + 提取文字 + 建议布局 + 情绪）
-- overlay 总占比 ≈ 30%
+- overlay 总占比符合选定内容密度目标
 - 每个场景有明确的文字内容和布局方向
 
 **🚧 GATE 1**：场景规划表未输出 → 禁止进入步骤 6。必须包含所有列。产出物是一个完整的 markdown 表格。
 
 #### 步骤 5：创建 DESIGN.md
 
-📖 **读取**：`~/.claude/skills/hyperframes/visual-styles.md`（8 种风格 YAML token）
+📖 **读取**：项目本地 `.agents/skills/hyperframes/` 或 `.claude/skills/hyperframes/`；如果当前是 student-kit 项目，优先使用 `STYLE_PROFILE.md` / `style-profile.json`
 📖 **参考**：`DESIGN.ais-example.md`（完整结构模板）
 
 从 visual-styles.md 选择最匹配口播内容的风格。教程类 AI 工具测评通常适合 Swiss Pulse（数据驱动）或 Data Drift（AI/未来感）。
@@ -170,7 +189,7 @@ DESIGN.md 必须包含：
 
 #### 步骤 6：环境检查
 
-📖 **读取**：`~/.claude/skills/hyperframes-cli/SKILL.md`（doctor 命令详情）
+📖 **读取**：项目本地 `.agents/skills/hyperframes-cli/SKILL.md` 或 `.claude/skills/hyperframes-cli/SKILL.md`（doctor 命令详情）
 
 ```bash
 cd video-projects/<project-slug>
@@ -186,7 +205,7 @@ ffmpeg -i raw.mov -c:v libx264 -preset medium -crf 20 -c:a aac -b:a 192k -movfla
 
 #### 步骤 7：转录
 
-📖 **读取**：`~/.claude/skills/hyperframes-media/SKILL.md`（transcribe 命令详情）
+📖 **读取**：项目本地 `.agents/skills/hyperframes-media/SKILL.md` 或 `.claude/skills/hyperframes-media/SKILL.md`（transcribe 命令详情）
 
 **字幕系统选择（固定优先级）**：
 
@@ -221,7 +240,7 @@ curl -s -X POST https://api.siliconflow.cn/v1/audio/transcriptions \
 - 帧边界对齐：时间 snap 到 0.0333s 倍数（30fps）
 - 场景间留 0.3-0.5s 间隔（避免连续 overlay 太密）
 
-**完成条件：** 每个场景有精确的帧对齐 data-start/data-duration，overlay 总占比 ≈ 30%
+**完成条件：** 每个场景有精确的帧对齐 data-start/data-duration，overlay 总占比符合步骤 4b 的内容密度目标
 
 **🚧 GATE 2**：时间戳校准表未输出 → 禁止构建 compositions。产出物是一个完整的时间戳表，每行有 data-start、data-duration、帧对齐确认。
 
@@ -230,9 +249,9 @@ curl -s -X POST https://api.siliconflow.cn/v1/audio/transcriptions \
 📖 **必读**：`references/broll-architecture.md`（架构约束 + 常见错误速查）
 📖 **查阅**：`references/broll-techniques.md`（24 种常用动画技法 + 3 大基础设施系统，按场景需要选用）
 📖 **查阅**：`references/broll-design-reference.md`（face-wrapper 4 种架构、8 种视觉风格、face 美化）
-📖 **参考**：`scene-index.md`（按内容类型 + 文字量匹配视觉结构模式）
-📖 **必读**：`~/.claude/skills/hyperframes/references/typography.md`（字体排版规则，每个场景都有文字）
-📖 **参考**：`~/.claude/skills/hyperframes/references/css-patterns.md`（文字强调效果）
+📖 **参考**：项目内 `AI_SCENE_INDEX.md` / `style-profile.json`（按内容类型 + 文字量匹配视觉结构模式）
+📖 **必读**：项目本地 `.agents/skills/hyperframes/references/typography.md` 或 `.claude/skills/hyperframes/references/typography.md`（字体排版规则，每个场景都有文字）
+📖 **参考**：项目本地 `.agents/skills/hyperframes/references/css-patterns.md` 或 `.claude/skills/hyperframes/references/css-patterns.md`（文字强调效果）
 📖 **规则**：`rules/hyperframes.md`（自动加载，承重 GSAP 规则）
 
 对每个场景创建 `compositions/<scene-name>.html`。从零按 DESIGN.md 构建。
@@ -241,7 +260,7 @@ curl -s -X POST https://api.siliconflow.cn/v1/audio/transcriptions \
 
 **场景视觉设计**：
 - 每个场景在 DESIGN.md 框架内做变体（同色系不同布局）
-- 按 `scene-index.md` 匹配内容类型的视觉结构
+- 按 `AI_SCENE_INDEX.md` / `style-profile.json` 匹配内容类型的视觉结构
 - 变体方式：布局方向（左对齐/居中/卡片）、强调元素（数字/标签/图标）、动画节奏
 
 **文字尺寸验证**（用官方工具，不靠猜）：
@@ -494,7 +513,7 @@ var layout = window.__hyperframes.pretext.layout(prepared, 800, 1.3);
 
 #### 步骤 11-18：验证管线
 
-📖 **读取**：`~/.claude/skills/hyperframes-cli/SKILL.md`（命令参数详解）
+📖 **读取**：项目本地 `.agents/skills/hyperframes-cli/SKILL.md` 或 `.claude/skills/hyperframes-cli/SKILL.md`（命令参数详解）
 
 ```bash
 # 11. 静态检查
@@ -585,7 +604,7 @@ npx hyperframes render --quality standard --output renders/final.mp4
 
 | 原则 | 说明 |
 |------|------|
-| B-Roll 占比 > 30% | 总 overlay 时长 / 总视频时长 |
+| B-Roll 占比符合内容密度目标 | 总 overlay 时长 / 总视频时长；AI/教程密集型通常 30-45%，策略评论 25-35%，个人叙事 15-25%，UI 证据型可到 40-55% |
 | 每 10-15s 至少一个场景 | 避免长时间无动画 |
 | 场景时长跟口播段落匹配 | 不能太短（看不完）也不能太长（想关掉） |
 | 长口播段落拆分多个场景 | 不在一个场景里塞 15s+ 内容 |
@@ -611,12 +630,13 @@ video-projects/<project-slug>/
 - `references/broll-techniques.md` — 24 种常用动画技法 + 3 大基础设施系统（ambient-bg/captions/face-wrapper）
 
 **项目级（自动加载）：**
+- `docs/AI_TALKING_HEAD_OVERLAY_SYSTEM.md` — student-kit 内 AI/tech 口播增强权威流程
 - `CLAUDE.md` — **Render Contract（11 条硬规则）+ workspace layout + 全部 CLI 命令**。构建前必读
 - `rules/hyperframes.md` — B-roll overlay 完整规则 + 渲染器踩坑 + 性能优化
 - `MOTION_PHILOSOPHY.md` — 官方美学体系（10 Laws + pre-flight checklist）
 - `DESIGN.ais-example.md` — 完整 DESIGN.md 结构模板
 - `video-projects/may-shorts-6/` — 官方 overlay 参考项目
-- `scene-index.md` — 52 个内容场景的视觉灵感库（7 横屏模板，按内容类型速查）
+- `AI_SCENE_INDEX.md` / `style-profile.json` — student-kit 项目内 AI/tech 场景模式库（按语义触发、素材需求、face mode 速查）
 
 **委托 skill：**
 - `/hyperframes` — Composition 编写规则，写 HTML 前调用
