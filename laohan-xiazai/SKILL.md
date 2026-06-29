@@ -156,12 +156,12 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 
 | 方法 | 工具 | 场景 |
 |------|------|------|
-| agent-reach | `agent-reach` skill（npx） | 13 平台搜索/阅读统一入口（Tier0 零配置：Web/YouTube/GitHub/RSS/Exa/V2EX/雪球；Tier1 需 key：Twitter/Reddit/B站/小红书/小宇宙）。管"读/搜"，与 opencli（管"下载/操作"）互补 |
+| agent-reach | `agent-reach`（pipx/pip 安装，官方推荐 pipx） | 13 平台搜索/阅读统一入口（Tier0 零配置：Web/YouTube/GitHub/RSS/Exa/V2EX/雪球；Tier1 需登录态：Twitter/Reddit/B站/小红书用 Cookie，小宇宙用免费 Groq Key）。管"读/搜"，与 opencli（管"下载/操作"）互补 |
 | Jina Reader | `curl -sL "https://r.jina.ai/<url>"` | 通用网页内容提取 |
 | web-content-fetcher | `/web-content-fetcher` skill | agent-reach 失败时的三级降级抓网页 |
 | Scrapling stealthy | MCP stealthy_fetch | 反爬场景 |
 | yt-dlp | `yt-dlp <url>` | 通用视频下载 |
-| browser-use | `/open-source` skill（npx） | AI 自主操作浏览器，全新/未知页面 |
+| browser-use | `/open-source` skill | AI 自主操作浏览器，全新/未知页面 |
 | web-access | `/web-access` skill | CDP 接管已登录日常 Chrome（localhost:3456），覆盖：登录态内容、复杂交互（点击/翻页/表单/上传）、视频帧采样、本地书签历史检索 |
 | Playwright 手动 | ECC Playwright MCP | 精确手动控制，最后兜底 |
 
@@ -195,7 +195,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 | 音视频转码 | `ffmpeg -i input.mp4 -vn -acodec libmp3lame output.mp3` |
 | OCR | `tesseract image.png stdout -l chi_sim+eng` |
 | PDF 提取文本 | `python3 -c "import fitz; doc=fitz.open('file.pdf'); [page.get_text() for page in doc]"` |
-| 图片处理 | `convert input.png -resize 800x600 output.png` |
+| 图片处理 | `magick input.png -resize 800x600 output.png` |
 
 ### 搜索兜底
 
