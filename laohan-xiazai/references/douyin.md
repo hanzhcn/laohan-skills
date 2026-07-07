@@ -1,6 +1,6 @@
 # 抖音下载方法
 
-抖音反爬极强，yt-dlp/Jina/web_fetch 全部无效。以下方法是唯一可靠方案（无需 cookies）。
+抖音反爬极强，yt-dlp/Jina/web_fetch 全部无效。日常用 opencli（`opencli douyin --help` 看全部子命令）；下方移动端 UA + iesdouyin 是底层原理与降级方案——opencli 内部走的就是这套 API，手动方法仅在 opencli 失效时备用。
 
 ## 下载视频
 
@@ -49,7 +49,7 @@ print(result['text'])
 
 ```bash
 # 1. 获取视频列表（含 play_url CDN 临时链接）
-opencli douyin user-videos {sec_uid} --limit 200 --with_comments false -f json > /tmp/videos.json
+opencli douyin user-videos {sec_uid} --limit 20 --with_comments false -f json > /tmp/videos.json
 
 # 2. 批量下载+音频提取+转录
 python3 << 'PYEOF'
@@ -97,18 +97,17 @@ PYEOF
 ## 查博主更新
 
 ```bash
-opencli douyin user-videos {sec_uid} --limit 200 --with_comments false -f json
+opencli douyin user-videos {sec_uid} --limit 20 --with_comments false -f json
 ```
 
 - sec_uid 从 URL 的 `/user/` 后面提取，或通过短链接解析获取
-- **最大200条，分页已内置**（`public-api.js` 有 `max_cursor` 循环 + `has_more` 检查，每批20条自动翻页）
-- 默认值 `--limit 20`，加 `--limit 200` 可获取全部视频（实际受账号视频总数限制）
+- **`--limit` 上限 20 条**：opencli 1.8.6 源码 `clis/douyin/user-videos.js` 中 `MAX_USER_VIDEOS_LIMIT = 20`，`normalizeUserVideosLimit` 用 `Math.min(20, …)` 硬截断，结果再 `.slice(0, limit)`——**没有翻页循环**。`public-api.js` 里的 `max_cursor: '0'` 只是单次请求参数，不是分页迭代。要取超过 20 条需多次调用或换思路
 - 返回 aweme_id + play_url（CDN临时链接）→ 立即下载视频
 - ⚠️ sec_uid 必须是最新的：旧 sec_uid 会触发 Cookie 覆盖返回自己账号的数据
 - 获取最新 sec_uid：`curl -sL -o /dev/null -w '%{url_effective}' -H "User-Agent: {移动端UA}" "https://v.douyin.com/{短链接}/"`
 - 返回 aweme_id → `https://www.douyin.com/video/{aweme_id}`
 
-> **踩坑记录**：源码 `user-videos.js` 第43行 help 文字写"最大 20"，实际 `MAX_USER_VIDEOS_LIMIT = 200`。help 文字是 opencli 自身 bug。不要信 help 文字，以源码常量为准。
+> **踩坑记录（2026-07-08 读源码纠正）**：本文档早先版本曾断言"源码 `MAX_USER_VIDEOS_LIMIT = 200`、help 写'最大 20'是 opencli bug"——这是编造的。直接读 `user-videos.js`：常量就是 `20`，help 文字正确，`Math.min(20, …)` 把更大值截断为 20，`--limit 200` 实际只返回 20 条。作者当时没真读源码就下了结论，还据此写了下方"方法论"——反面教材，但方法论本身（不信文档、读源码）值得保留，已用本次纠正重写。
 
 ## 代码层抓取（agent 内嵌）
 
@@ -120,11 +119,11 @@ async with Scraper() as s:
 
 ## 抓取评论（douyin-session adapter）
 
-`~/.claude/skills/adapters/perf-data/douyin-session/crawler.py` 提供基于 Playwright 的评论抓取，支持任意公开视频。
+`~/.agents/skills/adapters/perf-data/douyin-session/crawler.py` 提供基于 Playwright 的评论抓取，支持任意公开视频。（本机扩展，非 laohan-skills 自带；opencli 无抖音评论命令，评论需靠此 adapter 或第三方库）
 
 ```python
 import sys, asyncio, os
-sys.path.insert(0, os.path.expanduser('~/.claude/skills/adapters/perf-data/douyin-session'))
+sys.path.insert(0, os.path.expanduser('~/.agents/skills/adapters/perf-data/douyin-session'))
 from crawler import Session, fetch_comments
 
 async def main():
@@ -143,20 +142,20 @@ asyncio.run(main())
 - `fetch_comments`：抓任意公开视频评论（headless/headful 都行），拦截 XHR 滚动加载
 - `fetch_video_detail`：仅对自己账号视频有效（创作者中心 API 限制）
 - `.auth/` 目录存持久化 Cookie（需扫码登录一次），Chrome 异常退出后需清理 `SingletonLock/SingletonCookie/SingletonSocket`
-- 获取用户视频列表：`opencli douyin user-videos {sec_uid} --limit 200 -f json`（⚠️ 最大200条分页已内置；旧 sec_uid 会 Cookie 覆盖返回自己账号的视频，需用短链接解析获取最新 sec_uid）
+- 获取用户视频列表：`opencli douyin user-videos {sec_uid} --limit 20 -f json`（⚠️ `--limit` 上限 20 无翻页；旧 sec_uid 会 Cookie 覆盖返回自己账号的视频，需用短链接解析获取最新 sec_uid）
 - 抖音主页 Scrapling stealthy_fetch 可获取公开视频页面（点赞+评论），但无法滚动加载全部评论
 
 ## 方法论：如何发现工具的真实能力
 
-这次"最大20条"→"实际最大200条"的纠正过程，暴露了一个通用问题：**help 文字和文档会滞后于代码**。发现正确方法的步骤：
+本次"user-videos 到底是 20 还是 200"的纠正过程（见上方踩坑记录），正好是这套方法论的活教材。发现工具真实能力的步骤：
 
-1. **不信 help 文字**：`--help` 输出的"最大 20"和 `default: 20` 是两个不同的东西——default 不等于 max
-2. **读源码常量**：直接看工具的源码（npm 包在 `~/.nvm/.../lib/node_modules/` 下），找 `MAX_*` / `LIMIT` 等常量定义
-3. **读分页逻辑**：看 API 调用层是否有 `cursor` / `max_cursor` / `has_more` / `page_token` 等分页机制
-4. **用递增 limit 测试**：先测 `--limit 30`（超过声称的20），再测 `--limit 200`，用 `grep "^- index:" | wc -l` 计算实际返回条数
-5. **区分限制来源**：返回少于 limit 可能是账号视频总数不够（如拉斐尔只有63条），不是工具限制
+1. **不信文档，也不盲信 help**：文档会编造（本文档就曾把 20 写成 200），help 文字也可能滞后于代码——两者都要用源码验证
+2. **直接读源码常量**：npm 包在 `~/.nvm/.../lib/node_modules/@jackwener/opencli/clis/<platform>/` 下，找 `MAX_*` / `LIMIT` / `DEFAULT_*` 常量定义（如 `MAX_USER_VIDEOS_LIMIT = 20`）
+3. **读截断/分页逻辑**：看是否有 `Math.min(MAX, …)` 硬截断（→ 上限就是 MAX），还是 `cursor` / `max_cursor` 在 `while` / `has_more` 循环里递增（→ 真分页）。注意 `max_cursor: '0'` 只是单次请求参数，没有循环就不是分页
+4. **用递增 limit 实测**：`--limit 30` 超过声称上限跑一次，数返回条数（`-f json | jq length` 或 `grep -c`），若被截断到上限说明硬限制
+5. **区分限制来源**：返回少于 limit 可能是数据源本身不够（如某博主只有 15 条视频），不是工具限制
 
-**通用原则**：当工具文档说"最大 N"时，用 `--limit N+1` 跑一次验证。如果成功了，文档就是错的。
+**通用原则**：`Math.min(MAX, x)` + `.slice(0, limit)` = 硬上限，文档/help 说的"最大 N"通常就是这个 MAX；只有看到游标在循环里递增才是真分页。本次教训：声称"读了源码"却得出错误结论（200），比不读源码更有害——读源码时必须真的找到常量定义行，不能靠猜。
 
 ## 获取视频发布时间（aweme_id 解码法）
 
@@ -237,9 +236,22 @@ opencli douyin stats <aweme_id> -f json
 
 - 注意：部分作品可能返回 API error（隐私设置或创作者中心权限限制）
 
-## 关键词搜索（DrissionPage）
+## 关键词搜索
 
-抖音搜索 API 有 a_bogus 签名校验，无法直接调接口。opencli 的 `hashtag search` 只搜话题标签（返回热门话题 + view_count，**不返回视频流**），没有视频流搜索命令。视频搜索唯一可靠方案：DrissionPage 监听浏览器数据包 + 滚动采集。
+首选 `opencli douyin search`（视频流搜索，opencli 内部解决 a_bogus 签名）；需要更大量/排序筛选时降级 DrissionPage。
+
+### 第1选：opencli douyin search
+
+```bash
+opencli douyin search "关键词" --limit 30 -f json
+# 输出列：rank, desc, author, url, plays, likes, comments, shares
+```
+
+- `--limit 1-30`（default 10），返回真实视频流（含播放/点赞/评论/分享数 + 视频地址）
+- 需 Browser Bridge（`opencli doctor` 查状态）
+- 这是视频搜索，区别于 `hashtag search`（只搜话题标签）
+
+### 第2选：DrissionPage 监听（需大量采集/排序筛选时）
 
 ```bash
 cd /tmp/douyin-test && source .venv/bin/activate
@@ -258,10 +270,15 @@ python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 
 - 不支持排序/时间筛选（API 需 a_bogus 签名，UI 点击触发验证码）
 - 如需筛选，建议多采集后 Python 后处理
 
-其他搜索方案对比：
-- `opencli douyin hashtag search`：✅ 有效，但只搜话题标签（热门话题 + view_count），不返回视频流
-- ECC Playwright `browser_run_code`：✅ 可用但数据量少（约10条），适合快速预览
-- 纯 requests 调搜索 API：❌ a_bogus 签名校验
+### 搜索方案对比
+
+| 方案 | 返回 | 适用 |
+|------|------|------|
+| `opencli douyin search` | 视频流（rank/desc/author/url/plays/likes/comments/shares） | **首选**，日常关键词搜索 |
+| `opencli douyin hashtag search` | 话题标签（name/id/view_count） | 选题调研，不返回视频 |
+| DrissionPage（laohan-douyinsousuo） | 视频流 + 排行 | 需大量采集/排序，需登录态 |
+| ECC Playwright `browser_run_code` | 少量视频（约10条） | 快速预览 |
+| 纯 requests 调搜索 API | ❌ | a_bogus 签名校验，不可行 |
 
 ## 话题与热点
 
@@ -386,13 +403,16 @@ opencli douyin collections -f json
 opencli douyin activities -f json
 ```
 
-## opencli 抖音命令速查
+## opencli 抖音命令速查（1.8.6 共 17 个子命令）
 
 | 命令 | 用途 | 需登录 | 场景 |
 |------|------|--------|------|
+| `search` | 关键词搜索视频流 | Browser Bridge | 竞品/选题搜索（首选） |
 | `user-videos` | 获取指定用户视频列表 | Browser Bridge | 监测博主更新 |
 | `videos` | 获取自己作品列表 | Browser Bridge | 贤德数据分析 |
 | `profile` | 获取账号信息 | Browser Bridge | 贤德数据分析 |
+| `whoami` | 当前登录账号 | Browser Bridge | 多账号切换确认 |
+| `login` | 扫码登录抖音 | Browser Bridge | 首次登录/换号 |
 | `stats` | 单个作品数据分析 | Browser Bridge | 贤德数据分析 |
 | `hashtag hot` | 话题热点词 | Browser Bridge | 选题调研 |
 | `hashtag search` | 话题搜索 | Browser Bridge | 选题调研 |

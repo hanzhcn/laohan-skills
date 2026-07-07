@@ -49,9 +49,9 @@ opencli doctor
 ```
 3 项全绿（Daemon + Extension + Connectivity）才能用 Cookie 命令。失败时排障：
 1. `opencli doctor` 看哪项失败
-2. daemon 没跑 → `launchctl start com.opencli.daemon`
+2. daemon 没跑 → `opencli daemon restart`（opencli 自带 daemon 管理，**不要用 launchctl**——opencli 不提供 LaunchAgent）
 3. daemon 在跑但扩展未连 → 让用户 `chrome://extensions/` 关开 OpenCLI 扩展
-4. 都 OK 还连不上 → `launchctl kickstart -k gui/$(id -u)/com.opencli.daemon`
+4. 都 OK 还连不上 → `opencli daemon stop` 后再跑任意 `opencli <命令>` 触发 daemon 自启
 
 ### 命令失败时的处理
 
@@ -91,7 +91,7 @@ opencli doctor
 | 小红书 | opencli xiaohongshu | agent-reach | Scrapling stealthy | — |
 | 微博 | opencli weibo | agent-reach | Jina Reader | — |
 | B站 | opencli bilibili | agent-reach | Jina Reader | — |
-| 抖音 | DrissionPage 关键词搜索（→ `references/douyin.md`，或直接 `/laohan-douyinsousuo`） | opencli douyin | agent-reach | douyin-session（评论） |
+| 抖音 | `opencli douyin search`（视频流搜索） | DrissionPage（→ `references/douyin.md` / `/laohan-douyinsousuo`，需大量采集/排序时） | agent-reach | douyin-session（评论） |
 | TikTok | opencli tiktok（需 Browser Bridge） | agent-reach | Scrapling stealthy | — |
 | 任意平台 | agent-reach（13平台搜索/阅读，含 GitHub/RSS/V2EX/Twitter/Reddit/小宇宙/Exa 等 opencli 不覆盖的） | web-content-fetcher | Jina Reader | Scrapling stealthy |
 
@@ -203,7 +203,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 
 | 工具 | 场景 | 说明 |
 |------|------|------|
-| anysearch | 实时搜索+垂直领域+批量并行+URL全文提取 | 23 个垂直领域（股票/CVE/DOI/法律/学术等），`~/.agents/skills/anysearch/`，`/anysearch` |
+| anysearch | 实时搜索+垂直领域+批量并行+URL全文提取 | 16 个垂直领域（股票/CVE/DOI/法律/学术等；Stock/CVE/DOI 是触发标识符非 domain），`~/.agents/skills/anysearch/`，`/anysearch` |
 | smart-search | opencli 搜索路由 | 基于 opencli 的智能搜索，覆盖社交/技术/新闻/购物，`~/.agents/skills/smart-search/` |
 | web-search | 通用网页搜索 | DuckDuckGo API，轻量搜索，`~/.openclaw/skills/web-search/` |
 | multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.openclaw/skills/multi-search-engine/` |
