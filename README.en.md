@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-15-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-16-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -24,7 +24,7 @@ Built by [寒武纪AI](https://github.com/hanzhcn) · Search **寒武纪AI** on 
 > **Don't install all** — pick only the skills you need. Full per-skill commands in [Install on demand](#install-on-demand).
 
 ```bash
-# Install all 15 skills (requires Claude Code or OpenClaw)
+# Install all 16 skills (requires Claude Code or OpenClaw)
 npx skills add hanzhcn/laohan-skills -g -y
 
 # Install one (recommended: pick what you need)
@@ -40,7 +40,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuang
 
 No need to install all. Pick what you need and copy the command (requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code)):
 
-**Content Creation (9)**
+**Content Creation (10)**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 3-source AI trend aggregation
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (6 inputs → script)
@@ -51,6 +51,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Stor
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 Slide images
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 Screen recording automation
 npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay video
+npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 Multi-platform rewrite (Douyin/Xiaohongshu/WeChat)
 ```
 
 **Content Acquisition (2)**
@@ -71,7 +72,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ C
 
 ---
 
-## Content Creation (9)
+## Content Creation (10)
 
 > From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
 
@@ -166,6 +167,7 @@ Script + real-person video → B-roll overlay final video. Built on Hyperframes:
 | 🎬 **fenjing** | Storyboard prompts (FLUX / SDXL / Gemini, quality-validated) | "拆分镜" |
 | 📑 **notebooklm** | Script → slide images (NotebookLM, ready for video editors) | "做 PPT" |
 | 🎥 **luping** | Screen recording automation (ffmpeg physical screen + Playwright browser → 1080p MP4) | "录屏" |
+| 🔄 **duopingtai** | Multi-platform rewrite (script → Douyin / Xiaohongshu / WeChat 3 versions) | "多平台改写" |
 
 ---
 
