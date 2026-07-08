@@ -80,12 +80,29 @@ for i, v in enumerate(data):
         subprocess.run(['ffmpeg', '-y', '-i', mp4, '-vn', '-acodec', 'pcm_s16le', wav],
                        capture_output=True, timeout=30)
 
-    # 转录（优先硅基流动 API，降级 whisper-cli）
+    # 转录（优先硅基流动 API，降级 whisper-cli；结果写入 transcript.md）
     transcript = f'{vdir}/transcript.md'
     if not os.path.exists(transcript) or os.path.getsize(transcript) < 10:
-        subprocess.run(['whisper-cli', '-m', '/opt/homebrew/share/whisper.cpp/ggml-small.bin',
-                        '-f', wav, '-l', 'zh', '--no-timestamps'],
-                       capture_output=True, text=True, timeout=120)
+        # 第1选：硅基流动 SenseVoiceSmall（免费，中文优化）
+        sf = subprocess.run(
+            ['curl', '-sS', '-X', 'POST',
+             'https://api.siliconflow.cn/v1/audio/transcriptions',
+             '-H', f'Authorization: Bearer {os.environ.get("SILICONFLOW_API_KEY","")}',
+             '-F', 'model=FunAudioLLM/SenseVoiceSmall',
+             '-F', f'file=@{wav}'],
+            capture_output=True, text=True, timeout=120)
+        try:
+            text = json.loads(sf.stdout).get('text', '') if sf.stdout else ''
+        except Exception:
+            text = ''
+        if not text:
+            # 第2选：whisper-cli（本地）
+            w = subprocess.run(
+                ['whisper-cli', '-m', '/opt/homebrew/share/whisper.cpp/ggml-small.bin',
+                 '-f', wav, '-l', 'zh', '--no-timestamps'],
+                capture_output=True, text=True, timeout=120)
+            text = w.stdout
+        open(transcript, 'w').write(text)
 PYEOF
 ```
 
@@ -403,7 +420,7 @@ opencli douyin collections -f json
 opencli douyin activities -f json
 ```
 
-## opencli 抖音命令速查（1.8.6 共 17 个子命令）
+## opencli 抖音命令速查（1.8.6 共 16 个顶级命令，hashtag 含 hot/search/suggest 3 个子命令）
 
 | 命令 | 用途 | 需登录 | 场景 |
 |------|------|--------|------|

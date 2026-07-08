@@ -241,5 +241,5 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 
 - 抖音反爬极强，yt-dlp/Jina 全部无效，只能用移动端 UA 方法（见 `references/douyin.md`）
 - TikTok 用 tikwm API，CDN URL 临时，获取后立即下载
-- YouTube VTT 字幕必须清洗，否则 LLM 处理不了
+- YouTube 字幕首选 `opencli youtube transcript`（返回干净文本免清洗），备选 yt-dlp 的 VTT 需 `clean_vtt.py` 清洗（见 `references/youtube.md`）
 - opencli Cookie 命令需要 Browser Bridge 运行（排障：`opencli doctor`）
