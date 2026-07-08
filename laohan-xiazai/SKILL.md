@@ -86,7 +86,7 @@ opencli doctor
 
 | 平台 | 第1选 | 第2选 | 第3选 | 第4选 |
 |------|-------|-------|-------|-------|
-| 公众号 | agent-reach | Jina Reader | Scrapling stealthy | — |
+| 公众号 | `opencli weixin search/download` | agent-reach | fetch.py | Jina Reader |
 | 知乎 | opencli zhihu | agent-reach | Jina Reader | — |
 | 小红书 | opencli xiaohongshu | agent-reach | Scrapling stealthy | — |
 | 微博 | opencli weibo | agent-reach | Jina Reader | — |
@@ -111,7 +111,7 @@ opencli doctor
 | B站 | `opencli bilibili download`（需 Browser Bridge） | Jina Reader | — | — |
 | 小红书 | `opencli xiaohongshu download`（需 Browser Bridge） | agent-reach | Jina Reader | — |
 | 知乎 | `opencli zhihu` | Jina Reader | — | — |
-| 公众号 | `fetch.py` | agent-reach | Jina Reader | Scrapling stealthy |
+| 公众号 | `opencli weixin download`（导出 Markdown） | `fetch.py` | agent-reach | Jina Reader |
 | 视频号 | wx_video_download（MITM 代理） | — | — | — |
 | 未知平台 | `yt-dlp` | Scrapling MCP（get） | Scrapling stealthy | Jina Reader |
 
@@ -151,6 +151,25 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 - 精确操作 → Playwright（人工级控制）
 
 **成本递增，能浅不深**：Scrapling get（HTTP 秒级）< Scrapling fetch（浏览器秒级）< Scrapling stealthy（反检测）< browser-use（需调 LLM API）< web-access（需 CDP 连接）< Playwright（需写代码）
+
+## 评论采集
+
+> 详查命令见 `references/other-platforms.md`。opencli 是评论主力（read 8 平台 / write 3 平台），MediaCrawler 只抓不写且禁商业，不装。
+
+| 平台 | read 评论 | write 评论 | 命令 |
+|------|----------|-----------|------|
+| B站 | ✅（含楼中楼 `--parent`） | ✅ 发评论/回复 | `opencli bilibili comments <bvid>` / `comment <bvid> <msg>` |
+| 小红书 | ✅（楼中楼） | ❌ | `opencli xiaohongshu comments <note-id>` |
+| 知乎 | ✅ `answer-comments` | ✅ `comment <target> <text>` | 回答评论列表 / 发评论 |
+| 微博 | ✅ | ❌ | `opencli weibo comments <id>` |
+| 即刻 | ✅（post 含评论） | ✅ `comment <id> <text>` | `opencli jike post <id>` / `comment` |
+| 知识星球 | ✅（topic 含评论） | ❌ | `opencli zsxq topic <id>` |
+| 雪球 | ✅ | ❌ | `opencli xueqiu comments <symbol>` |
+| 贴吧 | ✅（read 含回复） | ❌ | `opencli tieba read <id>` |
+| 抖音 | △（user-videos 含热门评论，无独立 comments） | ❌ | `opencli douyin user-videos`；深度评论用 douyin-session adapter |
+| **快手** | ❌ opencli 无此平台 | ❌ | **唯一真缺口**，需另调研（移动端 UA / web-access CDP） |
+
+批量评论/批量主页采集属爬虫框架范畴，不在本 skill（见「不适用场景」）；按需取评论走 opencli。
 
 ## 通用兜底
 
