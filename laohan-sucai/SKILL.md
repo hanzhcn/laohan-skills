@@ -118,7 +118,7 @@ broll-assets/
 ## 输入输出契约
 
 - **输入**：`episodes/<slug>/01-口播稿.md`（或任意口播稿文件）
-- **输出**：`episodes/<slug>/07-剪辑/broll-assets/`（按工作流⑧产物归位）
+- **输出**：`episodes/<slug>/08-素材/broll-assets/`（按工作流⑤v5 ⑨素材独立步归位）
 - **不输出**：合成视频（归⑧/donghua）
 
 ## 依赖
@@ -144,7 +144,8 @@ broll-assets/
 - ⬜ scripts/ 实现（提词→多源搜→GLM打分→下载→清单）
 - ⬜ references/ 源适配器文档（各 API 字段/限流/署名要求）
 
-> spec 先行，实现待 chengfeng adapter 验证 + ⑧链子跑通后再做（避免预付实现成本）。当前 FDE 期停在⑥封面，⑧未到。
+> spec 先行，实现待 chengfeng adapter 验证 + ⑧链子跑通后再做（避免预付实现成本）。当前 FDE 期停在⑥封面，⑨未到。
+> v5 定位：⑨素材是独立步（原⑧子工具升格），喂 `01-口播稿.md` 不喂⑧剪辑产物，可独立于⑧并行触发。产物归位从 `07-剪辑/broll-assets/` 改 `08-素材/broll-assets/`。
 
 ## 注意事项
 
