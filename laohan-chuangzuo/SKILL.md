@@ -1,6 +1,6 @@
 ---
 name: laohan-chuangzuo
-description: 统一创作引擎，多种输入→口播稿+封面提示词。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、热点转译(选题→大纲)、结构化大纲、原始文本、自由主题六种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""找选题""写一篇""热点""想做个视频""根据链接改写""改写文档""不知道拍什么"。
+description: 统一创作引擎，负责确定来源+创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、热点转译(选题→大纲)、结构化大纲、原始文本、自由主题六种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""找选题""写一篇""热点""想做个视频""根据链接改写""改写文档""不知道拍什么"。
 version: "1.2.0"
 ---
 
@@ -102,7 +102,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 - [ ] Step 4: 写口播稿
 - [ ] Step 5: 质量检查（6关）
 - [ ] Step 6: 通过/重试
-- [ ] Step 7: 输出 + 调用 /laohan-fengmianqiuzhi 生成封面
+- [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
 - [ ] Post-A: [可选] NotebookLM 幻灯片
 
 ---
@@ -282,10 +282,11 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 - ✅ 全部通过 → Step 7
 - ❌ 不通过 → 第1次重试换角度，第2次重试换结构，仍不通过回 Step 3 重新规划（最多2轮）
 
-## Step 7：输出 + 封面
+## Step 7：输出口播初稿
 
 1. 口播稿写入 `output/script-YYYY-MM-DD.md`
-2. 调用 `/laohan-fengmianqiuzhi output/script-YYYY-MM-DD.md` 生成封面提示词
+
+> 封面提示词不在本 skill 范围。chuangzuo 的职责止于「确定来源 + 创作口播初稿」。封面由独立 skill `laohan-fengmianqiuzhi` 在后续流程（违规检查、校准评分通过、标题锁定后）单独产出。
 
 ---
 
@@ -315,8 +316,8 @@ output/
 ├── 热点-YYYY-MM-DD.md          ← Pre-C 热点简报
 ├── organize-YYYY-MM-DD.md      ← Step 1 整理结果（素材模式）
 ├── outline-YYYY-MM-DD.md       ← Step 1.5 大纲（自由模式/热点模式）
-├── script-YYYY-MM-DD.md        ← Step 7 口播稿
-└── cover-prompts-YYYY-MM-DD.md ← Step 7 封面提示词
+├── script-YYYY-MM-DD.md        ← Step 7 口播初稿（本 skill 唯一终产物）
+└── (cover-prompts 不在此产出，由 laohan-fengmianqiuzhi 独立 skill 后续生成)
 ```
 
 如果 `output/` 不存在，自动创建。
