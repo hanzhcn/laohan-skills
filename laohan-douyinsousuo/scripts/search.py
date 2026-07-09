@@ -27,20 +27,47 @@ def main():
     url = f"https://www.douyin.com/search/{keyword}?type=video"
     print(f"搜索: {keyword} | 目标≥{args.min}条 | 最多滚动{args.scroll}次")
 
-    # 启动浏览器 + new_tab 打开搜索页
+    # 启动浏览器：独立持久化 profile（不复用日常 Chrome 的 user-data-dir，避免占用冲突）
+    profile_dir = os.path.expanduser(os.environ.get("DOUYIN_PROFILE", "~/.douyin-search-profile"))
+    os.makedirs(profile_dir, exist_ok=True)
     co = ChromiumOptions()
     co.set_browser_path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-    co.set_local_port(9223)
+    co.set_user_data_path(profile_dir)
+    co.set_argument("--no-first-run")
+    co.set_argument("--no-default-browser-check")
     browser = Chromium(co)
+
+    # 注入 Profile 5 抽取的抖音登录态 cookie（复用日常 Chrome 登录，免扫码）
+    cookies_file = os.path.expanduser(os.environ.get("DOUYIN_COOKIES", "~/.douyin-search-profile/douyin_cookies.json"))
+    if os.path.exists(cookies_file):
+        with open(cookies_file, "r", encoding="utf-8") as f:
+            cookies = json.load(f)
+        # 清理 None 值（带 None 的字段 DrissionPage 会拒收）
+        cookies = [{k: v for k, v in c.items() if v is not None} for c in cookies]
+        tab0 = browser.latest_tab
+        tab0.get("https://www.douyin.com/")  # 先到目标域再注 cookie
+        time.sleep(3)
+        tab0.set.cookies(cookies)  # DrissionPage 4.x：传整个 list
+        time.sleep(1)
+        tab0.refresh()  # 刷新让 cookie 生效，重判登录态
+        time.sleep(3)
+        print(f"已注入 {len(cookies)} 个抖音 cookie（来源: {cookies_file}）")
+    else:
+        print(f"⚠️ 未找到 cookie 文件 {cookies_file}")
+        print("   先跑抽取脚本（需本机 Chrome 已登录抖音）:")
+        print("   ~/.douyin-search-profile/.venv/bin/python ~/.agents/skills/laohan-douyinsousuo/scripts/extract_cookies.py")
+        print("   现在回退扫码登录模式（120秒内手动扫码）...")
+
     tab = browser.new_tab(url)
 
     # 等待登录
     print("等待登录...")
     try:
-        tab.wait.ele_displayed('tag:span@@class="semi-avatar"', timeout=15)
+        tab.wait.ele_displayed('tag:span@@class="semi-avatar"', timeout=20)
         print("登录态有效")
     except Exception:
-        print("请在浏览器中扫码登录...")
+        print("⚠️ cookie 注入无效或已失效，请在弹出的浏览器中扫码登录（120秒）...")
+        print("   登录后建议重抽 cookie 持久化: 跑 extract_cookies.py")
         tab.wait.ele_displayed('tag:span@@class="semi-avatar"', timeout=120)
         print("登录成功！")
     time.sleep(2)
@@ -80,9 +107,10 @@ def main():
         print(f"   {v['url']}")
 
     # 保存 JSON
-    os.makedirs("/tmp/douyin-test", exist_ok=True)
+    output_dir = os.path.expanduser("~/.douyin-search-profile/output")
+    os.makedirs(output_dir, exist_ok=True)
     safe_name = keyword.replace(" ", "_").replace("/", "_")
-    output_file = f"/tmp/douyin-test/{safe_name}_results.json"
+    output_file = f"{output_dir}/{safe_name}_results.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(videos, f, ensure_ascii=False, indent=2)
     print(f"\n已保存: {output_file}")
