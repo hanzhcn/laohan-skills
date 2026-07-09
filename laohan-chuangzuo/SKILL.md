@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
-description: 统一创作引擎，负责确定来源+创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、热点转译(选题→大纲)、结构化大纲、原始文本、自由主题六种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""找选题""写一篇""热点""想做个视频""根据链接改写""改写文档""不知道拍什么"。
-version: "1.2.0"
+description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
+version: "1.3.0"
 ---
 
 # 统一创作引擎
@@ -23,7 +23,7 @@ version: "1.2.0"
 - **写作规则**：`references/style.md` → `~/.openclaw/workspace-writer/knowledge/style.md`（富贵 style.md v3.2）
 - **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
-- **热点转译法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）
+- **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
@@ -32,7 +32,7 @@ GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
 | 模式 | 输入 | 触发场景 | 内部处理 |
 |------|------|----------|---------|
-| 大纲模式 | 结构化大纲文件 | 热点转译后、外部传入 | 跳过整理，从 Step 2 开始 |
+| 大纲模式 | 结构化大纲文件 | 工作流①前置产出 / 外部传入 | 跳过整理，从 Step 2 开始 |
 | 素材模式 | 原始文本/转录稿 | 录屏转录后、URL抓取后 | 先 Layer A/B 整理，再写稿 |
 | 自由模式 | 主题关键词 或 无输入 | 用户直接调用 | 先生成大纲→确认→写稿 |
 
@@ -60,24 +60,6 @@ GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 3. 内容保存为 `output/content-YYYY-MM-DD.md`，进入**素材模式**
 4. **完成后更新队列**：将 url.md 中对应行改为 `- [x] URL 关键词 ✅ YYYY-MM-DD`
 
-### Pre-C：热点转译预处理
-
-触发：用户说"找选题""写一篇""热点""不知道拍什么""想做个视频"。
-
-从热点中提炼原创选题，生成大纲后进入大纲模式。详见 `references/yuanchuang-method.md`。
-
-1. **获取热点**：检查 `output/热点-YYYY-MM-DD.md` 是否已存在
-   - 不存在 → 先调用 `/laohan-redian` 抓取
-2. **筛选候选**：AI 相关关键词匹配 + 间接相关打捞 → 交叉验证排序 → top 3-5
-3. **读热点内容**：用 opencli / agent-reach 抓正文，提炼核心争议/情绪/数据
-4. **三个必答题**（详见 yuanchuang-method.md）：
-   - ① 跟 AI 有关系吗？② 我有真实经历吗？③ 路人为什么要在意？
-   - 三个都通过 → 选题成立。否则回 Step 1 扩大范围
-5. **选角度**：反常识性 > 情绪共鸣 > 场景包装（角度库见 yuanchuang-method.md）
-6. **生成标题**：两句话标题（第一句主题+冲突，第二句态度+情绪），<30字
-7. **输出大纲**到 `output/outline-YYYY-MM-DD.md`，**展示给用户确认**
-8. 用户确认后进入**大纲模式**
-
 ## 环境检测
 
 ```
@@ -93,7 +75,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 ## 执行清单（每步完成后打勾）
 
 - [ ] Step -1: **风格选择（强制，不可跳过）**
-- [ ] Pre-A/B/C: 前置处理（如需）
+- [ ] Pre-A/B: 前置处理（如需；Pre-C 热点转译已移除，搜索归工作流①）
 - [ ] Step 0: 判断输入模式（大纲/素材/自由）
 - [ ] Step 1: [素材模式] Layer A/B 整理
 - [ ] Step 1.5: [自由模式] 生成大纲→用户确认
@@ -313,7 +295,6 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 output/
 ├── transcript-YYYY-MM-DD.md    ← Pre-A 录屏转录结果
 ├── content-YYYY-MM-DD.md       ← Pre-B URL 抓取内容
-├── 热点-YYYY-MM-DD.md          ← Pre-C 热点简报
 ├── organize-YYYY-MM-DD.md      ← Step 1 整理结果（素材模式）
 ├── outline-YYYY-MM-DD.md       ← Step 1.5 大纲（自由模式/热点模式）
 ├── script-YYYY-MM-DD.md        ← Step 7 口播初稿（本 skill 唯一终产物）
@@ -330,9 +311,8 @@ output/
 | 硅基流动 API Key | 语音转文字（Pre-A，优先） | 注册 siliconflow.cn |
 | whisper.cpp | 本地语音转文字（Pre-A，备选） | `brew install whisper.cpp` |
 | nlm CLI + poppler | NotebookLM 幻灯片（Post-A） | `pip install notebooklm-mcp-cli && brew install poppler` |
-| opencli | 热榜/搜索（Pre-C） | `npm install -g @jackwener/opencli` |
 
-Pre-A/B/C 按需依赖，不使用对应模式时无需安装。
+Pre-A/B 按需依赖，不使用对应模式时无需安装。
 
 ## 触发方式
 
@@ -344,10 +324,7 @@ Pre-A/B/C 按需依赖，不使用对应模式时无需安装。
 # URL 队列模式
 "根据链接改写""链接内容改写""改写文档"
 
-# 热点转译模式
-"找选题""写一篇""不知道拍什么""热点""想做个视频"
-
-# 大纲模式（传入大纲文件）
+# 大纲模式（传入大纲文件；选题搜索归工作流①）
 /laohan-chuangzuo output/outline-YYYY-MM-DD.md
 
 # 素材模式（传入原始文本文件）
@@ -365,8 +342,8 @@ Pre-A/B/C 按需依赖，不使用对应模式时无需安装。
 - style.md 是通用模式的唯一写作规则来源。选择其他风格时，风格文件完全自包含，不需要加载 style.md
 - **风格文件**（`references/styles/`）是完全自包含的写作规范，每次创作前必须选择一个风格。通用模式无额外文件，直接用 style.md；其他模式只读对应风格文件
 - skill.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
-- 热点转译法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）
+- 转译选题法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）。本 skill 不自带热点搜索；该文件供工作流①前置阶段复用
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
-- 二创脱敏规则（style.md 第十节）：素材来自他人内容时执行；原创内容（热点转译/自由模式）跳过
-- 本 skill 不负责获取热点（那是 laohan-redian 的职责）
+- 二创脱敏规则（style.md 第十节）：素材来自他人内容时执行；自由模式（原创主题）跳过
+- 本 skill 不负责选题搜索（那是工作流①阶段的职责，用 laohan-redian + laohan-douyinsousuo 出大纲后喂入）
 - 本 skill 不负责平台特定下载（那是 laohan-xiazai 的职责）
