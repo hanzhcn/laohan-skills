@@ -60,7 +60,7 @@ TzFilm 的评论导出只允许 export，不允许 reply。显式导入：`pytho
 
 写 `14-评论/insights.md`，首行必须为 `评论数据状态: AVAILABLE` 或 `评论数据状态: UNAVAILABLE`。UNAVAILABLE 时第二行必须是 `失败原因: <具体原因>`；之后记录抓取时间、来源、代表评论、3—5 个主题、选题信号与待验证假设。
 
-T+N 数据和评论齐备后，调用上游 `cheat-retro`。它写 prediction 的 `## 复盘` 段、`rubric-memo.md` 和经用户确认的 `script_patterns.md`；本 skill 不修改 rubric。完成后写 `14-评论/retro-handoff.json`：`status: "COMPLETE"`、episode、aweme_id、prediction_file、prediction_after_retro_sha256、rubric_memo_sha256、snapshots_sha256、insights_sha256、comments_sha256（无评论时为 null）和 ISO `completed_at` 都必填；没有该证据不得把⑭标完成。
+T+N 数据和评论齐备后，调用上游 `cheat-retro`。它写 prediction 的 `## 复盘` 段、`rubric-memo.md` 和经用户确认的 `script_patterns.md`；本 skill 不修改 rubric。完成后写 `14-评论/retro-handoff.json`：`status: "COMPLETE"`、episode、aweme_id、prediction_file、prediction_after_retro_sha256、rubric_memo_sha256、snapshots_sha256、insights_sha256、comments_sha256（无评论时为 null）和 ISO `completed_at` 都必填；还必须写非空 `feedback_hypotheses` 数组，每项有唯一 hypothesis_id、intervention、expected_metric、`T+N` observation_window、`OPEN|SUPPORTED|REJECTED|INCONCLUSIVE` status 与目标 `feedback_target: "①"|"④"`。结论为 `UPGRADE_EVIDENCE` 时，额外要求至少两期 evidence_episode_ids 和 comparison_note；单期结论只准 OBSERVATION 或 HYPOTHESIS。没有这些证据不得把⑭标完成。
 
 ## 降级链
 

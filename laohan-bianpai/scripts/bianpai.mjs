@@ -296,7 +296,15 @@ const commentState = () => safely(() => {
   const predictionBody = existsSync(predictionPath) ? readFileSync(predictionPath, 'utf8') : '';
   const [, retroSection = ''] = predictionBody.split(/^##\s*复盘\s*$/m);
   const predictionAfterRetroHash = predictionBody ? createHash('sha256').update(predictionBody).digest('hex') : null;
-  if (retro.status !== 'COMPLETE' || !['OBSERVATION', 'HYPOTHESIS', 'UPGRADE_EVIDENCE'].includes(retro.conclusion_level) || retro.episode !== basename(episodeDir) || retro.aweme_id !== publish.aweme_id || retro.prediction_file !== proof.prediction_file || !predictionBody || createHash('sha256').update(immutablePrediction(predictionBody)).digest('hex') !== proof.prediction_section_sha256 || retroSection.trim().length < 20 || /待填|TODO/i.test(retroSection) || retro.prediction_after_retro_sha256 !== predictionAfterRetroHash || !rubricHash || retro.rubric_memo_sha256 !== rubricHash || retro.snapshots_sha256 !== sha('13-数据/snapshots.jsonl') || retro.insights_sha256 !== sha('14-评论/insights.md') || retro.comments_sha256 !== commentsHash || !retro.completed_at || Number.isNaN(Date.parse(retro.completed_at))) return {done: false, reason: 'retro-handoff 必须声明结论级别，并绑定不可变预测段、真实复盘内容、rubric-memo、作品、数据与评论证据 SHA'};
+  const hypotheses = retro.feedback_hypotheses;
+  const ids = new Set();
+  const validHypotheses = Array.isArray(hypotheses) && hypotheses.length > 0 && hypotheses.every((item) => {
+    if (!item || typeof item.hypothesis_id !== 'string' || !item.hypothesis_id.trim() || ids.has(item.hypothesis_id) || typeof item.intervention !== 'string' || !item.intervention.trim() || typeof item.expected_metric !== 'string' || !item.expected_metric.trim() || typeof item.observation_window !== 'string' || !/^T\+\d+$/.test(item.observation_window) || !['OPEN', 'SUPPORTED', 'REJECTED', 'INCONCLUSIVE'].includes(item.status) || !['①', '④'].includes(item.feedback_target)) return false;
+    ids.add(item.hypothesis_id);
+    return true;
+  });
+  const upgradeEvidence = retro.conclusion_level !== 'UPGRADE_EVIDENCE' || (Array.isArray(retro.evidence_episode_ids) && new Set(retro.evidence_episode_ids).size >= 2 && retro.evidence_episode_ids.every((id) => typeof id === 'string' && id.trim()) && typeof retro.comparison_note === 'string' && retro.comparison_note.trim());
+  if (retro.status !== 'COMPLETE' || !['OBSERVATION', 'HYPOTHESIS', 'UPGRADE_EVIDENCE'].includes(retro.conclusion_level) || !validHypotheses || !upgradeEvidence || retro.episode !== basename(episodeDir) || retro.aweme_id !== publish.aweme_id || retro.prediction_file !== proof.prediction_file || !predictionBody || createHash('sha256').update(immutablePrediction(predictionBody)).digest('hex') !== proof.prediction_section_sha256 || retroSection.trim().length < 20 || /待填|TODO/i.test(retroSection) || retro.prediction_after_retro_sha256 !== predictionAfterRetroHash || !rubricHash || retro.rubric_memo_sha256 !== rubricHash || retro.snapshots_sha256 !== sha('13-数据/snapshots.jsonl') || retro.insights_sha256 !== sha('14-评论/insights.md') || retro.comments_sha256 !== commentsHash || !retro.completed_at || Number.isNaN(Date.parse(retro.completed_at))) return {done: false, reason: 'retro-handoff 必须声明合法结论级别、反馈假设与绑定不可变预测段、真实复盘、rubric-memo、作品、数据和评论证据 SHA'};
   return {done: true, reason: '评论洞察与 cheat-retro 已登记'};
 }, '评论洞察无法读取');
 
