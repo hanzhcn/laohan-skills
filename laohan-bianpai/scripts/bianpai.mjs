@@ -202,6 +202,13 @@ const materialState = () => {
   if (!exists('09-导演/source-manifest.json')) return {done: false, reason: '缺 09-导演/source-manifest.json'};
   return gateState('materials', '素材契约未通过');
 };
+const topicState = () => safely(() => {
+  if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
+  const topic = readJson('00-选题.json');
+  const experiment = topic.experiment;
+  if (topic.schema_version !== 1 || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标/T+N 窗口与不做理由'};
+  return {done: true, reason: '选题合同已登记'};
+}, '00-选题.json 无法读取');
 const animationState = () => {
   if (!exists('11-动画/render-manifest.json')) return {done: false, reason: '缺 11-动画/render-manifest.json'};
   return gateState('accepted-final', '动画尚未接受为 final');
@@ -309,7 +316,7 @@ const commentState = () => safely(() => {
 }, '评论洞察无法读取');
 
 const steps = [
-  {id: '①', name: '选题', skill: 'laohan-redian（主写）+ laohan-douyinsousuo（证据）', done: () => nonEmptyFile('00-选题.md'), output: '00-选题.md'},
+  {id: '①', name: '选题', skill: 'laohan-redian（主写）+ laohan-douyinsousuo（证据）', done: () => topicState().done, output: '00-选题.md + 00-选题.json（受众/论点/证据/实验）'},
   {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => nonEmptyFile('01-口播稿.md'), output: '01-口播稿.md'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
@@ -358,7 +365,7 @@ if (runtime.status) {
 }
 if (command === 'check') {
   if (requiredStage === 'final' || requiredStage === 'production' || requiredStage === 'full') {
-    const prerequisites = [nonEmptyFile('00-选题.md'), nonEmptyFile('01-口播稿.md'), complianceState().done, calibrationState().done, deepScanState().done, coverState().done, shootingState().done];
+    const prerequisites = [topicState().done, nonEmptyFile('01-口播稿.md'), complianceState().done, calibrationState().done, deepScanState().done, coverState().done, shootingState().done];
     if (prerequisites.some((value) => !value)) {
       console.error('FAIL ' + (requiredStage === 'production' ? '生产前' : '发布/闭环前') + '必须完成①—⑦、最终盲预测 RECORDED，且所有稿件绑定当前 hash');
       process.exit(1);
@@ -417,7 +424,7 @@ if (command === 'next') {
 
 console.log('# 编排状态\n');
 for (const step of states) {
-  const detail = step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + coverState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
+  const detail = step.id === '①' ? ' · ' + topicState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + coverState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
   const marker = step.id === '④' && calibration.scoreDone && !calibration.done ? '~' : step.done ? 'x' : ' ';
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }

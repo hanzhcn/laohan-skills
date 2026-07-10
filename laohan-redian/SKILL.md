@@ -38,7 +38,7 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，以上共享热点简报只能作为研究缓存。`laohan-redian` 是①的唯一主写者：结合本次热点和可选的抖音搜索证据，在 `episodes/<slug>/00-选题.md` 落盘本期选题、目标受众、核心论点、事实来源与未决风险。不得引用或复制旧 episode 的选题文件。
+当参数含 `--episode episodes/<slug>` 时，以上共享热点简报只能作为研究缓存。`laohan-redian` 是①的唯一主写者：结合本次热点和可选的抖音搜索证据，在 `episodes/<slug>/00-选题.md` 落盘可读选题说明，并在 `00-选题.json` 写 `schema_version: 1`、audience、thesis、至少一条 `{id,source}` evidence、`experiment`（hypothesis_id、intervention、expected_metric、T+N observation_window）和 not_do_reason。不得引用或复制旧 episode 的选题文件；缺 JSON 合同不得交②。
 
 ---
 
