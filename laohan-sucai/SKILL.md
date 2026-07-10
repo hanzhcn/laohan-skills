@@ -1,156 +1,70 @@
 ---
 name: laohan-sucai
-description: B-roll 素材搜索引擎，从口播稿自动配素材。输入口播稿→逐句提取关键名词→翻译英文场景词→多源聚合搜索（Pexels/Pixabay/Coverr/Mixkit）→GLM 文本相关性打分选片→批量下载+自动署名，末尾输出清单供确认。只产素材不合成视频（合成归剪辑⑧或 laohan-donghua）。Use when 用户说"配素材""找B-roll""加素材""口播稿配画面""补视频素材"。
-version: "0.1.0"
+version: "1.1.0-candidate"
+description: B-roll 素材供应器。读取⑨导演的 source manifest，搜索、下载、抽帧并记录可授权现实素材；只有视觉复核通过的资产可交⑪动画生产。Use when 用户说配素材、找B-roll、补真实场景、下载素材、审核素材、进入⑩素材，或⑨导演将 beat 路由为 BROLL_STOCK。
 ---
 
-# B-roll 素材搜索
+# B-roll 素材供应器
 
-从口播稿自动配 B-roll 素材。纯搜索引擎：产出素材文件+清单+署名表，不合成视频。
+只为已经判定为 BROLL_STOCK 的现实场景找素材。它不决定动画、不把库存素材伪装成事实、不合成视频。
 
-## 核心理念
+## 输入与停止条件
 
-口播视频里 B-roll 的作用是让观众在听到抽象概念时有画面锚点。本 skill 解决"中文口播稿怎么自动配到贴的免费可商用素材"——核心难点是中英场景词翻译 + 多源聚合 + 选片打分。
+正式入口是 09-导演/source-manifest.json 的 broll_requests，以及已批准的 PROOF_PUBLIC/PROOF_USER source_entries。每项 BROLL 必须有 beat_id、source_mode=BROLL_STOCK、visual_need 和 must_not_imply；PROOF 必须有 evidence.id。
 
-**只产素材不合成**：合成视频是剪辑⑧或 laohan-donghua 的职责。本 skill 产出落到 `broll-assets/`，由后续环节按时间轴 overlay。
+🛑 STOP：没有 broll_requests 或请求不是 BROLL_STOCK 时，不搜索、不下载。没有 provider key 时只写出 `no_result` 与 `provider_errors`，不会发起搜索或下载。
 
-## 设计契约（7 项已定，2026-07-10）
+## 命令
 
-| 维度 | 决策 |
-|------|------|
-| 输出形态 | 只产素材不合成（纯引擎） |
-| 场景词 | 全自动：整稿提词→搜→GLM 打分选→下载，仅末尾确认 |
-| 数据源 | 多源聚合：Pexels 主力 + Pixabay + Coverr + Mixkit |
-| 选片 | GLM 文本相关性打分（素材描述/标签 vs 该句口播，选 top1-2） |
-| 无结果 | 留空标记"无素材"，不凑（交动画层/手动补） |
-| 确认形态 | 清单+预览：`素材清单.md` + `_credits.md`，过一遍不满意手换 |
-| 存放 | laohan-skills 仓库（MIT，symlink 同步） |
+~~~bash
+# 搜索候选：Pexels/Pixabay/Coverr 并行检索；至少配置一个 key
+node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材
 
-## 与工作流的分工
+# 本地素材库优先参与；local 候选会复制到本 episode 后再抽帧
+node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材 --local-library "/绝对路径/你的素材库"
 
-- **真实场景用素材**（本 skill）：人物工作/城市/科技设备/自然等有实拍可搜的
-- **抽象概念用动画**（laohan-donghua）：数据流/AI 概念/流程示意等搜不到实拍的
-- 搜不到素材的句子 → 留空标记，不强行凑，留给动画层或手动补
+# 下载一个候选，并生成缩略图供实际视觉检查
+node scripts/sucai.mjs download --manifest 10-素材/素材清单.json --beat B01 --candidate pexels:123
+
+# 先实际查看缩略图或 contact sheet，再记录判定
+node scripts/sucai.mjs verify --manifest 10-素材/素材清单.json --beat B01 --candidate pexels:123 --verdict pass --reason "主体、构图和事实边界均匹配"
+
+# 查看当前清单
+node scripts/sucai.mjs report --manifest 10-素材/素材清单.json
+
+# PROOF 只物化已批准证据；显式视觉确认后复制到本期并登记
+node scripts/register-proof-asset.mjs episodes/<slug> B03 <proof-file> <thumb-file> --visually-verified
+~~~
+
+环境变量和官方申请入口见 references/providers.md。不要把 key 写入 SKILL.md、JSON、episode 或 Git。
 
 ## 工作流
 
-### 1. 解析口播稿
+1. 读取 broll_requests 的 query_terms；缺 query_terms 时只用 visual_need，记录搜索理由。
+2. 若传入 --local-library 或 LAOHAN_LOCAL_BROLL_DIR，先把本地库加入候选来源；随后并行调用 Pexels、Pixabay、Coverr。Mixkit 不做自动抓取。
+3. 记录每个 provider 的 status、candidate_count、elapsed_ms、rate_limits；单个 provider 的无 key、限流或失败不阻断其他 provider。
+4. 写入 10-素材/素材清单.json、素材清单.md、_credits.md；素材清单必须记录当前 source_manifest_sha256，候选初始状态都是 candidate_unverified。
+5. 下载选择的 candidate，使用 FFmpeg 抽帧；local candidate 先复制到本 episode。
+6. 实际检查人物、动作、画幅、水印、错误文字、字幕安全区和 must_not_imply。
+7. 只有 verify pass 才把 item 标为 visually_verified；selected candidate 必须在本期 `10-素材/broll-assets/` 内，含 local_path、thumb_path 与文件 SHA-256；⑪只读取这种资产。
+8. PROOF 不进入库存搜索池。只把⑨已批准且绑定⑤ `SUPPORTED claim_id` 的同源 evidence 复制到 `10-素材/proof-assets/`，写 `proof-assets.json` 并绑定 claim ID、evidence ID、source URL、本地文件/缩略图 SHA 与 visually_verified；不重做事实判断。
 
-读 `01-口播稿.md`，按句号/换行分句，给每句编号。过滤纯过渡句（语气词/连接词无实义）。
+## 失败处理
 
-### 2. 逐句提取场景词
+| 情况 | 动作 |
+|---|---|
+| 某 provider 无 key 或 API 失败 | 写 provider_errors，继续其他 provider |
+| 本地素材库不存在或不可读 | 标 local provider error，继续远程 provider |
+| 全部无候选 | 标 no_result，返回⑨重新判断，不凑素材 |
+| 全部候选视觉不匹配 | 标 no_approved_candidate，修改检索词或手动补充，不得进入⑪ |
+| 下载失败 | 标 download_failed，不改变其他候选 |
+| 视觉不匹配 | verify reject，不能因文本相关就通过 |
 
-对每句：
-- 提取关键名词/动词（去掉"你""我""感觉"等无场景义的词）
-- 翻译成英文场景词（Pexels/Pixabay 用英文搜效果最好）
-- 每句出 1-3 组场景词（主词 + 备选词）
+## 禁止事项
 
-例：「你刷到 FDE 高薪招聘」→ `job offer / hiring / career` 或 `office work / computer`
-
-### 3. 多源聚合搜索
-
-按场景词搜，每源拿 top 候选：
-
-| 源 | 类型 | key | 限流 | 署名 |
-|----|------|-----|------|------|
-| **Pexels** | 视频/图 | 免费 key | 200/h, 20000/月 | 摄影师+Pexels 链接 |
-| **Pixabay** | 视频/图 | 免费 key | 100/分钟 | 宽松，鼓励署名 |
-| **Coverr** | 视频 | 需查 | — | 免署名 |
-| **Mixkit** | 视频 | 需查 | — | 免署名 |
-
-每句每源最多 3 候选，去重合并。API key 从环境变量读（`PEXELS_API_KEY`/`PIXABAY_API_KEY`）。
-
-### 4. GLM 相关性打分选片
-
-对每句的候选集，用 GLM 对「候选素材的描述/标签文本」与「该句口播」打相关性分（0-10），选 top1-2。
-
-- 输入：口播句 + 每个候选的 description/tags（API 返回的文本，不看画面）
-- 输出：每句 0-2 个选中素材 + 分数
-- 全部低于阈值（如 5 分）→ 该句标记"无素材"，不凑
-
-> 为什么文本打分不用多模态看画面：M1 本地跑不动大 vision 模型；API vision 每期几十张图贵慢；素材 API 自带的描述文本质量够用于初筛。画面匹配留给末尾人工确认环节。
-
-### 5. 批量下载
-
-下载选中素材到 `broll-assets/`：
-- 文件名：`{句编号}_{源}_{关键词}_{原文件名}.{ext}`（如 `03_pexels_hiring_video-office.mp4`）
-- 视频优先下载 SD/预览质量（B-roll overlay 用不着 4K，省带宽）
-- 下载失败 → 标记跳过，不卡流程
-
-### 6. 产出清单 + 署名
-
-**`素材清单.md`**：
-```markdown
-# B-roll 素材清单
-
-| 句编号 | 口播句 | 场景词 | 选中素材 | 预览 | 出处 | 相似度 |
-|--------|--------|--------|---------|------|------|--------|
-| 03 | 你刷到FDE高薪招聘 | hiring | video-office.mp4 | [缩略图] | Pexels/John | 8.2 |
-| 07 | 其实跟你没关系 | career | (无素材) | — | — | — |
-```
-
-**`_credits.md`**（自动署名表，发布时随片附上）：
-```markdown
-# 素材署名
-
-- video-office.mp4 — Photo by John Doe on Pexels (https://pexels.com/...)
-- ...
-```
-
-### 7. 末尾确认
-
-输出清单 + 缩略图预览（清单里嵌图片路径或起本地预览页）。Jeffrey 过一遍：
-- 满意 → 素材就位，等⑧/donghua 合成
-- 某句不满意 → 手动换该文件（重跑该句搜索或手动塞素材）
-- "无素材"的句 → 决定交动画层还是手动补
-
-## 产物
-
-```
-broll-assets/
-├── 03_pexels_hiring_video-office.mp4
-├── 05_pixabay_career_meeting.mp4
-├── ...
-├── 素材清单.md          ← 每句对应素材+预览+出处+相似度
-└── _credits.md          ← 自动署名表（发布随片附）
-```
-
-## 输入输出契约
-
-- **输入**：`episodes/<slug>/01-口播稿.md`（或任意口播稿文件）
-- **输出**：`episodes/<slug>/08-素材/broll-assets/`（按工作流⑤v5 ⑨素材独立步归位）
-- **不输出**：合成视频（归⑧/donghua）
-
-## 依赖
-
-| 依赖 | 用途 | 安装 |
-|------|------|------|
-| Pexels API key | 主力视频源 | 注册 pexels.com/api（免费） |
-| Pixabay API key | 兜底视频/图 | 注册 pixabay.com（免费） |
-| GLM API | 相关性打分选片 | `$ZAI_API_KEY` 已有 |
-| ffmpeg（可选） | 截缩略图预览 | `brew install ffmpeg` |
-| curl | API 调用+下载 | 系统自带 |
-
-## 触发方式
-
-```bash
-/laohan-sucai episodes/2026-07-10-fde/01-口播稿.md
-"给这期口播配素材""找B-roll""加素材"
-```
-
-## 实现状态（2026-07-10）
-
-- ✅ spec 已定（本文件，7 项设计契约）
-- ⬜ scripts/ 实现（提词→多源搜→GLM打分→下载→清单）
-- ⬜ references/ 源适配器文档（各 API 字段/限流/署名要求）
-
-> spec 先行，实现待 chengfeng adapter 验证 + ⑧链子跑通后再做（避免预付实现成本）。当前 FDE 期停在⑥封面，⑨未到。
-> v5 定位：⑨素材是独立步（原⑧子工具升格），喂 `01-口播稿.md` 不喂⑧剪辑产物，可独立于⑧并行触发。产物归位从 `07-剪辑/broll-assets/` 改 `08-素材/broll-assets/`。
-
-## 注意事项
-
-- 素材 API 英文搜索效果最好，中文稿必须先翻场景词
-- 200/时限流：每期约 15-20 句 × 3 候选 = 45-60 请求，远低于限流，单期不会撞限流；批量回填历史期时注意间隔
-- 署名是发布义务（尤其 Pexels），`_credits.md` 必须随片发布，别漏
-- 视频质量只下 SD/预览版即可，B-roll overlay 不需要 4K
-- 本 skill 不碰字幕/剪口播（那是 chengfeng 剪口播），不合成视频（那是 donghua）
+- 不对整篇口播逐句配图；
+- 不自动把 no_result 变成动画；
+- 不把候选文本分数当视觉通过；
+- 不把本地文件名命中当视觉通过；
+- 不使用 Mixkit 爬虫或把库存素材当用户 proof；
+- 不在本 skill 中裁切、烧字幕、渲染或发布。

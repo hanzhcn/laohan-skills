@@ -36,6 +36,10 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 
 目录不存在时自动创建。
 
+## Episode 模式
+
+当参数含 `--episode episodes/<slug>` 时，以上共享热点简报只能作为研究缓存。`laohan-redian` 是①的唯一主写者：结合本次热点和可选的抖音搜索证据，在 `episodes/<slug>/00-选题.md` 落盘本期选题、目标受众、核心论点、事实来源与未决风险。不得引用或复制旧 episode 的选题文件。
+
 ---
 
 ## 执行流程
@@ -169,7 +173,7 @@ node "$SCRIPT"
 
 ## 与其他 skill 的关系
 
-- **laohan-yuanchuang**：需要热点时读 `output/热点-YYYY-MM-DD.md`，不自己抓
+- **laohan-chuangzuo**：本 skill 产 `output/热点-YYYY-MM-DD.md`；工作流①前置读热点→按 `chuangzuo/references/yuanchuang-method.md` 出大纲→大纲模式喂 chuangzuo（laohan-yuanchuang 已合并进 chuangzuo，不再独立存在）
 - **laohan-cheat**：打分时引用简报中的热点信息
 - **laohan-aihotjingxuan**：被本 skill 替代（路 1 完全覆盖其能力）
 - **laohan-hotdouyinai**：被本 skill 替代（路 3 完全覆盖其能力）

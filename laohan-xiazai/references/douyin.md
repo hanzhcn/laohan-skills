@@ -21,6 +21,23 @@ Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHT
 ffmpeg -i input.mp4 -vn -acodec libmp3lame output.mp3
 ```
 
+### Apple Silicon 高精度 benchmark 路线
+
+对标拆稿优先准确率，不走日常“云端秒级”默认。M1/M2/M3/M4 Mac 使用 Apple MLX 实现和**未量化** `mlx-community/whisper-large-v3-mlx`：
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install mlx-whisper
+.venv/bin/mlx_whisper input.mp3 \
+  --model mlx-community/whisper-large-v3-mlx \
+  --language zh \
+  --output-format txt
+```
+
+- `large-v3` 是 OpenAI 完整多语种模型；不要把 `large-v3-turbo`、4bit/8bit 量化版写成“最高精度”。
+- 不用 PyTorch `whisper --device mps`：本机 M1 Pro 实测 FP16 产生 NaN；FP32 虽可运行但两条 6 分钟视频 30 分钟仍未完成。
+- `whisper-cli + small` 只用于快速预跑；最终 benchmark transcript 必须记录真实 engine/model。
+
 转录优先用硅基流动 API（免费、秒级返回），失败降级到本地 whisper：
 
 ```bash

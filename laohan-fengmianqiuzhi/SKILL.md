@@ -49,9 +49,25 @@ description: 基于秋芝2046视频封面风格生成Gemini图片提示词，动
 4. 推荐第1种风格（匹配度最高的），其余2种为备选
 5. **输出格式**：
    - **头部**：封面大字文案（横式句子 + 左右关键词 + 标签）+ 三种风格概览表（风格名 / 视觉故事 / 推荐理由）+ V1 推荐说明
-   - **正文**：每种风格（V1、V2、V3）全部输出3种比例（3:4 抖音 / 4:3 小红书B站 / 16:9 B站）
-   - 总共 9 个提示词
+   - **正文**：独立任务可输出多比例；Episode 模式只按 `episode-config.json` 的 canvas 与 platforms 输出，不得把泛平台比例覆盖本期画布。
+   - 独立任务总共 9 个提示词；Episode 模式按本期画布输出 3 个差异化候选。
 6. 输出到 `{task_dir}/{标题}_prompts.md`（与 script.md 同级）
+
+7. 用户在 Gemini 或其他工具生成并选定封面后，把真实 PNG 或 JPEG 放入 `episodes/<slug>/05-封面/`，再登记 `selected-cover.json`；没有真实选图不得伪造这个文件。`script_hash` 必须为当前 `01-口播稿.md` 的 SHA-256；JSON 声明的画布与图片真实像素都必须匹配 `episode-config.json`，`large_text` 不得为空。最小格式：
+
+```json
+{
+  "selected_asset": "05-封面/final.png",
+  "title": "与 01-口播稿一致的标题",
+  "canvas": {"width": 1920, "height": 1080},
+  "large_text": ["顶部标题", "左关键词", "右关键词"],
+  "source_prompt": "相对路径或 prompt ID",
+  "script_hash": "01-口播稿.md 的 SHA-256",
+  "selected_at": "ISO-8601 时间"
+}
+```
+
+`laohan-bianpai` 只认该登记文件，不以 prompt 文件存在替代真实封面选择。
 
 ## 设计原则：每篇都不同
 

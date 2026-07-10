@@ -3,3 +3,6 @@
 Thumbs.db
 */reports/
 *.cheat-state.json
+.env
+# 本地 donghua/sucai 方法论指针（含本地绝对路径，不进公开仓库）
+CLAUDE.md

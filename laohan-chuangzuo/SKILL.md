@@ -45,19 +45,19 @@ GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 1. **提取音频**：`ffmpeg -i "<视频路径>" -vn -acodec libmp3lame -q:a 2 "/tmp/录屏音频_$(date +%s).mp3" -y`
 2. **语音转文字**：三级降级（详见 `references/transcription.md`）
    - 硅基流动 API（免费，秒级）→ whisper-cli（本地快）→ Python whisper（最准）
-3. 转录结果保存为 `output/transcript-YYYY-MM-DD.md`，自动进入**素材模式**
+3. 独立写作时转录结果保存为 `output/transcript-YYYY-MM-DD.md`；Episode 模式保存为 `episodes/<slug>/02-创作工作稿/transcript.md`，自动进入**素材模式**。
 
 ### Pre-B：URL 队列预处理
 
 触发：用户说"根据链接改写""链接内容改写""改写文档"。
 
-1. **读取队列**：检查 `<cwd>/url.md`，找第一个 `- [ ]` 且后面有 URL 的行
+1. **读取队列**：独立写作检查 `<cwd>/url.md`；Episode 模式只检查 `episodes/<slug>/02-创作工作稿/url.md`，找第一个 `- [ ]` 且后面有 URL 的行
    - 没有待处理 → 告诉用户"队列为空"，结束
 2. **抓取内容**：根据平台自动选择方法（参考 laohan-xiazai 路由）
    - 抖音：移动端 UA → iesdouyin.com
    - B站：opencli bilibili
    - 其他：Jina Reader / agent-reach
-3. 内容保存为 `output/content-YYYY-MM-DD.md`，进入**素材模式**
+3. 独立写作时内容保存为 `output/content-YYYY-MM-DD.md`；Episode 模式保存为 `episodes/<slug>/02-创作工作稿/content.md`，进入**素材模式**。
 4. **完成后更新队列**：将 url.md 中对应行改为 `- [x] URL 关键词 ✅ YYYY-MM-DD`
 
 ## 环境检测
@@ -69,8 +69,12 @@ STYLE_FILE = 检测顺序：
 
 ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink 到 OpenClaw）
 
-OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
+OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 episodes/<slug>/02-创作工作稿/
 ```
+
+## Episode 模式
+
+当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
 ## 执行清单（每步完成后打勾）
 
@@ -91,7 +95,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 ## Step -1：风格选择（强制，不可跳过）
 
-**在执行任何创作动作之前，必须先让用户选择写作风格。不选择不执行。**
+独立写作时在执行任何创作动作之前，必须让用户选择写作风格。不选择不执行。**Episode mode 例外**：从 `00-选题.md` 的受众、内容模式和预期效果自主选择最合适的结构工具，在 `02-创作工作稿/创作决策.md` 记录选择理由、替代方案和待验证假设；不得因等待风格选择而阻断已授权的 AUTONOMOUS_RUN。
 
 执行方式：
 1. 读取 `references/styles/` 目录下所有 `.md` 文件
@@ -106,7 +110,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 请输入编号或名称。
 ```
 
-3. **等待用户选择**。用户不选择 → 不执行后续任何步骤，循环等待
+3. **独立写作等待用户选择**。Episode mode 按上面的可追溯自主选择执行。
 4. 用户选择后：
    - **通用**：直接使用 style.md 作为唯一规则，不加载额外风格文件
    - **教程型或其他**：只读取对应的 `references/styles/<选择>.md` 文件，**不加载 style.md**。风格文件完全自包含，内部已含结构规则+语言质量规则+技法+自检清单
@@ -140,7 +144,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 8. 核心选题提炼（一句话主题+标题底子+裁剪建议）
 9. 教程型质量预评分（模式A时执行，6维度打分）
 
-整理完成后，输出到 `output/organize-YYYY-MM-DD.md`，进入 Step 2。
+独立写作时整理结果输出到 `output/organize-YYYY-MM-DD.md`；Episode 模式输出到 `episodes/<slug>/02-创作工作稿/organize.md`，进入 Step 2。
 
 ## Step 1.5：自由模式 — 生成大纲
 
@@ -165,7 +169,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 [模式A 教程型 / 模式B 观点型]
 ```
 
-输出到 `output/outline-YYYY-MM-DD.md`，**展示给用户确认后再进入 Step 2**。
+独立写作时输出到 `output/outline-YYYY-MM-DD.md`；Episode 模式输出到 `episodes/<slug>/02-创作工作稿/outline.md`。展示确认后再进入 Step 2。
 
 ## Step 2：选题确认（动笔前必须完成，不可跳过）
 
@@ -266,7 +270,7 @@ OUTPUT_DIR = <当前工作目录>/output/           ← 自动创建
 
 ## Step 7：输出口播初稿
 
-1. 口播稿写入 `output/script-YYYY-MM-DD.md`
+1. 独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
 
 > 封面提示词不在本 skill 范围。chuangzuo 的职责止于「确定来源 + 创作口播初稿」。封面由独立 skill `laohan-fengmianqiuzhi` 在后续流程（违规检查、校准评分通过、标题锁定后）单独产出。
 
@@ -303,6 +307,20 @@ output/
 
 如果 `output/` 不存在，自动创建。
 
+Episode 模式的完整中间产物固定为：
+
+```
+episodes/<slug>/
+├── 01-口播稿.md
+└── 02-创作工作稿/
+    ├── transcript.md
+    ├── content.md
+    ├── organize.md
+    └── outline.md
+```
+
+Episode 模式禁止读取或写入共享 `output/`。
+
 ## 依赖
 
 | 依赖 | 用途 | 安装方式 |
@@ -326,6 +344,9 @@ Pre-A/B 按需依赖，不使用对应模式时无需安装。
 
 # 大纲模式（传入大纲文件；选题搜索归工作流①）
 /laohan-chuangzuo output/outline-YYYY-MM-DD.md
+
+# Episode 模式（00-选题已锁定）
+/laohan-chuangzuo --episode episodes/<slug>
 
 # 素材模式（传入原始文本文件）
 /laohan-chuangzuo output/transcript.md
