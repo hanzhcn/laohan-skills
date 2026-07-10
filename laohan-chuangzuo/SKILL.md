@@ -74,7 +74,7 @@ OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 ep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
+当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。同时写 `02-创作工作稿/创作决策.json`：`schema_version: 1`、与①一致的 topic_thesis/hypothesis_id、非空 structure_tool、非空 fact_boundary 数组、expected_audience_effect。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
 ## 执行清单（每步完成后打勾）
 
