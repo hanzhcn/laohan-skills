@@ -206,7 +206,8 @@ const topicState = () => safely(() => {
   if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
   const topic = readJson('00-选题.json');
   const experiment = topic.experiment;
-  if (topic.schema_version !== 1 || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标/T+N 窗口与不做理由'};
+  const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec']);
+  if (topic.schema_version !== 1 || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || !Array.isArray(experiment.metric_keys) || !experiment.metric_keys.length || new Set(experiment.metric_keys).size !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => typeof key === 'string' && allowedMetricKeys.has(key)) || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标键/T+N 窗口与不做理由'};
   return {done: true, reason: '选题合同已登记'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
@@ -275,11 +276,19 @@ const jsonLines = (relative) => {
 const snapshotState = () => safely(() => {
   if (!exists('13-数据/snapshots.jsonl')) return {done: false, reason: '缺 13-数据/snapshots.jsonl'};
   const publish = readJson('12-发布/publish-record.json');
+  const topic = readJson('00-选题.json');
+  const experiment = topic.experiment || {};
+  let hasTarget = false;
   for (const snapshot of jsonLines('13-数据/snapshots.jsonl')) {
-    if (snapshot.platform !== 'douyin' || snapshot.aweme_id !== publish.aweme_id || !snapshot.observed_at || !snapshot.source || !snapshot.observation_window || !/^T\+\d+$/.test(snapshot.observation_window) || snapshot.metric_dictionary_version !== 1 || !snapshot.metrics || Array.isArray(snapshot.metrics) || Object.keys(snapshot.metrics).length === 0 || Number.isNaN(Date.parse(snapshot.observed_at)) || Date.parse(snapshot.observed_at) < Date.parse(publish.published_at)) return {done: false, reason: '每条数据快照必须归属本作品、含固定 T+N 窗口、指标字典版本和非空指标来源，且时间不得早于发布'};
+    if (snapshot.platform !== 'douyin' || snapshot.aweme_id !== publish.aweme_id || !snapshot.observed_at || !snapshot.source || !snapshot.observation_window || !/^T\+\d+$/.test(snapshot.observation_window) || !['TARGET', 'CONTEXT'].includes(snapshot.measurement_role) || snapshot.metric_dictionary_version !== 1 || !snapshot.metrics || Array.isArray(snapshot.metrics) || Object.keys(snapshot.metrics).length === 0 || Number.isNaN(Date.parse(snapshot.observed_at)) || Date.parse(snapshot.observed_at) < Date.parse(publish.published_at)) return {done: false, reason: '每条数据快照必须归属本作品、声明 TARGET/CONTEXT、窗口、指标字典和来源，且时间不得早于发布'};
     if (!Object.values(snapshot.metrics).every((value) => value === null || (typeof value === 'number' && Number.isFinite(value) && value >= 0))) return {done: false, reason: 'metrics 只能是非负数或 null'};
+    if (snapshot.measurement_role === 'TARGET') {
+      if (snapshot.observation_window !== experiment.observation_window || typeof snapshot.metrics.plays !== 'number' || !experiment.metric_keys.every((key) => typeof snapshot.metrics[key] === 'number')) return {done: false, reason: 'TARGET 快照必须匹配①的 T+N，并含非空播放和全部预注册指标'};
+      hasTarget = true;
+    }
   }
-  return {done: true, reason: '最新抖音数据快照已登记'};
+  if (!hasTarget) return {done: false, reason: '缺匹配①测量计划的 TARGET 快照；CONTEXT 不能完成⑬'};
+  return {done: true, reason: '目标窗口抖音数据快照已登记'};
 }, 'snapshots.jsonl 无法读取');
 const commentState = () => safely(() => {
   if (!nonEmptyFile('14-评论/insights.md')) return {done: false, reason: '缺 14-评论/insights.md'};
