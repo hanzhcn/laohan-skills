@@ -68,7 +68,7 @@ const vendorPreflightState = () => safely(() => {
   const relative = '00-编排/vendor-preflight.json';
   if (!nonEmptyFile(relative)) return {done: false, reason: '缺当前 vendor preflight；先运行 bianpai vendors'};
   const record = readJson(relative);
-  if (record.schema_version !== 1 || record.status !== 'READY' || record.runtime_lock_sha256 !== shaPath(runtimeLock) || Number.isNaN(Date.parse(record.checked_at)) || record.cheat !== 'READY' || record.dbskill !== 'READY') return {done: false, reason: 'vendor preflight 无效或未绑定当前 runtime lock；重新运行 bianpai vendors'};
+  if (record.schema_version !== 2 || record.status !== 'READY' || !['FROZEN_AT_CREATION', 'FROZEN_ON_RESUME'].includes(record.source_scope) || record.runtime_lock_sha256 !== shaPath(runtimeLock) || Number.isNaN(Date.parse(record.checked_at)) || !['UP_TO_DATE', 'READY_LOCAL_AHEAD'].includes(record.cheat_state) || !['UP_TO_DATE', 'READY_LOCAL_AHEAD'].includes(record.dbskill_state)) return {done: false, reason: 'vendor preflight 无效、未冻结可用 vendor 或未绑定当前 runtime lock；重新运行 bianpai vendors'};
   return {done: true, reason: 'vendor preflight 已绑定当前 runtime lock'};
 }, 'vendor preflight 无法读取');
 const conclusionState = (relative, label, statusField, countFields) => safely(() => {
@@ -367,9 +367,16 @@ if (command === 'vendors') {
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);
   if (result.status === 0) {
+    const vendorState = (name) => result.stdout.match(new RegExp('^' + name + '=(UP_TO_DATE|READY_LOCAL_AHEAD)\\b', 'm'))?.[1];
+    const cheatState = vendorState('CHEAT');
+    const dbskillState = vendorState('DBSKILL');
+    if (!cheatState || !dbskillState) {
+      console.error('BLOCKED：vendor 检查未返回可冻结的 Cheat/dbskill 状态。');
+      process.exit(1);
+    }
     const preflightDir = file('00-编排');
     mkdirSync(preflightDir, {recursive: true});
-    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 1, status: 'READY', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), cheat: 'READY', dbskill: 'READY'}, null, 2) + '\n');
+    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 2, status: 'READY', source_scope: 'FROZEN_ON_RESUME', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), cheat_state: cheatState, dbskill_state: dbskillState}, null, 2) + '\n');
     console.log('VENDOR_PREFLIGHT=00-编排/vendor-preflight.json');
   }
   process.exit(result.status ?? 1);

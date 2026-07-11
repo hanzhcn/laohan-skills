@@ -36,7 +36,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 工作流
 
-1. 恢复工作先运行 `vendors`。它检查两个 upstream；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。进行中的 episode 只记录更新待办，不能中途改变规则。
+1. 恢复工作先运行 `vendors`。它把当时可用 vendor 写为 `FROZEN_ON_RESUME`；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。进行中的 episode 只记录更新待办，不能中途改变规则。
 2. 读取 `episode-config.json`，先运行 config gate。失败时停在⑦之前，不路由后续步骤。
 3. 按 ①—⑭检查标准产物。第⑩步只在 source manifest 有 BROLL_STOCK request 时要求素材；无 request 标为 not_applicable。
 4. ④先记录 score，此时状态为 PARTIAL，再进入⑤；⑤报告匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。任何改稿改变 `script_hash` 都回到⑤再④。

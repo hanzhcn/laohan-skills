@@ -11,6 +11,7 @@
 - `laohan-cheat/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
 - `laohan-yunying/SKILL.md`：⑫—⑭的抖音运营编排器。发布准备要求 `bianpai check --require final`；真实发布仍必须 Jeffrey 确认。它保存 publish-record、数据快照和评论洞察，随后交给 upstream cheat-publish/retro；不自动发布、回复或改预测。
 - ①的 experiment 必须预先声明合法 `metric_keys` 和 T+N 窗口；⑬只有匹配该窗口、播放与全部预注册指标非空的 `measurement_role: TARGET` 快照可完成，其他观测只能标 `CONTEXT`，不得被 retro 当作假设结论。
+- `bianpai vendors` 写 schema 2 的 `FROZEN_ON_RESUME` vendor preflight，只冻结当时的 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD`。新 episode 必须走 `sync-content-vendors.sh --new-episode`；更新可用、待安装、dirty、分叉、远端不可达或 lane schema 不匹配不得开工或伪写 READY。
 - ④ score 后只算 PARTIAL，最终盲预测 RECORDED 后才算 COMPLETE；production/final/full 不得接受 PENDING。⑧媒体/SRT、⑨时间轴/PROOF、⑪ workspace/handoff/qa-evidence 都由 workflow 机械 gate 验证。
 - ③和⑤不能只凭当前稿 hash 通过：③的 `02-违规报告.md` 必须声明 `risk_status: CLEAR` 与 `unresolved_high_risk_count: 0`；⑤的 `04-深扫报告.md` 必须声明 `review_status: CLEAR` 与 `unresolved_issue_count: 0`，`04-事实核验.md` 必须声明 `fact_check_status: CLEAR`、`contradicted_count: 0`、`unverifiable_count: 0`。`laohan-bianpai`、`laohan-cheat`、`laohan-weigui`、`laohan-shencha` 必须一致拒绝不满足这些结论的 episode。
 - ⑪不能把 ILLUSTRATIVE 变成固定圆环、轴线、卡片或配色。⑨必须在 EDL `visual.render_plan` 明确背景及每一层的坐标、尺寸、颜色、文字和动效；⑪只执行该计划，缺计划必须回⑨。
