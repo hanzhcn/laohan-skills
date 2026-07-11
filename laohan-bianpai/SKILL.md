@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.0.0-candidate"
+version: "1.1.0-candidate"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -36,15 +36,16 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 工作流
 
-1. 恢复工作先运行 `vendors`。它把当时可用 vendor 写为 `FROZEN_ON_RESUME`；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。进行中的 episode 只记录更新待办，不能中途改变规则。
-2. 读取 `episode-config.json`，先运行 config gate。失败时停在⑦之前，不路由后续步骤。
+1. 恢复工作先运行 `vendors`。它把当时可用 vendor 写为 `FROZEN_ON_RESUME`；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
+2. 读取 `episode-config.json`，先运行 config gate。失败时停在①之前，不路由任何内容或生产步骤。
 3. 按 ①—⑭检查标准产物。第⑩步只在 source manifest 有 BROLL_STOCK request 时要求素材；无 request 标为 not_applicable。
 4. ④先记录 score，此时状态为 PARTIAL，再进入⑤；⑤报告匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。任何改稿改变 `script_hash` 都回到⑤再④。
 5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。
 
 ## 硬规则
 
-- ⑦前必须有 shooting_contract；⑨前必须有 clean.mp4 与 subtitles.srt。
+- schema 2 在①前必须有 distribution contract 与 executor lock；⑥开始前 distribution 必须锁定。⑦前必须有 shooting_contract；⑨前必须有 clean.mp4 与 subtitles.srt。
+- schema 2 的①还必须有真实 source health；③报告必须绑定未过期 ruleset 并声明 `platform_guarantee: false`；⑥必须分别登记 prompt executor、image provider 和 selection mode。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。
 - 有产物但未满足 gate 时，报告 BLOCKED，不算完成；JSON 损坏也必须报告 BLOCKED，不输出 stack trace。

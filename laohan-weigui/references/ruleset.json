@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "ruleset_version": "douyin-text-risk-2026-07-11",
+  "reviewed_at": "2026-07-11T00:00:00+08:00",
+  "expires_at": "2026-10-09T23:59:59+08:00",
+  "scope": "Douyin spoken-script heuristic risk screening",
+  "platform_guarantee": false,
+  "evidence": [
+    {
+      "type": "project-rules",
+      "path": "references/keywords.md",
+      "note": "Heuristic categories and user-observed incidents; not an official exhaustive banned-word list."
+    }
+  ],
+  "refresh_policy": "Review at least every 90 days or immediately after a platform enforcement incident; preserve old episode reports as historical snapshots."
+}

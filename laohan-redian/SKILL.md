@@ -1,6 +1,6 @@
 ---
 name: laohan-redian
-version: 1.0
+version: 1.1
 description: AI 热点统一抓取，三路并行（AIHOT 精选 + opencli 9 平台热榜 + 抖音 AI 筛选），合并去重输出完整热点简报。其他 skill 需要热点数据时直接读简报文件。Use when 用户说"抓热点""AI热点""今天的AI精选""找选题""热点""redian"或提到AI新闻/热门话题/今日精选。
 argument-hint: [可选：关键词，如"OpenAI""Claude"]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -17,7 +17,7 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 ## 不适用场景
 
 - 抓单个平台热榜 → 直接用 `opencli <platform> hot`，不需要本 skill
-- 抓特定博主更新 → 用 laohan-chuangzuo 的录屏模式，不走热点
+- 抓特定博主更新 → 用对应平台的搜索/下载执行器采集证据（抖音用 laohan-douyinsousuo 或 laohan-xiazai），不走热点聚合，也不由创作 skill 代抓
 - 非中文场景的热点 → AIHOT 和 opencli 主要覆盖中文平台，英文热点直接看 HackerNews
 
 ## 三路数据源
@@ -38,7 +38,9 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，以上共享热点简报只能作为研究缓存。`laohan-redian` 是①的唯一主写者：结合本次热点和可选的抖音搜索证据，在 `episodes/<slug>/00-选题.md` 落盘可读选题说明，并在 `00-选题.json` 写 `schema_version: 1`、audience、thesis、至少一条 `{id,source}` evidence、`experiment`（hypothesis_id、intervention、expected_metric、非空且不重复的 metric_keys、T+N observation_window）和 not_do_reason。metric_keys 只能是 `plays`、`likes`、`comments`、`shares`、`favorites`、`ctr5s`、`avg_duration_sec`，它们是⑬要在预先窗口检验的指标，不得在发布后补写。不得引用或复制旧 episode 的选题文件；缺 JSON 合同不得交②。
+当参数含 `--episode episodes/<slug>` 时，以上共享热点简报只能作为研究缓存。`laohan-redian` 是①的唯一主写者：结合本次热点和可选的抖音搜索证据，在 `episodes/<slug>/00-选题.md` 落盘可读选题说明，并在 `00-选题.json` 写 `schema_version: 1`、audience、thesis、至少一条 evidence、`experiment`（hypothesis_id、intervention、expected_metric、非空且不重复的 metric_keys、T+N observation_window）和 not_do_reason。每条 evidence 必须有稳定非空 `id` 与说明证据内容/边界的非空 `source`；schema 2 episode 还必须有 `source_type`（`PRIMARY|PLATFORM_SIGNAL|SECONDARY`）、可访问 `url` 和有效 `retrieved_at`。热点/抖音热度只能是 `PLATFORM_SIGNAL`，脚本中的可外部验证主张必须回到 `PRIMARY` 原始来源。metric_keys 只能是 `plays`、`likes`、`comments`、`shares`、`favorites`、`ctr5s`、`avg_duration_sec`，它们是⑬要在预先窗口检验的指标，不得在发布后补写。不得引用或复制旧 episode 的选题文件；缺 JSON 合同不得交②。
+
+同时写 `00-选题-source-health.json`：顶层必须有 `schema_version: 1`、有效 `collected_at` 和非空 `sources` 数组；每路记录非空 `source_id`、实际 `command_or_url`、有效 `attempted_at`、`status`（`OK|EMPTY|FAILED|SKIPPED`）、非负整数 `result_count`，`FAILED` 还必须写非空 `error`。至少一路必须同时为 `OK` 且 `result_count > 0`；不得把“预期三路”写成“实际三路成功”。
 
 ---
 
@@ -72,10 +74,10 @@ opencli douyin hashtag hot --limit 30
 opencli toutiao hot
 opencli tieba hot
 opencli hupu hot
-opencli hackernews hot
+opencli hackernews top
 ```
 
-某个平台失败就跳过，不阻塞。
+某个平台失败就记录到 source health 后降级，不阻塞其他来源。`hackernews hot` 不是当前 adapter 命令，禁止恢复；当前合法命令是 `top|best|new|ask|show|jobs`。
 
 **路 3：抖音 AI 筛选**
 
@@ -142,7 +144,7 @@ node "$SCRIPT"
 
 ## 统计
 
-- 抓取：AIHOT X 条 / 全平台 X 条（过滤后） / 抖音 AI X 条
+- 抓取：AIHOT X 条 / 全平台 X 条（过滤后） / 抖音 AI X 条；逐路真实状态见 source-health
 - 去重后：X 条
 - 交叉验证：3+ 来源 X 条 / 2 来源 X 条 / 单源 X 条
 ```
@@ -170,6 +172,8 @@ node "$SCRIPT"
 | opencli 某平台失败 | 跳过该平台，继续其他 |
 | 抖音脚本失败 | 跳过路 3，用路 2 的 douyin 数据补充 |
 | 全部失败 | 提示用户检查网络，建议稍后重试 |
+
+失败不能伪造结果数。Episode mode 全部失败时留在①并写 source health，不得用旧日报或旧 episode 选题冒充本期证据。
 
 ## 与其他 skill 的关系
 

@@ -1,21 +1,41 @@
 #!/bin/bash
-# runtime 红灯扫描：检测 skill 是否硬编码单一平台（Claude Code/Cursor/Codex）
-# 用法：bash scripts/redlight-scan.sh [目标文件或目录，默认 SKILL.md + references/]
-# 命中需人工确认是否在例外清单（frontmatter 触发词/标注章节/注释）
+set -euo pipefail
 
-TARGET="${1:-SKILL.md references/}"
-PATTERNS="在 Claude Code|Claude Code skill|Claude Code 用户|Cursor only|Codex 中|只在 Cursor|~/\.claude/skills/[a-z]|/plugin install"
-
-echo "=== runtime 红灯扫描: $TARGET ==="
-HITS=$(grep -rnE "$PATTERNS" $TARGET 2>/dev/null || true)
-if [ -z "$HITS" ]; then
-  echo "✅ 无红灯命中（runtime 中立）"
-  exit 0
-else
-  COUNT=$(echo "$HITS" | grep -c . || true)
-  echo "⚠️  命中 $COUNT 处，需人工确认是否在例外清单："
-  echo "$HITS"
-  echo ""
-  echo "例外：frontmatter 触发词 / 明确标注的专属章节 / 注释说明"
-  exit 1
+PROFILE="portable"
+if [[ "${1:-}" == "--profile" ]]; then
+  PROFILE="${2:-}"
+  shift 2
 fi
+if [[ "$PROFILE" != "portable" && "$PROFILE" != "local" ]]; then
+  echo "用法: bash scripts/redlight-scan.sh --profile portable|local [skill-dir ...]" >&2
+  exit 2
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  TARGETS=("SKILL.md" "references")
+else
+  TARGETS=("$@")
+fi
+
+PATTERN='/Users/[^ /]+'
+if [[ "$PROFILE" == "portable" ]]; then
+  PATTERN+='|~/\.(claude|agents)/skills/[A-Za-z0-9_-]+|Claude Code only|仅限 Claude Code|Cursor only|只在 Cursor|/plugin install'
+fi
+
+echo "=== runtime 红灯扫描: profile=$PROFILE targets=${TARGETS[*]} ==="
+HITS=$(grep -rnE \
+  --exclude='runtime-neutrality.md' \
+  --exclude='blacklist-phrases.md' \
+  --exclude='redlight-scan.sh' \
+  --exclude='test-redlight-scan.sh' \
+  -- "$PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
+
+if [[ -z "$HITS" ]]; then
+  echo "PASS: 无字面 runtime 红灯"
+  exit 0
+fi
+
+COUNT=$(printf '%s\n' "$HITS" | grep -c . || true)
+echo "FAIL: 命中 $COUNT 处字面红灯；修复、改用 local profile，或将必要专属行为改为显式 capability branch："
+printf '%s\n' "$HITS"
+exit 1

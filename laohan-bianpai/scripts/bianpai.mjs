@@ -87,7 +87,20 @@ const conclusionState = (relative, label, statusField, countFields) => safely(()
   }
   return {done: true, reason: label + ' 已绑定当前稿且结论 CLEAR'};
 }, label + ' 无法读取');
-const complianceState = () => conclusionState('02-违规报告.md', '02-违规报告.md', 'risk_status', ['unresolved_high_risk_count']);
+const complianceState = () => safely(() => {
+  const base = conclusionState('02-违规报告.md', '02-违规报告.md', 'risk_status', ['unresolved_high_risk_count']);
+  if (!base.done) return base;
+  const config = readJson('episode-config.json');
+  if (config.schema_version !== 2) return base;
+  const content = readFileSync(file('02-违规报告.md'), 'utf8');
+  const frontmatter = content.match(/^---\n([\s\S]*?)\n---/);
+  const field = (name) => frontmatter?.[1].match(new RegExp('^' + name + ':\\s*(.+)\\s*$', 'm'))?.[1]?.trim();
+  const reviewed = Date.parse(field('ruleset_reviewed_at'));
+  const expires = Date.parse(field('ruleset_expires_at'));
+  const completed = Date.parse(field('scan_completed_at'));
+  if (!field('ruleset_version') || Number.isNaN(reviewed) || Number.isNaN(expires) || Number.isNaN(completed) || completed < reviewed || completed > expires || field('platform_guarantee') !== 'false') return {done: false, reason: 'schema 2 违规报告必须绑定有效 ruleset_version/reviewed/expires/scan 时间并声明 platform_guarantee: false'};
+  return {done: true, reason: '违规报告已绑定当前稿和有效规则集；CLEAR 不代表平台保证'};
+}, '02-违规报告.md 无法读取');
 const imageDimensions = (path) => {
   const bytes = readFileSync(path);
   if (bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
@@ -136,7 +149,8 @@ const coverState = () => safely(() => {
     || !actualAsset.startsWith(assetRoot) || !dimensions || !Array.isArray(cover.large_text) || !cover.large_text.some((text) => typeof text === 'string' && text.trim())
     || cover.canvas.width !== config.canvas?.width || cover.canvas.height !== config.canvas?.height
     || dimensions.width !== config.canvas?.width || dimensions.height !== config.canvas?.height || cover.title !== scriptTitle
-    || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || !Array.isArray(review.candidates) || review.candidates.length < 2 || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))) {
+    || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || !Array.isArray(review.candidates) || review.candidates.length < 2 || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
+    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || !['AGENT_PROXY', 'JEFFREY'].includes(cover.selection_mode) || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode))) {
     return {done: false, reason: 'selected-cover 必须引用本期 05-封面内的真实 PNG/JPEG，真实像素、标题、large_text、画布和 script_hash 必须匹配当前稿/config'};
   }
   return {done: true, reason: '封面选择已登记'};
@@ -208,13 +222,23 @@ const topicState = () => safely(() => {
   const experiment = topic.experiment;
   const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec']);
   if (topic.schema_version !== 1 || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || !Array.isArray(experiment.metric_keys) || !experiment.metric_keys.length || new Set(experiment.metric_keys).size !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => typeof key === 'string' && allowedMetricKeys.has(key)) || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标键/T+N 窗口与不做理由'};
+  const config = readJson('episode-config.json');
+  if (config.schema_version === 2) {
+    const types = new Set(['PRIMARY', 'PLATFORM_SIGNAL', 'SECONDARY']);
+    if (!topic.evidence.every((item) => types.has(item.source_type) && typeof item.url === 'string' && /^https?:\/\//.test(item.url) && !Number.isNaN(Date.parse(item.retrieved_at)))) return {done: false, reason: 'schema 2 选题 evidence 必须声明 source_type、可访问 URL 与 retrieved_at'};
+    if (!exists('00-选题-source-health.json')) return {done: false, reason: 'schema 2 选题缺 00-选题-source-health.json'};
+    const health = readJson('00-选题-source-health.json');
+    const statuses = new Set(['OK', 'EMPTY', 'FAILED', 'SKIPPED']);
+    if (health.schema_version !== 1 || Number.isNaN(Date.parse(health.collected_at)) || !Array.isArray(health.sources) || !health.sources.length || !health.sources.every((item) => typeof item.source_id === 'string' && item.source_id.trim() && typeof item.command_or_url === 'string' && item.command_or_url.trim() && !Number.isNaN(Date.parse(item.attempted_at)) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim()))) || !health.sources.some((item) => item.status === 'OK' && item.result_count > 0)) return {done: false, reason: 'source health 必须如实记录每路状态，且至少一路有真实结果'};
+  }
   return {done: true, reason: '选题合同已登记'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
   if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
   const topic = readJson('00-选题.json');
   const decision = readJson('02-创作工作稿/创作决策.json');
-  if (decision.schema_version !== 1 || decision.topic_thesis !== topic.thesis || decision.hypothesis_id !== topic.experiment?.hypothesis_id || typeof decision.structure_tool !== 'string' || !decision.structure_tool.trim() || !Array.isArray(decision.fact_boundary) || decision.fact_boundary.length === 0 || !decision.fact_boundary.every((item) => typeof item === 'string' && item.trim()) || typeof decision.expected_audience_effect !== 'string' || !decision.expected_audience_effect.trim()) return {done: false, reason: '创作决策必须绑定①论点/假设，并声明结构工具、事实边界与预期观众效果'};
+  const nonEmptyStrings = (items) => Array.isArray(items) && items.length > 0 && items.every((item) => typeof item === 'string' && item.trim());
+  if (decision.schema_version !== 1 || decision.topic_thesis !== topic.thesis || decision.hypothesis_id !== topic.experiment?.hypothesis_id || typeof decision.active_style_file !== 'string' || !decision.active_style_file.trim() || typeof decision.structure_tool !== 'string' || !decision.structure_tool.trim() || typeof decision.structure_rationale !== 'string' || !decision.structure_rationale.trim() || !nonEmptyStrings(decision.fact_boundary) || typeof decision.expected_audience_effect !== 'string' || !decision.expected_audience_effect.trim() || !nonEmptyStrings(decision.alternative_structures) || !nonEmptyStrings(decision.unproven_assumptions) || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0) return {done: false, reason: '创作决策必须绑定①论点/假设，并声明风格、结构及理由、替代结构、事实边界、待验证假设、预期效果与时长'};
   return {done: true, reason: '创作决策已绑定选题合同'};
 }, '创作决策无法读取');
 const animationState = () => {
@@ -346,7 +370,7 @@ const steps = [
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
-  {id: '⑥', name: '封面选择', skill: 'laohan-fengmianqiuzhi', done: () => coverState().done, output: '05-封面/selected-cover.json'},
+  {id: '⑥', name: '封面选择', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider + selection policy', done: () => coverState().done, output: '05-封面/selected-cover.json + cover-review.json'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
   {id: '⑧', name: '剪辑与实际字幕', skill: '人工剪辑 + chengfeng adapter', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/clean.mp4 + subtitles.srt'},
   {id: '⑨', name: '语义导演', skill: 'laohan-daoyan', done: () => gateState('director-output', '导演输出契约未通过').done, output: '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
@@ -360,6 +384,10 @@ const steps = [
 const configCheck = () => gate('config');
 const configResult = configCheck();
 if (command === 'vendors') {
+  if (configResult.status !== 0) {
+    console.error('BLOCKED：episode config/executor lock 未通过，不能刷新 vendor preflight。\n' + (configResult.stderr || configResult.stdout).trim());
+    process.exit(1);
+  }
   const runtime = spawnSync('node', [runtimeChecker], {encoding: 'utf8'});
   process.stdout.write(runtime.stdout);
   process.stderr.write(runtime.stderr);

@@ -1,6 +1,6 @@
 ---
 name: laohan-shencha
-version: 1.1
+version: 1.2
 description: 深度联网核验器，验证技术文档的外部声明，或核验口播稿中可外部验证的事实主张。Use when 用户说"深度审查""老韩审查""联网审查""技术文档审查""核验口播事实"或要求对技术方案、部署脚本、配置文件、口播稿的事实主张进行查证；不做纯文风审查。
 ---
 
@@ -16,6 +16,8 @@ LLM 写技术文档时天然相信自己写的声明是对的。本 skill 的唯
 
 输入是 `episodes/<slug>/01-口播稿.md`，输出固定为 `04-事实核验.md` 与 `04-事实主张.json`。报告开头必须含 `script_hash: <当前稿 SHA-256>`、`fact_check_status: CLEAR|REVISE_REQUIRED|BLOCKED`、`contradicted_count` 与 `unverifiable_count` frontmatter。claims JSON 必须含当前 script_hash、事实报告 SHA、每项外部主张的稳定 `claim_id`、原句、`SUPPORTED|CONTRADICTED|UNVERIFIABLE|OPINION` 结论及来源证据。只提取会影响观众判断、且能被外部证据验证的主张：机构行为、职位/产品定义、数字、增速、政策、研究结论、原话引用和时间关系。个人经验、价值判断、比喻与行动建议标为 `OPINION`，不伪装成可核验事实。
 
+`04-事实主张.json` 最小结构：`schema_version: 1`、`script_sha256`、`fact_report_sha256`、`claims` 数组；每项至少含稳定 `claim_id`、`statement`、`verdict`、`evidence` 数组。每个证据项必须有稳定 `id`，并且二选一：外部证据写 `url`、`source_type`、`retrieved_at`；本期本地证据写 episode 内 `local_path` 与文件 `sha256`。两个 SHA 字段必须分别等于当前 `01-口播稿.md` 与 `04-事实核验.md` 的 SHA-256。无可核验主张时仍写空 `claims` 数组，不能省略文件或伪造来源。
+
 1. 逐条编号提取主张，保留原句和所在行。
 2. 每条优先找一手来源：机构官网/公告、原始研究、官方数据库、原采访或平台原帖；没有一手来源才用可靠二手报道，并注明。
 3. 只能给出 `SUPPORTED`、`CONTRADICTED`、`UNVERIFIABLE`、`OPINION` 四种结论；没有来源不能写“基本正确”。
@@ -26,7 +28,9 @@ LLM 写技术文档时天然相信自己写的声明是对的。本 skill 的唯
 
 CONTENT_CLAIMS 不评价钩子、节奏、共鸣或传播性；这些由 dbskill 诊断。它也不改变上游 Cheat 的 rubric。
 
-**分级抽样（声明超 50 条时启用，节省 token）：** 高可信（官方 README 复制、环境变量名）→ 抽检 20%；中可信（版本号、参数值）→ 抽检 50%；低/未知可信（社区讨论、博客引用）→ 全部验证。声明数 ≤50 条时，逐条全量验证。常识性声明（如"PyTorch 是深度学习框架"）始终跳过。
+**AUTONOMOUS_RUN 边界：** CONTENT_CLAIMS 不执行下文通用“阶段3.5向用户逐项确认”。发现 `CONTRADICTED`/`UNVERIFIABLE` 时先写 `REVISE_REQUIRED`、精确原句/证据/建议改法并回②；编排器可在最多三轮内自主删改或降级措辞，再重跑③—⑤和④最终预测。只有来源访问、账号授权或事实本身必须由 Jeffrey 提供且三轮仍无法消解时才 `BLOCKED`。不得把常规 HIGH/CRITICAL 事实修订变成人工确认 gate，也不得为继续流程把问题写成 CLEAR。
+
+**分级抽样（声明超 50 条时启用，节省 token）：** 高可信（官方 README 复制、环境变量名）→ 抽检 20%；中可信（版本号、参数值）→ 抽检 50%；低/未知可信（社区讨论、博客引用）→ 全部验证。声明数 ≤50 条时，逐条全量验证。纯类别常识且不影响观众判断的声明（如"PyTorch 是深度学习框架"）可跳过；版本号、推荐值、资源需求、端口或其他会改变操作结果的参数不是“常识”，必须按本规则核验。
 
 ## 五阶段审查流程
 
@@ -72,7 +76,7 @@ CONTENT_CLAIMS 不评价钩子、节奏、共鸣或传播性；这些由 dbskill
 6. Docker Hub API / HuggingFace API / PyPI JSON API — 镜像和模型验证
 7. `gh auth status` — 先检查认证状态，再决定是否设 GH_TOKEN
 
-**并行化：** 独立的验证项用多个 Agent 并行跑，不要串行。
+**并行化：** 独立验证项优先并行工具调用；只有用户明确要求或宿主规则允许多 Agent 时才委派子 Agent。
 
 **API 频率限制处理：**
 - GitHub API 未认证：60 req/hr。设置 `GH_TOKEN` 或 `GITHUB_TOKEN` 环境变量可获得 5000 req/hr。
@@ -91,6 +95,8 @@ CONTENT_CLAIMS 不评价钩子、节奏、共鸣或传播性；这些由 dbskill
 - 步骤/流程描述
 
 ### 阶段 3.5：确认 — 向用户展示发现
+
+本阶段只适用于通用技术文档审查。真人口播⑤的 CONTENT_CLAIMS 按上面的 AUTONOMOUS_RUN/REVIEW_GATED 合同处理，不在此重复询问。
 
 CRITICAL 发现必须经用户确认后才能修复。HIGH 发现若超过 3 个，或任一修复会改动超过 5 行，也需确认。MEDIUM/LOW 自动修复，汇总报告。确认格式：
 
