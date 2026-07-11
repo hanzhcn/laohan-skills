@@ -248,6 +248,15 @@ const publishState = () => safely(() => {
   if (record.final_sha256 !== finalHash || !selected || selected.sha256 !== finalHash) {
     return {done: false, reason: 'publish-record 必须绑定当前 final 与选中 candidate 的 SHA-256'};
   }
+  if (exists('12-发布/platform-display-evidence.json')) {
+    const display = readJson('12-发布/platform-display-evidence.json');
+    const cover = readJson('05-封面/selected-cover.json');
+    const displayPath = display.evidence_path;
+    const hash = (relative) => createHash('sha256').update(readFileSync(file(relative))).digest('hex');
+    if (display.schema_version !== 1 || typeof displayPath !== 'string' || !displayPath.startsWith('12-发布/') || displayPath.includes('..') || !nonEmptyFile(displayPath) || display.evidence_sha256 !== hash(displayPath) || String(display.aweme_id) !== String(record.aweme_id) || display.platform_title !== record.platform_title || display.display_title !== record.platform_title || display.cover_asset !== cover.selected_asset || !nonEmptyFile(cover.selected_asset) || display.cover_sha256 !== hash(cover.selected_asset) || display.final_sha256 !== finalHash || !['MATCHED', 'REVISE'].includes(display.title_verdict) || !['MATCHED', 'REVISE'].includes(display.cover_verdict) || !['MATCHED', 'REVISE'].includes(display.video_verdict) || display.title_verdict !== 'MATCHED' || display.cover_verdict !== 'MATCHED' || display.video_verdict !== 'MATCHED' || typeof display.reviewer !== 'string' || !display.reviewer.trim() || Number.isNaN(Date.parse(display.captured_at)) || Number.isNaN(Date.parse(display.reviewed_at))) {
+      return {done: false, reason: '可选 platform-display-evidence 存在时必须绑定本期展示证据、标题、封面、final 与 MATCHED 人工核对'};
+    }
+  }
   if (!exists('12-发布/cheat-publish-evidence.json') || !exists('03-预测证据.json')) return {done: false, reason: '缺 cheat-publish 与本期预测/发布事实绑定证据'};
   const evidence = readJson('12-发布/cheat-publish-evidence.json');
   const proof = readJson('03-预测证据.json');
