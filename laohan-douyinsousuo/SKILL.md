@@ -1,7 +1,7 @@
 ---
 name: laohan-douyinsousuo
 description: 抖音关键词搜索，采集视频数据按点赞排行。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"或提到"在抖音搜""抖音的xxx情况""抖音里xxx排行"。
-version: "2.0.1"
+version: "2.0.2"
 ---
 
 # 抖音搜索
@@ -19,6 +19,7 @@ version: "2.0.1"
 - 登录态来源：日常 Chrome 抖音登录态在 **Profile 5**（本机 7 个 Profile 无 Default，抖音登录在 Profile 5）
 - cookie 抽取：`extract_cookies.py` 用 browser_cookie3 读 Chrome Cookies 库（自动 keychain 解密），筛 douyin 域存 JSON
 - cookie 注入：search.py 用 DrissionPage 4.x `tab.set.cookies(list)` 传整个 list（不是逐条），先 `tab.get(目标域)` 再注 + refresh 生效
+- 调试端口：search.py 每次选择一个空闲 localhost 端口，避免误连日常 Chrome 的 9222；需要固定端口时设置 `DOUYIN_DEBUG_PORT`
 - cookie 失效（几天到几周）：重跑 `extract_cookies.py` 一键刷新
 
 **为什么不直接连日常 Chrome**：① 日常 Chrome 不带 `--remote-debugging-port`；② 带了也开不了——Chrome 远程调试拒绝配"默认" user-data-dir（`Application Support/Google/Chrome`）；③ 复用日常 Chrome 的 profile 要先关 Chrome，扰民。独立 profile + cookie 注入三全其美。

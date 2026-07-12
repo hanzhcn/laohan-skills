@@ -8,6 +8,7 @@
 import argparse
 import json
 import os
+import socket
 import time
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions
@@ -33,6 +34,14 @@ def main():
     co = ChromiumOptions()
     co.set_browser_path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
     co.set_user_data_path(profile_dir)
+    configured_port = int(os.environ.get("DOUYIN_DEBUG_PORT", "0"))
+    if configured_port:
+        debug_port = configured_port
+    else:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.bind(("127.0.0.1", 0))
+            debug_port = probe.getsockname()[1]
+    co.set_local_port(debug_port)
     co.set_argument("--no-first-run")
     co.set_argument("--no-default-browser-check")
     browser = Chromium(co)
