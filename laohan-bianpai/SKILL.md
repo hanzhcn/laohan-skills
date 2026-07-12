@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.1.0-candidate"
+version: "1.2.0-candidate"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -37,6 +37,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 ## 工作流
 
 1. 恢复工作先运行 `vendors`。它把当时可用 vendor 写为 `FROZEN_ON_RESUME`；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
+   已存在且通过机械核验的 `00-编排/supersession-record.json` 必须优先返回 `SUPERSEDED`，不得继续 vendors/status/next/check，也不得用新 lock 覆盖旧 lock。
 2. 读取 `episode-config.json`，先运行 config gate。失败时停在①之前，不路由任何内容或生产步骤。
 3. 按 ①—⑭检查标准产物。第⑩步只在 source manifest 有 BROLL_STOCK request 时要求素材；无 request 标为 not_applicable。
 4. ④先记录 score，此时状态为 PARTIAL，再进入⑤；⑤报告匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。任何改稿改变 `script_hash` 都回到⑤再④。

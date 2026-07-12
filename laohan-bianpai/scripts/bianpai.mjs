@@ -64,6 +64,17 @@ const nonEmptyFile = (relative) => {
   return exists(relative) && statSync(target).isFile() && statSync(target).size > 0 && realpathSync(target).startsWith(episodeRealRoot + '/');
 };
 const shaPath = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+const supersessionPath = file('00-编排/supersession-record.json');
+if (existsSync(supersessionPath)) {
+  const verifier = join(root, 'scripts/verify-episode-supersession.mjs');
+  const result = existsSync(verifier) ? spawnSync('node', [verifier, episodeDir], {encoding: 'utf8'}) : {status: 1, stderr: '缺 supersession verifier'};
+  if (result.status !== 0) {
+    console.error('BLOCKED：supersession record 无效。\n' + (result.stderr || result.stdout || '').trim());
+    process.exit(1);
+  }
+  console.error('SUPERSEDED：本期已在拍摄前作废，禁止继续、迁移或覆盖旧 executor lock；待方法冻结后从0创建新 episode。\n' + (result.stdout || '').trim());
+  process.exit(1);
+}
 const vendorPreflightState = () => safely(() => {
   const relative = '00-编排/vendor-preflight.json';
   if (!nonEmptyFile(relative)) return {done: false, reason: '缺当前 vendor preflight；先运行 bianpai vendors'};
