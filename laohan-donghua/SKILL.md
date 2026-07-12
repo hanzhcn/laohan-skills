@@ -1,6 +1,6 @@
 ---
 name: laohan-donghua
-version: "11.1.0-candidate"
+version: "11.2.0-candidate"
 description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核验素材、剪后视频和实际字幕，分别用 Remotion 或 HyperFrames 生成并 QA 最终成片。Use when 用户说生成动画成片、渲染口播动画、进入⑪动画生产、Remotion 成片、HyperFrames 成片、合成最终视频。
 ---
 
@@ -13,13 +13,13 @@ description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核
 读取当前 episode：
 
 1. 07-剪辑/clean.mp4 与 subtitles.srt；
-2. 09-导演/edl.json、source-manifest.json、renderer-brief.md；
+2. 09-导演/edl.json、animation-brief.json、animation-ast.json、source-manifest.json、renderer-brief.md、styleframes 与 animatic-manifest.json；
 3. 10-素材/素材清单.json（仅当 EDL 有 BROLL_STOCK）；
 4. episode-config.json。
 
 缺输入时报告文件名并停止。只有 素材清单.json 标为 visually_verified 的资产可以使用。
 
-🛑 STOP：EDL、source manifest、renderer brief 或 required 素材缺失时，不创建 renderer 项目。
+🛑 STOP：EDL、animation brief/AST、source manifest、renderer brief、animatic 或 required 素材缺失时，不创建 renderer 项目。先运行 `node animation-method/scripts/compile-animation-ast.mjs episodes/<slug>/09-导演 --check`；漂移时回⑨，不在⑪手修 AST。
 
 ## 工作流
 
@@ -33,27 +33,29 @@ description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核
 
 workspace 必须通过 `node scripts/verify-renderer-workspace.mjs episodes/<slug> <renderer>`；它绑定当前 handoff SHA 和全部生成文件 SHA。handoff 变化后旧 workspace 与 candidate 必须拒绝，不能继续渲染。
 
-完成检查后用 `node scripts/render-episode-remotion.mjs episodes/<slug>` 或 `node scripts/render-episode-hyperframes.mjs episodes/<slug>` 写入各自 candidate；渲染后必须继续走本期 QA 与审片 gate。
+读取 handoff 后，先为每个 renderer 写 `11-动画/renderer-proposals/<renderer>.json`：必须绑定当前 brief SHA，完整映射 AST state，能力只能来自 AST allow-list，proof 只能绑定⑩的 asset ID/SHA。再生成并验证 `11-动画/renderer-extensions/<renderer>.json`，同时绑定 AST/proposal SHA 和全部 state/transition/fact boundary；缺 extension 不得开始实现。
+
+完成检查后用本期 native workspace 渲染各自 base，再用同一 SRT/字幕样式后处理为 review candidate；渲染后必须继续走本期 QA 与审片 gate。`renderer_track: PARITY` 才允许走旧 render_plan 兼容实现，且其结果不得冒充审美上限。
 
 每个 candidate 先由独立审阅写入 `11-动画/qa-reviews/<renderer>.json`（绑定 candidate SHA、审阅者、时间、字幕安全区和有声审片结论及说明），再运行 `node scripts/create-qa-evidence.mjs episodes/<slug> <renderer> --review-file 11-动画/qa-reviews/<renderer>.json`，最后运行 `node scripts/create-render-manifest.mjs episodes/<slug>`。它生成真实 contact sheet、每个 selected beat 的入场/中段/退场帧、完整解码和结构化 `qa-evidence.json`。不能靠命令行或 Markdown 写 PASS 放行。
 
 - CROSS_RENDER_VALIDATION_PAIR：Remotion 和 HyperFrames 各建独立 candidate 项目，使用同一 source hash、EDL、字幕和事实文字。
 - PRIMARY_RENDERER：primary_renderer 必须是 remotion 或 hyperframes，且已有接受记录；否则停止并要求回到 CROSS_RENDER_VALIDATION_PAIR。专项 beat 只有在 EDL 明确指定后才交给另一 renderer。
-- 两个 candidate 不共享组件、HTML、CSS、GSAP、布局常量、转场或旧项目 scene。
+- 两个 candidate 共享 AST 语义合同和已验证素材，但不共享组件实现、HTML、CSS、GSAP、React 布局常量、转场或旧项目 scene。
 
 ### 2. 实现 base video
 
-- 每个 ILLUSTRATIVE beat 只实现 EDL 指定的理解问题。
+- 每个 ILLUSTRATIVE beat 只实现 AST/approved proposal 指定的理解问题、state graph 和 must-preserve。
 - HERO/NONE beat 保持真人，不新增主动画。
 - PROOF beat 只能使用 source-manifest 记录的来源。
 - BROLL_STOCK beat 只能使用 visually_verified 素材。
 - Remotion 使用 frame-driven composition；HyperFrames 使用 deterministic paused timeline。
-- BROLL/PROOF 只使用 handoff 锁定的本期真实资产；ILLUSTRATIVE 只显示 EDL 的 `visual.on_screen_text`，禁止显示 `acceptance_question`。
+- BROLL/PROOF 只使用 handoff 锁定的本期真实资产；ILLUSTRATIVE 只显示 AST approved copy，禁止显示 `acceptance_question`。
 
 ### 3. 统一字幕与合成
 
-- workspace 以⑧的校对字幕作为唯一字幕文本，并在 candidate 中统一合成。
-- Remotion 使用 component motion diagram；HyperFrames 使用 timeline full-bleed scene，两者不得共享固定卡片布局。
+- workspace 可读取⑧字幕做 timing/safe-band 约束，但 renderer base 不得各自烧字幕；两边 base 完成后由同一字幕后处理生成 review candidate。
+- Remotion 使用 frame-driven native implementation；HyperFrames 使用可 seek 的 paused timeline。两者不得套同一固定卡片布局，也不得从 renderer 反向改 AST。
 - 不把口播稿精简版、场景标题或旧项目字幕混入字幕轨。
 
 ### 4. QA 与交付
