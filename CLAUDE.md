@@ -27,6 +27,7 @@
 - ⑨ `laohan-daoyan` 为效果未证默认，⑩ `laohan-sucai` 的合同/降级路线已验证，⑪ `laohan-donghua` 只编排 Remotion/HyperFrames 技术可用默认对。真实本期试片和发布效果未完成前，不得称为 accepted 或效果最优方法。
 - `laohan-xiazai` 的抖音下载按其 `references/douyin.md`：先用 `opencli douyin user-videos` 取得临时 `play_url` 并立即下载；opencli 失效才降级到移动端 UA + iesdouyin `_ROUTER_DATA`，再按文档后续降级。抖音不存在 YouTube/yt-dlp 路径。对标/cheat 批量文字转录用 MLX 未量化 large-v3；⑧停顿和词级时间真值用 whisper-timestamped large-v3。ASR-B01 证明 MLX 会合并静音间隔，不能替代⑧；不要使用会出现 NaN/吞吐异常的 Torch MPS。路径见 workflow `CLAUDE.md` 第24条。
 - schema 2 的①必须写 source health 和带 `PRIMARY|PLATFORM_SIGNAL|SECONDARY`、URL/time 的 evidence；`opencli hackernews top` 是当前命令，禁止 `hackernews hot`。⑥的旧 skill 名保留兼容，但只产 prompt strategy；真实 image provider 与 selection evidence 必须另行登记，秋芝模板不是默认规律。
+- 上游 Cheat 的 prediction anatomy 现统一为所有 calibration 阶段都写 7 组件、bucket、概率、中枢与反事实；cold-start 只降低 Confidence、拉平分布。工作流 `AUTONOMOUS_RUN` 可用 `Review Mode: AUTONOMOUS_AGENT_PROXY`，但不得伪造 Jeffrey 确认或用户覆盖。当前有效真实期为 `2026-07-12-native-method-real-run`，①—⑥已通过，唯一下一步是⑦真人拍摄。
 
 ## Skill 维护
 
