@@ -1,6 +1,6 @@
 ---
 name: laohan-donghua
-version: "11.2.0-candidate"
+version: "11.3.0-candidate"
 description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核验素材、剪后视频和实际字幕，分别用 Remotion 或 HyperFrames 生成并 QA 最终成片。Use when 用户说生成动画成片、渲染口播动画、进入⑪动画生产、Remotion 成片、HyperFrames 成片、合成最终视频。
 ---
 
@@ -13,7 +13,7 @@ description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核
 读取当前 episode：
 
 1. 07-剪辑/clean.mp4 与 subtitles.srt；
-2. 09-导演/edl.json、animation-brief.json、animation-ast.json、source-manifest.json、renderer-brief.md、styleframes 与 animatic-manifest.json；
+2. 09-导演/edl.json、animation-brief.json、animation-ast.json、source-manifest.json、renderer-brief.md、styleframes 与 animatic-manifest.json；NATIVE 还包括 renderer-route.json 与 caption-style.json；
 3. 10-素材/素材清单.json（仅当 EDL 有 BROLL_STOCK）；
 4. episode-config.json。
 
@@ -29,13 +29,18 @@ description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核
 
 渲染前运行 `node scripts/verify-renderer-handoff.mjs episodes/<slug>/11-动画/renderer-handoffs/<renderer>/input-manifest.json`。任何 hash 变化都回⑨或⑩重新生成 handoff，不能沿用旧 candidate。
 
-随后运行 `node scripts/create-renderer-workspace.mjs episodes/<slug> <renderer>`，只在本期 `11-动画/renderer-projects/<renderer>/` 实现；生成器拒绝覆盖已有 workspace，旧 pilot 不参与。
-
-workspace 必须通过 `node scripts/verify-renderer-workspace.mjs episodes/<slug> <renderer>`；它绑定当前 handoff SHA 和全部生成文件 SHA。handoff 变化后旧 workspace 与 candidate 必须拒绝，不能继续渲染。
-
 读取 handoff 后，先为每个 renderer 写 `11-动画/renderer-proposals/<renderer>.json`：必须绑定当前 brief SHA，完整映射 AST state，能力只能来自 AST allow-list，proof 只能绑定⑩的 asset ID/SHA。再生成并验证 `11-动画/renderer-extensions/<renderer>.json`，同时绑定 AST/proposal SHA 和全部 state/transition/fact boundary；缺 extension 不得开始实现。
 
-完成检查后用本期 native workspace 渲染各自 base，再用同一 SRT/字幕样式后处理为 review candidate；渲染后必须继续走本期 QA 与审片 gate。`renderer_track: PARITY` 才允许走旧 render_plan 兼容实现，且其结果不得冒充审美上限。
+NATIVE 的确定性顺序固定为：
+
+1. `node scripts/prepare-renderer-extension.mjs episodes/<slug> <renderer>`，再以 `--check` 验证；
+2. `node scripts/create-renderer-workspace.mjs episodes/<slug> <renderer>` 创建未 seal scaffold；
+3. 只在本期 workspace 实现批准 extension，移除 `NATIVE_IMPLEMENTATION_REQUIRED`；
+4. `node scripts/seal-renderer-workspace.mjs episodes/<slug> <renderer>`，再运行 `node scripts/verify-renderer-workspace.mjs episodes/<slug> <renderer>`；
+5. `node scripts/render-episode-<renderer>.mjs episodes/<slug>` 只生成 `candidates/base/<renderer>.mp4`；
+6. `node scripts/apply-review-captions.mjs episodes/<slug> <renderer>` 使用同一 SRT/caption style 生成 `candidates/<renderer>.mp4` 和 caption evidence。
+
+create workspace 之前缺 proposal/extension 必须失败且不得留下半成品 workspace；seal 必须拒绝 placeholder、renderer 内嵌字幕、非确定性时间/随机逻辑、未注册 timeline、合同/hash 漂移和 symlink。handoff 变化后旧 workspace、base 与 candidate 均不得继续使用。`renderer_track: PARITY` 才允许走旧 render_plan 兼容实现，且其结果不得冒充审美上限。
 
 每个 candidate 先由独立审阅写入 `11-动画/qa-reviews/<renderer>.json`（绑定 candidate SHA、审阅者、时间、字幕安全区和有声审片结论及说明），再运行 `node scripts/create-qa-evidence.mjs episodes/<slug> <renderer> --review-file 11-动画/qa-reviews/<renderer>.json`，最后运行 `node scripts/create-render-manifest.mjs episodes/<slug>`。它生成真实 contact sheet、每个 selected beat 的入场/中段/退场帧、完整解码和结构化 `qa-evidence.json`。不能靠命令行或 Markdown 写 PASS 放行。
 
@@ -54,7 +59,7 @@ workspace 必须通过 `node scripts/verify-renderer-workspace.mjs episodes/<slu
 
 ### 3. 统一字幕与合成
 
-- workspace 可读取⑧字幕做 timing/safe-band 约束，但 renderer base 不得各自烧字幕；两边 base 完成后由同一字幕后处理生成 review candidate。
+- workspace 只读取 caption safe-band 数值做避让，不把 SRT 文本放入 NATIVE runtime；renderer base 不得各自烧字幕。两边 base 完成后必须由 `apply-review-captions.mjs` 用同一 SRT/caption style 生成 review candidate，并绑定 base/SRT/style/candidate/audio essence SHA。
 - Remotion 使用 frame-driven native implementation；HyperFrames 使用可 seek 的 paused timeline。两者不得套同一固定卡片布局，也不得从 renderer 反向改 AST。
 - 不把口播稿精简版、场景标题或旧项目字幕混入字幕轨。
 

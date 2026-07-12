@@ -17,6 +17,7 @@
 - ④ score 后只算 PARTIAL，最终盲预测 RECORDED 后才算 COMPLETE；production/final/full 不得接受 PENDING。⑧媒体/SRT、⑨时间轴/PROOF、⑪ workspace/handoff/qa-evidence 都由 workflow 机械 gate 验证。
 - ③和⑤不能只凭当前稿 hash 通过：schema 2 的③还必须绑定未过期 ruleset review/expiry/scan 时间并写 `platform_guarantee: false`；⑤的 `04-深扫报告.md` 必须声明 `review_status: CLEAR` 与 `unresolved_issue_count: 0`，`04-事实核验.md` 必须声明 `fact_check_status: CLEAR`、`contradicted_count: 0`、`unverifiable_count: 0`。CONTENT_CLAIMS 在 AUTONOMOUS_RUN 不因通用 HIGH/CRITICAL 确认规则询问用户，而是回②最多三轮修订；不得伪 CLEAR。
 - schema 2 NATIVE 不再用 EDL `visual.render_plan` 决定审美：⑨先写 semantic contract/art direction/parity plan/native challenge，再确定性编译 `animation-ast.json`；⑪的两个 proposal/extension 必须绑定 AST/proposal SHA、完整 state/transition 与 capability allow-list。旧 render_plan 仅保留 PARITY 兼容回归，不能作为表现上限。
+- NATIVE 生产顺序必须是 proposal → `prepare-renderer-extension` → scaffold → native implementation → `seal-renderer-workspace` → base render → `apply-review-captions` → QA。未 seal workspace、renderer 内嵌字幕或缺 base/SRT/caption-style/candidate 哈希链都必须失败；Remotion/HyperFrames 的 base 都不得自行烧字幕。
 - ⑪ QA 的字幕安全区和有声审片结论必须来自独立 `qa-reviews/<renderer>.json`，绑定 candidate SHA、审阅者、时间及具体说明；任何命令行 PASS 都无效。每个 selected beat 均须有 entry/middle/exit 三帧证据。
 - ⑧的实际字幕必须经过 `spoken-script-variance.json` 与当前稿的事实差异审阅。任何事实偏离都回②→⑤→④，⑨不得自行解释或继续生产；仅 `CLEAR`、事实偏离为零的当前记录可放行。
 - bianpai `vendors` 成功后必须为本期写入绑定 runtime lock 的 `00-编排/vendor-preflight.json`；`status/next` 缺少或检测到漂移时只能 BLOCKED，不能隐式联网或继续路由。
