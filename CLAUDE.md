@@ -2,18 +2,16 @@
 
 ## Talking-head video workflow
 
-真人口播动画采用三段候选协作架构：
+真人口播动画默认采用 CODEX_DIRECT + Remotion：
 
-- `laohan-daoyan/SKILL.md`：⑨语义导演，输出 beat sheet、EDL、source manifest、animation brief、renderer-neutral AST、styleframe 与 animatic。
-- `laohan-sucai/SKILL.md`：⑩并行检索 Pexels、Pixabay、Coverr，并可把指定本地素材库优先加入候选池；记录 provider health、下载、抽帧和复核 BROLL_STOCK 候选素材。必须输出机器可读 素材清单.json，且只有 visually_verified 资产可进入⑪。Mixkit 仅手动补充，不爬虫。
-- `laohan-donghua/SKILL.md`：⑪只按 AST + approved native proposal/extension 实现、渲染、统一字幕后处理和 QA；禁止固定 coverage、固定 scene 数、旧 student-kit 模板和逐步人工审批默认。
+- ⑨—⑪由同一个 Codex 任务连续完成：完整观看 clean/SRT、写 direct brief 与按需 source manifest、直接实现 Remotion、渲染完整 candidate、完整观看并最多修三轮。`laohan-daoyan`、`laohan-donghua`、AST、双 renderer 与 proposal/extension/seal 只用于 Jeffrey 明确发起的 METHOD_LAB 或历史 episode。
+- `laohan-sucai/SKILL.md`：⑩仅在 source manifest 有真实 PROOF/BROLL 请求时供应 provider/license/source/SHA 完整且 visually_verified 的本期素材；无请求标 not_applicable，不创建空素材任务。
 - `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanAI视频创作` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
 - episode 存在且通过 workflow `verify-episode-supersession.mjs` 的 `supersession-record.json` 时，bianpai 必须优先返回 `SUPERSEDED` 并拒绝 vendors/status/next/check；不得覆盖旧 executor lock 或把作废期迁移到新 runtime。
 - `laohan-cheat/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
 - `laohan-yunying/SKILL.md`：⑫—⑭的抖音运营编排器。发布准备要求 `bianpai check --require final`；真实发布仍必须 Jeffrey 确认。它保存 publish-record、数据快照和评论洞察，随后交给 upstream cheat-publish/retro；不自动发布、回复或改预测。
 - ①的 experiment 必须预先声明合法 `metric_keys` 和 T+N 窗口；⑬只有匹配该窗口、播放与全部预注册指标非空的 `measurement_role: TARGET` 快照可完成，其他观测只能标 `CONTEXT`，不得被 retro 当作假设结论。
-- `bianpai vendors` 写 schema 2 的 `FROZEN_ON_RESUME` vendor preflight，只冻结当时的 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD`。新 episode 必须走 `sync-content-vendors.sh --new-episode` 并创建 `00-编排/executor-lock.json`；registry/runtime 漂移时进行中 schema 2 episode BLOCKED，不得刷新 preflight 静默换执行器。
-- schema 3 的完整 vendor HEAD 锁定已在 skills `codex/vendor-head-lock@a0a9a09f` 与 workflow `codex/vendor-head-lock@f848686c` 成对完成回归；当前 main 仍服务已开工的 schema 2 真实期。只有该期完成或明确作废后的独立维护窗口才可同时合并两支，禁止单仓提前合并或刷新当前 episode lock。
+- `bianpai vendors` 写 schema 3 的 `FROZEN_ON_RESUME` vendor preflight，冻结 `UP_TO_DATE|READY_LOCAL_AHEAD` 状态和 Cheat/dbskill 完整 HEAD SHA。`status/next` 只做本地 HEAD 对照；任一 HEAD 漂移或旧 schema 2 均 BLOCKED，不能猜填或静默迁移。新 episode 必须走 `sync-content-vendors.sh --new-episode` 并创建 `00-编排/executor-lock.json`；registry/runtime 漂移时进行中 schema 2 episode BLOCKED，不得刷新 preflight 静默换执行器。
 - `platform-display-evidence.json` 是⑫可选的发布后展示核对；缺失不阻断，存在时必须绑定本期截图/导出、aweme、标题、封面 SHA、final SHA 和三项 MATCHED 人工结论。错绑记录必须使⑫未完成，绝不自动修正或伪造证据。
 - ④ score 后只算 PARTIAL，最终盲预测 RECORDED 后才算 COMPLETE；production/final/full 不得接受 PENDING。⑧媒体/SRT、⑨时间轴/PROOF、⑪ workspace/handoff/qa-evidence 都由 workflow 机械 gate 验证。
 - ③和⑤不能只凭当前稿 hash 通过：schema 2 的③还必须绑定未过期 ruleset review/expiry/scan 时间并写 `platform_guarantee: false`；⑤的 `04-深扫报告.md` 必须声明 `review_status: CLEAR` 与 `unresolved_issue_count: 0`，`04-事实核验.md` 必须声明 `fact_check_status: CLEAR`、`contradicted_count: 0`、`unverifiable_count: 0`。CONTENT_CLAIMS 在 AUTONOMOUS_RUN 不因通用 HIGH/CRITICAL 确认规则询问用户，而是回②最多三轮修订；不得伪 CLEAR。
@@ -28,7 +26,7 @@
 - ⑨ `laohan-daoyan` 为效果未证默认，⑩ `laohan-sucai` 的合同/降级路线已验证，⑪ `laohan-donghua` 只编排 Remotion/HyperFrames 技术可用默认对。真实本期试片和发布效果未完成前，不得称为 accepted 或效果最优方法。
 - `laohan-xiazai` 的抖音下载按其 `references/douyin.md`：先用 `opencli douyin user-videos` 取得临时 `play_url` 并立即下载；opencli 失效才降级到移动端 UA + iesdouyin `_ROUTER_DATA`，再按文档后续降级。抖音不存在 YouTube/yt-dlp 路径。对标/cheat 批量文字转录用 MLX 未量化 large-v3；⑧停顿和词级时间真值用 whisper-timestamped large-v3。ASR-B01 证明 MLX 会合并静音间隔，不能替代⑧；不要使用会出现 NaN/吞吐异常的 Torch MPS。路径见 workflow `CLAUDE.md` 第24条。
 - schema 2 的①必须写 source health 和带 `PRIMARY|PLATFORM_SIGNAL|SECONDARY`、URL/time 的 evidence；`opencli hackernews top` 是当前命令，禁止 `hackernews hot`。⑥的旧 skill 名保留兼容，但只产 prompt strategy；真实 image provider 与 selection evidence 必须另行登记，秋芝模板不是默认规律。
-- 上游 Cheat 的 prediction anatomy 现统一为所有 calibration 阶段都写 7 组件、bucket、概率、中枢与反事实；cold-start 只降低 Confidence、拉平分布。工作流 `AUTONOMOUS_RUN` 可用 `Review Mode: AUTONOMOUS_AGENT_PROXY`，但不得伪造 Jeffrey 确认或用户覆盖。当前有效真实期为 `2026-07-12-native-method-real-run`，①—⑥已通过，唯一下一步是⑦真人拍摄。
+- 上游 Cheat 的 prediction anatomy 现统一为所有 calibration 阶段都写 7 组件、bucket、概率、中枢与反事实；cold-start 只降低 Confidence、拉平分布。工作流 `AUTONOMOUS_RUN` 可用 `Review Mode: AUTONOMOUS_AGENT_PROXY`，但不得伪造 Jeffrey 确认或用户覆盖。旧 `2026-07-12-native-method-real-run` 已在拍摄前 SUPERSEDED；当前生产期为 `2026-07-16-codex-direct-production`，唯一下一步是①选题。
 
 ## Skill 维护
 

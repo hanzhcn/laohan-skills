@@ -36,6 +36,7 @@ if (existsSync(episodeDir) && (lstatSync(episodeDir).isSymbolicLink() || !episod
 }
 const checker = join(root, 'scripts/check-episode-contract.sh');
 const vendorSync = join(root, 'scripts/sync-content-vendors.sh');
+const vendorPreflightVerifier = join(root, 'scripts/verify-vendor-preflight.mjs');
 const runtimeChecker = join(root, 'scripts/check-workflow-runtime.mjs');
 const runtimeLock = join(root, 'workflow-runtime-lock.json');
 if (!existsSync(checker)) {
@@ -78,9 +79,10 @@ if (existsSync(supersessionPath)) {
 const vendorPreflightState = () => safely(() => {
   const relative = '00-编排/vendor-preflight.json';
   if (!nonEmptyFile(relative)) return {done: false, reason: '缺当前 vendor preflight；先运行 bianpai vendors'};
-  const record = readJson(relative);
-  if (record.schema_version !== 2 || record.status !== 'READY' || !['FROZEN_AT_CREATION', 'FROZEN_ON_RESUME'].includes(record.source_scope) || record.runtime_lock_sha256 !== shaPath(runtimeLock) || Number.isNaN(Date.parse(record.checked_at)) || !['UP_TO_DATE', 'READY_LOCAL_AHEAD'].includes(record.cheat_state) || !['UP_TO_DATE', 'READY_LOCAL_AHEAD'].includes(record.dbskill_state)) return {done: false, reason: 'vendor preflight 无效、未冻结可用 vendor 或未绑定当前 runtime lock；重新运行 bianpai vendors'};
-  return {done: true, reason: 'vendor preflight 已绑定当前 runtime lock'};
+  if (!existsSync(vendorPreflightVerifier)) return {done: false, reason: '缺 vendor preflight verifier'};
+  const result = spawnSync('node', [vendorPreflightVerifier, episodeDir], {encoding: 'utf8'});
+  if (result.status !== 0) return {done: false, reason: (result.stderr || result.stdout || 'vendor preflight 核验失败').trim()};
+  return {done: true, reason: (result.stdout || 'vendor preflight 已绑定当前 runtime lock 与 vendor HEAD').trim()};
 }, 'vendor preflight 无法读取');
 const conclusionState = (relative, label, statusField, countFields) => safely(() => {
   if (!nonEmptyFile(relative)) return {done: false, reason: '缺非空 ' + relative};
@@ -413,20 +415,45 @@ if (command === 'vendors') {
     console.error('BLOCKED：当前 episode 已开始。vendor 同步只允许在新 episode 开始前或独立维护窗口执行，避免中途改变诊断/校准规则。');
     process.exit(1);
   }
+  let frozenVendor = null;
+  if (exists('01-口播稿.md')) {
+    const preflightRelative = '00-编排/vendor-preflight.json';
+    if (!nonEmptyFile(preflightRelative)) {
+      console.error('BLOCKED：进行中的 episode 缺原 vendor preflight，不能用当前 HEAD 重建历史冻结值。');
+      process.exit(1);
+    }
+    const existing = spawnSync('node', [vendorPreflightVerifier, episodeDir], {encoding: 'utf8'});
+    if (existing.status !== 0) {
+      console.error('BLOCKED：原 vendor preflight 无效或已漂移，不能刷新。\n' + (existing.stderr || existing.stdout || '').trim());
+      process.exit(1);
+    }
+    frozenVendor = readJson(preflightRelative);
+  }
   const result = spawnSync('bash', [vendorSync, syncVendors ? '--apply' : '--check'], {encoding: 'utf8'});
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);
   if (result.status === 0) {
-    const vendorState = (name) => result.stdout.match(new RegExp('^' + name + '=(UP_TO_DATE|READY_LOCAL_AHEAD)\\b', 'm'))?.[1];
-    const cheatState = vendorState('CHEAT');
-    const dbskillState = vendorState('DBSKILL');
-    if (!cheatState || !dbskillState) {
-      console.error('BLOCKED：vendor 检查未返回可冻结的 Cheat/dbskill 状态。');
+    const vendorInfo = (name) => {
+      const match = result.stdout.match(new RegExp('^' + name + '=(UP_TO_DATE|READY_LOCAL_AHEAD)\\s+head=([a-f0-9]{40,64})$', 'm'));
+      return match ? {state: match[1], head: match[2]} : null;
+    };
+    const cheat = vendorInfo('CHEAT');
+    const dbskill = vendorInfo('DBSKILL');
+    if (!cheat || !dbskill) {
+      console.error('BLOCKED：vendor 检查未返回可冻结的 Cheat/dbskill 状态与完整 HEAD SHA。');
+      process.exit(1);
+    }
+    if (frozenVendor && (frozenVendor.cheat_head_sha !== cheat.head || frozenVendor.dbskill_head_sha !== dbskill.head)) {
+      console.error('BLOCKED：VENDOR_HEAD_DRIFT。进行中的 episode 只能续用原 schema 3 冻结的 vendor HEAD，不能迁移或猜填。');
       process.exit(1);
     }
     const preflightDir = file('00-编排');
     mkdirSync(preflightDir, {recursive: true});
-    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 2, status: 'READY', source_scope: 'FROZEN_ON_RESUME', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), cheat_state: cheatState, dbskill_state: dbskillState}, null, 2) + '\n');
+    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 3, status: 'READY', source_scope: 'FROZEN_ON_RESUME', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), cheat_state: cheat.state, cheat_head_sha: cheat.head, dbskill_state: dbskill.state, dbskill_head_sha: dbskill.head}, null, 2) + '\n');
+    const verified = spawnSync('node', [vendorPreflightVerifier, episodeDir], {encoding: 'utf8'});
+    process.stdout.write(verified.stdout);
+    process.stderr.write(verified.stderr);
+    if (verified.status !== 0) process.exit(verified.status || 1);
     console.log('VENDOR_PREFLIGHT=00-编排/vendor-preflight.json');
   }
   process.exit(result.status ?? 1);
@@ -473,9 +500,12 @@ if (configResult.status !== 0) {
   console.log('# 编排状态\n\n状态：BLOCKED\n\n- 当前 gate：episode-config.json\n- 原因：' + (configResult.stderr || configResult.stdout).trim());
   process.exit(1);
 }
-if (['status', 'next'].includes(command) && !vendorPreflightState().done) {
-  console.log('# 编排状态\n\n状态：BLOCKED\n\n- 当前 gate：vendor preflight\n- 原因：' + vendorPreflightState().reason);
-  process.exit(1);
+if (['status', 'next'].includes(command)) {
+  const preflight = vendorPreflightState();
+  if (!preflight.done) {
+    console.log('# 编排状态\n\n状态：BLOCKED\n\n- 当前 gate：vendor preflight\n- 原因：' + preflight.reason);
+    process.exit(1);
+  }
 }
 
 const states = steps.map((step) => ({...step, done: step.done()}));

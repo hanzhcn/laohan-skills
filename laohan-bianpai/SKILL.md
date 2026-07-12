@@ -36,7 +36,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 工作流
 
-1. 恢复工作先运行 `vendors`。它把当时可用 vendor 写为 `FROZEN_ON_RESUME`；`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
+1. 恢复工作先运行 `vendors`。它把当时可用 vendor 的状态和完整 HEAD SHA 写入 schema 3 `FROZEN_ON_RESUME`；进行中 episode 只能在两方 HEAD 与原冻结值一致时续用，旧 schema 2 因缺 commit 证据必须 BLOCKED，不能从当前 HEAD 猜填。`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
    已存在且通过机械核验的 `00-编排/supersession-record.json` 必须优先返回 `SUPERSEDED`，不得继续 vendors/status/next/check，也不得用新 lock 覆盖旧 lock。
 2. 读取 `episode-config.json`，先运行 config gate。失败时停在①之前，不路由任何内容或生产步骤。
 3. 按 ①—⑭检查标准产物。新 episode 默认 `CODEX_DIRECT + Remotion`：⑨—⑪由同一个 Codex 任务连续完成，⑨只落 `direct-brief.json + source-manifest.json`；第⑩步只在 source manifest 有真实素材请求时运行，无 request 标为 not_applicable。
