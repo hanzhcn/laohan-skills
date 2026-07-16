@@ -158,13 +158,15 @@ const coverState = () => safely(() => {
   const assetStat = existsSync(assetPath) ? statSync(assetPath) : null;
   const actualAsset = assetStat?.isFile() ? realpathSync(assetPath) : '';
   const dimensions = actualAsset ? imageDimensions(actualAsset) : null;
+  const expectedSelectionMode = config.workflow_mode === 'AUTONOMOUS_RUN' ? 'AGENT_PROXY' : 'JEFFREY';
+  const autonomousReviewerInvalid = config.workflow_mode === 'AUTONOMOUS_RUN' && typeof review.reviewer === 'string' && review.reviewer.toLowerCase().includes('jeffrey');
   if (!cover.selected_asset || !cover.title || !cover.canvas?.width || !cover.canvas?.height || cover.script_hash !== scriptHash()
     || !actualAsset.startsWith(assetRoot) || !dimensions || !Array.isArray(cover.large_text) || !cover.large_text.some((text) => typeof text === 'string' && text.trim())
     || cover.canvas.width !== config.canvas?.width || cover.canvas.height !== config.canvas?.height
     || dimensions.width !== config.canvas?.width || dimensions.height !== config.canvas?.height || cover.title !== scriptTitle
     || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || !Array.isArray(review.candidates) || review.candidates.length < 2 || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
-    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || !['AGENT_PROXY', 'JEFFREY'].includes(cover.selection_mode) || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode))) {
-    return {done: false, reason: 'selected-cover 必须引用本期 05-封面内的真实 PNG/JPEG，真实像素、标题、large_text、画布和 script_hash 必须匹配当前稿/config'};
+    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || cover.selection_mode !== expectedSelectionMode || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode || autonomousReviewerInvalid))) {
+    return {done: false, reason: 'selected-cover 必须引用本期 05-封面内的真实 PNG/JPEG，真实像素、标题、large_text、画布和 script_hash 必须匹配当前稿/config；AUTONOMOUS_RUN 只接受非 Jeffrey 的 AGENT_PROXY，REVIEW_GATED 只接受 JEFFREY'};
   }
   return {done: true, reason: '封面选择已登记'};
 }, 'selected-cover.json 无法读取');
@@ -387,7 +389,7 @@ const steps = [
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
   {id: '⑥', name: '封面选择', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider + selection policy', done: () => coverState().done, output: '05-封面/selected-cover.json + cover-review.json'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
-  {id: '⑧', name: '剪辑与实际字幕', skill: '人工剪辑 + chengfeng adapter', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/clean.mp4 + subtitles.srt'},
+  {id: '⑧', name: 'Codex自动剪辑与实际字幕', skill: directProduction ? 'codex-direct-production' : 'whisper-timestamped + registered edit executor', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/{raw-transcript.json,edit-candidates.json,edit-decision.json,edit-render.json,clean.mp4,clean-transcript.json,subtitles.srt,spoken-script-variance.json,edit-review.json,edit-manifest.json}'},
   {id: '⑨', name: directProduction ? 'Codex Direct导演' : 'METHOD_LAB语义导演', skill: directProduction ? 'codex-direct-production' : 'laohan-daoyan', done: () => gateState('director-output', directProduction ? 'Direct brief 契约未通过' : '导演输出契约未通过').done, output: directProduction ? '09-导演/{direct-brief.json,source-manifest.json}' : '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
   {id: '⑩', name: '按需素材', skill: directProduction ? 'codex-direct-production + laohan-sucai（仅有请求时）' : 'laohan-sucai', done: () => materialState().done, output: '10-素材/真实已核验资产，或 not_applicable'},
   {id: '⑪', name: directProduction ? 'Codex Direct成片与选片' : 'METHOD_LAB动画与选片', skill: directProduction ? 'codex-direct-production' : 'laohan-donghua', done: () => animationState().done, output: directProduction ? 'Remotion candidates + 完整观看 QA + accepted final' : 'renderer candidates + QA + accepted final'},
@@ -398,6 +400,8 @@ const steps = [
 
 const configCheck = () => gate('config');
 const configResult = configCheck();
+let workflowMode = null;
+try { workflowMode = readJson('episode-config.json').workflow_mode; } catch {}
 if (command === 'vendors') {
   if (configResult.status !== 0) {
     console.error('BLOCKED：episode config/executor lock 未通过，不能刷新 vendor preflight。\n' + (configResult.stderr || configResult.stdout).trim());
@@ -521,6 +525,9 @@ if (calibration.done && deepScan.done && calibration.predictionStatus === 'RECOR
 }
 if (command === 'next') {
   if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
+  else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\nnext_scope: ⑧—⑪\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
+  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；成功后重跑 bianpai 并自动继续，不逐步询问 Jeffrey。`);
+  else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log(`# 下一步：⑦拍摄\n\nWAITING_FOR_JEFFREY_SHOOTING\nworkflow_mode: AUTONOMOUS_RUN\nplanned_manual_handoff: true\n\n- 需要落盘：${next.output}\n- 说明：到达计划内唯一拍摄交接；等 Jeffrey 拍摄，这不是 BLOCKED。`);
   else console.log(`# 下一步：${next.id}${next.name}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留。`);
   process.exit(0);
 }
@@ -531,5 +538,10 @@ for (const step of states) {
   const marker = step.id === '④' && calibration.scoreDone && !calibration.done ? '~' : step.done ? 'x' : ' ';
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }
-if (next) console.log(`\n当前唯一下一步：${next.id}${next.name}（${next.skill}）`);
+if (next) {
+  console.log(`\n当前唯一下一步：${next.id}${next.name}（${next.skill}）`);
+  if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production next_scope=⑧—⑪`);
+  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');
+  else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log('WAITING_FOR_JEFFREY_SHOOTING planned_manual_handoff=true blocked=false');
+}
 else console.log('\n全部标准产物已存在；进入复盘与方法更新 gate。');
