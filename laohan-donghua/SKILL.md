@@ -1,10 +1,12 @@
 ---
 name: laohan-donghua
-version: "11.3.0-candidate"
-description: 真人口播动画生产编排器。读取⑨导演 EDL、⑩已核验素材、剪后视频和实际字幕，分别用 Remotion 或 HyperFrames 生成并 QA 最终成片。Use when 用户说生成动画成片、渲染口播动画、进入⑪动画生产、Remotion 成片、HyperFrames 成片、合成最终视频。
+version: "11.4.0-candidate"
+description: METHOD_LAB/历史 episode 的双 renderer 动画编排器。默认 CODEX_DIRECT 生产不使用本 skill；只有用户明确要求旧 AST、Remotion/HyperFrames 对照或恢复历史 episode 时使用。
 ---
 
 # 真人口播动画生产
+
+> 2026-07-16 起，本 skill 仅保留 METHOD_LAB/历史兼容。新 episode 默认由 `codex-direct-production` 直接编写 Remotion、渲染完整 candidate、完整观看并最多修三轮；不经过 proposal/extension/seal 或双 renderer。
 
 本 skill 执行已经做出的导演决策，不重新决定哪些话要动画。动画不是固定 B-roll 覆盖率，也不是一个 HTML 模板。
 

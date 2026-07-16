@@ -375,6 +375,8 @@ const commentState = () => safely(() => {
   return {done: true, reason: '评论洞察与 cheat-retro 已登记'};
 }, '评论洞察无法读取');
 
+let directProduction = false;
+try { directProduction = readJson('episode-config.json').renderer_mode === 'CODEX_DIRECT'; } catch {}
 const steps = [
   {id: '①', name: '选题', skill: 'laohan-redian（主写）+ laohan-douyinsousuo（证据）', done: () => topicState().done, output: '00-选题.md + 00-选题.json（受众/论点/证据/实验）'},
   {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '01-口播稿.md + 02-创作工作稿/创作决策.json'},
@@ -384,9 +386,9 @@ const steps = [
   {id: '⑥', name: '封面选择', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider + selection policy', done: () => coverState().done, output: '05-封面/selected-cover.json + cover-review.json'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
   {id: '⑧', name: '剪辑与实际字幕', skill: '人工剪辑 + chengfeng adapter', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/clean.mp4 + subtitles.srt'},
-  {id: '⑨', name: '语义导演', skill: 'laohan-daoyan', done: () => gateState('director-output', '导演输出契约未通过').done, output: '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
-  {id: '⑩', name: '素材供应', skill: 'laohan-sucai', done: () => materialState().done, output: '10-素材/素材清单.json'},
-  {id: '⑪', name: '动画生产与选片', skill: 'laohan-donghua', done: () => animationState().done, output: '11-动画/render-manifest.json + 07-剪辑/final.mp4'},
+  {id: '⑨', name: directProduction ? 'Codex Direct导演' : 'METHOD_LAB语义导演', skill: directProduction ? 'codex-direct-production' : 'laohan-daoyan', done: () => gateState('director-output', directProduction ? 'Direct brief 契约未通过' : '导演输出契约未通过').done, output: directProduction ? '09-导演/{direct-brief.json,source-manifest.json}' : '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
+  {id: '⑩', name: '按需素材', skill: directProduction ? 'codex-direct-production + laohan-sucai（仅有请求时）' : 'laohan-sucai', done: () => materialState().done, output: '10-素材/真实已核验资产，或 not_applicable'},
+  {id: '⑪', name: directProduction ? 'Codex Direct成片与选片' : 'METHOD_LAB动画与选片', skill: directProduction ? 'codex-direct-production' : 'laohan-donghua', done: () => animationState().done, output: directProduction ? 'Remotion candidates + 完整观看 QA + accepted final' : 'renderer candidates + QA + accepted final'},
   {id: '⑫', name: '发布登记', skill: 'laohan-yunying', done: () => publishState().done, output: '12-发布/publish-record.json'},
   {id: '⑬', name: '数据快照', skill: 'laohan-yunying', done: () => snapshotState().done, output: '13-数据/snapshots.jsonl'},
   {id: '⑭', name: '评论洞察', skill: 'laohan-yunying', done: () => commentState().done, output: '14-评论/{comments.jsonl,insights.md}'},
@@ -444,7 +446,7 @@ if (command === 'check') {
   }
   const stages = ['config'];
   if (exists('07-剪辑/clean.mp4') && exists('07-剪辑/subtitles.srt')) stages.push('director');
-  if (exists('09-导演/edl.json') && exists('09-导演/source-manifest.json') && exists('09-导演/renderer-brief.md')) stages.push('director-output', 'materials', 'production');
+  if ((exists('09-导演/direct-brief.json') || exists('09-导演/edl.json')) && exists('09-导演/source-manifest.json')) stages.push('director-output', 'materials', 'production');
   if (requiredStage === 'production' && !stages.includes('production')) stages.push('production');
   if (exists('11-动画/render-manifest.json')) stages.push('final');
   if (requiredStage === 'final' || requiredStage === 'full') stages.push('accepted-final');

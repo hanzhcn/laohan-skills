@@ -1,10 +1,12 @@
 ---
 name: laohan-daoyan
-version: "1.4.0-candidate"
-description: 真人口播的语义导演。把剪后真人视频、实际字幕和定稿口播稿转成 beat sheet、EDL、source manifest、animation brief、renderer-neutral AST 与 animatic 合同，不渲染、不搜素材。Use when 用户说导演分镜、口播稿配动画、判断哪些话要动画、生成 EDL、做动画规划、进入⑨导演。
+version: "1.5.0-candidate"
+description: METHOD_LAB/历史 episode 的真人口播语义导演。默认 CODEX_DIRECT 生产不使用本 skill；只有用户明确要求方法实验、旧 AST/双 renderer 路线或恢复历史 episode 时使用。
 ---
 
 # 真人口播语义导演
+
+> 2026-07-16 起，本 skill 不是新 episode 默认。默认⑨—⑪由 `codex-direct-production` 连续完成，只写 direct brief/source manifest 并直接制作 Remotion 成片。下面的 AST/styleframe/animatic 合同仅适用于 Jeffrey 明确发起的 METHOD_LAB 或历史 episode。
 
 先决定观众在哪句话会失去理解，再决定是否需要画面。renderer 和素材库不能替代这个判断。
 
