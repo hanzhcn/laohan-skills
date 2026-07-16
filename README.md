@@ -194,7 +194,7 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 
 覆盖：视频下载 / 搜索聚合 / 网页提取 / 评论采集 / 语音转录 / 博主数据
 
-集成工具：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download
+集成工具：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download
 
 ```
 你: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文字
@@ -208,9 +208,9 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 
 ### 🔍 douyinsousuo（抖音搜索）
 
-> *"抖音搜索没有 API，那就自己造一个。"*
+> *"搜索能力已有成熟入口，就不再维护第二套浏览器。"*
 
-DrissionPage 监听 + 滚动采集，按点赞排行 TOP 20 + 选题分析。搜索竞品、发现选题、追踪热点。
+编排已安装的 OpenCLI 完成登录态预检、关键词搜索和选题分析；失败只在 OpenCLI adapter、trace/autofix 与 Browser Bridge 内降级，不增加独立浏览器运行时。
 
 ```
 你: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
@@ -248,17 +248,16 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 | 工具 | 安装 | 增强哪些技能 |
 |------|------|-------------|
-| [opencli](https://github.com/jackwener/opencli) | `npm i -g @jackwener/opencli` | xiazai（B站/小红书下载、热榜、搜索） |
+| [opencli](https://github.com/jackwener/opencli) | `npm i -g @jackwener/opencli` | xiazai（B站/小红书下载、热榜、搜索）、douyinsousuo（抖音搜索） |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | `brew install yt-dlp` | xiazai（YouTube 下载） |
 | [ffmpeg](https://ffmpeg.org/) | `brew install ffmpeg` | xiazai（音视频转码）、chuangzuo（音频提取）、luping（录屏） |
 | [Playwright](https://playwright.dev/) | `npm i -g playwright && npx playwright install chromium` | xiazai（浏览器抓取）、luping（浏览器录屏） |
 | [tmux](https://github.com/tmux/tmux) | `brew install tmux` | luping（终端录屏） |
 | 硅基流动 API Key | 注册 [siliconflow.cn](https://siliconflow.cn)（免费） | xiazai（云端语音转录）、chuangzuo（语音转文字） |
-| [DrissionPage](https://github.com/g1879/DrissionPage) + Chrome | `pip install DrissionPage` | douyinsousuo（抖音搜索） |
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm（幻灯片生成） |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo（本地语音转录） |
 
-无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing
+无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing；douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
 
 ---
 

@@ -1,116 +1,62 @@
 ---
 name: laohan-douyinsousuo
-description: 抖音关键词搜索，采集视频数据按点赞排行。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"或提到"在抖音搜""抖音的xxx情况""抖音里xxx排行"。
-version: "2.0.2"
+description: 抖音关键词搜索与选题分析。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"或提到"在抖音搜""抖音的xxx情况""抖音里xxx排行"。
+version: "3.0.0"
 ---
 
 # 抖音搜索
 
-用 DrissionPage 监听抖音搜索 API 数据包，滚动采集视频列表，按点赞排行输出。
+这是工作流里的抖音搜索编排接口。只使用宿主已安装且已登录的 OpenCLI，不自带爬虫、浏览器、cookie 复制、独立 profile 或 Python runtime。
 
-## 核心理念
+## 输入
 
-抖音搜索 API 有 a_bogus 签名校验，无法直接调接口。唯一可行方案：浏览器自动化 → 监听数据包 → 后处理排序。不支持 API 级排序/筛选。
+- `query`：必填，搜索关键词。
+- `limit`：可选，1—30，默认 30。
+- `episode`：可选，本期 `episodes/<slug>` 路径；只允许写 `00-抖音搜索证据.md`，不得写 `00-选题.md`。
 
-## 登录态机制（v2.0 核心升级）
+## 执行
 
-**免扫码**：脚本不复用日常 Chrome（日常 Chrome 默认目录开不了远程调试口），而是启动**独立 profile**（`~/.douyin-search-profile`），注入从日常 Chrome 抽取的抖音登录态 cookie，带 sessionid 直接进站。
-
-- 登录态来源：日常 Chrome 抖音登录态在 **Profile 5**（本机 7 个 Profile 无 Default，抖音登录在 Profile 5）
-- cookie 抽取：`extract_cookies.py` 用 browser_cookie3 读 Chrome Cookies 库（自动 keychain 解密），筛 douyin 域存 JSON
-- cookie 注入：search.py 用 DrissionPage 4.x `tab.set.cookies(list)` 传整个 list（不是逐条），先 `tab.get(目标域)` 再注 + refresh 生效
-- 调试端口：search.py 每次选择一个空闲 localhost 端口，避免误连日常 Chrome 的 9222；需要固定端口时设置 `DOUYIN_DEBUG_PORT`
-- cookie 失效（几天到几周）：重跑 `extract_cookies.py` 一键刷新
-
-**为什么不直接连日常 Chrome**：① 日常 Chrome 不带 `--remote-debugging-port`；② 带了也开不了——Chrome 远程调试拒绝配"默认" user-data-dir（`Application Support/Google/Chrome`）；③ 复用日常 Chrome 的 profile 要先关 Chrome，扰民。独立 profile + cookie 注入三全其美。
-
-## 工作流
-
-### 1. 确认搜索参数
-
-从用户输入中提取：
-- **关键词**（必填）：要搜什么
-- **最少条数**（可选，默认 30）：`--min`
-- **最大滚动**（可选，默认 10）：`--scroll`
-
-如果用户只给了关键词，用默认参数直接执行。
-
-### 2. 确保登录态 cookie 存在（首次或失效时）
-
-cookie 文件 `~/.douyin-search-profile/douyin_cookies.json` 不存在、或搜索时提示"登录态无效"时，先抽 cookie：
+### 1. 预检
 
 ```bash
-~/.douyin-search-profile/.venv/bin/python ~/.agents/skills/laohan-douyinsousuo/scripts/extract_cookies.py
+opencli doctor
+opencli douyin whoami -f json
 ```
 
-前提：日常 Chrome 的 **Profile 5** 已登录 douyin.com（没登就先用 Chrome 登一次）。成功输出 "sessionid ✓ 登录态有效"。
+必须同时满足 Browser Bridge 可连接、`logged_in=true`。否则直接报告 `BLOCKED`，不要抽取或复制 Chrome cookie，也不要安装新工具。
 
-### 3. 执行搜索
+### 2. 搜索
 
 ```bash
-~/.douyin-search-profile/.venv/bin/python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 30 --scroll 10
+opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 ```
 
-脚本会自动：
-- 启动独立 Chrome（`~/.douyin-search-profile`，**不动日常 Chrome**）
-- 注入抖音 cookie，免扫码带登录态进站
-- 滚动采集，采够 `--min` 条即停
-- 按点赞降序，输出 TOP 20
-- JSON 保存到 `~/.douyin-search-profile/output/{关键词}_results.json`
+结果必须是 JSON 数组，并逐条保留 OpenCLI 返回的 `rank`、`desc`、`author`、`url` 及可用互动字段。不要按缺失字段重排，也不要把 OpenCLI 的结果顺序描述成“按点赞排行”。
 
-### 4. 展示结果
+### 3. 失败降级
 
-脚本运行结束后，读 JSON 文件，用表格展示（含发布时间）：
+按顺序执行，成功即停：
 
-```
-# 抖音搜索结果：{关键词}
-共 {N} 条 | TOP {M}（按点赞排行）：
+1. 同一命令加 `--trace retain-on-failure`，使用 OpenCLI autofix 修复现有 adapter；总尝试最多 3 次。
+2. 若 `opencli doctor` 仍正常但 adapter 持续失败，使用 `opencli browser douyin-search bind` 绑定用户当前已登录的抖音标签页，仅做读取和取证。执行浏览器降级前说明会操作当前标签页。
+3. 仍失败则报告 `BLOCKED`，记录失败层级和原始错误，不得临时安装 DrissionPage、Playwright、浏览器或自制爬虫。
 
-| # | 作者 | ❤️点赞 | 💬评论 | 📅发布时间 | 标题 |
-|---|------|--------|--------|------------|------|
-| 1 | {作者} | {点赞} | {评论} | {create_time_str} | {标题} |
-```
+## 输出与判断
 
-- 时间字段用 `create_time_str`（格式 YYYY-MM-DD HH:MM）
-- 超过 30 天前的发布时间加粗标记（`**2026-01-05**`），让用户快速识别旧内容
-- 如果用户问"有没有 xxx 博主"，逐条检查 author 字段回答
+先展示搜索健康状态和实际返回条数，再展示结果表：
 
-### 5. 选题分析
+| # | 作者 | 点赞 | 标题 | 链接 |
+|---|------|------|------|------|
+| 1 | author | likes/不可用 | desc | url |
 
-展示结果后，自动附上选题分析，包含：
+- 互动字段缺失或返回 `0` 时写“不可用/未验证”，不得断言真实互动为零。
+- 返回空数组时写 `EMPTY_OR_FIELD_UNAVAILABLE`；不能据此断言抖音上没有相关内容。
+- 事实性结论必须回到原视频或权威来源核验；搜索结果只能作为发现证据。
+- 用户要求选题分析时，再总结内容类型、重复角度和差异化机会；不得补造搜索结果未提供的事实。
+- 指定 `episode` 时，把关键词、执行时间、OpenCLI 健康状态、实际条数、命令和结果摘要写入本期 `00-抖音搜索证据.md`。
 
-**内容类型分布**：统计各类型视频数量（安装教程/进阶技巧/方法论/对比评测/实战/资源推荐）
+## 边界
 
-**热门选题规律**：从标题和互动数据中总结 2-4 条规律（如哪些角度流量高、哪些话题红海、哪些角度竞品少）
-
-**差异化机会**：基于搜索结果，指出老韩（寒武纪AI）可切入的选题方向，重点看竞品未覆盖的领域（Skills/Hooks/多Agent协作/飞书控制等 OpenClaw 独家经验）
-
-当参数含 `--episode episodes/<slug>` 时，额外把本次 JSON 的路径、关键词、采集时间和前 20 条结果摘要写入 `episodes/<slug>/00-抖音搜索证据.md`。本 skill 不写 `00-选题.md`，避免与 laohan-redian 重复拥有选题真值。
-
-## 操作规则
-
-- **首次运行需建 venv 装依赖**（持久位置，重启不丢）：
-  ```bash
-  mkdir -p ~/.douyin-search-profile
-  python3 -m venv ~/.douyin-search-profile/.venv
-  ~/.douyin-search-profile/.venv/bin/pip install DrissionPage browser-cookie3
-  ```
-- **Chrome 必须已安装**：脚本硬编码 `/Applications/Google Chrome.app` 路径
-- **依赖登录态**：Profile 5 登录抖音 → `extract_cookies.py` 抽 cookie → search.py 注入。全程免扫码
-- **脚本是阻塞的**：运行时间 = 滚动次数 × ~5秒 + cookie 注入/登录等待。30 条约需 1-2 分钟
-- **弹独立 Chrome 窗口**：脚本会弹一个独立 Chrome 跑搜索，跑完自动关。**不动用户日常 Chrome**
-- **不同关键词结果完全不同**：抖音搜索算法对用户画像和关键词匹配权重高
-
-## 已知限制
-
-- author_id 全部为空（搜索 API 不返回）
-- plays 全部为 0（搜索 API 不返回播放量）
-- 不支持排序/时间筛选（API 需签名，UI 点击触发验证码）
-- 如需筛选，建议多采集后 Python 后处理
-- cookie 会过期（抖音 sessionid 几天到几周），失效重跑 extract_cookies.py
-
-## 不适用场景
-
-- 下载抖音视频 → 用 `/laohan-xiazai`：先由 `opencli douyin user-videos` 取得临时 `play_url` 并立即下载；失败才走移动端 UA + iesdouyin `_ROUTER_DATA` 等抖音专用降级链。抖音不存在 YouTube/yt-dlp 下载路径。
-- 抓取抖音评论 → 用 douyin-session adapter
-- 博主作品列表 → 用 `opencli douyin user-videos`
+- 下载视频、博主作品列表：用 `/laohan-xiazai`。
+- 评论、发布、账号运营：用 `/laohan-yunying` 或对应 OpenCLI adapter。
+- 禁止 DrissionPage、`browser_cookie3` cookie 注入、独立 user-data-dir、额外 Chrome/Chromium、后台自动发布或回复。

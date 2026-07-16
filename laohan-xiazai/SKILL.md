@@ -91,7 +91,7 @@ opencli doctor
 | 小红书 | opencli xiaohongshu | agent-reach | Scrapling stealthy | — |
 | 微博 | opencli weibo | agent-reach | Jina Reader | — |
 | B站 | opencli bilibili | agent-reach | Jina Reader | — |
-| 抖音 | `opencli douyin search`（视频流搜索） | DrissionPage（→ `references/douyin.md` / `/laohan-douyinsousuo`，需大量采集/排序时） | agent-reach | douyin-session（评论） |
+| 抖音 | `opencli douyin search`（视频流搜索） | 同命令 trace/autofix | `opencli browser` 绑定当前登录页只读取证 | douyin-session（评论） |
 | TikTok | opencli tiktok（需 Browser Bridge） | agent-reach | Scrapling stealthy | — |
 | 任意平台 | agent-reach（13平台搜索/阅读，含 GitHub/RSS/V2EX/Twitter/Reddit/小宇宙/Exa 等 opencli 不覆盖的） | web-content-fetcher | Jina Reader | Scrapling stealthy |
 

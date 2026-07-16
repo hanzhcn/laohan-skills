@@ -272,7 +272,7 @@ opencli douyin stats <aweme_id> -f json
 
 ## 关键词搜索
 
-首选 `opencli douyin search`（视频流搜索，opencli 内部解决 a_bogus 签名）；需要更大量/排序筛选时降级 DrissionPage。
+统一使用 `opencli douyin search`（视频流搜索，OpenCLI 内部维护 adapter 和签名）。不再安装或维护另一套浏览器爬虫。
 
 ### 第1选：opencli douyin search
 
@@ -281,28 +281,13 @@ opencli douyin search "关键词" --limit 30 -f json
 # 输出列：rank, desc, author, url, plays, likes, comments, shares
 ```
 
-- `--limit 1-30`（default 10），返回真实视频流（含播放/点赞/评论/分享数 + 视频地址）
+- `--limit 1-30`（default 10），返回视频流和视频地址；互动字段是否可用以当次响应为准
 - 需 Browser Bridge（`opencli doctor` 查状态）
 - 这是视频搜索，区别于 `hashtag search`（只搜话题标签）
 
-### 第2选：DrissionPage 监听（需大量采集/排序筛选时）
+失败时按现有 OpenCLI 能力降级：同一命令加 `--trace retain-on-failure` 并运行 autofix；最多三次仍失败且 `opencli doctor` 正常时，用 `opencli browser` 绑定当前已登录抖音标签页做只读取证。全部失败就报告 `BLOCKED`，不安装 DrissionPage、Playwright、另一套浏览器或自制 adapter。
 
-```bash
-cd /tmp/douyin-test && source .venv/bin/activate
-python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 30 --scroll 10
-```
-
-- 首次需安装：`cd /tmp/douyin-test && python3 -m venv .venv && source .venv/bin/activate && pip install DrissionPage`
-- 需要登录态：首次扫码，后续自动复用 Chrome profile
-- 输出：按点赞排行 TOP 20 + JSON 保存到 `/tmp/douyin-test/{关键词}_results.json`
-- JSON 字段：title, author, likes, comments, shares, plays(始终0), create_time, create_time_str, aweme_id, url
-- 也可直接触发 `/laohan-douyinsousuo`（含选题分析）
-
-已知限制：
-- author_id 全部为空（搜索 API 不返回）
-- plays 全部为 0（搜索 API 不返回播放量）
-- 不支持排序/时间筛选（API 需 a_bogus 签名，UI 点击触发验证码）
-- 如需筛选，建议多采集后 Python 后处理
+已知限制：互动字段缺失或为 `0` 只能记为不可用，不能当作真实零；空数组也不能直接证明平台没有相关内容。
 
 ### 搜索方案对比
 
@@ -310,8 +295,8 @@ python ~/.agents/skills/laohan-douyinsousuo/scripts/search.py "关键词" --min 
 |------|------|------|
 | `opencli douyin search` | 视频流（rank/desc/author/url/plays/likes/comments/shares） | **首选**，日常关键词搜索 |
 | `opencli douyin hashtag search` | 话题标签（name/id/view_count） | 选题调研，不返回视频 |
-| DrissionPage（laohan-douyinsousuo） | 视频流 + 排行 | 需大量采集/排序，需登录态 |
-| ECC Playwright `browser_run_code` | 少量视频（约10条） | 快速预览 |
+| OpenCLI trace/autofix | 修复当前 adapter | 主命令异常时，最多三次 |
+| `opencli browser` 绑定当前标签页 | 当前登录页只读取证 | adapter 持续失败时 |
 | 纯 requests 调搜索 API | ❌ | a_bogus 签名校验，不可行 |
 
 ## 话题与热点

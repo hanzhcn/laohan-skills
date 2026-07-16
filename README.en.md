@@ -193,7 +193,7 @@ Layer 6  Precision control    → Playwright / web-access CDP (code-level contro
 
 Covers: Video download / search aggregation / web extraction / comment scraping / speech transcription / creator data
 
-Integrated tools: opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · DrissionPage · tesseract · wx_video_download
+Integrated tools: opencli · agent-reach · AnySearch · yt-dlp · Scrapling · browser-use · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download
 
 ```
 You: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文字
@@ -207,9 +207,9 @@ You: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文�
 
 ### 🔍 douyinsousuo (Douyin Search)
 
-> *"No Douyin search API? Build one yourself."*
+> *"When a mature search path exists, do not maintain a second browser stack."*
 
-DrissionPage packet listener + scroll collection, ranked by likes TOP 20 + topic analysis. Search competitors, discover topics, track trends.
+Orchestrates the installed OpenCLI for login preflight, keyword search, and topic analysis. Failures stay within the OpenCLI adapter, trace/autofix, and Browser Bridge path, with no separate browser runtime.
 
 ```
 You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
@@ -247,17 +247,16 @@ Mac + Windows installer packages. Install and use directly. Based on MITM proxy 
 
 | Tool | Install | Enhances which skills |
 |------|---------|----------------------|
-| [opencli](https://github.com/jackwener/opencli) | `npm i -g @jackwener/opencli` | xiazai (Bilibili/Xiaohongshu download, trending, search) |
+| [opencli](https://github.com/jackwener/opencli) | `npm i -g @jackwener/opencli` | xiazai (Bilibili/Xiaohongshu download, trending, search), douyinsousuo (Douyin search) |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | `brew install yt-dlp` | xiazai (YouTube download) |
 | [ffmpeg](https://ffmpeg.org/) | `brew install ffmpeg` | xiazai (audio/video transcoding), chuangzuo (audio extraction), luping (recording) |
 | [Playwright](https://playwright.dev/) | `npm i -g playwright && npx playwright install chromium` | xiazai (browser scraping), luping (browser recording) |
 | [tmux](https://github.com/tmux/tmux) | `brew install tmux` | luping (terminal recording) |
 | SiliconFlow API Key | Register at [siliconflow.cn](https://siliconflow.cn) (free) | xiazai (cloud transcription), chuangzuo (speech-to-text) |
-| [DrissionPage](https://github.com/g1879/DrissionPage) + Chrome | `pip install DrissionPage` | douyinsousuo (Douyin search) |
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm (slide generation) |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo (local transcription) |
 
-Skills with no extra dependencies: redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing
+Skills with no extra dependencies: redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing. douyinsousuo reuses the installed opencli and no longer ships a Python/browser runtime.
 
 ---
 

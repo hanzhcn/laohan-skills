@@ -2,6 +2,13 @@
 
 所有重要变更都会记录在此文件中。
 
+## [Unreleased] - 2026-07-17
+
+### 变更
+
+- **laohan-douyinsousuo** v3.0.0 — 删除 DrissionPage、cookie 注入、独立 Chrome profile 与项目脚本，改为只编排已安装的 OpenCLI；失败链固定为 adapter → trace/autofix → OpenCLI Browser Bridge。
+- **laohan-xiazai** — 抖音关键词搜索移除 DrissionPage/Playwright 降级，统一回到 OpenCLI 成熟能力。
+
 ## [1.4.0] - 2026-06-14
 
 ### 新增
