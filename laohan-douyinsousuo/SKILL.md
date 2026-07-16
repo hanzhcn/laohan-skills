@@ -1,7 +1,7 @@
 ---
 name: laohan-douyinsousuo
-description: 抖音关键词搜索与选题分析。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"或提到"在抖音搜""抖音的xxx情况""抖音里xxx排行"。
-version: "3.0.0"
+description: 抖音关键词搜索与结构化取证 adapter，只使用已安装且已登录的 OpenCLI；独立回答搜索请求，或为真人口播①写本期抖音证据，不决定最终选题。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"，或 bianpai/选题流程要求抖音关键词验证。
+version: "3.2.0"
 ---
 
 # 抖音搜索
@@ -12,7 +12,7 @@ version: "3.0.0"
 
 - `query`：必填，搜索关键词。
 - `limit`：可选，1—30，默认 30。
-- `episode`：可选，本期 `episodes/<slug>` 路径；只允许写 `00-抖音搜索证据.md`，不得写 `00-选题.md`。
+- `episode`：可选，本期 `episodes/<slug>` 路径；只允许写 `00-抖音搜索证据.json` 与 `.md`，不得写 candidates、source-health 或 `00-选题.*`。
 
 ## 执行
 
@@ -27,11 +27,23 @@ opencli douyin whoami -f json
 
 ### 2. 搜索
 
+Episode 模式用确定性包装器一次执行 1—3 个短名单查询并原子写 JSON/Markdown：
+
+```bash
+node ~/Documents/laohan-skills/laohan-douyinsousuo/scripts/search-evidence.mjs \
+  --episode episodes/<slug> \
+  --query "关键词一" \
+  --query "关键词二" \
+  --limit 10
+```
+
+独立单查询可直接执行：
+
 ```bash
 opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 ```
 
-结果必须是 JSON 数组，并逐条保留 OpenCLI 返回的 `rank`、`desc`、`author`、`url` 及可用互动字段。不要按缺失字段重排，也不要把 OpenCLI 的结果顺序描述成“按点赞排行”。
+结果必须是 JSON 数组，并逐条保留 OpenCLI 返回的 `rank`、`desc`、`author`、`url` 及可用互动字段。为每条计算稳定 id（`sha256(query + rank + url + desc)[:12]`）；不要按缺失字段重排，也不要把 OpenCLI 的结果顺序描述成“按点赞排行”。
 
 ### 3. 失败降级
 
@@ -52,8 +64,33 @@ opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 - 互动字段缺失或返回 `0` 时写“不可用/未验证”，不得断言真实互动为零。
 - 返回空数组时写 `EMPTY_OR_FIELD_UNAVAILABLE`；不能据此断言抖音上没有相关内容。
 - 事实性结论必须回到原视频或权威来源核验；搜索结果只能作为发现证据。
-- 用户要求选题分析时，再总结内容类型、重复角度和差异化机会；不得补造搜索结果未提供的事实。
-- 指定 `episode` 时，把关键词、执行时间、OpenCLI 健康状态、实际条数、命令和结果摘要写入本期 `00-抖音搜索证据.md`。
+- 用户单独要求搜索分析时，可总结结果中可见的内容类型和重复角度；不得决定工作流最终选题，不得补造搜索结果未提供的事实。
+- 指定 `episode` 时必须使用 runtime-locked 包装器，先写机器真源 `00-抖音搜索证据.json`，再从它生成 `.md`；Markdown 不得新增 JSON 没有的结论。
+
+Episode JSON 最小合同：
+
+```json
+{
+  "schema_version": 1,
+  "collected_at": "ISO-8601",
+  "executor": {
+    "name": "opencli",
+    "version": "实际版本",
+    "doctor_status": "PASS",
+    "logged_in": true
+  },
+  "queries": [{
+    "query": "关键词",
+    "command": "opencli douyin search ... -f json",
+    "attempted_at": "ISO-8601",
+    "status": "OK|EMPTY_OR_FIELD_UNAVAILABLE|FAILED",
+    "result_count": 1,
+    "results": [{"id":"稳定id","rank":1,"desc":"原字段","author":"原字段","url":"https://..."}]
+  }]
+}
+```
+
+`OK` 必须 `result_count > 0` 且等于 results 长度；`EMPTY_OR_FIELD_UNAVAILABLE` 必须为 0 和空数组；FAILED 必须为 0、空数组并有 `error`。全部查询 FAILED 时报告 BLOCKED。
 
 ## 边界
 

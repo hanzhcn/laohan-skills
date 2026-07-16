@@ -240,13 +240,57 @@ const topicState = () => safely(() => {
   const config = readJson('episode-config.json');
   if (config.schema_version === 2) {
     const types = new Set(['PRIMARY', 'PLATFORM_SIGNAL', 'SECONDARY']);
-    if (!topic.evidence.every((item) => types.has(item.source_type) && typeof item.url === 'string' && /^https?:\/\//.test(item.url) && !Number.isNaN(Date.parse(item.retrieved_at)))) return {done: false, reason: 'schema 2 选题 evidence 必须声明 source_type、可访问 URL 与 retrieved_at'};
-    if (!exists('00-选题-source-health.json')) return {done: false, reason: 'schema 2 选题缺 00-选题-source-health.json'};
+    const requiredFiles = ['00-选题-signals.json', '00-选题-candidates.json', '00-选题-source-health.json', '00-抖音搜索证据.json', '00-抖音搜索证据.md'];
+    if (!requiredFiles.every(nonEmptyFile)) return {done: false, reason: 'schema 2 选题必须有 signals/candidates/source-health/抖音 JSON+Markdown 全部本期产物'};
+    const futureLimit = Date.now() + 5 * 60 * 1000;
+    const validTime = (value) => !Number.isNaN(Date.parse(value)) && Date.parse(value) <= futureLimit;
+    const uniqueNonEmpty = (items) => Array.isArray(items) && items.length > 0 && new Set(items).size === items.length && items.every((item) => typeof item === 'string' && item.trim());
+    const validEvidence = (item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim() && types.has(item.source_type) && typeof item.url === 'string' && /^https?:\/\//.test(item.url) && validTime(item.retrieved_at);
+    if (!uniqueNonEmpty(topic.evidence.map((item) => item?.id)) || !topic.evidence.every(validEvidence) || !topic.evidence.some((item) => item.source_type === 'PRIMARY') || !topic.evidence.some((item) => item.source_type === 'PLATFORM_SIGNAL')) return {done: false, reason: 'schema 2 最终 evidence 必须唯一、可访问、时间有效，且同时含 PRIMARY 与 PLATFORM_SIGNAL'};
+
+    const signals = readJson('00-选题-signals.json');
+    const signalSources = Array.isArray(signals.sources) ? signals.sources : [];
+    const signalSourceIds = signalSources.map((item) => item?.source_id);
+    const signalIds = signalSources.flatMap((item) => Array.isArray(item?.results) ? item.results.map((result) => result?.id) : []);
+    const signalStatuses = new Set(['OK', 'EMPTY', 'FAILED']);
+    if (signals.schema_version !== 1 || signals.episode !== basename(episodeDir) || !validTime(signals.collected_at) || !uniqueNonEmpty(signalSourceIds) || !signalSources.every((item) => typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && signalStatuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && Array.isArray(item.results) && item.results.length === item.result_count && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && item.record_sha256 === createHash('sha256').update(JSON.stringify(item.results)).digest('hex')) || !uniqueNonEmpty(signalIds)) return {done: false, reason: 'signals 必须绑定本期、route/结果 ID 唯一、状态条数一致且 record SHA 正确'};
+
+    const candidates = readJson('00-选题-candidates.json');
+    const candidateItems = Array.isArray(candidates.candidates) ? candidates.candidates : [];
+    const candidateIds = candidateItems.map((item) => item?.id);
+    const candidateEvidence = Array.isArray(candidates.evidence) ? candidates.evidence : [];
+    const candidateEvidenceIds = candidateEvidence.map((item) => item?.id);
+    const scoreKeys = ['audience_fit', 'evidence_strength', 'platform_relevance', 'differentiation', 'production_feasibility', 'learning_value'];
+    const validScorecard = (scorecard) => scorecard && scoreKeys.every((key) => Number.isInteger(scorecard[key]) && scorecard[key] >= 1 && scorecard[key] <= 5) && typeof scorecard.rationale === 'string' && scorecard.rationale.trim();
+    if (candidates.schema_version !== 1 || !validTime(candidates.collected_at) || candidateItems.length < 2 || !uniqueNonEmpty(candidateIds) || !uniqueNonEmpty(candidateEvidenceIds) || !candidateEvidence.every(validEvidence) || !candidateItems.every((item) => typeof item.title === 'string' && item.title.trim() && typeof item.audience_problem === 'string' && item.audience_problem.trim() && typeof item.thesis === 'string' && item.thesis.trim() && uniqueNonEmpty(item.signal_ids) && item.signal_ids.every((id) => signalIds.includes(id)) && uniqueNonEmpty(item.evidence_ids) && item.evidence_ids.every((id) => candidateEvidenceIds.includes(id)) && validScorecard(item.scorecard) && typeof item.rationale === 'string' && item.rationale.trim() && ['SELECTED', 'REJECTED'].includes(item.disposition)) || candidateItems.filter((item) => item.disposition === 'SELECTED').length !== 1) return {done: false, reason: 'candidates 必须至少两个、引用真实 signals/evidence、六维分数完整且只有一个 SELECTED'};
+    const selected = candidateItems.find((item) => item.disposition === 'SELECTED');
+    const rejectedIds = candidateItems.filter((item) => item.disposition === 'REJECTED').map((item) => item.id);
+    if (topic.selected_candidate_id !== selected.id || !uniqueNonEmpty(topic.rejected_candidate_ids) || !topic.rejected_candidate_ids.every((id) => rejectedIds.includes(id)) || typeof topic.selection_rationale !== 'string' || !topic.selection_rationale.trim() || !topic.evidence.every((item) => selected.evidence_ids.includes(item.id))) return {done: false, reason: '最终选题必须绑定唯一 SELECTED、非空淘汰项、选择理由及其候选 evidence'};
+
+    const douyin = readJson('00-抖音搜索证据.json');
+    const queryStatuses = new Set(['OK', 'EMPTY_OR_FIELD_UNAVAILABLE', 'FAILED']);
+    const queryItems = Array.isArray(douyin.queries) ? douyin.queries : [];
+    const douyinResultIds = queryItems.flatMap((query) => Array.isArray(query?.results) ? query.results.map((item) => item?.id) : []);
+    const validDouyinResult = (item) => item && typeof item.id === 'string' && item.id.trim() && Number.isInteger(item.rank) && item.rank > 0 && typeof item.desc === 'string' && item.desc.trim() && typeof item.author === 'string' && item.author.trim() && typeof item.url === 'string' && /^https?:\/\//.test(item.url);
+    if (douyin.schema_version !== 1 || !validTime(douyin.collected_at) || !douyin.executor || douyin.executor.name !== 'opencli' || typeof douyin.executor.version !== 'string' || !douyin.executor.version.trim() || douyin.executor.doctor_status !== 'PASS' || douyin.executor.logged_in !== true || !queryItems.length || !queryItems.every((query) => typeof query.query === 'string' && query.query.trim() && typeof query.command === 'string' && query.command.includes('opencli douyin search') && validTime(query.attempted_at) && queryStatuses.has(query.status) && Number.isInteger(query.result_count) && query.result_count >= 0 && Array.isArray(query.results) && query.results.length === query.result_count && query.results.every(validDouyinResult) && ((query.status === 'OK' && query.result_count > 0) || (query.status !== 'OK' && query.result_count === 0)) && (query.status !== 'FAILED' || (typeof query.error === 'string' && query.error.trim()))) || queryItems.every((query) => query.status === 'FAILED') || (douyinResultIds.length > 0 && !uniqueNonEmpty(douyinResultIds))) return {done: false, reason: '抖音证据必须绑定真实 OpenCLI 登录、合法查询状态/结果；全部 FAILED 不放行'};
+
     const health = readJson('00-选题-source-health.json');
     const statuses = new Set(['OK', 'EMPTY', 'FAILED', 'SKIPPED']);
-    if (health.schema_version !== 1 || Number.isNaN(Date.parse(health.collected_at)) || !Array.isArray(health.sources) || !health.sources.length || !health.sources.every((item) => typeof item.source_id === 'string' && item.source_id.trim() && typeof item.command_or_url === 'string' && item.command_or_url.trim() && !Number.isNaN(Date.parse(item.attempted_at)) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim()))) || !health.sources.some((item) => item.status === 'OK' && item.result_count > 0)) return {done: false, reason: 'source health 必须如实记录每路状态，且至少一路有真实结果'};
+    const roles = new Set(['DISCOVERY', 'DOUYIN_SEARCH', 'PRIMARY_PROOF']);
+    const healthSources = Array.isArray(health.sources) ? health.sources : [];
+    const healthIds = healthSources.map((item) => item?.source_id);
+    const validResultFile = (item) => {
+      if (typeof item.result_file !== 'string' || !item.result_file.trim() || item.result_file.includes('..') || !nonEmptyFile(item.result_file)) return false;
+      return /^[a-f0-9]{64}$/.test(item.result_sha256 || '') && item.result_sha256 === shaPath(file(item.result_file));
+    };
+    if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthIds) || !healthSources.every((item) => roles.has(item.source_role) && typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && (item.status !== 'SKIPPED' || (typeof item.reason === 'string' && item.reason.trim())) && validResultFile(item)) || !healthSources.some((item) => item.source_role === 'DISCOVERY' && item.status === 'OK') || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && item.status === 'OK')) return {done: false, reason: 'source health 必须三类角色齐全、状态/条数一致，并绑定本期真实结果文件 SHA'};
+    if (!healthSources.filter((item) => item.source_role === 'DISCOVERY').every((item) => signalSourceIds.includes(item.source_id)) || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && item.result_file === '00-抖音搜索证据.json') || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && topic.evidence.some((evidence) => evidence.source_type === 'PRIMARY' && evidence.url === item.command_or_url))) return {done: false, reason: 'source health 必须绑定 signals route、抖音 JSON 与最终 PRIMARY URL'};
+
+    const targetKeys = Array.isArray(experiment.metric_targets) ? experiment.metric_targets.map((item) => item?.key) : [];
+    const directions = new Set(['INCREASE', 'DECREASE', 'MAINTAIN']);
+    if (Number(experiment.observation_window.slice(2)) <= 0 || experiment.observation_window_unit !== 'DAY' || !uniqueNonEmpty(targetKeys) || targetKeys.length !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => targetKeys.includes(key)) || !experiment.metric_targets.every((item) => allowedMetricKeys.has(item.key) && directions.has(item.direction) && typeof item.baseline_ref === 'string' && item.baseline_ref.trim() && item.measurement_source === 'douyin_creator_center')) return {done: false, reason: 'schema 2 experiment 必须用正整数 T+N/DAY，并为每个 metric key 预注册方向、基线和抖音创作者中心来源'};
   }
-  return {done: true, reason: '选题合同已登记'};
+  return {done: true, reason: '选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
   if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
@@ -382,7 +426,7 @@ const commentState = () => safely(() => {
 let directProduction = false;
 try { directProduction = readJson('episode-config.json').renderer_mode === 'CODEX_DIRECT'; } catch {}
 const steps = [
-  {id: '①', name: '选题', skill: 'laohan-redian（主写）+ laohan-douyinsousuo（证据）', done: () => topicState().done, output: '00-选题.md + 00-选题.json（受众/论点/证据/实验）'},
+  {id: '①', name: '选题决策', skill: 'laohan-redian（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
   {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '01-口播稿.md + 02-创作工作稿/创作决策.json'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
