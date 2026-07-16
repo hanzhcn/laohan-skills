@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.7.0"
+version: "1.8.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -46,7 +46,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 ## 硬规则
 
 - schema 2在①前必须有distribution contract与executor lock；⑥开始前distribution必须锁定。⑦前必须有shooting_contract；⑦通过后Claude Code交接Codex执行⑧—⑪。⑨前必须有绑定当前raw/稿件的raw-transcript、edit-candidates、schema 2 edit-decision、edit-render、clean、large-v3 clean-transcript/SRT provenance、spoken-script-variance、Codex edit-review与schema 5 edit-manifest；候选必须逐项裁决，不确定KEEP，不路由人工审批。
-- schema 2 的①必须同时有 signals、至少两个 candidates、source health、抖音 JSON+Markdown 与最终选题；唯一 SELECTED 必须绑定 PRIMARY+PLATFORM_SIGNAL、真实 OpenCLI 搜索和逐键测量目标。任意单源 OK、热度或 Markdown 摘要都不能单独放行。③报告必须绑定未过期 ruleset 并声明 `platform_guarantee: false`；⑥必须分别登记 prompt executor、image provider 和 selection mode。`AUTONOMOUS_RUN` 只接受非 Jeffrey 的 `AGENT_PROXY`，`REVIEW_GATED` 只接受 `JEFFREY`。
+- schema 2 的①必须同时有 signals、至少两个 candidates、source health、抖音 JSON+Markdown 与最终选题；新候选合同使用 schema 2，唯一 SELECTED 必须锁定 `opinion-video|tutorial-video`、受众水平/承诺/前置/术语、PRIMARY+PLATFORM_SIGNAL claim map、`ALIGNED` 平台语义和逐键测量目标。教程入选还必须有本期真实执行证据、版本边界和恢复方法。④ `content_form` 必须与①一致。任意单源 OK、相邻热度或 Markdown 摘要都不能单独放行。③报告必须绑定未过期 ruleset 并声明 `platform_guarantee: false`；⑥必须分别登记 prompt executor、image provider 和 selection mode。`AUTONOMOUS_RUN` 只接受非 Jeffrey 的 `AGENT_PROXY`，`REVIEW_GATED` 只接受 `JEFFREY`。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA 与 Jeffrey 接受。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。
