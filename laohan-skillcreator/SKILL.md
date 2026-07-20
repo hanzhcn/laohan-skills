@@ -1,7 +1,7 @@
 ---
 name: laohan-skillcreator
 version: 2.2.0
-description: 创建、审计、修复和优化 Agent Skills。Use when 用户要新建 Skill、检查 Skill 质量、恢复原版或修正明确错误、比较新旧效果，或更新本 Skill 借鉴的上游方法。
+description: 创建、审计、修复和优化 Agent Skills。Use when 用户要新建 Skill、检查 Skill 质量、恢复原版或修正明确错误、比较新旧效果，或更新本 Skill 借鉴的上游方法。触发词："创建skill""写一个skill""改skill""优化skill""给skill打分""skill体检""review skill"。
 ---
 
 # laohan Skill 创建·审计·修复·优化器
@@ -294,7 +294,7 @@ description: 一句话说清做什么。Use when 用户说"触发词1""触发词
 ### 反例黑名单（v2 新，darwin 8 条精简）
 
 创建/优化时禁止：
-1. **不把自评当验收** — 同一 session 可做静态诊断；确定性候选接受需独立机械 verifier + held-out，主观候选需 blind judge + held-out
+1. **不把自评当验收** — 同一 session 可做静态诊断；确定性候选接受需独立机械 verifier + held-out，主观候选需 blind judge + held-out（OPTIMIZE/复杂候选接受时）
 2. **不先 commit 再评** — 先在工作副本比较；只在候选已单独 commit 且获授权时用 `git revert`
 3. **不为凑分堆冗余** — 触顶（连续 2 轮 Δ<2 分）就停
 4. **不把静态分冒充验收分** — `AUDIT` 可标 `STRUCTURE_ONLY`；只有 `OPTIMIZE` 的效果改善结论必须有 baseline/with-skill/held-out 行为证据

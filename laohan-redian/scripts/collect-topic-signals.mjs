@@ -75,6 +75,7 @@ function collectOpencli(sourceId, commandArgs) {
   const attemptedAt = nowIso();
   const command = ['opencli', ...commandArgs].join(' ');
   const run = spawnSync('opencli', commandArgs, {encoding: 'utf8', timeout: 90000, maxBuffer: 16 * 1024 * 1024});
+  // status 66 = opencli EMPTY_RESULT (EX_NOINPUT)，"无数据/未命中"的合法退出码；当 OK 放行，结果数量由后续 stdout 解析决定（空 -> EMPTY，有数据 -> OK）
   if (run.error || ![0, 66].includes(run.status)) {
     return {source_id: sourceId, command_or_url: command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: String(run.error?.message || run.stderr || `exit ${run.status}`).trim(), results: []};
   }

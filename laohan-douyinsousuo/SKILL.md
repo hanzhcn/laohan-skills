@@ -11,7 +11,7 @@ version: "3.3.0"
 ## 输入
 
 - `query`：必填，搜索关键词。
-- `limit`：可选，1—30，默认 30。
+- `limit`：可选，1—30，默认 10。
 - `episode`：可选，本期 `episodes/<slug>` 路径；只允许写 `00-抖音搜索证据.json` 与 `.md`，不得写 candidates、source-health 或 `00-选题.*`。
 
 ## 执行

@@ -49,10 +49,10 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 ## 硬规则
 
 - schema 2在①前必须有distribution contract与executor lock；⑥开始前distribution必须锁定。⑦前必须有shooting_contract；⑦通过后Claude Code交接Codex执行⑧—⑪。⑨前必须有绑定当前raw/稿件的raw-transcript、edit-candidates、schema 2 edit-decision、edit-render、clean、large-v3 clean-transcript/SRT provenance、spoken-script-variance、Codex edit-review与schema 5 edit-manifest；候选必须逐项裁决，不确定KEEP，不路由人工审批。
-- schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。唯一 SELECTED 必须锁定 why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
+- schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。唯一 SELECTED 必须锁定 why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。教程型 lane 的 SELECTED 候选还必须绑定 `tutorial_proof`：`status: VERIFIED`、本机真实执行产物的 `evidence_path` 与 `evidence_sha256`、`version_boundary` 与 `recovery` 方法，对应 CLAUDE.md 第13条“教程写成确定步骤前仍须本机真实执行、版本边界和恢复方法”。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
 - schema 2 的②必须用 schema 2 `创作决策.json` 绑定当前稿 hash、最终标题、Step -1—7 执行状态、Step 3 规划、至少两项原创增量和六关质量结论。稿件 hash 改变时旧记录立即失效。
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
-- ⑥固定生成3种风格×3个尺寸（3:4、4:3、16:9）共9张真实候选；提示词声明 `REFERENCE_REQUIRED` 时，9次 provider request、selected cover 与 review 必须逐项绑定本期 reference 路径/SHA。最终只能选1个风格并保留其3个尺寸；provider 必须等于 executor lock 的⑥ image-provider，不能把未携带头像的新图生成冒充 reference edit。
+- ⑥固定生成3种风格×3个尺寸（3:4、4:3、16:9）共9张真实候选；提示词声明 `REFERENCE_REQUIRED` 时，9次 provider request、selected cover 与 review 必须逐项绑定本期 reference 路径/SHA。最终只能选1个风格并保留其3个尺寸；provider 必须等于 executor lock 的⑥ image-provider，不能把未携带头像的新图生成冒充 reference edit。候选 `style_id` 固定为 `V1`/`V2`/`V3`，尺寸后缀固定为 `3x4`/`4x3`/`16x9`，`candidate_id` 固定为 `${style_id}-${size_suffix}`（如 `V1-3x4`）；该命名契约与 `laohan-fengmianqiuzhi` 候选命名强耦合，改命名必须两 skill 同步。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA 与 Jeffrey 接受。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。

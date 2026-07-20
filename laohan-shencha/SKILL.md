@@ -25,7 +25,7 @@ LLM 写技术文档时天然相信自己写的声明是对的。本 Skill 的唯
 
 ## CONTENT_CLAIMS 模式（真人口播⑤）
 
-输入是 `episodes/<slug>/01-口播稿.md`，输出固定为 `04-事实核验.md` 与 `04-事实主张.json`。报告开头必须含 `script_hash: <当前稿 SHA-256>`、`fact_check_status: CLEAR|REVISE_REQUIRED|BLOCKED`、`contradicted_count` 与 `unverifiable_count` frontmatter。claims JSON 必须含当前 script_hash、事实报告 SHA、每项外部主张的稳定 `claim_id`、原句、`SUPPORTED|INFERRED|CONTRADICTED|UNVERIFIABLE|OPINION` 结论及来源证据。能由来源直接读出的才写 `SUPPORTED`；从实现、多个来源或行为推导出的结论写 `INFERRED`，并提供非空 `inference_note`。个人经验、价值判断、比喻与行动建议标为 `OPINION`。
+输入是 `episodes/<slug>/01-口播稿.md`，输出固定为 `04-事实核验.md` 与 `04-事实主张.json`。报告开头必须含 `script_hash: <当前稿 SHA-256>`、`fact_check_status: CLEAR|REVISE_REQUIRED|BLOCKED`、`contradicted_count` 与 `unverifiable_count` frontmatter。claims JSON 必须含当前 script_hash、事实报告 SHA、每项外部主张的稳定 `claim_id`、原句、`SUPPORTED|INFERRED|CONTRADICTED|UNVERIFIABLE|OPINION` 结论及来源证据。只提取会影响观众判断、且能被外部证据验证的主张：机构行为、职位/产品定义、数字、增速、政策、研究结论、原话引用和时间关系。能由来源直接读出的才写 `SUPPORTED`；从实现、多个来源或行为推导出的结论写 `INFERRED`，并提供非空 `inference_note`。个人经验、价值判断、比喻与行动建议标为 `OPINION`。
 
 `04-事实主张.json` 最小结构：`schema_version: 1`、`script_sha256`、`fact_report_sha256`、`claims` 数组；每项至少含稳定 `claim_id`、`statement`、`verdict`、`evidence` 数组。每个证据项必须有稳定 `id`，并且二选一：外部证据写 `url`、`source_type`、`retrieved_at`；本期本地证据写 episode 内 `local_path` 与文件 `sha256`。两个 SHA 字段必须分别等于当前 `01-口播稿.md` 与 `04-事实核验.md` 的 SHA-256。无可核验主张时仍写空 `claims` 数组，不能省略文件或伪造来源。
 
