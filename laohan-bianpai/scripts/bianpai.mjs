@@ -111,8 +111,9 @@ const complianceState = () => safely(() => {
   const reviewed = Date.parse(field('ruleset_reviewed_at'));
   const expires = Date.parse(field('ruleset_expires_at'));
   const completed = Date.parse(field('scan_completed_at'));
-  if (!field('ruleset_version') || Number.isNaN(reviewed) || Number.isNaN(expires) || Number.isNaN(completed) || completed < reviewed || completed > expires || field('platform_guarantee') !== 'false') return {done: false, reason: 'schema 2 违规报告必须绑定有效 ruleset_version/reviewed/expires/scan 时间并声明 platform_guarantee: false'};
-  return {done: true, reason: '违规报告已绑定当前稿和有效规则集；CLEAR 不代表平台保证'};
+  if (!field('ruleset_version') || Number.isNaN(reviewed) || Number.isNaN(expires) || Number.isNaN(completed) || completed < reviewed || field('platform_guarantee') !== 'false') return {done: false, reason: 'schema 2 违规报告必须绑定 ruleset_version/reviewed/expires/scan 时间并声明 platform_guarantee: false'};
+  if (completed > expires && field('ruleset_warning') !== 'STALE') return {done: false, reason: '过期规则集不自动阻断文案，但报告必须写 ruleset_warning: STALE'};
+  return {done: true, reason: completed > expires ? '违规报告已绑定当前稿；规则集过期已警告，不因过期压平文案' : '违规报告已绑定当前稿和当前规则集；CLEAR 不代表平台保证'};
 }, '02-违规报告.md 无法读取');
 const imageDimensions = (path) => {
   const bytes = readFileSync(path);
@@ -151,7 +152,9 @@ const coverState = () => safely(() => {
   if (!exists('05-封面/selected-cover.json')) return {done: false, reason: '缺 05-封面/selected-cover.json'};
   const cover = readJson('05-封面/selected-cover.json');
   const review = readJson('05-封面/cover-review.json');
+  const providerRequests = readJson('05-封面/provider-requests.json');
   const config = readJson('episode-config.json');
+  const executorLock = readJson('00-编排/executor-lock.json');
   const assetRoot = realpathSync(file('05-封面')) + '/';
   const assetPath = resolve(episodeDir, cover.selected_asset || '');
   const scriptTitle = readFileSync(file('01-口播稿.md'), 'utf8').match(/^#\s+(.+)$/m)?.[1]?.trim();
@@ -160,13 +163,69 @@ const coverState = () => safely(() => {
   const dimensions = actualAsset ? imageDimensions(actualAsset) : null;
   const expectedSelectionMode = config.workflow_mode === 'AUTONOMOUS_RUN' ? 'AGENT_PROXY' : 'JEFFREY';
   const autonomousReviewerInvalid = config.workflow_mode === 'AUTONOMOUS_RUN' && typeof review.reviewer === 'string' && review.reviewer.toLowerCase().includes('jeffrey');
+  const lockedImageProvider = executorLock.selected_executors?.find((item) => String(item.node) === '6' && item.kind === 'image-provider')?.id;
+  const referencePath = resolve(episodeDir, cover.reference_asset || '');
+  const validReference = cover.reference_mode === 'NONE'
+    ? cover.reference_asset == null && cover.reference_sha256 == null
+    : cover.reference_mode === 'REQUIRED' && typeof cover.reference_asset === 'string' && cover.reference_asset.startsWith('05-封面/reference/') && existsSync(referencePath) && realpathSync(referencePath).startsWith(assetRoot) && shaPath(referencePath) === cover.reference_sha256;
+  const requests = Array.isArray(providerRequests.requests) ? providerRequests.requests : [];
+  const candidateObjects = Array.isArray(review.candidates) ? review.candidates : [];
+  const styleObjects = Array.isArray(review.styles) ? review.styles : [];
+  const requiredStyles = ['V1', 'V2', 'V3'];
+  const requiredSizes = [
+    {suffix: '3x4', aspect_ratio: '3:4', width: 1080, height: 1440},
+    {suffix: '4x3', aspect_ratio: '4:3', width: 1440, height: 1080},
+    {suffix: '16x9', aspect_ratio: '16:9', width: 1920, height: 1080}
+  ];
+  const requiredCandidateIds = requiredStyles.flatMap((styleId) => requiredSizes.map((size) => `${styleId}-${size.suffix}`));
+  const candidateIds = candidateObjects.map((candidate) => candidate?.candidate_id);
+  const candidateAssets = candidateObjects.map((candidate) => candidate?.asset);
+  const candidateHashes = [];
+  const validCandidateRequests = candidateObjects.length === 9 && candidateObjects.every((candidate) => {
+    if (!candidate || typeof candidate !== 'object' || typeof candidate.candidate_id !== 'string' || typeof candidate.style_id !== 'string' || typeof candidate.aspect_ratio !== 'string' || typeof candidate.asset !== 'string' || typeof candidate.thumbnail !== 'string') return false;
+    const size = requiredSizes.find((item) => item.aspect_ratio === candidate.aspect_ratio);
+    if (!requiredStyles.includes(candidate.style_id) || !size || candidate.candidate_id !== `${candidate.style_id}-${size.suffix}` || candidate.canvas?.width !== size.width || candidate.canvas?.height !== size.height) return false;
+    const candidateAsset = resolve(episodeDir, candidate.asset);
+    const thumbnail = resolve(episodeDir, candidate.thumbnail);
+    if (!existsSync(candidateAsset) || !existsSync(thumbnail) || !realpathSync(candidateAsset).startsWith(assetRoot) || !realpathSync(thumbnail).startsWith(assetRoot)) return false;
+    const candidateDimensions = imageDimensions(candidateAsset);
+    if (!candidateDimensions || candidateDimensions.width !== size.width || candidateDimensions.height !== size.height) return false;
+    const request = requests.find((item) => item?.candidate_id === candidate.candidate_id && item?.output_asset === candidate.asset);
+    candidateHashes.push(shaPath(candidateAsset));
+    return request && request.style_id === candidate.style_id && request.aspect_ratio === candidate.aspect_ratio && request.canvas?.width === size.width && request.canvas?.height === size.height
+      && request.image_provider === cover.image_provider && request.source_prompt && request.output_sha256 === shaPath(candidateAsset)
+      && request.reference_mode === cover.reference_mode && request.reference_asset === cover.reference_asset && request.reference_sha256 === cover.reference_sha256
+      && candidate.readability === 'PASS' && candidate.script_consistency === 'PASS';
+  });
+  const selectedStyles = styleObjects.filter((style) => style?.verdict === 'SELECTED');
+  const styleIds = styleObjects.map((style) => style?.style_id);
+  const validStyleSelection = styleObjects.length === 3 && new Set(styleIds).size === 3 && requiredStyles.every((styleId) => styleIds.includes(styleId))
+    && styleObjects.every((style) => requiredStyles.includes(style?.style_id) && ['SELECTED', 'NOT_SELECTED'].includes(style?.verdict) && typeof style?.reason === 'string' && style.reason.trim())
+    && selectedStyles.length === 1 && selectedStyles[0].style_id === cover.selected_style_id && review.selected_style_id === cover.selected_style_id;
+  const selectedAssets = Array.isArray(cover.selected_assets) ? cover.selected_assets : [];
+  const validSelectedAssets = selectedAssets.length === 3 && requiredSizes.every((size) => {
+    const selected = selectedAssets.find((item) => item?.aspect_ratio === size.aspect_ratio);
+    const expectedId = `${cover.selected_style_id}-${size.suffix}`;
+    const candidate = candidateObjects.find((item) => item?.candidate_id === expectedId);
+    const request = requests.find((item) => item?.candidate_id === expectedId && item?.output_asset === candidate?.asset);
+    return selected?.candidate_id === expectedId && selected?.canvas?.width === size.width && selected?.canvas?.height === size.height
+      && selected?.asset === candidate?.asset && selected?.source_prompt === request?.source_prompt;
+  });
+  const selectedAssetPaths = selectedAssets.map((item) => item?.asset);
+  const reviewSelectedAssets = Array.isArray(review.selected_assets) ? review.selected_assets : [];
+  const primarySelected = selectedAssets.find((item) => item?.aspect_ratio === '16:9');
+  const validCandidateSet = new Set(candidateIds).size === 9 && new Set(candidateAssets).size === 9 && new Set(candidateHashes).size === 9
+    && requiredCandidateIds.every((candidateId) => candidateIds.includes(candidateId));
+  const validReviewSelection = reviewSelectedAssets.length === 3 && new Set(reviewSelectedAssets).size === 3
+    && selectedAssetPaths.every((selectedAsset) => reviewSelectedAssets.includes(selectedAsset))
+    && primarySelected?.asset === cover.selected_asset && primarySelected?.source_prompt === cover.source_prompt;
   if (!cover.selected_asset || !cover.title || !cover.canvas?.width || !cover.canvas?.height || cover.script_hash !== scriptHash()
     || !actualAsset.startsWith(assetRoot) || !dimensions || !Array.isArray(cover.large_text) || !cover.large_text.some((text) => typeof text === 'string' && text.trim())
-    || cover.canvas.width !== config.canvas?.width || cover.canvas.height !== config.canvas?.height
-    || dimensions.width !== config.canvas?.width || dimensions.height !== config.canvas?.height || cover.title !== scriptTitle
-    || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || !Array.isArray(review.candidates) || review.candidates.length < 2 || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
-    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || cover.selection_mode !== expectedSelectionMode || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode || autonomousReviewerInvalid))) {
-    return {done: false, reason: 'selected-cover 必须引用本期 05-封面内的真实 PNG/JPEG，真实像素、标题、large_text、画布和 script_hash 必须匹配当前稿/config；AUTONOMOUS_RUN 只接受非 Jeffrey 的 AGENT_PROXY，REVIEW_GATED 只接受 JEFFREY'};
+    || cover.canvas.width !== 1920 || cover.canvas.height !== 1080
+    || dimensions.width !== 1920 || dimensions.height !== 1080 || cover.title !== scriptTitle
+    || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
+    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || cover.image_provider !== lockedImageProvider || cover.selection_mode !== expectedSelectionMode || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode || review.reference_mode !== cover.reference_mode || review.reference_asset !== cover.reference_asset || review.reference_sha256 !== cover.reference_sha256 || providerRequests.schema_version !== 1 || providerRequests.script_hash !== scriptHash() || providerRequests.image_provider !== cover.image_provider || providerRequests.reference_mode !== cover.reference_mode || providerRequests.reference_asset !== cover.reference_asset || providerRequests.reference_sha256 !== cover.reference_sha256 || !validReference || !validCandidateRequests || !validCandidateSet || !validStyleSelection || !validSelectedAssets || !validReviewSelection || autonomousReviewerInvalid))) {
+    return {done: false, reason: 'selected-cover 必须绑定3种风格×3个尺寸共9张唯一真实候选；唯一SELECTED风格必须保留3个尺寸并逐项绑定provider request/source_prompt/reference；AUTONOMOUS_RUN只接受非Jeffrey的AGENT_PROXY'};
   }
   return {done: true, reason: '封面选择已登记'};
 }, 'selected-cover.json 无法读取');
@@ -204,6 +263,13 @@ const calibrationState = () => safely(() => {
   const scoreOutputPath = resolve(calibrationRoot, scoreProof.score_output || '');
   const scoreStateSnapshot = resolve(calibrationRoot, scoreProof.lane_state_snapshot || '');
   if (scoreProof.episode !== basename(episodeDir) || scoreProof.command !== 'cheat-score' || scoreProof.script_hash !== scriptHash() || !scoreProof.lane_state_snapshot || scoreProof.lane_state_snapshot.includes('..') || !existsSync(scoreStateSnapshot) || !realpathSync(scoreStateSnapshot).startsWith(realpathSync(calibrationRoot) + '/') || createHash('sha256').update(readFileSync(scoreStateSnapshot)).digest('hex') !== scoreProof.lane_state_snapshot_sha256 || !scoreProof.score_output || scoreProof.score_output.includes('..') || !existsSync(scoreOutputPath) || !realpathSync(scoreOutputPath).startsWith(realpathSync(calibrationRoot) + '/') || createHash('sha256').update(readFileSync(scoreOutputPath)).digest('hex') !== scoreProof.score_output_sha256) return {done: false, reason: 'score_evidence 未绑定本期当前稿和 score 时点的 lane 状态快照'};
+  const scoreOutput = readFileSync(scoreOutputPath, 'utf8');
+  const payloadText = [...scoreOutput.matchAll(/```json\s*([\s\S]*?)```/g)].map((match) => match[1].trim()).find((text) => { try { return JSON.parse(text)?.dimensions; } catch { return false; } });
+  const payload = payloadText ? JSON.parse(payloadText) : null;
+  const snapshotState = JSON.parse(readFileSync(scoreStateSnapshot, 'utf8'));
+  const dimensions = payload?.dimensions && Object.values(payload.dimensions);
+  const expectedEvidenceLevel = Number(snapshotState.calibration_samples || 0) === 0 ? 'COLD_START_DIAGNOSTIC' : 'CALIBRATED';
+  if (!payloadText || createHash('sha256').update(payloadText).digest('hex') !== scoreProof.score_payload_sha256 || payload.script_hash !== scriptHash() || payload.rubric_version !== snapshotState.rubric_version || !Array.isArray(dimensions) || !dimensions.length || !dimensions.every((item) => Number.isFinite(item?.score) && item.score >= 0 && item.score <= 5 && typeof item.reason === 'string' && item.reason.trim()) || payload.input_status?.any_other_file_read !== false || payload.self_check?.any_contamination_signal !== false || payload.refusal != null || scoreProof.evidence_level !== expectedEvidenceLevel) return {done: false, reason: 'score_evidence 缺合法原始隔离评分 JSON，或存在污染/拒评/冷启动标记错误'};
   const state = JSON.parse(readFileSync(join(calibrationRoot, '.cheat-state.json'), 'utf8'));
   if (state.content_form !== contentForm) return {done: false, reason: 'lane 的 content_form 与报告不一致'};
   if (predictionStatus === 'RECORDED') {
@@ -218,16 +284,23 @@ const calibrationState = () => safely(() => {
       || proof.prediction_revision !== predictionRevision || predictionScriptHash !== scriptHash() || !proof.prediction_revision || !existsSync(laneScriptPath) || !realpathSync(predictionPath).startsWith(realpathSync(calibrationRoot) + '/') || !realpathSync(laneScriptPath).startsWith(realpathSync(calibrationRoot) + '/') || sha(laneScriptPath) !== scriptHash()) {
       return {done: false, reason: '预测证据未绑定当前稿、预测文件或 lane 稿件快照'};
     }
-    return {done: true, scoreDone: true, predictionStatus, phase: 'COMPLETE', reason: contentForm + ' score 与盲预测已落盘'};
+    return {done: true, scoreDone: true, predictionStatus, phase: 'COMPLETE', reason: contentForm + ' score 与盲预测已落盘；' + expectedEvidenceLevel};
   }
-  return {done: false, scoreDone: true, predictionStatus, phase: 'PARTIAL', reason: contentForm + ' score 已落盘（PARTIAL），等待⑤后写盲预测'};
+  return {done: false, scoreDone: true, predictionStatus, phase: 'PARTIAL', reason: contentForm + ' score 已落盘（PARTIAL，' + expectedEvidenceLevel + '），等待⑤后写盲预测'};
 }, '03-校准报告.md 无法读取');
 const deepScanState = () => safely(() => {
   const review = conclusionState('04-深扫报告.md', '04-深扫报告.md', 'review_status', ['unresolved_issue_count']);
   if (!review.done) return review;
   const facts = conclusionState('04-事实核验.md', '04-事实核验.md', 'fact_check_status', ['contradicted_count', 'unverifiable_count']);
   if (!facts.done) return facts;
-  return {done: true, reason: '深扫与事实核验均匹配当前稿且结论 CLEAR'};
+  if (!exists('04-事实主张.json')) return {done: false, reason: '缺 04-事实主张.json'};
+  const claims = readJson('04-事实主张.json');
+  const verdicts = new Set(['SUPPORTED', 'INFERRED', 'CONTRADICTED', 'UNVERIFIABLE', 'OPINION']);
+  const ids = Array.isArray(claims.claims) ? claims.claims.map((item) => item?.claim_id) : [];
+  const validEvidence = (item) => item && typeof item.id === 'string' && item.id.trim() && ((typeof item.url === 'string' && /^https?:\/\//.test(item.url)) || (typeof item.local_path === 'string' && item.local_path.trim() && /^[a-f0-9]{64}$/.test(item.sha256 || '')));
+  const validClaim = (item) => item && typeof item.statement === 'string' && item.statement.trim() && verdicts.has(item.verdict) && Array.isArray(item.evidence) && item.evidence.every(validEvidence) && (['OPINION', 'UNVERIFIABLE'].includes(item.verdict) || item.evidence.length > 0) && (item.verdict !== 'INFERRED' || (typeof item.inference_note === 'string' && item.inference_note.trim()));
+  if (claims.schema_version !== 1 || claims.script_sha256 !== scriptHash() || claims.fact_report_sha256 !== shaPath(file('04-事实核验.md')) || ids.length !== new Set(ids).size || ids.some((id) => typeof id !== 'string' || !id.trim()) || !claims.claims.every(validClaim)) return {done: false, reason: '04-事实主张.json 必须绑定当前稿/报告，claim_id 唯一，结论与证据合法；INFERRED 必须写 inference_note'};
+  return {done: true, reason: '⑤机械合同通过：报告与事实主张均绑定当前稿；内容判断由专业 skill 负责'};
 }, '⑤报告无法读取');
 const materialState = () => {
   if (!exists('09-导演/source-manifest.json')) return {done: false, reason: '缺 09-导演/source-manifest.json'};
@@ -248,7 +321,7 @@ const topicState = () => safely(() => {
     const validTime = (value) => !Number.isNaN(Date.parse(value)) && Date.parse(value) <= futureLimit;
     const uniqueNonEmpty = (items) => Array.isArray(items) && items.length > 0 && new Set(items).size === items.length && items.every((item) => typeof item === 'string' && item.trim());
     const validEvidence = (item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim() && types.has(item.source_type) && typeof item.url === 'string' && /^https?:\/\//.test(item.url) && validTime(item.retrieved_at);
-    if (!uniqueNonEmpty(topic.evidence.map((item) => item?.id)) || !topic.evidence.every(validEvidence) || !topic.evidence.some((item) => item.source_type === 'PRIMARY') || !topic.evidence.some((item) => item.source_type === 'PLATFORM_SIGNAL')) return {done: false, reason: 'schema 2 最终 evidence 必须唯一、可访问、时间有效，且同时含 PRIMARY 与 PLATFORM_SIGNAL'};
+    if (!uniqueNonEmpty(topic.evidence.map((item) => item?.id)) || !topic.evidence.every(validEvidence) || !topic.evidence.some((item) => item.source_type === 'PRIMARY')) return {done: false, reason: 'schema 2 最终 evidence 必须唯一、可访问、时间有效，且至少含 PRIMARY'};
 
     const signals = readJson('00-选题-signals.json');
     const signalSources = Array.isArray(signals.sources) ? signals.sources : [];
@@ -262,36 +335,60 @@ const topicState = () => safely(() => {
     const candidateIds = candidateItems.map((item) => item?.id);
     const candidateEvidence = Array.isArray(candidates.evidence) ? candidates.evidence : [];
     const candidateEvidenceIds = candidateEvidence.map((item) => item?.id);
+    const screening = candidates.screening_summary;
+    const longlist = Array.isArray(screening?.longlist) ? screening.longlist : [];
+    const signalSourceById = new Map(signalSources.flatMap((source) => (source.results || []).map((result) => [result.id, source.source_id])));
+    const validLonglistItem = (item) => item && typeof item.event_cluster_id === 'string' && item.event_cluster_id.trim() && typeof item.working_title === 'string' && item.working_title.trim() && uniqueNonEmpty(item.signal_ids) && item.signal_ids.every((id) => signalIds.includes(id)) && Number.isInteger(item.source_count) && item.source_count === new Set(item.signal_ids.map((id) => signalSourceById.get(id))).size && ['SHORTLISTED', 'REJECTED'].includes(item.disposition) && typeof item.reason === 'string' && item.reason.trim();
     const scoreKeys = ['audience_fit', 'evidence_strength', 'platform_relevance', 'differentiation', 'production_feasibility', 'learning_value'];
     const validScorecard = (scorecard) => scorecard && scoreKeys.every((key) => Number.isInteger(scorecard[key]) && scorecard[key] >= 1 && scorecard[key] <= 5) && typeof scorecard.rationale === 'string' && scorecard.rationale.trim();
     const nonEmptyStrings = (items) => Array.isArray(items) && items.every((item) => typeof item === 'string' && item.trim()) && new Set(items).size === items.length;
     const validClaimMap = (item) => Array.isArray(item.claim_evidence_map) && item.claim_evidence_map.length > 0 && uniqueNonEmpty(item.claim_evidence_map.map((claim) => claim?.claim_id)) && item.claim_evidence_map.every((claim) => typeof claim.claim === 'string' && claim.claim.trim() && uniqueNonEmpty(claim.evidence_ids) && claim.evidence_ids.every((id) => item.evidence_ids.includes(id)));
     const evidenceTypesFor = (item) => new Set(item.claim_evidence_map.flatMap((claim) => claim.evidence_ids).map((id) => candidateEvidence.find((evidence) => evidence.id === id)?.source_type));
-    const validAlignment = (item) => item.platform_alignment && ['ALIGNED', 'ADJACENT', 'CONTRADICTED', 'UNRESOLVED'].includes(item.platform_alignment.status) && typeof item.platform_alignment.rationale === 'string' && item.platform_alignment.rationale.trim() && uniqueNonEmpty(item.platform_alignment.evidence_ids) && item.platform_alignment.evidence_ids.every((id) => item.evidence_ids.includes(id) && candidateEvidence.find((evidence) => evidence.id === id)?.source_type === 'PLATFORM_SIGNAL');
+    const validAlignment = (item) => {
+      const alignment = item.platform_alignment;
+      if (!alignment || !['ALIGNED', 'ADJACENT', 'CONTRADICTED', 'UNRESOLVED', 'UNAVAILABLE'].includes(alignment.status) || typeof alignment.rationale !== 'string' || !alignment.rationale.trim() || !Array.isArray(alignment.evidence_ids)) return false;
+      if (alignment.status === 'UNAVAILABLE') return alignment.evidence_ids.length === 0;
+      return uniqueNonEmpty(alignment.evidence_ids) && alignment.evidence_ids.every((id) => item.evidence_ids.includes(id) && candidateEvidence.find((evidence) => evidence.id === id)?.source_type === 'PLATFORM_SIGNAL');
+    };
+    const validContentGap = (item) => {
+      const gap = item.content_gap;
+      if (!gap || !['CONFIRMED', 'NOT_CONFIRMED', 'UNAVAILABLE'].includes(gap.status) || typeof gap.rationale !== 'string' || !gap.rationale.trim() || !Array.isArray(gap.evidence_ids)) return false;
+      if (gap.status === 'UNAVAILABLE') return gap.evidence_ids.length === 0;
+      return uniqueNonEmpty(gap.evidence_ids) && gap.evidence_ids.every((id) => item.evidence_ids.includes(id) && candidateEvidence.find((evidence) => evidence.id === id)?.source_type === 'PLATFORM_SIGNAL');
+    };
     const validTutorialProof = (item) => {
       if (item.content_form !== 'tutorial-video' || item.disposition !== 'SELECTED') return true;
       const proof = item.tutorial_proof;
       return proof?.status === 'VERIFIED' && typeof proof.evidence_path === 'string' && proof.evidence_path.trim() && !proof.evidence_path.includes('..') && nonEmptyFile(proof.evidence_path) && /^[a-f0-9]{64}$/.test(proof.evidence_sha256 || '') && proof.evidence_sha256 === shaPath(file(proof.evidence_path)) && typeof proof.version_boundary === 'string' && proof.version_boundary.trim() && typeof proof.recovery === 'string' && proof.recovery.trim();
     };
     const validV2Candidate = (item) => {
-      if (!['opinion-video', 'tutorial-video'].includes(item.content_form) || !['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(item.audience_level) || typeof item.audience_promise !== 'string' || !item.audience_promise.trim() || !nonEmptyStrings(item.assumed_prerequisites) || !nonEmptyStrings(item.jargon_to_explain) || typeof item.platform_query_intent !== 'string' || !item.platform_query_intent.trim() || !validAlignment(item) || !validClaimMap(item) || !validTutorialProof(item)) return false;
+      if (typeof item.event_cluster_id !== 'string' || !item.event_cluster_id.trim() || typeof item.why_now !== 'string' || !item.why_now.trim() || !['opinion-video', 'tutorial-video'].includes(item.content_form) || !['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(item.audience_level) || typeof item.audience_promise !== 'string' || !item.audience_promise.trim() || !nonEmptyStrings(item.assumed_prerequisites) || !nonEmptyStrings(item.jargon_to_explain) || typeof item.platform_query_intent !== 'string' || !item.platform_query_intent.trim() || !validAlignment(item) || !validContentGap(item) || !validClaimMap(item) || !validTutorialProof(item)) return false;
       const mappedTypes = evidenceTypesFor(item);
-      return mappedTypes.has('PRIMARY') && mappedTypes.has('PLATFORM_SIGNAL') && (item.disposition !== 'SELECTED' || item.platform_alignment.status === 'ALIGNED');
+      return mappedTypes.has('PRIMARY') && (item.platform_alignment.status === 'UNAVAILABLE' || mappedTypes.has('PLATFORM_SIGNAL')) && (item.disposition !== 'SELECTED' || ['ALIGNED', 'ADJACENT', 'UNAVAILABLE'].includes(item.platform_alignment.status));
     };
     const validBaseCandidate = (item) => typeof item.title === 'string' && item.title.trim() && typeof item.audience_problem === 'string' && item.audience_problem.trim() && typeof item.thesis === 'string' && item.thesis.trim() && uniqueNonEmpty(item.signal_ids) && item.signal_ids.every((id) => signalIds.includes(id)) && uniqueNonEmpty(item.evidence_ids) && item.evidence_ids.every((id) => candidateEvidenceIds.includes(id)) && validScorecard(item.scorecard) && typeof item.rationale === 'string' && item.rationale.trim() && ['SELECTED', 'REJECTED'].includes(item.disposition);
-    if (![1, 2].includes(candidates.schema_version) || !validTime(candidates.collected_at) || candidateItems.length < 2 || !uniqueNonEmpty(candidateIds) || !uniqueNonEmpty(candidateEvidenceIds) || !candidateEvidence.every(validEvidence) || !candidateItems.every((item) => validBaseCandidate(item) && (candidates.schema_version === 1 || validV2Candidate(item))) || candidateItems.filter((item) => item.disposition === 'SELECTED').length !== 1) return {done: false, reason: 'candidates 必须至少两个、引用真实 signals/evidence、六维分数完整且只有一个 SELECTED；schema 2 还须锁定 lane、小白合同、claim map 与平台语义对齐'};
+    const minLonglist = Math.min(8, screening?.event_cluster_count || 0);
+    const shortlistedClusters = new Set(longlist.filter((item) => item?.disposition === 'SHORTLISTED').map((item) => item.event_cluster_id));
+    const candidateClusters = new Set(candidateItems.map((item) => item?.event_cluster_id));
+    const validScreening = screening && screening.raw_signal_count === signalIds.length && Number.isInteger(screening.event_cluster_count) && screening.event_cluster_count >= longlist.length && longlist.length >= minLonglist && longlist.length <= 12 && new Set(longlist.map((item) => item?.event_cluster_id)).size === longlist.length && longlist.every(validLonglistItem) && [...candidateClusters].every((id) => shortlistedClusters.has(id)) && [...shortlistedClusters].every((id) => candidateClusters.has(id));
+    if (![1, 2].includes(candidates.schema_version) || !validTime(candidates.collected_at) || candidateItems.length < 2 || !uniqueNonEmpty(candidateIds) || !uniqueNonEmpty(candidateEvidenceIds) || !candidateEvidence.every(validEvidence) || (candidates.schema_version === 2 && !validScreening) || !candidateItems.every((item) => validBaseCandidate(item) && (candidates.schema_version === 1 || validV2Candidate(item))) || candidateItems.filter((item) => item.disposition === 'SELECTED').length !== 1) return {done: false, reason: 'candidates 必须留下 signals→longlist→短名单链路，引用真实 evidence、六维分数完整且只有一个 SELECTED；schema 2 同时锁定 why-now、lane、小白合同、claim map 与平台语义状态'};
     const selected = candidateItems.find((item) => item.disposition === 'SELECTED');
     const rejectedIds = candidateItems.filter((item) => item.disposition === 'REJECTED').map((item) => item.id);
     if (topic.selected_candidate_id !== selected.id || !uniqueNonEmpty(topic.rejected_candidate_ids) || !topic.rejected_candidate_ids.every((id) => rejectedIds.includes(id)) || typeof topic.selection_rationale !== 'string' || !topic.selection_rationale.trim() || !topic.evidence.every((item) => selected.evidence_ids.includes(item.id))) return {done: false, reason: '最终选题必须绑定唯一 SELECTED、非空淘汰项、选择理由及其候选 evidence'};
-    if (candidates.schema_version === 2 && (topic.schema_version !== 2 || topic.content_form !== selected.content_form || topic.audience_level !== selected.audience_level || topic.audience_promise !== selected.audience_promise || JSON.stringify(topic.assumed_prerequisites) !== JSON.stringify(selected.assumed_prerequisites) || JSON.stringify(topic.jargon_to_explain) !== JSON.stringify(selected.jargon_to_explain) || topic.platform_query_intent !== selected.platform_query_intent || JSON.stringify(topic.platform_alignment) !== JSON.stringify(selected.platform_alignment) || JSON.stringify(topic.claim_evidence_map) !== JSON.stringify(selected.claim_evidence_map))) return {done: false, reason: 'schema 2 最终选题必须原样绑定 SELECTED 的 lane、小白合同、平台对齐与 claim evidence map'};
+    if (candidates.schema_version === 2 && (topic.schema_version !== 2 || topic.content_form !== selected.content_form || topic.audience_level !== selected.audience_level || topic.audience_promise !== selected.audience_promise || JSON.stringify(topic.assumed_prerequisites) !== JSON.stringify(selected.assumed_prerequisites) || JSON.stringify(topic.jargon_to_explain) !== JSON.stringify(selected.jargon_to_explain) || topic.platform_query_intent !== selected.platform_query_intent || JSON.stringify(topic.platform_alignment) !== JSON.stringify(selected.platform_alignment) || JSON.stringify(topic.content_gap) !== JSON.stringify(selected.content_gap) || JSON.stringify(topic.claim_evidence_map) !== JSON.stringify(selected.claim_evidence_map))) return {done: false, reason: 'schema 2 最终选题必须原样绑定 SELECTED 的 lane、小白合同、平台对齐、内容缺口与 claim evidence map'};
+    if (selected.platform_alignment.status !== 'UNAVAILABLE' && !topic.evidence.some((item) => item.source_type === 'PLATFORM_SIGNAL')) return {done: false, reason: '平台可用的 schema 2 最终 evidence 必须含 PLATFORM_SIGNAL'};
     if (candidates.schema_version === 1 && topic.schema_version !== 1) return {done: false, reason: '历史 candidates schema 1 必须匹配 topic schema 1'};
 
     const douyin = readJson('00-抖音搜索证据.json');
     const queryStatuses = new Set(['OK', 'EMPTY_OR_FIELD_UNAVAILABLE', 'FAILED']);
     const queryItems = Array.isArray(douyin.queries) ? douyin.queries : [];
-    const douyinResultIds = queryItems.flatMap((query) => Array.isArray(query?.results) ? query.results.map((item) => item?.id) : []);
-    const validDouyinResult = (item) => item && typeof item.id === 'string' && item.id.trim() && Number.isInteger(item.rank) && item.rank > 0 && typeof item.desc === 'string' && item.desc.trim() && typeof item.author === 'string' && item.author.trim() && typeof item.url === 'string' && /^https?:\/\//.test(item.url);
-    if (douyin.schema_version !== 1 || !validTime(douyin.collected_at) || !douyin.executor || douyin.executor.name !== 'opencli' || typeof douyin.executor.version !== 'string' || !douyin.executor.version.trim() || douyin.executor.doctor_status !== 'PASS' || douyin.executor.logged_in !== true || !queryItems.length || !queryItems.every((query) => typeof query.query === 'string' && query.query.trim() && typeof query.command === 'string' && query.command.includes('opencli douyin search') && validTime(query.attempted_at) && queryStatuses.has(query.status) && Number.isInteger(query.result_count) && query.result_count >= 0 && Array.isArray(query.results) && query.results.length === query.result_count && query.results.every(validDouyinResult) && ((query.status === 'OK' && query.result_count > 0) || (query.status !== 'OK' && query.result_count === 0)) && (query.status !== 'FAILED' || (typeof query.error === 'string' && query.error.trim()))) || queryItems.every((query) => query.status === 'FAILED') || (douyinResultIds.length > 0 && !uniqueNonEmpty(douyinResultIds))) return {done: false, reason: '抖音证据必须绑定真实 OpenCLI 登录、合法查询状态/结果；全部 FAILED 不放行'};
+    const validDouyinResult = (item) => {
+      if (!item || typeof item.id !== 'string' || !item.id.trim() || !Number.isInteger(item.rank) || item.rank < 1 || typeof item.desc !== 'string' || !item.desc.trim() || typeof item.author !== 'string' || !item.author.trim() || typeof item.url !== 'string' || !/^https?:\/\//.test(item.url)) return false;
+      const fields = ['plays', 'likes', 'comments', 'shares'];
+      return item.field_availability && fields.every((key) => typeof item.field_availability[key] === 'boolean' && (item.field_availability[key] ? typeof item[key] === 'number' && Number.isFinite(item[key]) : item[key] === null));
+    };
+    const executorAvailable = douyin.executor?.availability_status === 'AVAILABLE';
+    if (douyin.schema_version !== 1 || !validTime(douyin.collected_at) || !douyin.executor || douyin.executor.name !== 'opencli' || typeof douyin.executor.version !== 'string' || !douyin.executor.version.trim() || !['PASS', 'FAILED'].includes(douyin.executor.doctor_status) || !['AVAILABLE', 'UNAVAILABLE'].includes(douyin.executor.availability_status) || typeof douyin.executor.logged_in !== 'boolean' || (executorAvailable && (douyin.executor.doctor_status !== 'PASS' || douyin.executor.logged_in !== true)) || !queryItems.length || !queryItems.every((query) => typeof query.query === 'string' && query.query.trim() && typeof query.command === 'string' && query.command.includes('opencli douyin search') && validTime(query.attempted_at) && queryStatuses.has(query.status) && Number.isInteger(query.result_count) && query.result_count >= 0 && Array.isArray(query.results) && query.results.length === query.result_count && query.results.every(validDouyinResult) && ((query.status === 'OK' && query.result_count > 0) || (query.status !== 'OK' && query.result_count === 0)) && (query.status !== 'FAILED' || (typeof query.error === 'string' && query.error.trim()))) || (queryItems.every((query) => query.status === 'FAILED') && douyin.executor.availability_status !== 'UNAVAILABLE')) return {done: false, reason: '抖音证据必须绑定真实 OpenCLI 预检、合法查询状态/结果，并把不可用与真实 0 分开'};
 
     const health = readJson('00-选题-source-health.json');
     const statuses = new Set(['OK', 'EMPTY', 'FAILED', 'SKIPPED']);
@@ -302,7 +399,7 @@ const topicState = () => safely(() => {
       if (typeof item.result_file !== 'string' || !item.result_file.trim() || item.result_file.includes('..') || !nonEmptyFile(item.result_file)) return false;
       return /^[a-f0-9]{64}$/.test(item.result_sha256 || '') && item.result_sha256 === shaPath(file(item.result_file));
     };
-    if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthIds) || !healthSources.every((item) => roles.has(item.source_role) && typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && (item.status !== 'SKIPPED' || (typeof item.reason === 'string' && item.reason.trim())) && validResultFile(item)) || !healthSources.some((item) => item.source_role === 'DISCOVERY' && item.status === 'OK') || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && item.status === 'OK')) return {done: false, reason: 'source health 必须三类角色齐全、状态/条数一致，并绑定本期真实结果文件 SHA'};
+    if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthIds) || !healthSources.every((item) => roles.has(item.source_role) && typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && (item.status !== 'SKIPPED' || (typeof item.reason === 'string' && item.reason.trim())) && validResultFile(item)) || !healthSources.some((item) => item.source_role === 'DISCOVERY' && item.status === 'OK') || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY', 'FAILED'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && item.status === 'OK')) return {done: false, reason: 'source health 必须三类角色齐全、状态/条数一致，并绑定本期真实结果文件 SHA；Douyin FAILED 只表示 UNAVAILABLE'};
     if (!healthSources.filter((item) => item.source_role === 'DISCOVERY').every((item) => signalSourceIds.includes(item.source_id)) || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && item.result_file === '00-抖音搜索证据.json') || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && topic.evidence.some((evidence) => evidence.source_type === 'PRIMARY' && evidence.url === item.command_or_url))) return {done: false, reason: 'source health 必须绑定 signals route、抖音 JSON 与最终 PRIMARY URL'};
 
     const targetKeys = Array.isArray(experiment.metric_targets) ? experiment.metric_targets.map((item) => item?.key) : [];
@@ -316,8 +413,18 @@ const scriptState = () => safely(() => {
   const topic = readJson('00-选题.json');
   const decision = readJson('02-创作工作稿/创作决策.json');
   const nonEmptyStrings = (items) => Array.isArray(items) && items.length > 0 && items.every((item) => typeof item === 'string' && item.trim());
-  if (decision.schema_version !== 1 || decision.topic_thesis !== topic.thesis || decision.hypothesis_id !== topic.experiment?.hypothesis_id || typeof decision.active_style_file !== 'string' || !decision.active_style_file.trim() || typeof decision.structure_tool !== 'string' || !decision.structure_tool.trim() || typeof decision.structure_rationale !== 'string' || !decision.structure_rationale.trim() || !nonEmptyStrings(decision.fact_boundary) || typeof decision.expected_audience_effect !== 'string' || !decision.expected_audience_effect.trim() || !nonEmptyStrings(decision.alternative_structures) || !nonEmptyStrings(decision.unproven_assumptions) || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0) return {done: false, reason: '创作决策必须绑定①论点/假设，并声明风格、结构及理由、替代结构、事实边界、待验证假设、预期效果与时长'};
-  return {done: true, reason: '创作决策已绑定选题合同'};
+  const scriptBody = readFileSync(file('01-口播稿.md'), 'utf8');
+  const title = scriptBody.match(/^#\s+(.+)$/m)?.[1]?.trim();
+  const steps = decision.execution_steps || {};
+  const completedSteps = ['step_minus_1', 'step_0', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6', 'step_7'];
+  const skippedOrCompleted = ['pre_a_b', 'step_1', 'step_1_5'];
+  const plan = decision.argument_plan || {};
+  const checks = decision.quality_checks || {};
+  const checkKeys = ['content_floor', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
+  const validPlan = ['opening_contract', 'reasoning_path', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'].every((key) => typeof plan[key] === 'string' && plan[key].trim());
+  const validSteps = completedSteps.every((key) => steps[key]?.status === 'COMPLETED') && skippedOrCompleted.every((key) => ['COMPLETED', 'SKIPPED'].includes(steps[key]?.status) && typeof steps[key]?.reason === 'string' && steps[key].reason.trim());
+  if (decision.schema_version !== 2 || decision.topic_thesis !== topic.thesis || decision.hypothesis_id !== topic.experiment?.hypothesis_id || decision.content_form !== topic.content_form || decision.audience !== topic.audience || decision.script_hash !== scriptHash() || decision.script_title !== title || Number.isNaN(Date.parse(decision.completed_at)) || typeof decision.input_mode !== 'string' || !decision.input_mode.trim() || typeof decision.active_style_file !== 'string' || !decision.active_style_file.trim() || !/^[a-f0-9]{64}$/.test(decision.active_style_sha256 || '') || typeof decision.structure_tool !== 'string' || !decision.structure_tool.trim() || typeof decision.structure_rationale !== 'string' || !decision.structure_rationale.trim() || !nonEmptyStrings(decision.fact_boundary) || typeof decision.expected_audience_effect !== 'string' || !decision.expected_audience_effect.trim() || !nonEmptyStrings(decision.alternative_structures) || !nonEmptyStrings(decision.unproven_assumptions) || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0 || !validPlan || !nonEmptyStrings(decision.original_contributions) || decision.original_contributions.length < 2 || !validSteps || !checkKeys.every((key) => checks[key] === 'PASS') || typeof checks.read_aloud_note !== 'string' || !checks.read_aloud_note.trim()) return {done: false, reason: 'schema 2 创作决策必须绑定当前稿/①，并证明 Step -1—7、论证与拍摄规划、至少两项原创增量、六关检查和试读已完成'};
+  return {done: true, reason: 'schema 2 创作执行记录已绑定当前稿与选题合同'};
 }, '创作决策无法读取');
 const animationState = () => {
   if (!exists('11-动画/render-manifest.json')) return {done: false, reason: '缺 11-动画/render-manifest.json'};
@@ -559,7 +666,7 @@ if (command === 'check') {
     process.exit(1);
   }
   if (incomplete.length) console.log('INCOMPLETE next=' + incomplete[0].id + incomplete[0].name + '；PASS 仅表示当前已具备输入的机械 gate 通过');
-  else console.log('PASS full workflow');
+  else console.log('PASS full workflow mechanical contracts');
   process.exit(0);
 }
 
@@ -579,11 +686,12 @@ const states = steps.map((step) => ({...step, done: step.done()}));
 const calibration = calibrationState();
 const deepScan = deepScanState();
 let next = states.find((step) => !step.done);
-if (calibration.scoreDone && !deepScan.done) next = states[4];
-if (calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
+const contentPrefixDone = states.slice(0, 3).every((step) => step.done);
+if (contentPrefixDone && calibration.scoreDone && !deepScan.done) next = states[4];
+if (contentPrefixDone && calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
   next = {...states[3], name: '最终盲预测', skill: 'laohan-cheat → cheat-on-content cheat-predict', output: '03-校准报告.md（prediction_status=RECORDED）'};
 }
-if (calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
+if (contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
   next = states.slice(5).find((step) => !step.done);
 }
 if (command === 'next') {

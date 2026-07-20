@@ -17,8 +17,12 @@ if bash "$SCAN" --profile local "$FIXTURE/absolute.md" >/dev/null 2>&1; then
 fi
 
 printf 'install: ~/.claude/skills/demo\n' > "$FIXTURE/runtime-path.md"
-if bash "$SCAN" --profile portable "$FIXTURE/runtime-path.md" >/dev/null 2>&1; then
-  echo "FAIL: portable 应拒绝无分支的 runtime 专属安装路径" >&2
+portable_output="$(bash "$SCAN" --profile portable "$FIXTURE/runtime-path.md")" || {
+  echo "FAIL: portable 专属路径应由人工判断，不应机械失败" >&2
+  exit 1
+}
+if [[ "$portable_output" != *"WARN:"* ]]; then
+  echo "FAIL: portable 专属路径必须输出 warning" >&2
   exit 1
 fi
 bash "$SCAN" --profile local "$FIXTURE/runtime-path.md" >/dev/null

@@ -1,6 +1,6 @@
 ---
 name: laohan-cheat
-version: "2.0.0"
+version: "2.1.0"
 description: 内容校准工作流适配器。为 episode 选择正确的 cheat-on-content 校准 lane，保存可追溯的校准入口；评分、盲预测、发布登记、复盘和 rubric 更新一律由上游 cheat-on-content 执行。Use when 用户说校准这期、给本期打分并预测、把 episode 接入 cheat、选择校准轨道、进入④校准。
 ---
 
@@ -17,14 +17,17 @@ description: 内容校准工作流适配器。为 episode 选择正确的 cheat-
 
 ## 路由
 
+评分前的 `verify-blind-rubric.mjs` 不得只核对 header：`blind-rubric.md` 必须逐字保留来源 rubric 当前完整维度定义与占位规则。维度语义有缩写、遗漏或改写时保持 PENDING，修复后换全新隔离上下文重评。
+
 1. 先运行 `laohan-bianpai vendors`。Cheat 或 dbskill upstream 有更新时只记录待办；只在新 episode 前或独立维护窗口运行 `vendors --sync`。它报告 schema migration 时停止，不能绕过，也不能在本期中途切换规则。
 2. 读取 `episodes/<slug>/01-口播稿.md` 与 `00-选题.md`，判断内容形态。
    - 教程、明确操作路径、资源交付 → `tutorial-video` lane。
    - 观点、评论、议题、个人判断 → `opinion-video` lane。
    - 无法判断时停止，不能默认为教程型。
 3. 读取目标 lane 的 `.cheat-state.json`，确认 `content_form` 一致。观点视频固定使用工作流项目的 `calibration/opinion-video/`；无 lane 时先在该目录用上游 `cheat-init` 创建，不复用不匹配的旧目录。
-4. 先运行 `node scripts/verify-blind-rubric.mjs calibration/<content_form>`。对当前 `01-口播稿.md` 运行上游 `cheat-score`：主评分器可用完整 `rubric_notes.md` 解析公式，但隔离子评分器只可读取已验证的 `blind-rubric.md` 与本期稿。任何 contamination warning 都必须丢弃并重启全新隔离评分。把无告警的完整输出保存到本 lane 内，再运行 `node scripts/register-cheat-score-evidence.mjs episodes/<slug> calibration/<content_form> <lane内score输出.md>`。在 `03-校准报告.md` frontmatter 写 `score_evidence: <相对lane路径>` 与当前 SHA-256。此时 `prediction_status` 必须为 `PENDING`；不能在⑤修改稿之前写盲预测。
-5. 进入⑤：固定调用 `dbs-script-flow`、`dbs-resonate`、`laohan-shencha CONTENT_CLAIMS`；只有首 5 秒被判弱时调用 `dbs-hook`，只有语言审计需要时调用 `dbs-ai-check`。报告完成后运行 `node scripts/stamp-episode-script-hash.mjs episodes/<slug> 04-深扫报告.md 04-事实核验.md`，两份⑤报告才会写入同一个 script_hash。仅 hash 匹配不足：③必须 `risk_status: CLEAR` 且 `unresolved_high_risk_count: 0`；⑤深扫必须 `review_status: CLEAR` 与 `unresolved_issue_count: 0`，事实核验必须 `fact_check_status: CLEAR`、`contradicted_count: 0`、`unverifiable_count: 0`，否则不得 prepare 或登记最终盲预测。
+4. 先运行 `node scripts/verify-blind-rubric.mjs calibration/<content_form>`。对当前 `01-口播稿.md` 运行上游 `cheat-score`：主评分器可用完整 `rubric_notes.md` 解析公式，但隔离子评分器只可读取已验证的 `blind-rubric.md` 与本期稿。任何 contamination warning 都必须丢弃并重启全新隔离评分。完整输出必须保留原始隔离 JSON（完整 script hash、rubric version、各维分数/理由、input_status、self_check、refusal）；登记脚本会复核它，不能只登记 Markdown 的 SHA。把无告警输出保存到 lane 内，再运行 `node scripts/register-cheat-score-evidence.mjs ...`。
+   - lane 尚无真实发布样本时，分数只能表述为“冷启动诊断”，不得声称已验证质量或流量，也不得为了提高 composite 覆盖原版模板、口头禅、场景、节奏或金句。评分建议只有指出具体理解/交付问题时才进入改稿候选。
+5. 进入⑤：固定调用 `dbs-script-flow`、`dbs-resonate`、`dbs-ai-check` 和 `laohan-shencha CONTENT_CLAIMS`；只有首 5 秒被判弱时调用 `dbs-hook`。dbs-ai-check 只诊断具体命中句，不自动改写；dbs-hook 一旦触发，完整使用上游三种方法，每种3—5条、总计10—15条差异候选。严禁补造作者经历、采访人数、数据、结果或案例，缺证据必须写 `[需真实证据]`。报告完成后运行 `node scripts/stamp-episode-script-hash.mjs episodes/<slug> 04-深扫报告.md 04-事实核验.md`，两份⑤报告才会写入同一个 script_hash。仅 hash 匹配不足：③必须没有明确未解决高风险；⑤深扫必须 `review_status: CLEAR` 与 `unresolved_issue_count: 0`，事实核验必须 `fact_check_status: CLEAR`、`contradicted_count: 0`、`unverifiable_count: 0`，否则不得 prepare 或登记最终盲预测。
 6. ⑤报告与当前稿 hash 一致后，先运行 `node scripts/prepare-cheat-prediction-input.mjs episodes/<slug> calibration/<content_form>`。把输出的 lane snapshot 作为上游 `cheat-predict` 的唯一输入，并在预测 metadata 写 `**Script**: <snapshot path>` 与 `**Script Hash**: <sha256>`。然后运行 `node scripts/register-cheat-prediction.mjs episodes/<slug> calibration/<content_form> predictions/<file>.md v1`。它验证预测晚于快照、metadata 与快照一致，才写 `03-预测证据.json` 并标 `RECORDED`。任何改稿都会使 hash 失效；必须重跑⑤、prepare 新快照并登记新的 prediction revision，不能改写旧预测。
 7. `03-校准报告.md` 的开头必须是：
 

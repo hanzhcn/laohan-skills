@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-07-18",
+  "sources": [
+    {
+      "id": "anthropic-skill-creator",
+      "repo": "anthropics/skills",
+      "path": "skills/skill-creator/SKILL.md",
+      "commit": "b0cbd3df1533b396d281a6886d5132f623393a9c",
+      "borrowed": "progressive disclosure, real evals, baseline comparison, description optimization"
+    },
+    {
+      "id": "agent-skills-specification",
+      "repo": "agentskills/agentskills",
+      "path": "docs/specification.mdx",
+      "commit": "6868401b64f791e9ff565f29beb6338826b73a2b",
+      "borrowed": "portable frontmatter and progressive disclosure specification"
+    },
+    {
+      "id": "agent-skills-best-practices",
+      "repo": "agentskills/agentskills",
+      "path": "docs/skill-creation/best-practices.mdx",
+      "commit": "b8d2613ac050aa4aa8bfb2cf28380d81cdfcd1ca",
+      "borrowed": "real expertise, execution-trace refinement, calibrated control and concise scope"
+    },
+    {
+      "id": "mattpocock-writing-great-skills",
+      "repo": "mattpocock/skills",
+      "path": "skills/productivity/writing-great-skills/SKILL.md",
+      "commit": "af6d6922c3e2b5288eef155346cbe319e4ed3bd0",
+      "borrowed": "invocation branches, information hierarchy, completion criteria, pruning and single source of truth"
+    },
+    {
+      "id": "9arm-debug-mantra",
+      "repo": "thananon/9arm-skills",
+      "path": "skills/engineering/debug-mantra/SKILL.md",
+      "commit": "d714cb84f35e0c42b2ca29bca505e564ab9f2bcd",
+      "borrowed": "reproduce, trace, falsify and keep evidence"
+    },
+    {
+      "id": "9arm-post-mortem",
+      "repo": "thananon/9arm-skills",
+      "path": "skills/engineering/post-mortem/SKILL.md",
+      "commit": "d714cb84f35e0c42b2ca29bca505e564ab9f2bcd",
+      "borrowed": "required inputs, explicit refusal conditions and no invented evidence"
+    },
+    {
+      "id": "9arm-scrutinize",
+      "repo": "thananon/9arm-skills",
+      "path": "skills/engineering/scrutinize/SKILL.md",
+      "commit": "1b222f2284eea323f542a43e891dc5250bffa15c",
+      "borrowed": "question intent, seek simpler alternatives and cite end-to-end evidence"
+    },
+    {
+      "id": "darwin-skill",
+      "repo": "alchaincyf/darwin-skill",
+      "path": "SKILL.md",
+      "commit": "12684eb125ceed7fc50c0b3ed1e5fcf79cf257f1",
+      "borrowed": "diagnostic rubric, ratchet, independent evaluation and human checkpoints"
+    },
+    {
+      "id": "superpowers-writing-skills",
+      "repo": "obra/superpowers",
+      "path": "skills/writing-skills/SKILL.md",
+      "commit": "711d895ce736cbcc5fb0c219ea3f49277f17fa8c",
+      "borrowed": "pressure scenarios for deep creation or optimization and validators for mechanical constraints"
+    }
+  ]
+}

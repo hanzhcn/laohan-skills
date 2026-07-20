@@ -9,14 +9,12 @@ Agent Skills 的核心是 `SKILL.md` + 按需资源，但 Claude Code、Codex、
 
 评分前必须选 profile。未声明时按 `portable` 审查。
 
-## 红灯
+## Fatal 与 warning
 
-- 个人绝对路径：`/Users/<name>/...`；
-- portable profile 中无 capability branch 的专属安装路径或命令；
-- “仅限某 runtime”但 description 声称通用；
-- 缺少能力时继续假装已执行。
+- `FATAL`：个人绝对路径 `/Users/<name>/...`、secret、缺少能力却继续假装已执行。
+- `WARNING`：portable profile 中出现专属安装路径、命令或“仅限某 runtime”措辞。脚本无法判断附近是否已有 capability branch，因此只提示人工复核，不机械判失败。
 
-明确标注的 runtime-specific 分支、frontmatter 触发词和用于说明的反例不是红灯。
+明确标注的 runtime-specific 分支、frontmatter 触发词和用于说明的反例不是问题。只有人工确认它无分支且与通用声明冲突时才修。
 
 ## 验证
 
@@ -25,4 +23,4 @@ bash <laohan-skillcreator-dir>/scripts/redlight-scan.sh --profile portable <skil
 bash <laohan-skillcreator-dir>/scripts/redlight-scan.sh --profile local <skill-dir>
 ```
 
-脚本只能发现字面红灯，不能证明跨 runtime 可用。portable skill 还要在每个声称支持的宿主至少运行一个触发和一个执行样本；未跑的宿主标 `UNVERIFIED`。
+脚本只能发现字面风险，不能证明跨 runtime 可用。退出码 1 表示 fatal，portable 专属路径只输出 warning。portable skill 还要在每个声称支持的宿主至少运行一个触发和一个执行样本；未跑的宿主标 `UNVERIFIED`。

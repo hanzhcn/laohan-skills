@@ -10,15 +10,15 @@ const valueOf = (name) => {
   return index >= 0 ? args[index + 1] : null;
 };
 const episodeArg = valueOf('--episode');
-if (!episodeArg) throw new Error('用法: collect-topic-signals.mjs --episode episodes/<slug> [--sources aihot,hackernews,zhihu,douyin-hot]');
+if (!episodeArg) throw new Error('用法: collect-topic-signals.mjs --episode episodes/<slug> [--sources aihot,hackernews,zhihu,weibo,36kr,bilibili,douyin-hot,toutiao,tieba,hupu]');
 
 const episode = resolve(episodeArg);
 if (!existsSync(episode) || !statSync(episode).isDirectory() || !existsSync(join(episode, 'episode-config.json'))) throw new Error('episode 不存在或缺 episode-config.json: ' + episode);
 if (!isAbsolute(episodeArg) && !episodeArg.includes('episodes/')) throw new Error('episode 必须指向 episodes/<slug>');
 
-const defaultSources = ['aihot', 'hackernews', 'zhihu', 'douyin-hot'];
+const defaultSources = ['aihot', 'hackernews', 'zhihu', 'weibo', '36kr', 'bilibili', 'douyin-hot', 'toutiao', 'tieba', 'hupu'];
 const selectedSources = (valueOf('--sources') || defaultSources.join(',')).split(',').map((item) => item.trim()).filter(Boolean);
-if (selectedSources.length < 2 || selectedSources.length > 5 || new Set(selectedSources).size !== selectedSources.length) throw new Error('sources 必须是 2—5 个不重复 route');
+if (selectedSources.length < 2 || selectedSources.length > 10 || new Set(selectedSources).size !== selectedSources.length) throw new Error('sources 必须是 2—10 个不重复 route');
 
 const sourceDefinitions = {
   aihot: {type: 'http'},
@@ -27,7 +27,10 @@ const sourceDefinitions = {
   'douyin-hot': {type: 'opencli', args: ['douyin', 'hashtag', 'hot', '--limit', '30', '-f', 'json']},
   '36kr': {type: 'opencli', args: ['36kr', 'hot', '--limit', '20', '-f', 'json']},
   weibo: {type: 'opencli', args: ['weibo', 'hot', '--limit', '20', '-f', 'json']},
-  bilibili: {type: 'opencli', args: ['bilibili', 'hot', '--limit', '20', '-f', 'json']}
+  bilibili: {type: 'opencli', args: ['bilibili', 'hot', '--limit', '20', '-f', 'json']},
+  toutiao: {type: 'opencli', args: ['toutiao', 'hot', '--limit', '20', '-f', 'json']},
+  tieba: {type: 'opencli', args: ['tieba', 'hot', '--limit', '20', '-f', 'json']},
+  hupu: {type: 'opencli', args: ['hupu', 'hot', '--limit', '20', '-f', 'json']}
 };
 for (const source of selectedSources) if (!sourceDefinitions[source]) throw new Error('未知 source: ' + source);
 

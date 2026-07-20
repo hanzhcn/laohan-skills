@@ -17,25 +17,39 @@ else
   TARGETS=("$@")
 fi
 
-PATTERN='/Users/[^ /]+'
+FATAL_PATTERN='/Users/[^ /]+'
+WARNING_PATTERN=''
 if [[ "$PROFILE" == "portable" ]]; then
-  PATTERN+='|~/\.(claude|agents)/skills/[A-Za-z0-9_-]+|Claude Code only|仅限 Claude Code|Cursor only|只在 Cursor|/plugin install'
+  WARNING_PATTERN='~/\.(claude|agents)/skills/[A-Za-z0-9_-]+|Claude Code only|仅限 Claude Code|Cursor only|只在 Cursor|/plugin install'
 fi
 
 echo "=== runtime 红灯扫描: profile=$PROFILE targets=${TARGETS[*]} ==="
-HITS=$(grep -rnE \
+FATAL_HITS=$(grep -rnE \
   --exclude='runtime-neutrality.md' \
   --exclude='blacklist-phrases.md' \
   --exclude='redlight-scan.sh' \
   --exclude='test-redlight-scan.sh' \
-  -- "$PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
+  -- "$FATAL_PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
 
-if [[ -z "$HITS" ]]; then
-  echo "PASS: 无字面 runtime 红灯"
-  exit 0
+if [[ -n "$FATAL_HITS" ]]; then
+  COUNT=$(printf '%s\n' "$FATAL_HITS" | grep -c . || true)
+  echo "FAIL: 命中 $COUNT 处 fatal runtime 红灯："
+  printf '%s\n' "$FATAL_HITS"
+  exit 1
 fi
 
-COUNT=$(printf '%s\n' "$HITS" | grep -c . || true)
-echo "FAIL: 命中 $COUNT 处字面红灯；修复、改用 local profile，或将必要专属行为改为显式 capability branch："
-printf '%s\n' "$HITS"
-exit 1
+if [[ -n "$WARNING_PATTERN" ]]; then
+  WARNING_HITS=$(grep -rnE \
+    --exclude='runtime-neutrality.md' \
+    --exclude='blacklist-phrases.md' \
+    --exclude='redlight-scan.sh' \
+    --exclude='test-redlight-scan.sh' \
+    -- "$WARNING_PATTERN" "${TARGETS[@]}" 2>/dev/null || true)
+  if [[ -n "$WARNING_HITS" ]]; then
+    COUNT=$(printf '%s\n' "$WARNING_HITS" | grep -c . || true)
+    echo "WARN: 命中 $COUNT 处 portable 专属字面模式；人工确认是否已有 capability branch："
+    printf '%s\n' "$WARNING_HITS"
+  fi
+fi
+
+echo "PASS: 无 fatal runtime 红灯"
