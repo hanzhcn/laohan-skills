@@ -113,7 +113,10 @@ const complianceState = () => safely(() => {
   const completed = Date.parse(field('scan_completed_at'));
   if (!field('ruleset_version') || Number.isNaN(reviewed) || Number.isNaN(expires) || Number.isNaN(completed) || completed < reviewed || field('platform_guarantee') !== 'false') return {done: false, reason: 'schema 2 违规报告必须绑定 ruleset_version/reviewed/expires/scan 时间并声明 platform_guarantee: false'};
   if (completed > expires && field('ruleset_warning') !== 'STALE') return {done: false, reason: '过期规则集不自动阻断文案，但报告必须写 ruleset_warning: STALE'};
-  return {done: true, reason: completed > expires ? '违规报告已绑定当前稿；规则集过期已警告，不因过期压平文案' : '违规报告已绑定当前稿和当前规则集；CLEAR 不代表平台保证'};
+  if (!exists('02-违规扫描.json')) return {done: false, reason: 'weigui scan 未执行：缺 02-违规扫描.json（跑 node laohan-weigui/scripts/scan.mjs episodes/<slug>）'};
+  const scan = readJson('02-违规扫描.json');
+  if (scan.script_hash !== scriptHash() || !scan.ruleset_version || !scan.keywords_sha256) return {done: false, reason: '02-违规扫描.json 必须绑定当前稿 script_hash + ruleset_version + keywords_sha256（weigui scan 执行证据）'};
+  return {done: true, reason: completed > expires ? '违规报告已绑定当前稿；规则集过期已警告，不因过期压平文案' : '违规报告已绑定当前稿、当前规则集与 weigui scan 执行证据；CLEAR 不代表平台保证'};
 }, '02-违规报告.md 无法读取');
 const imageDimensions = (path) => {
   const bytes = readFileSync(path);
@@ -291,6 +294,8 @@ const calibrationState = () => safely(() => {
 const deepScanState = () => safely(() => {
   const review = conclusionState('04-深扫报告.md', '04-深扫报告.md', 'review_status', ['unresolved_issue_count']);
   if (!review.done) return review;
+  const deepScanContent = readFileSync(file('04-深扫报告.md'), 'utf8');
+  if (!/dbs-ai-check/i.test(deepScanContent) || !/dbs-script-flow/i.test(deepScanContent) || !/dbs-resonate/i.test(deepScanContent)) return {done: false, reason: '04-深扫报告.md 必须含 dbs-ai-check / dbs-script-flow / dbs-resonate 诊断段（dbskill 真实执行证据）'};
   const facts = conclusionState('04-事实核验.md', '04-事实核验.md', 'fact_check_status', ['contradicted_count', 'unverifiable_count']);
   if (!facts.done) return facts;
   if (!exists('04-事实主张.json')) return {done: false, reason: '缺 04-事实主张.json'};
@@ -410,6 +415,7 @@ const topicState = () => safely(() => {
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
   if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
+  if (!nonEmptyFile('02-创作工作稿/organize.md') && !nonEmptyFile('02-创作工作稿/outline.md')) return {done: false, reason: '②必须产出 02-创作工作稿/organize.md（素材模式 Layer A/B 整理）或 outline.md（自由模式大纲）作为整理执行证据'};
   const topic = readJson('00-选题.json');
   const decision = readJson('02-创作工作稿/创作决策.json');
   const nonEmptyStrings = (items) => Array.isArray(items) && items.length > 0 && items.every((item) => typeof item === 'string' && item.trim());
