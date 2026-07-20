@@ -16,7 +16,7 @@
 
 **[English](./README.en.md)** | 中文
 
-由 [寒武纪AI](https://github.com/hanzhcn) 出品 · 抖音搜索「**寒武纪AI**」看实战教程 · 基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
+由 [laohanAI](https://github.com/hanzhcn) 出品 · 抖音搜索「**laohanAI**」看实战教程 · 基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
 ---
 
@@ -275,11 +275,11 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 ## 关于
 
-我是寒武纪AI，一个用 AI 工具做内容创作的普通人。不是专业程序员，但相信好工具应该人人用得起。
+我是laohanAI，一个用 AI 工具做内容创作的普通人。不是专业程序员，但相信好工具应该人人用得起。
 
 这些 skill 都是我自己每天在用的——从选题、写稿、审核到发布，全靠 Claude Code + 这套技能包跑通。踩过的坑、调过的参数、摸过的套路，全都塞进去了。
 
-觉得有用的话，给个 ⭐，抖音搜索「**寒武纪AI**」看我是怎么用这些工具的。
+觉得有用的话，给个 ⭐，抖音搜索「**laohanAI**」看我是怎么用这些工具的。
 
 ---
 
@@ -287,6 +287,6 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 [MIT License](./LICENSE) · 自由使用 / 修改 / 再分发
 
-Made by [寒武纪AI](https://github.com/hanzhcn)
+Made by [laohanAI](https://github.com/hanzhcn)
 
 </div>

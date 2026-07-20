@@ -130,7 +130,7 @@ opencli wechat-channels whoami               # 登录态确认
 下载：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.2.0
 - Mac：`weixin-video-download-mac.dmg`
 - Windows：`weixin-video-download-windows.exe`（NSIS 安装器，自动生成桌面快捷方式）
-- 品牌：寒武纪AI
+- 品牌：laohanAI
 
 ---
 

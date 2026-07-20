@@ -1,7 +1,7 @@
 # CLAUDE.md 配置指南：让 AI 编程助手少犯错的四个原则
 
 > 来源: [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) by [multica-ai](https://github.com/multica-ai)
-> 整理: 寒武纪AI & Jeffrey | 日期: 2026-05-20
+> 整理: laohanAI & Jeffrey | 日期: 2026-05-20
 >
 > 原文为英文，本文保留原文结构并附中文说明。CLAUDE.md 是 Claude Code 项目配置文件，
 > 定义 AI 助手的行为准则。好的 CLAUDE.md 能显著减少不必要的代码改动和返工。

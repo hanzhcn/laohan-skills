@@ -1,24 +1,24 @@
 !define PRODUCT_NAME "视频号下载"
 !define PRODUCT_VERSION "1.2.0"
-!define PRODUCT_PUBLISHER "寒武纪AI"
+!define PRODUCT_PUBLISHER "laohanAI"
 !define PRODUCT_WEB "https://www.douyin.com/user/MS4wLjABAAAAH5yUDz1lRwM158jy-QNImv77MnxI7fcCyJDfciEdkvM"
 
 !include "MUI2.nsh"
 
-Name "视频号下载 — 寒武纪AI"
+Name "视频号下载 — laohanAI"
 OutFile "视频号下载_Setup.exe"
-InstallDir "$PROGRAMFILES\寒武纪AI\视频号下载"
+InstallDir "$PROGRAMFILES\laohanAI\视频号下载"
 RequestExecutionLevel admin
 SetCompressor lzma
 
 !define MUI_ICON "app.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "${NSISDIR}\\Contrib\\Graphics\\Wizard\\orange.bmp"
-!define MUI_BRANDINGTEXT "寒武纪AI"
+!define MUI_BRANDINGTEXT "laohanAI"
 
 ; 欢迎页
 !insertmacro MUI_PAGE_WELCOME
-!define MUI_WELCOMEPAGE_TITLE "视频号下载 — 寒武纪AI"
-!define MUI_WELCOMEPAGE_TEXT "一键下载微信视频号视频$\r$\n$\r$\n由 寒武纪AI 提供技术支持"
+!define MUI_WELCOMEPAGE_TITLE "视频号下载 — laohanAI"
+!define MUI_WELCOMEPAGE_TEXT "一键下载微信视频号视频$\r$\n$\r$\n由 laohanAI 提供技术支持"
 
 ; 许可页
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
@@ -32,7 +32,7 @@ SetCompressor lzma
 ; 完成页
 !define MUI_FINISHPAGE_TITLE "安装完成！"
 !define MUI_FINISHPAGE_TEXT "双击桌面「视频号下载」启动$\r$\n打开微信→视频号→点视频即可下载"
-!define MUI_FINISHPAGE_LINK "关注寒武纪AI → ${PRODUCT_WEB}"
+!define MUI_FINISHPAGE_LINK "关注laohanAI → ${PRODUCT_WEB}"
 !define MUI_FINISHPAGE_LINK_LOCATION "${PRODUCT_WEB}"
 !insertmacro MUI_PAGE_FINISH
 
@@ -64,10 +64,10 @@ Section "安装"
   FileOpen $0 "$INSTDIR\启动.bat" w
   FileWrite $0 '@echo off$\r$\n'
   FileWrite $0 'chcp 65001 >nul$\r$\n'
-  FileWrite $0 'title 视频号下载 — 寒武纪AI$\r$\n'
+  FileWrite $0 'title 视频号下载 — laohanAI$\r$\n'
   FileWrite $0 '$\r$\n'
   FileWrite $0 'echo =============================$\r$\n'
-  FileWrite $0 'echo   视频号下载 by 寒武纪AI$\r$\n'
+  FileWrite $0 'echo   视频号下载 by laohanAI$\r$\n'
   FileWrite $0 'echo =============================$\r$\n'
   FileWrite $0 'echo.$\r$\n'
   FileWrite $0 '$\r$\n'
@@ -137,7 +137,7 @@ Section "安装"
   FileWrite $0 '  echo.$\r$\n'
   FileWrite $0 ')$\r$\n'
   FileWrite $0 'echo.$\r$\n'
-  FileWrite $0 'echo 关注寒武纪AI 获取更多AI工具$\r$\n'
+  FileWrite $0 'echo 关注laohanAI 获取更多AI工具$\r$\n'
   FileWrite $0 'pause$\r$\n'
   FileClose $0
 
@@ -145,14 +145,14 @@ Section "安装"
   CreateShortCut "$DESKTOP\视频号下载.lnk" "$INSTDIR\启动.bat" "" "$INSTDIR\wx_video_download.exe" 0
 
   ; 开始菜单
-  CreateDirectory "$SMPROGRAMS\寒武纪AI"
-  CreateShortCut "$SMPROGRAMS\寒武纪AI\视频号下载.lnk" "$INSTDIR\启动.bat"
-  CreateShortCut "$SMPROGRAMS\寒武纪AI\卸载.lnk" "$INSTDIR\uninstall.exe"
+  CreateDirectory "$SMPROGRAMS\laohanAI"
+  CreateShortCut "$SMPROGRAMS\laohanAI\视频号下载.lnk" "$INSTDIR\启动.bat"
+  CreateShortCut "$SMPROGRAMS\laohanAI\卸载.lnk" "$INSTDIR\uninstall.exe"
 
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "视频号下载 — 寒武纪AI"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "Publisher" "寒武纪AI"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "视频号下载 — laohanAI"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "Publisher" "laohanAI"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "UninstallString" "$INSTDIR\uninstall.exe"
 SectionEnd
 
@@ -169,9 +169,9 @@ Section "Uninstall"
   RMDir /r "$INSTDIR"
 
   Delete "$DESKTOP\视频号下载.lnk"
-  Delete "$SMPROGRAMS\寒武纪AI\视频号下载.lnk"
-  Delete "$SMPROGRAMS\寒武纪AI\卸载.lnk"
-  RMDir "$SMPROGRAMS\寒武纪AI"
+  Delete "$SMPROGRAMS\laohanAI\视频号下载.lnk"
+  Delete "$SMPROGRAMS\laohanAI\卸载.lnk"
+  RMDir "$SMPROGRAMS\laohanAI"
 
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 SectionEnd

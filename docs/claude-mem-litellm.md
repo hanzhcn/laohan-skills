@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v3.1 | 日期: 2026-06-10 | 作者: 寒武纪AI & Jeffrey
+> 版本: v3.1 | 日期: 2026-06-10 | 作者: laohanAI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:

@@ -15,7 +15,7 @@
 
 English | **[中文](./README.md)**
 
-Built by [寒武纪AI](https://github.com/hanzhcn) · Search **寒武纪AI** on Douyin for tutorials · Powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
+Built by [laohanAI](https://github.com/hanzhcn) · Search **laohanAI** on Douyin for tutorials · Powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
 
 ---
 
@@ -274,11 +274,11 @@ Skills with no extra dependencies: redian · weigui · cheat · shencha · gengx
 
 ## About
 
-I'm 寒武纪AI, a content creator using AI tools. Not a professional programmer, but I believe good tools should be accessible to everyone.
+I'm laohanAI, a content creator using AI tools. Not a professional programmer, but I believe good tools should be accessible to everyone.
 
 These skills are what I use daily — from topic selection, writing, review to publishing, all powered by Claude Code + this skill pack. Every pitfall I've hit, every parameter I've tuned, every pattern I've learned — they're all baked in.
 
-If you find this useful, please ⭐ and search **寒武纪AI** on Douyin to see how I use these tools.
+If you find this useful, please ⭐ and search **laohanAI** on Douyin to see how I use these tools.
 
 ---
 
@@ -286,6 +286,6 @@ If you find this useful, please ⭐ and search **寒武纪AI** on Douyin to see 
 
 [MIT License](./LICENSE) · Free to use / modify / redistribute
 
-Made by [寒武纪AI](https://github.com/hanzhcn)
+Made by [laohanAI](https://github.com/hanzhcn)
 
 </div>
