@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianqiuzhi
-version: 1.4.0
+version: 1.5.0
 description: 基于秋芝2046实战模板和29种场景风格生成真人口播封面；固定输出3种视觉风格，每种生成3:4、4:3、16:9三个尺寸，共9张真实候选，最终选择1个风格并保留其3个尺寸，同时绑定真实头像、provider 与选择证据。Use when 用户说"生成封面提示词""做封面""封面""封面图""封面词"或工作流进入⑥。
 ---
 
@@ -11,6 +11,7 @@ description: 基于秋芝2046实战模板和29种场景风格生成真人口播�
 ## 边界
 
 - 输入真源：`01-口播稿.md`、`episode-config.json` 的 `canvas` 与已锁定 `distribution_contract`。
+- 人物身份真源固定为项目 `assets/identity/jeffrey-cover-reference.jpg`；新期副本固定为 `05-封面/reference/jeffrey-reference.jpg`。
 - 输出：`05-封面/cover-prompts.md`，固定3个策略真正不同的视觉风格；每种分别提供3:4、4:3、16:9完整 prompt，共9个候选。
 - 不输出：假图片、`selected-cover.json`、CTR 结论或“某风格一定爆”。
 - REVIEW_GATED：最终选图留给 Jeffrey。
@@ -22,6 +23,7 @@ description: 基于秋芝2046实战模板和29种场景风格生成真人口播�
 2. `distribution_contract.primary_platform` 已包含在 `platforms`。
 3. `master_aspect_ratio` 与 canvas 一致，`locked_at` 是有效 ISO-8601。
 4. `01-口播稿.md` 标题已锁定。
+5. `episode-config.cover_identity_contract` 必须声明 `reference_mode: REQUIRED`，项目真源、本期副本和登记 SHA 完全一致。
 
 任一项失败就停在⑥，不自行改画布或猜发布平台。
 
@@ -49,7 +51,7 @@ description: 基于秋芝2046实战模板和29种场景风格生成真人口播�
 - 标题”月薪两万五被AI取代，法院判了” -> 横式”月薪两万五被AI取代，法院判了” | 左”被AI开除” | 右”真话扎心”
 - 标题”花大钱补课，考场都没了” -> 横式”花大钱补课，考场都没了” | 左”AI拆考场” | 右”还在补课?”
 
-`REFERENCE_REQUIRED` 是执行合同，不是提示语。frontmatter 必须同时写 `image_provider`、`reference_mode: REQUIRED`、本期内 `reference_asset` 与 `reference_sha256`；reference 必须复制到 `05-封面/reference/`。provider 调用时必须把该文件作为 reference image 参数传入，不能只在 prompt 里说“参考头像”。
+`REFERENCE_REQUIRED` 是不可关闭的执行合同，不是提示语。frontmatter 必须同时写 `image_provider`、`reference_mode: REQUIRED`、本期内 `reference_asset` 与 `reference_sha256`；reference 必须来自项目真源并由新期创建器复制到 `05-封面/reference/`。provider 的9次调用都必须把该文件作为 reference image 参数传入，不能只在 prompt 里说“参考头像”，也不能使用 brand-new generation。
 
 头像只锁定人物身份和真实面部特征，不锁原照片的服装、姿势、表情、背景或光线；这些按每个视觉世界重新设计。
 
@@ -129,9 +131,9 @@ script_hash: <01-口播稿.md sha256>
 distribution_locked_at: <ISO-8601>
 prompt_executor: cover-prompt-strategy
 image_provider: <executor-lock 中⑥登记的 image provider>
-reference_mode: REQUIRED # 或 NONE
-reference_asset: reference/jeffrey-reference.jpg # NONE 时为 null
-reference_sha256: <sha256> # NONE 时为 null
+reference_mode: REQUIRED
+reference_asset: reference/jeffrey-reference.jpg
+reference_sha256: <sha256>
 style_count: 3
 size_count_per_style: 3
 candidate_count: 9
@@ -170,7 +172,7 @@ V2、V3使用同一结构。Episode 与独立任务都固定输出3种风格×3�
 
 prompt 写完后，编排器调用 `executor-lock.json` 已登记的 image provider，把 V1/V2/V3 的3:4、4:3、16:9各真实生成一张，共9张并全部参加比较。原图必须放入本期 `05-封面/`，不得用旧期图片、同图裁切或只写 prompt 冒充。provider 若支持 reference edit，使用已登记 reference 参数；OpenAI ImageGen 对人物身份保持使用 reference-image edit 路径，不得改走 brand-new generation。
 
-每次真实调用追加写入 `05-封面/provider-requests.json`：`schema_version: 1`、`script_hash`、`image_provider`、`reference_mode`、reference 路径/SHA，以及每个候选的 `candidate_id`、`style_id`、`aspect_ratio`、`canvas`、`source_prompt`、`reference_asset`、`reference_sha256`、`output_asset`、`output_sha256`、`requested_at`。9个候选 ID 固定为 `V1|V2|V3` 与 `3x4|4x3|16x9` 的组合。声明 REQUIRED 却缺 reference，或 output SHA/尺寸与文件不一致，立即停在⑥。
+每次真实调用追加写入 `05-封面/provider-requests.json`：`schema_version: 1`、`script_hash`、`image_provider`、`reference_mode`、reference 路径/SHA，以及每个候选的 `candidate_id`、`style_id`、`aspect_ratio`、`canvas`、`source_prompt`、`reference_asset`、`reference_sha256`、`output_asset`、`output_sha256`、`requested_at`。9个候选 ID 固定为 `V1|V2|V3` 与 `3x4|4x3|16x9` 的组合。缺 reference、项目真源/本期副本/config SHA 不一致、调用未传 `referenced_image_paths`，或 output SHA/尺寸与文件不一致，立即停在⑥。
 
 provider 单次失败可用同一候选重试一次；仅当 `executor-lock.json` 已登记允许的 fallback 时才可切换 provider。任一风格缺任一尺寸、任一候选不可解码、9张不是独立生成、候选违反事实/可读性约束，或 default 与 fallback 均失败时，留在⑥并报告 `BLOCKED`，不得创建 `selected-cover.json` 或用旧图补位。
 

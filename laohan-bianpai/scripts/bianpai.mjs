@@ -168,10 +168,18 @@ const coverState = () => safely(() => {
   const expectedSelectionMode = config.workflow_mode === 'AUTONOMOUS_RUN' ? 'AGENT_PROXY' : 'JEFFREY';
   const autonomousReviewerInvalid = config.workflow_mode === 'AUTONOMOUS_RUN' && typeof review.reviewer === 'string' && review.reviewer.toLowerCase().includes('jeffrey');
   const lockedImageProvider = executorLock.selected_executors?.find((item) => String(item.node) === '6' && item.kind === 'image-provider')?.id;
+  const identity = config.cover_identity_contract || {};
   const referencePath = resolve(episodeDir, cover.reference_asset || '');
-  const validReference = cover.reference_mode === 'NONE'
-    ? cover.reference_asset == null && cover.reference_sha256 == null
-    : cover.reference_mode === 'REQUIRED' && typeof cover.reference_asset === 'string' && cover.reference_asset.startsWith('05-封面/reference/') && existsSync(referencePath) && realpathSync(referencePath).startsWith(assetRoot) && shaPath(referencePath) === cover.reference_sha256;
+  const projectReferencePath = resolve(root, identity.project_asset || '');
+  const validReference = identity.reference_mode === 'REQUIRED'
+    && identity.project_asset === 'assets/identity/jeffrey-cover-reference.jpg'
+    && identity.episode_asset === '05-封面/reference/jeffrey-reference.jpg'
+    && /^[a-f0-9]{64}$/.test(identity.reference_sha256 || '')
+    && cover.reference_mode === 'REQUIRED'
+    && cover.reference_asset === identity.episode_asset
+    && cover.reference_sha256 === identity.reference_sha256
+    && existsSync(projectReferencePath) && !lstatSync(projectReferencePath).isSymbolicLink() && statSync(projectReferencePath).isFile() && realpathSync(projectReferencePath).startsWith(realpathSync(root) + '/') && shaPath(projectReferencePath) === identity.reference_sha256
+    && existsSync(referencePath) && !lstatSync(referencePath).isSymbolicLink() && statSync(referencePath).isFile() && realpathSync(referencePath).startsWith(assetRoot) && shaPath(referencePath) === identity.reference_sha256;
   const requests = Array.isArray(providerRequests.requests) ? providerRequests.requests : [];
   const candidateObjects = Array.isArray(review.candidates) ? review.candidates : [];
   const styleObjects = Array.isArray(review.styles) ? review.styles : [];
@@ -229,7 +237,7 @@ const coverState = () => safely(() => {
     || dimensions.width !== 1920 || dimensions.height !== 1080 || cover.title !== scriptTitle
     || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
     || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || cover.image_provider !== lockedImageProvider || cover.selection_mode !== expectedSelectionMode || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode || review.reference_mode !== cover.reference_mode || review.reference_asset !== cover.reference_asset || review.reference_sha256 !== cover.reference_sha256 || providerRequests.schema_version !== 1 || providerRequests.script_hash !== scriptHash() || providerRequests.image_provider !== cover.image_provider || providerRequests.reference_mode !== cover.reference_mode || providerRequests.reference_asset !== cover.reference_asset || providerRequests.reference_sha256 !== cover.reference_sha256 || !validReference || !validCandidateRequests || !validCandidateSet || !validStyleSelection || !validSelectedAssets || !validReviewSelection || autonomousReviewerInvalid))) {
-    return {done: false, reason: 'selected-cover 必须绑定3种风格×3个尺寸共9张唯一真实候选；唯一SELECTED风格必须保留3个尺寸并逐项绑定provider request/source_prompt/reference；AUTONOMOUS_RUN只接受非Jeffrey的AGENT_PROXY'};
+    return {done: false, reason: 'selected-cover 必须绑定项目 Jeffrey 头像、本期 reference 副本与3种风格×3个尺寸共9张唯一 reference-edit 候选；reference_mode=NONE 或任一 SHA 不一致均失败；AUTONOMOUS_RUN只接受非Jeffrey的AGENT_PROXY'};
   }
   return {done: true, reason: '封面选择已登记'};
 }, 'selected-cover.json 无法读取');
