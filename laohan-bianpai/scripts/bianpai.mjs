@@ -152,6 +152,12 @@ const safely = (fn, fallback) => {
     return {done: false, reason: fallback + ': ' + error.message};
   }
 };
+const coverDeferralState = () => safely(() => {
+  const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
+  if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
+  if (schedule.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(schedule.authorized_at)) || typeof schedule.authorization_note !== 'string' || !schedule.authorization_note.trim()) return {done: false, reason: '封面延后授权缺 Jeffrey、ISO时间或原话'};
+  return {done: true, reason: 'Jeffrey 已授权本期封面延后至候选选择前；⑥仍未PASS'};
+}, 'cover_schedule 无法读取');
 const coverState = () => safely(() => {
   if (!exists('05-封面/selected-cover.json')) return {done: false, reason: '缺 05-封面/selected-cover.json'};
   const cover = readJson('05-封面/selected-cover.json');
@@ -663,9 +669,11 @@ if (runtime.status) {
 }
 if (command === 'check') {
   if (requiredStage === 'final' || requiredStage === 'production' || requiredStage === 'full') {
-    const prerequisites = [topicState().done, scriptState().done, complianceState().done, calibrationState().done, deepScanState().done, coverState().done, shootingState().done];
+    const coverReadyForProduction = coverState().done || coverDeferralState().done;
+    const coverReady = requiredStage === 'production' ? coverReadyForProduction : coverState().done;
+    const prerequisites = [topicState().done, scriptState().done, complianceState().done, calibrationState().done, deepScanState().done, coverReady, shootingState().done];
     if (prerequisites.some((value) => !value)) {
-      console.error('FAIL ' + (requiredStage === 'production' ? '生产前' : '发布/闭环前') + '必须完成①—⑦、最终盲预测 RECORDED，且所有稿件绑定当前 hash');
+      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成①—⑤、⑦，并完成⑥或登记Jeffrey本期封面延后授权' : '发布/闭环前必须真实完成①—⑦，封面延后不算⑥PASS') + '；最终盲预测必须RECORDED，且所有稿件绑定当前hash');
       process.exit(1);
     }
   }
@@ -684,9 +692,10 @@ if (command === 'check') {
   }
   if (exitCode) process.exit(exitCode);
   const checkedStates = steps.map((step) => ({...step, done: step.done()}));
-  const incomplete = checkedStates.filter((step) => !step.done);
-  if (requiredStage === 'full' && incomplete.length) {
-    console.error('FAIL full workflow incomplete: ' + incomplete.map((step) => step.id + step.name).join('、'));
+  const actualIncomplete = checkedStates.filter((step) => !step.done);
+  const incomplete = requiredStage === 'full' ? actualIncomplete : actualIncomplete.filter((step) => step.id !== '⑥' || !coverDeferralState().done);
+  if (requiredStage === 'full' && actualIncomplete.length) {
+    console.error('FAIL full workflow incomplete: ' + actualIncomplete.map((step) => step.id + step.name).join('、'));
     process.exit(1);
   }
   if (incomplete.length) console.log('INCOMPLETE next=' + incomplete[0].id + incomplete[0].name + '；PASS 仅表示当前已具备输入的机械 gate 通过');
@@ -709,14 +718,17 @@ if (['status', 'next'].includes(command)) {
 const states = steps.map((step) => ({...step, done: step.done()}));
 const calibration = calibrationState();
 const deepScan = deepScanState();
-let next = states.find((step) => !step.done);
+const coverDeferred = coverDeferralState();
+const coverMayBeDeferredForRouting = coverDeferred.done && !animationState().done;
+const routeIncomplete = (step) => !step.done && !(step.id === '⑥' && coverMayBeDeferredForRouting);
+let next = states.find(routeIncomplete);
 const contentPrefixDone = states.slice(0, 3).every((step) => step.done);
 if (contentPrefixDone && calibration.scoreDone && !deepScan.done) next = states[4];
 if (contentPrefixDone && calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
   next = {...states[3], name: '最终盲预测', skill: 'laohan-cheat → cheat-on-content cheat-predict', output: '03-校准报告.md（prediction_status=RECORDED）'};
 }
 if (contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
-  next = states.slice(5).find((step) => !step.done);
+  next = states.slice(5).find(routeIncomplete);
 }
 if (command === 'next') {
   if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
@@ -729,8 +741,8 @@ if (command === 'next') {
 
 console.log('# 编排状态\n');
 for (const step of states) {
-  const detail = step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + coverState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
-  const marker = step.id === '④' && calibration.scoreDone && !calibration.done ? '~' : step.done ? 'x' : ' ';
+  const detail = step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + (step.done ? coverState().reason : coverDeferred.done ? coverDeferred.reason : coverState().reason) : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
+  const marker = (step.id === '④' && calibration.scoreDone && !calibration.done) || (step.id === '⑥' && !step.done && coverDeferred.done) ? '~' : step.done ? 'x' : ' ';
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }
 if (next) {
