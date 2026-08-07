@@ -37,6 +37,7 @@ if (existsSync(episodeDir) && (lstatSync(episodeDir).isSymbolicLink() || !episod
 const checker = join(root, 'scripts/check-episode-contract.sh');
 const vendorSync = join(root, 'scripts/sync-content-vendors.sh');
 const vendorPreflightVerifier = join(root, 'scripts/verify-vendor-preflight.mjs');
+const dependencyChecker = join(root, 'scripts/check-production-dependencies.mjs');
 const runtimeChecker = join(root, 'scripts/check-workflow-runtime.mjs');
 const runtimeLock = join(root, 'workflow-runtime-lock.json');
 if (!existsSync(checker)) {
@@ -617,19 +618,28 @@ if (command === 'vendors') {
       const match = result.stdout.match(new RegExp('^' + name + '=(UP_TO_DATE|READY_LOCAL_AHEAD)\\s+head=([a-f0-9]{40,64})$', 'm'));
       return match ? {state: match[1], head: match[2]} : null;
     };
+    const laohanSkills = vendorInfo('LAOHAN_SKILLS');
     const cheat = vendorInfo('CHEAT');
     const dbskill = vendorInfo('DBSKILL');
-    if (!cheat || !dbskill) {
-      console.error('BLOCKED：vendor 检查未返回可冻结的 Cheat/dbskill 状态与完整 HEAD SHA。');
+    if (!laohanSkills || !cheat || !dbskill) {
+      console.error('BLOCKED：vendor 检查未返回可冻结的 laohan-skills/Cheat/dbskill 状态与完整 HEAD SHA。');
       process.exit(1);
     }
-    if (frozenVendor && (frozenVendor.cheat_head_sha !== cheat.head || frozenVendor.dbskill_head_sha !== dbskill.head)) {
-      console.error('BLOCKED：VENDOR_HEAD_DRIFT。进行中的 episode 只能续用原 schema 3 冻结的 vendor HEAD，不能迁移或猜填。');
+    const dependency = spawnSync(process.execPath, [dependencyChecker, '--json'], {encoding: 'utf8'});
+    if (dependency.status !== 0) {
+      console.error('BLOCKED：本机生产依赖未通过。\n' + (dependency.stderr || dependency.stdout || '').trim());
+      process.exit(1);
+    }
+    let dependencyPreflight;
+    try { dependencyPreflight = JSON.parse(dependency.stdout); }
+    catch { console.error('BLOCKED：本机生产依赖未返回合法JSON。'); process.exit(1); }
+    if (frozenVendor && (frozenVendor.laohan_skills_head_sha !== laohanSkills.head || frozenVendor.cheat_head_sha !== cheat.head || frozenVendor.dbskill_head_sha !== dbskill.head || frozenVendor.dependency_preflight?.fingerprint_sha256 !== dependencyPreflight.fingerprint_sha256)) {
+      console.error('BLOCKED：VENDOR_OR_DEPENDENCY_DRIFT。进行中的 episode 只能续用原 schema 4 冻结值，不能迁移或猜填。');
       process.exit(1);
     }
     const preflightDir = file('00-编排');
     mkdirSync(preflightDir, {recursive: true});
-    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 3, status: 'READY', source_scope: 'FROZEN_ON_RESUME', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), cheat_state: cheat.state, cheat_head_sha: cheat.head, dbskill_state: dbskill.state, dbskill_head_sha: dbskill.head}, null, 2) + '\n');
+    writeFileSync(join(preflightDir, 'vendor-preflight.json'), JSON.stringify({schema_version: 4, status: 'READY', source_scope: 'FROZEN_ON_RESUME', runtime_lock_sha256: shaPath(runtimeLock), checked_at: new Date().toISOString(), laohan_skills_state: laohanSkills.state, laohan_skills_head_sha: laohanSkills.head, cheat_state: cheat.state, cheat_head_sha: cheat.head, dbskill_state: dbskill.state, dbskill_head_sha: dbskill.head, dependency_preflight: dependencyPreflight}, null, 2) + '\n');
     const verified = spawnSync('node', [vendorPreflightVerifier, episodeDir], {encoding: 'utf8'});
     process.stdout.write(verified.stdout);
     process.stderr.write(verified.stderr);
