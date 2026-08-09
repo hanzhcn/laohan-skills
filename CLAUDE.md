@@ -1,5 +1,9 @@
 # laohan-skills project rules
 
+## Brand name
+
+- 对外品牌名统一为 `laohanAI`。所有口播稿、封面提示词、系列标签、安装器标题和后续生成内容不得再使用旧名“寒武纪AI”或“寒武纪说AI”。
+
 ## Talking-head video workflow
 
 真人口播动画默认采用 CODEX_DIRECT + Remotion：

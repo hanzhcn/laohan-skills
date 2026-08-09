@@ -66,7 +66,7 @@ LAYOUT: Large close-up head shot with symmetrical text framing.
 - MID-LEFT: Large bold cartoon-style Chinese text "[左关键词]" in bright yellow (#FFD700) with thick black outline
 - MID-RIGHT: Large bold cartoon-style Chinese text "[右关键词]" in bright yellow (#FFD700) with thick black outline, mirroring the left side
 - CENTER: [完整场景描述]
-- BOTTOM: Tag text "寒武纪说AI" in white with black outline
+- BOTTOM: Tag text "laohanAI" in white with black outline
 
 BACKGROUND: Clean white (#FFFFFF) or very light gray (#F5F5F5), minimal and flat. No gradient, unless this candidate deliberately uses one of the expanded scene worlds and clearly preserves thumbnail readability.
 

@@ -3,13 +3,13 @@ BIN="$HOME/.local/bin/wx_video_download"
 
 # 检查二进制是否安装
 if [ ! -f "$BIN" ]; then
-    osascript -e 'display dialog "请先运行「安装.sh」完成安装" with title "视频号下载 — 寒武纪AI" buttons {"好的"} default button 1 with icon caution'
+    osascript -e 'display dialog "请先运行「安装.sh」完成安装" with title "视频号下载 — laohanAI" buttons {"好的"} default button 1 with icon caution'
     exit 1
 fi
 
 # 检查二进制是否可执行
 if ! "$BIN" version >/dev/null 2>&1; then
-    osascript -e 'display dialog "二进制文件损坏，请重新运行「安装.sh」" with title "视频号下载 — 寒武纪AI" buttons {"好的"} default button 1 with icon stop'
+    osascript -e 'display dialog "二进制文件损坏，请重新运行「安装.sh」" with title "视频号下载 — laohanAI" buttons {"好的"} default button 1 with icon stop'
     exit 1
 fi
 
@@ -19,7 +19,7 @@ VERSION=$("$BIN" version 2>&1)
 if pgrep -f "wx_video_download" >/dev/null 2>&1; then
     osascript -e 'display dialog "已在运行中（v'"$VERSION"'）
 
-打开微信 → 视频号 → 点视频即可下载" with title "视频号下载 — 寒武纪AI" buttons {"好的"} default button 1 with icon note'
+打开微信 → 视频号 → 点视频即可下载" with title "视频号下载 — laohanAI" buttons {"好的"} default button 1 with icon note'
     exit 0
 fi
 
@@ -32,7 +32,7 @@ if pgrep -f "wx_video_download" >/dev/null 2>&1; then
 
 打开微信 → 视频号 → 点视频即可下载
 
-下载目录：~/Downloads" with title "视频号下载 — 寒武纪AI" buttons {"好的"} default button 1 with icon note'
+下载目录：~/Downloads" with title "视频号下载 — laohanAI" buttons {"好的"} default button 1 with icon note'
 else
     LOG_TAIL=$(tail -5 /tmp/weixin-video.log 2>/dev/null)
     osascript -e "display dialog \"启动失败！
@@ -41,5 +41,5 @@ else
 1. 端口 2022/2023 被占用（关闭其他代理软件）
 2. 权限不足（请重试）
 
-日志：$LOG_TAIL\" with title \"视频号下载 — 寒武纪AI\" buttons {\"好的\"} default button 1 with icon stop"
+日志：$LOG_TAIL\" with title \"视频号下载 — laohanAI\" buttons {\"好的\"} default button 1 with icon stop"
 fi
