@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync} from 'node:fs';
+import {existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync} from 'node:fs';
 import {basename, dirname, join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
@@ -122,23 +122,12 @@ const complianceState = () => safely(() => {
   return {done: true, reason: completed > expires ? '违规报告已绑定当前稿；规则集过期已警告，不因过期压平文案' : '违规报告已绑定当前稿、当前规则集与 weigui scan 执行证据；CLEAR 不代表平台保证'};
 }, '02-违规报告.md 无法读取');
 const imageDimensions = (path) => {
-  const bytes = readFileSync(path);
-  if (bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
-    return {width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20)};
-  }
-  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-    let offset = 2;
-    while (offset < bytes.length) {
-      if (bytes[offset] !== 0xff) { offset += 1; continue; }
-      const marker = bytes[offset + 1];
-      const length = bytes.readUInt16BE(offset + 2);
-      if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
-        return {height: bytes.readUInt16BE(offset + 5), width: bytes.readUInt16BE(offset + 7)};
-      }
-      offset += 2 + length;
-    }
-  }
-  throw new Error('selected_asset 必须是可读取尺寸的 PNG 或 JPEG');
+  const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'json', path], {encoding: 'utf8'});
+  if (probe.status !== 0) throw new Error('候选图无法读取');
+  const stream = JSON.parse(probe.stdout).streams?.[0];
+  const decode = spawnSync('ffmpeg', ['-v', 'error', '-i', path, '-f', 'null', '-'], {encoding: 'utf8'});
+  if (decode.status === 0 && Number.isInteger(stream?.width) && stream.width > 0 && Number.isInteger(stream?.height) && stream.height > 0) return {width: stream.width, height: stream.height};
+  throw new Error('候选图必须是可读取尺寸的 PNG、JPEG 或 WebP');
 };
 const gate = (stage) => spawnSync('bash', [checker, episodeDir, stage], {encoding: 'utf8'});
 const gateState = (stage, missingReason) => {
@@ -158,97 +147,40 @@ const coverDeferralState = () => safely(() => {
   const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
   if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
   if (schedule.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(schedule.authorized_at)) || typeof schedule.authorization_note !== 'string' || !schedule.authorization_note.trim()) return {done: false, reason: '封面延后授权缺 Jeffrey、ISO时间或原话'};
-  return {done: true, reason: 'Jeffrey 已授权本期封面延后至候选选择前；⑥仍未PASS'};
+  return {done: true, reason: 'Jeffrey 已授权本期封面延后；提示词和首张候选尚未齐全时⑥仍未PASS'};
 }, 'cover_schedule 无法读取');
 const coverState = () => safely(() => {
-  if (!exists('05-封面/selected-cover.json')) return {done: false, reason: '缺 05-封面/selected-cover.json'};
-  const cover = readJson('05-封面/selected-cover.json');
-  const review = readJson('05-封面/cover-review.json');
-  const providerRequests = readJson('05-封面/provider-requests.json');
+  if (!nonEmptyFile('05-封面/cover-prompts.md')) return {done: false, reason: '缺非空 05-封面/cover-prompts.md'};
   const config = readJson('episode-config.json');
-  const executorLock = readJson('00-编排/executor-lock.json');
-  const assetRoot = realpathSync(file('05-封面')) + '/';
-  const assetPath = resolve(episodeDir, cover.selected_asset || '');
-  const scriptTitle = readFileSync(file('01-口播稿.md'), 'utf8').match(/^#\s+(.+)$/m)?.[1]?.trim();
-  const assetStat = existsSync(assetPath) ? statSync(assetPath) : null;
-  const actualAsset = assetStat?.isFile() ? realpathSync(assetPath) : '';
-  const dimensions = actualAsset ? imageDimensions(actualAsset) : null;
-  const expectedSelectionMode = config.workflow_mode === 'AUTONOMOUS_RUN' ? 'AGENT_PROXY' : 'JEFFREY';
-  const autonomousReviewerInvalid = config.workflow_mode === 'AUTONOMOUS_RUN' && typeof review.reviewer === 'string' && review.reviewer.toLowerCase().includes('jeffrey');
-  const lockedImageProvider = executorLock.selected_executors?.find((item) => String(item.node) === '6' && item.kind === 'image-provider')?.id;
   const identity = config.cover_identity_contract || {};
-  const referencePath = resolve(episodeDir, cover.reference_asset || '');
+  const coverRoot = realpathSync(file('05-封面'));
+  const assetRoot = coverRoot + '/';
+  const referencePath = resolve(episodeDir, identity.episode_asset || '');
   const projectReferencePath = resolve(root, identity.project_asset || '');
   const validReference = identity.reference_mode === 'REQUIRED'
     && identity.project_asset === 'assets/identity/jeffrey-cover-reference.jpg'
     && identity.episode_asset === '05-封面/reference/jeffrey-reference.jpg'
     && /^[a-f0-9]{64}$/.test(identity.reference_sha256 || '')
-    && cover.reference_mode === 'REQUIRED'
-    && cover.reference_asset === identity.episode_asset
-    && cover.reference_sha256 === identity.reference_sha256
     && existsSync(projectReferencePath) && !lstatSync(projectReferencePath).isSymbolicLink() && statSync(projectReferencePath).isFile() && realpathSync(projectReferencePath).startsWith(realpathSync(root) + '/') && shaPath(projectReferencePath) === identity.reference_sha256
     && existsSync(referencePath) && !lstatSync(referencePath).isSymbolicLink() && statSync(referencePath).isFile() && realpathSync(referencePath).startsWith(assetRoot) && shaPath(referencePath) === identity.reference_sha256;
-  const requests = Array.isArray(providerRequests.requests) ? providerRequests.requests : [];
-  const candidateObjects = Array.isArray(review.candidates) ? review.candidates : [];
-  const styleObjects = Array.isArray(review.styles) ? review.styles : [];
-  const requiredStyles = ['V1', 'V2', 'V3'];
-  const requiredSizes = [
-    {suffix: '3x4', aspect_ratio: '3:4', width: 1080, height: 1440},
-    {suffix: '4x3', aspect_ratio: '4:3', width: 1440, height: 1080},
-    {suffix: '16x9', aspect_ratio: '16:9', width: 1920, height: 1080}
-  ];
-  const requiredCandidateIds = requiredStyles.flatMap((styleId) => requiredSizes.map((size) => `${styleId}-${size.suffix}`));
-  const candidateIds = candidateObjects.map((candidate) => candidate?.candidate_id);
-  const candidateAssets = candidateObjects.map((candidate) => candidate?.asset);
-  const candidateHashes = [];
-  const validCandidateRequests = candidateObjects.length === 9 && candidateObjects.every((candidate) => {
-    if (!candidate || typeof candidate !== 'object' || typeof candidate.candidate_id !== 'string' || typeof candidate.style_id !== 'string' || typeof candidate.aspect_ratio !== 'string' || typeof candidate.asset !== 'string' || typeof candidate.thumbnail !== 'string') return false;
-    const size = requiredSizes.find((item) => item.aspect_ratio === candidate.aspect_ratio);
-    if (!requiredStyles.includes(candidate.style_id) || !size || candidate.candidate_id !== `${candidate.style_id}-${size.suffix}` || candidate.canvas?.width !== size.width || candidate.canvas?.height !== size.height) return false;
-    const candidateAsset = resolve(episodeDir, candidate.asset);
-    const thumbnail = resolve(episodeDir, candidate.thumbnail);
-    if (!existsSync(candidateAsset) || !existsSync(thumbnail) || !realpathSync(candidateAsset).startsWith(assetRoot) || !realpathSync(thumbnail).startsWith(assetRoot)) return false;
-    const candidateDimensions = imageDimensions(candidateAsset);
-    if (!candidateDimensions || candidateDimensions.width !== size.width || candidateDimensions.height !== size.height) return false;
-    const request = requests.find((item) => item?.candidate_id === candidate.candidate_id && item?.output_asset === candidate.asset);
-    candidateHashes.push(shaPath(candidateAsset));
-    return request && request.style_id === candidate.style_id && request.aspect_ratio === candidate.aspect_ratio && request.canvas?.width === size.width && request.canvas?.height === size.height
-      && request.image_provider === cover.image_provider && request.source_prompt && request.output_sha256 === shaPath(candidateAsset)
-      && request.reference_mode === cover.reference_mode && request.reference_asset === cover.reference_asset && request.reference_sha256 === cover.reference_sha256
-      && candidate.readability === 'PASS' && candidate.script_consistency === 'PASS';
-  });
-  const selectedStyles = styleObjects.filter((style) => style?.verdict === 'SELECTED');
-  const styleIds = styleObjects.map((style) => style?.style_id);
-  const validStyleSelection = styleObjects.length === 3 && new Set(styleIds).size === 3 && requiredStyles.every((styleId) => styleIds.includes(styleId))
-    && styleObjects.every((style) => requiredStyles.includes(style?.style_id) && ['SELECTED', 'NOT_SELECTED'].includes(style?.verdict) && typeof style?.reason === 'string' && style.reason.trim())
-    && selectedStyles.length === 1 && selectedStyles[0].style_id === cover.selected_style_id && review.selected_style_id === cover.selected_style_id;
-  const selectedAssets = Array.isArray(cover.selected_assets) ? cover.selected_assets : [];
-  const validSelectedAssets = selectedAssets.length === 3 && requiredSizes.every((size) => {
-    const selected = selectedAssets.find((item) => item?.aspect_ratio === size.aspect_ratio);
-    const expectedId = `${cover.selected_style_id}-${size.suffix}`;
-    const candidate = candidateObjects.find((item) => item?.candidate_id === expectedId);
-    const request = requests.find((item) => item?.candidate_id === expectedId && item?.output_asset === candidate?.asset);
-    return selected?.candidate_id === expectedId && selected?.canvas?.width === size.width && selected?.canvas?.height === size.height
-      && selected?.asset === candidate?.asset && selected?.source_prompt === request?.source_prompt;
-  });
-  const selectedAssetPaths = selectedAssets.map((item) => item?.asset);
-  const reviewSelectedAssets = Array.isArray(review.selected_assets) ? review.selected_assets : [];
-  const primarySelected = selectedAssets.find((item) => item?.aspect_ratio === '16:9');
-  const validCandidateSet = new Set(candidateIds).size === 9 && new Set(candidateAssets).size === 9 && new Set(candidateHashes).size === 9
-    && requiredCandidateIds.every((candidateId) => candidateIds.includes(candidateId));
-  const validReviewSelection = reviewSelectedAssets.length === 3 && new Set(reviewSelectedAssets).size === 3
-    && selectedAssetPaths.every((selectedAsset) => reviewSelectedAssets.includes(selectedAsset))
-    && primarySelected?.asset === cover.selected_asset && primarySelected?.source_prompt === cover.source_prompt;
-  if (!cover.selected_asset || !cover.title || !cover.canvas?.width || !cover.canvas?.height || cover.script_hash !== scriptHash()
-    || !actualAsset.startsWith(assetRoot) || !dimensions || !Array.isArray(cover.large_text) || !cover.large_text.some((text) => typeof text === 'string' && text.trim())
-    || cover.canvas.width !== 1920 || cover.canvas.height !== 1080
-    || dimensions.width !== 1920 || dimensions.height !== 1080 || cover.title !== scriptTitle
-    || review.script_hash !== scriptHash() || review.selected_asset !== cover.selected_asset || review.thumbnail_readability !== 'PASS' || typeof review.expected_metric !== 'string' || !review.expected_metric.trim() || typeof review.reviewer !== 'string' || !review.reviewer.trim() || Number.isNaN(Date.parse(review.reviewed_at))
-    || (config.schema_version === 2 && (Number.isNaN(Date.parse(config.distribution_contract?.locked_at)) || typeof cover.source_prompt !== 'string' || !cover.source_prompt.trim() || typeof cover.image_provider !== 'string' || !cover.image_provider.trim() || cover.image_provider !== lockedImageProvider || cover.selection_mode !== expectedSelectionMode || cover.prompt_executor !== 'cover-prompt-strategy' || review.prompt_executor !== cover.prompt_executor || review.image_provider !== cover.image_provider || review.selection_mode !== cover.selection_mode || review.reference_mode !== cover.reference_mode || review.reference_asset !== cover.reference_asset || review.reference_sha256 !== cover.reference_sha256 || providerRequests.schema_version !== 1 || providerRequests.script_hash !== scriptHash() || providerRequests.image_provider !== cover.image_provider || providerRequests.reference_mode !== cover.reference_mode || providerRequests.reference_asset !== cover.reference_asset || providerRequests.reference_sha256 !== cover.reference_sha256 || !validReference || !validCandidateRequests || !validCandidateSet || !validStyleSelection || !validSelectedAssets || !validReviewSelection || autonomousReviewerInvalid))) {
-    return {done: false, reason: 'selected-cover 必须绑定项目 Jeffrey 头像、本期 reference 副本与3种风格×3个尺寸共9张唯一 reference-edit 候选；reference_mode=NONE 或任一 SHA 不一致均失败；AUTONOMOUS_RUN只接受非Jeffrey的AGENT_PROXY'};
+  if (!validReference) return {done: false, reason: '项目 Jeffrey 头像、本期 reference 副本与 cover_identity_contract 必须完全一致'};
+  const prompt = readFileSync(file('05-封面/cover-prompts.md'), 'utf8');
+  const frontmatter = prompt.match(/^---\n([\s\S]*?)\n---/);
+  const field = (name) => frontmatter?.[1].match(new RegExp('^' + name + ':\\s*(.+)\\s*$', 'm'))?.[1]?.trim();
+  if (field('script_hash') !== scriptHash() || field('prompt_executor') !== 'cover-prompt-strategy' || !field('image_provider') || field('reference_mode') !== 'REQUIRED' || !['reference/jeffrey-reference.jpg', identity.episode_asset].includes(field('reference_asset')) || field('reference_sha256') !== identity.reference_sha256) {
+    return {done: false, reason: 'cover-prompts.md 必须绑定当前稿、cover-prompt-strategy、image_provider 与本期 REQUIRED reference 路径/SHA'};
   }
-  return {done: true, reason: '封面选择已登记'};
-}, 'selected-cover.json 无法读取');
+  const candidateImages = readdirSync(coverRoot, {withFileTypes: true})
+    .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
+    .map((entry) => ({name: entry.name, path: join(coverRoot, entry.name)}))
+    .filter((candidate) => statSync(candidate.path).size > 0 && realpathSync(candidate.path).startsWith(assetRoot));
+  const decodable = candidateImages.find((candidate) => {
+    try { return Boolean(imageDimensions(candidate.path)); }
+    catch { return false; }
+  });
+  if (!decodable) return {done: false, reason: '05-封面/ 根目录至少需要1张真实可解码 PNG、JPEG 或 WebP 候选图'};
+  return {done: true, reason: `封面最小合同已完成：提示词绑定当前稿与本期头像，首张真实候选=${decodable.name}`};
+}, '封面最小合同无法读取');
 const calibrationState = () => safely(() => {
   if (!exists('03-校准报告.md')) return {done: false, reason: '缺 03-校准报告.md'};
   const report = readFileSync(file('03-校准报告.md'), 'utf8');
@@ -449,13 +381,18 @@ const scriptState = () => safely(() => {
   const executorLock = readJson('00-编排/executor-lock.json');
   const lockedVersion = executorLock.selected_executors?.find((item) => String(item.node) === '2' && item.id === 'laohan-chuangzuo')?.version;
   const commonValid = decision.topic_thesis === topic.thesis && decision.hypothesis_id === topic.experiment?.hypothesis_id && decision.content_form === topic.content_form && decision.audience === topic.audience && decision.script_hash === scriptHash() && decision.script_title === title && !Number.isNaN(Date.parse(decision.completed_at)) && typeof decision.input_mode === 'string' && decision.input_mode.trim() && typeof decision.active_style_file === 'string' && decision.active_style_file.trim() && /^[a-f0-9]{64}$/.test(decision.active_style_sha256 || '') && typeof decision.structure_tool === 'string' && decision.structure_tool.trim() && typeof decision.structure_rationale === 'string' && decision.structure_rationale.trim() && nonEmptyStrings(decision.fact_boundary) && typeof decision.expected_audience_effect === 'string' && decision.expected_audience_effect.trim() && nonEmptyStrings(decision.alternative_structures) && nonEmptyStrings(decision.unproven_assumptions) && validSteps;
-  if (lockedVersion === '1.7.0') {
+  const versionMatch = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!versionMatch) return {done: false, reason: 'executor lock 中 laohan-chuangzuo 版本无效'};
+  const [, majorText, minorText] = versionMatch;
+  const schema3 = Number(majorText) > 1 || (Number(majorText) === 1 && Number(minorText) >= 7);
+  if (schema3) {
     if (decision.schema_version !== 3 || !commonValid) return {done: false, reason: 'schema 3 创作决策必须绑定当前稿/①、完整规划与至少两项原创增量'};
     if (!existsSync(scriptContractChecker)) return {done: false, reason: '缺 laohan-chuangzuo schema 3 validator'};
     const contract = spawnSync('node', [scriptContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
     if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || 'schema 3创作机械合同失败').trim()};
     return {done: true, reason: (contract.stdout || 'schema 3创作机械合同通过').trim()};
   }
+  if (!/^1\.6\.\d+$/.test(lockedVersion)) return {done: false, reason: `不支持的 laohan-chuangzuo 旧版本: ${lockedVersion}`};
   if (decision.schema_version !== 2 || !commonValid || !validLegacyPlan || !nonEmptyStrings(decision.original_contributions) || decision.original_contributions.length < 2 || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0 || !checkKeys.every((key) => checks[key] === 'PASS') || typeof checks.read_aloud_note !== 'string' || !checks.read_aloud_note.trim()) return {done: false, reason: 'schema 2 创作决策必须绑定当前稿/①，并证明 Step -1—7、论证与拍摄规划、至少两项原创增量、六关检查和试读已完成'};
   return {done: true, reason: 'schema 2 创作执行记录已绑定当前稿与选题合同'};
 }, '创作决策无法读取');
@@ -590,7 +527,7 @@ const steps = [
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
-  {id: '⑥', name: '封面选择', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider + selection policy', done: () => coverState().done, output: '05-封面/selected-cover.json + cover-review.json'},
+  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 至少1张真实候选图'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
   {id: '⑧', name: 'Codex自动剪辑与实际字幕', skill: directProduction ? 'codex-direct-production' : 'whisper-timestamped + registered edit executor', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/{raw-transcript.json,edit-candidates.json,edit-decision.json,edit-render.json,clean.mp4,clean-transcript.json,subtitles.srt,spoken-script-variance.json,edit-review.json,edit-manifest.json}'},
   {id: '⑨', name: directProduction ? 'Codex Direct导演' : 'METHOD_LAB语义导演', skill: directProduction ? 'codex-direct-production' : 'laohan-daoyan', done: () => gateState('director-output', directProduction ? 'Direct brief 契约未通过' : '导演输出契约未通过').done, output: directProduction ? '09-导演/{direct-brief.json,source-manifest.json}' : '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
@@ -685,7 +622,7 @@ if (command === 'check') {
     const coverReady = requiredStage === 'production' ? coverReadyForProduction : coverState().done;
     const prerequisites = [topicState().done, scriptState().done, complianceState().done, calibrationState().done, deepScanState().done, coverReady, shootingState().done];
     if (prerequisites.some((value) => !value)) {
-      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成①—⑤、⑦，并完成⑥或登记Jeffrey本期封面延后授权' : '发布/闭环前必须真实完成①—⑦，封面延后不算⑥PASS') + '；最终盲预测必须RECORDED，且所有稿件绑定当前hash');
+      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成①—⑤、⑦，并完成⑥最小合同或登记Jeffrey本期封面延后授权' : '发布/闭环前必须真实完成①—⑦；⑥只要求提示词加至少1张真实候选') + '；最终盲预测必须RECORDED，且所有稿件绑定当前hash');
       process.exit(1);
     }
   }

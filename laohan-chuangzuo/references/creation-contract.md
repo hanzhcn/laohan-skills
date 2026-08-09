@@ -13,6 +13,8 @@ schema 3 必须先证明它执行了创作规划，而不是落稿后补一个ha
 
 Episode模式由编排器先核对①的主题、假设、内容形式和受众，再把其余 schema 3 机械检查统一交给本validator；不得在编排器内另写一套互相冲突的schema 3字段规则。
 
+`opening_contract.required_prefix` 固定为“嘿，你有没有这种感觉，”，`anchor_text` 必须是第一段固定开场后的真实原文；validator用本机TTS测量从开头到该锚点的时长，超过5秒即BLOCKED。
+
 ## 内容单位
 
 每个 `content_units[]` 必须包含：
@@ -34,6 +36,8 @@ Episode模式由编排器先核对①的主题、假设、内容形式和受众�
 | `VOICE_ONLY` | 人味呼吸段；不绑定内容单位，不冒充信息增量 |
 | `CALLBACK` | 回扣旧单位，但必须写新的后果或行动 |
 | `CTA` | 行动号召或固定收尾；不绑定内容单位 |
+
+同一内容单位只能在一个 `CONTENT` 段承担新增信息；后文需要回扣时使用 `CALLBACK` 并增加新的后果或行动，不能再次把它登记成内容增量。
 
 两遍 `semantic_redundancy_review` 固定为：第一遍逐段核对内容单位，第二遍排除人味设备后复核同义判断。发现重复只能 `MERGED`、`REMOVED`，或在确有新后果时 `ALLOWED_CALLBACK`。
 

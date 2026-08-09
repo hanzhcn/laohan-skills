@@ -88,7 +88,7 @@ schema 3 至少包含：
 - 非空数组 `fact_boundary`、`alternative_structures`、`unproven_assumptions`；
 - Step 3 的 `argument_plan`：`opening_contract`、`reasoning_path`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations`；
 - 至少两项 `original_contributions`，每项写清新增判断及其观众价值；
-- `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
+- `opening_contract.anchor_text` 绑定第一段5秒内的真实锚点；`content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
 - `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS音频、SHA和 `ffprobe` 实测时长；
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；

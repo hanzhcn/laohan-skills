@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
-import {existsSync, readFileSync, realpathSync, statSync} from 'node:fs';
+import {existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 
@@ -76,7 +77,21 @@ const originalContributions = decision.original_contributions;
 if (!Array.isArray(originalContributions) || originalContributions.length < 2 || originalContributions.some((item) => !nonEmpty(item?.judgement) || !nonEmpty(item?.viewer_value))) fail('original_contributions 必须至少两项并写清新增判断与观众价值');
 
 const opening = decision.opening_contract || {};
-if (opening.required_prefix !== '嘿，你有没有这种感觉，' || opening.status !== 'PASS' || !paragraphs[0].startsWith(opening.required_prefix)) fail('固定开场必须为“嘿，你有没有这种感觉，”且位于第一段开头');
+if (opening.required_prefix !== '嘿，你有没有这种感觉，' || opening.status !== 'PASS' || !paragraphs[0].startsWith(opening.required_prefix) || !nonEmpty(opening.anchor_text)) fail('固定开场必须为“嘿，你有没有这种感觉，”且登记第一段锚点');
+const anchorIndex = paragraphs[0].indexOf(opening.anchor_text);
+if (anchorIndex < opening.required_prefix.length) fail('opening_contract.anchor_text 必须真实出现在第一段固定开场之后');
+const anchorText = paragraphs[0].slice(0, anchorIndex + opening.anchor_text.length);
+const anchorTemp = mkdtempSync(join(tmpdir(), 'chuangzuo-opening-'));
+try {
+  const anchorAudio = join(anchorTemp, 'anchor.aiff');
+  const say = spawnSync('say', ['-o', anchorAudio, anchorText], {encoding: 'utf8'});
+  if (say.status !== 0) fail('无法执行开场锚点本机TTS');
+  const anchorProbe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', anchorAudio], {encoding: 'utf8'});
+  const anchorSeconds = Number(anchorProbe.stdout?.trim());
+  if (anchorProbe.status !== 0 || !Number.isFinite(anchorSeconds) || anchorSeconds > 5) fail(`开场锚点超过5秒 actual=${anchorSeconds}`);
+} finally {
+  rmSync(anchorTemp, {recursive: true, force: true});
+}
 
 const sufficiency = decision.content_sufficiency || {};
 const sufficiencyStatuses = new Set(['SUFFICIENT_FOR_NATURAL_LENGTH', 'RESEARCHED_TO_SUFFICIENCY']);
@@ -105,6 +120,8 @@ for (let index = 0; index < audit.length; index += 1) {
 }
 const usedUnits = new Set(audit.filter((item) => item.role === 'CONTENT').flatMap((item) => item.content_unit_ids));
 if (unitIds.some((id) => !usedUnits.has(id))) fail('存在未落入正文CONTENT段的内容单位');
+const contentBindings = audit.filter((item) => item.role === 'CONTENT').flatMap((item) => item.content_unit_ids);
+if (new Set(contentBindings).size !== contentBindings.length) fail('同一内容单位不得在多个CONTENT段重复使用');
 
 const redundancy = decision.semantic_redundancy_review || {};
 if (redundancy.status !== 'PASS' || !Array.isArray(redundancy.passes) || redundancy.passes.length !== 2 || redundancy.passes.map((item) => item?.pass).join(',') !== '1,2' || redundancy.passes.some((item) => !nonEmpty(item.focus) || item.verdict !== 'PASS') || !Array.isArray(redundancy.duplicate_groups)) fail('必须完成两遍内容语义重复审计');
@@ -114,11 +131,11 @@ for (const group of redundancy.duplicate_groups) {
 
 const voice = decision.human_voice_contract || {};
 const voiceDevices = Array.isArray(voice.devices) ? voice.devices : [];
-const voiceTypes = voiceDevices.map((item) => item?.type);
+const voiceTypes = voiceDevices.map((item) => item?.type).filter(nonEmpty);
 if (voice.status !== 'PRESERVED' || voice.required_minimum_device_types !== 4 || new Set(voiceTypes).size < 4) fail('人味废话必须保留至少4种不同设备');
 for (const device of voiceDevices) {
   const index = auditIds.indexOf(device.paragraph_id);
-  if (index === -1 || !nonEmpty(device.text) || !paragraphs[index].includes(device.text)) fail('人味设备没有绑定真实段落原文');
+  if (!nonEmpty(device.type) || index === -1 || !nonEmpty(device.text) || !paragraphs[index].includes(device.text)) fail('人味设备没有绑定类型和真实段落原文');
 }
 
 const structure = decision.structure_contract || {};

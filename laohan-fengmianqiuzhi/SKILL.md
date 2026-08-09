@@ -1,21 +1,20 @@
 ---
 name: laohan-fengmianqiuzhi
-version: 1.5.0
-description: 基于秋芝2046实战模板和29种场景风格生成真人口播封面；固定输出3种视觉风格，每种生成3:4、4:3、16:9三个尺寸，共9张真实候选，最终选择1个风格并保留其3个尺寸，同时绑定真实头像、provider 与选择证据。Use when 用户说"生成封面提示词""做封面""封面""封面图""封面词"或工作流进入⑥。
+version: 1.6.0
+description: 基于秋芝2046实战模板和29种场景风格生成真人口播封面提示词；默认提供3种视觉风格与3种比例，但只要求以固定真人头像为reference生成至少1张真实候选即可通过，是否继续生成或改用Gemini由Jeffrey决定。Use when 用户说"生成封面提示词""做封面""封面""封面图""封面词"或工作流进入⑥。
 ---
 
 # 封面 brief 与提示词执行器
 
-以 v1.0 经实战使用的秋芝2046模板为默认创作基线，完整恢复标题拆解、六层英文 prompt、CENTER人物写法、头部比例、白底大字、角色/动作/道具/场景差异和29种风格库；在此基础上继续扩充，不以“自由发挥”替代已有方法。v1.2 的头像 reference、provider 与选图证据合同继续保留。
+以 v1.0 经实战使用的秋芝2046模板为默认创作基线，完整恢复标题拆解、六层英文 prompt、CENTER人物写法、头部比例、白底大字、角色/动作/道具/场景差异和29种风格库；在此基础上继续扩充，不以“自由发挥”替代已有方法。头像 reference 硬合同继续保留；图片数量、provider日志和预先选图从完成门槛中移除。
 
 ## 边界
 
 - 输入真源：`01-口播稿.md`、`episode-config.json` 的 `canvas` 与已锁定 `distribution_contract`。
 - 人物身份真源固定为项目 `assets/identity/jeffrey-cover-reference.jpg`；新期副本固定为 `05-封面/reference/jeffrey-reference.jpg`。
-- 输出：`05-封面/cover-prompts.md`，固定3个策略真正不同的视觉风格；每种分别提供3:4、4:3、16:9完整 prompt，共9个候选。
-- 不输出：假图片、`selected-cover.json`、CTR 结论或“某风格一定爆”。
-- REVIEW_GATED：最终选图留给 Jeffrey。
-- AUTONOMOUS_RUN：可由 agent proxy 依据缩略图可读性与稿件一致性选择；这仍不是发布效果证明。
+- 输出：`05-封面/cover-prompts.md`，默认提供3个策略真正不同的视觉风格；每种分别提供3:4、4:3、16:9完整 prompt。提示词完成后只生成其中1张真实候选即可通过⑥。
+- 不输出：假图片、CTR 结论或“某风格一定爆”。`provider-requests.json`、`cover-review.json`、`selected-cover.json` 可按需要记录，但都不是candidate/final/full硬门槛。
+- 第一张图生成后由 Jeffrey判断：接受现图、继续生成更多方向，或复制提示词到 Gemini。执行器不得为了凑数量卡住后续视频制作。
 
 ## Episode 前置 gate
 
@@ -51,7 +50,7 @@ description: 基于秋芝2046实战模板和29种场景风格生成真人口播�
 - 标题”月薪两万五被AI取代，法院判了” -> 横式”月薪两万五被AI取代，法院判了” | 左”被AI开除” | 右”真话扎心”
 - 标题”花大钱补课，考场都没了” -> 横式”花大钱补课，考场都没了” | 左”AI拆考场” | 右”还在补课?”
 
-`REFERENCE_REQUIRED` 是不可关闭的执行合同，不是提示语。frontmatter 必须同时写 `image_provider`、`reference_mode: REQUIRED`、本期内 `reference_asset` 与 `reference_sha256`；reference 必须来自项目真源并由新期创建器复制到 `05-封面/reference/`。provider 的9次调用都必须把该文件作为 reference image 参数传入，不能只在 prompt 里说“参考头像”，也不能使用 brand-new generation。
+`REFERENCE_REQUIRED` 是不可关闭的执行合同，不是提示语。frontmatter 必须同时写 `image_provider`、`reference_mode: REQUIRED`、本期内 `reference_asset` 与 `reference_sha256`；reference 必须来自项目真源并由新期创建器复制到 `05-封面/reference/`。每次实际生成都必须把该文件作为 reference image 参数传入，不能只在 prompt 里说“参考头像”，也不能使用 brand-new generation。
 
 头像只锁定人物身份和真实面部特征，不锁原照片的服装、姿势、表情、背景或光线；这些按每个视觉世界重新设计。
 
@@ -136,7 +135,8 @@ reference_asset: reference/jeffrey-reference.jpg
 reference_sha256: <sha256>
 style_count: 3
 size_count_per_style: 3
-candidate_count: 9
+prompt_count: 9
+minimum_generated_candidate_count: 1
 sizes:
   - {aspect_ratio: "3:4", width: 1080, height: 1440}
   - {aspect_ratio: "4:3", width: 1440, height: 1080}
@@ -166,82 +166,29 @@ sizes:
 ```
 ```
 
-V2、V3使用同一结构。Episode 与独立任务都固定输出3种风格×3种比例，共9个完整提示词。三个尺寸不是裁切版：同一风格内也要重新安排人物姿势、道具互动和场景细节。
+V2、V3使用同一结构。Episode 与独立任务默认输出3种风格×3种比例，共9个完整提示词；这表示提示词探索数量，不表示必须生成9张图片。三个尺寸不是裁切版：同一风格内也要重新安排人物姿势、道具互动和场景细节。
 
-## Image provider 与选择证据
+## Image provider 与完成条件
 
-prompt 写完后，编排器调用 `executor-lock.json` 已登记的 image provider，把 V1/V2/V3 的3:4、4:3、16:9各真实生成一张，共9张并全部参加比较。原图必须放入本期 `05-封面/`，不得用旧期图片、同图裁切或只写 prompt 冒充。provider 若支持 reference edit，使用已登记 reference 参数；OpenAI ImageGen 对人物身份保持使用 reference-image edit 路径，不得改走 brand-new generation。
+prompt 写完后，从最匹配本期的一个 prompt 开始，调用可用 image provider 生成1张真实候选。图片放入本期 `05-封面/` 根目录，格式使用可解码的 PNG、JPEG 或 WebP；不得用旧期图片、占位图或只写 prompt 冒充。
 
-每次真实调用追加写入 `05-封面/provider-requests.json`：`schema_version: 1`、`script_hash`、`image_provider`、`reference_mode`、reference 路径/SHA，以及每个候选的 `candidate_id`、`style_id`、`aspect_ratio`、`canvas`、`source_prompt`、`reference_asset`、`reference_sha256`、`output_asset`、`output_sha256`、`requested_at`。9个候选 ID 固定为 `V1|V2|V3` 与 `3x4|4x3|16x9` 的组合。缺 reference、项目真源/本期副本/config SHA 不一致、调用未传 `referenced_image_paths`，或 output SHA/尺寸与文件不一致，立即停在⑥。
+这一次实际生成必须传入 `05-封面/reference/jeffrey-reference.jpg`。项目真源、本期副本与 config SHA 不一致，或调用未传 reference image 时，立即停在⑥。头像只锁人物身份，服装、姿势、表情、背景和光线仍按提示词变化。
 
-provider 单次失败可用同一候选重试一次；仅当 `executor-lock.json` 已登记允许的 fallback 时才可切换 provider。任一风格缺任一尺寸、任一候选不可解码、9张不是独立生成、候选违反事实/可读性约束，或 default 与 fallback 均失败时，留在⑥并报告 `BLOCKED`，不得创建 `selected-cover.json` 或用旧图补位。
+满足以下两项即完成⑥：
 
-最终 `selected-cover.json` 至少包含：
+1. `cover-prompts.md` 绑定当前 `01-口播稿.md` SHA、`reference_mode: REQUIRED`、本期 reference 路径/SHA；
+2. `05-封面/` 根目录至少有1张真实、非空、可解码的候选图。
 
-```json
-{
-  "selected_style_id": "V1",
-  "selected_asset": "05-封面/V1-16x9.png",
-  "selected_assets": [
-    {"candidate_id": "V1-3x4", "aspect_ratio": "3:4", "canvas": {"width": 1080, "height": 1440}, "asset": "05-封面/V1-3x4.png", "source_prompt": "05-封面/cover-prompts.md#V1-3x4"},
-    {"candidate_id": "V1-4x3", "aspect_ratio": "4:3", "canvas": {"width": 1440, "height": 1080}, "asset": "05-封面/V1-4x3.png", "source_prompt": "05-封面/cover-prompts.md#V1-4x3"},
-    {"candidate_id": "V1-16x9", "aspect_ratio": "16:9", "canvas": {"width": 1920, "height": 1080}, "asset": "05-封面/V1-16x9.png", "source_prompt": "05-封面/cover-prompts.md#V1-16x9"}
-  ],
-  "title": "与当前稿一致的标题",
-  "canvas": {"width": 1920, "height": 1080},
-  "large_text": ["实际画面中的大字"],
-  "source_prompt": "05-封面/cover-prompts.md#V1-16x9",
-  "prompt_executor": "cover-prompt-strategy",
-  "image_provider": "openai-imagegen",
-  "reference_mode": "REQUIRED",
-  "reference_asset": "05-封面/reference/jeffrey-reference.jpg",
-  "reference_sha256": "<sha256>",
-  "selection_mode": "AGENT_PROXY",
-  "script_hash": "<sha256>",
-  "selected_at": "<ISO-8601>"
-}
-```
-
-`cover-review.json` 必须复制 `script_hash`、`selected_style_id`、`selected_asset`、`selected_assets`、`prompt_executor`、`image_provider`、`selection_mode`，写 `thumbnail_readability: "PASS"`、3个风格结论、9个真实 candidates、非空 `expected_metric`、非空 `reviewer` 和有效 `reviewed_at`。风格层只能一个 `SELECTED`；候选层记录各自尺寸、asset/thumbnail、缩略图可读性和稿件一致性。最小结构：
-
-```json
-{
-  "schema_version": 1,
-  "script_hash": "<sha256>",
-  "selected_style_id": "V1",
-  "selected_asset": "05-封面/V1-16x9.png",
-  "selected_assets": ["05-封面/V1-3x4.png", "05-封面/V1-4x3.png", "05-封面/V1-16x9.png"],
-  "prompt_executor": "cover-prompt-strategy",
-  "image_provider": "openai-imagegen",
-  "reference_mode": "REQUIRED",
-  "reference_asset": "05-封面/reference/jeffrey-reference.jpg",
-  "reference_sha256": "<sha256>",
-  "selection_mode": "AGENT_PROXY",
-  "thumbnail_readability": "PASS",
-  "styles": [
-    {"style_id": "V1", "verdict": "SELECTED", "reason": "具体理由"},
-    {"style_id": "V2", "verdict": "NOT_SELECTED", "reason": "具体理由"},
-    {"style_id": "V3", "verdict": "NOT_SELECTED", "reason": "具体理由"}
-  ],
-  "candidates": [
-    {"candidate_id": "V1-3x4", "style_id": "V1", "aspect_ratio": "3:4", "canvas": {"width": 1080, "height": 1440}, "asset": "05-封面/V1-3x4.png", "thumbnail": "05-封面/thumbnails/V1-3x4.png", "readability": "PASS", "script_consistency": "PASS"}
-  ],
-  "expected_metric": "发布后固定窗口验证的指标",
-  "reviewer": "审阅者",
-  "reviewed_at": "<ISO-8601>"
-}
-```
-
-REVIEW_GATED 的 `selection_mode` 必须是 `JEFFREY`；AUTONOMOUS_RUN 可用 `AGENT_PROXY`。
+生成首张后立即把决定权交给 Jeffrey。只有 Jeffrey要求继续时才生成其他风格或尺寸；他也可以复制现有提示词到 Gemini。`provider-requests.json`、`cover-review.json`、`selected-cover.json` 可用于后续追踪或发布选图，但缺失不得阻塞⑪接受、`final/full` 或下一制作环节。
 
 ## 选择标准
 
-先按风格分组匿名看9张缩略图，比较3个完整风格组：
+有多张候选时再做缩略图比较；只有一张时，Jeffrey直接判断是否继续生成：
 
 - 真实像素/比例正确；
 - 缩到实际信息流尺寸后核心文字仍可辨；
 - 标题、对象、动作和画面不冲突；
 - 无水印、二维码、伪 UI、错误汉字或未核验事实；
-- 三个风格确实是不同场景、动作和主道具，不是同一模板换皮；每个风格的3个尺寸都独立构图且完整可用。
+- 若继续扩展多个风格，它们应是不同场景、动作和主道具，不是同一模板换皮；多个尺寸应独立构图而不是机械裁切。
 
 发布后才能验证：点击/首屏代理、5秒留存及与同账号基线的关系。没有固定窗口数据时只能写“当前可读性选择”，不能升级某模板为默认。

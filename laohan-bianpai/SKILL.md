@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.15.0"
+version: "1.17.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -52,10 +52,10 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 - schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。唯一 SELECTED 必须锁定 why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。教程型 lane 的 SELECTED 候选还必须绑定 `tutorial_proof`：`status: VERIFIED`、本机真实执行产物的 `evidence_path` 与 `evidence_sha256`、`version_boundary` 与 `recovery` 方法，对应 CLAUDE.md 第13条“教程写成确定步骤前仍须本机真实执行、版本边界和恢复方法”。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
 - 新期②必须使用 `laohan-chuangzuo` schema 3，并实际通过其 `scripts/check-script-contract.mjs`：固定“嘿”开场、独立内容单位、逐段SHA、两遍内容重复审计、至少4种人味设备、自然稿长、连续分层编号和本机TTS缺一不可。旧episode按其 executor lock 中的1.6.x继续验证schema 2，不静默迁移。
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
-- ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；9次 provider request、selected cover 与 review 必须逐项绑定本期 reference 路径/SHA，且项目真源、本期副本、config SHA 必须一致。最终只能选1个风格并保留其3个尺寸；provider 必须等于 executor lock 的⑥ image-provider，`reference_mode=NONE`、纯文字描述人物或未传头像的新图生成都是硬失败。候选 `style_id` 固定为 `V1`/`V2`/`V3`，尺寸后缀固定为 `3x4`/`4x3`/`16x9`，`candidate_id` 固定为 `${style_id}-${size_suffix}`（如 `V1-3x4`）；该命名契约与 `laohan-fengmianqiuzhi` 候选命名强耦合，改命名必须两 skill 同步。
-- 封面延后仅允许进入⑧—⑪候选生产，不算⑥完成。`--require production` 可接受有效的本期延后授权；`--require final|full`、Jeffrey候选接受及⑫仍必须让真实 `coverState` 通过。
+- ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；项目真源、本期副本与 config SHA 必须一致。最小完成合同为：绑定当前稿和本期 reference 的 `cover-prompts.md`，加 `05-封面/` 根目录至少1张真实可解码候选图。九图、provider request、review和 `selected-cover.json` 均不是成片门槛；任何实际生成仍必须传入本期头像，纯文字描述人物或 brand-new generation 都是硬失败。
+- 封面延后仅用于提示词或首张候选尚未完成时的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐最小合同后 `--require final|full` 直接通过⑥，不等待额外图片或预先选图。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
-- ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA 与 Jeffrey 接受。
+- ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA。默认由 Jeffrey 看过并接受；仅当前 episode 预先记录 Jeffrey 本人、ISO时间和原话的 `final_selection_contract.mode=AGENT_PROXY` 时，Codex可在完整QA后代为选择，并写 `selection_mode=AGENT_PROXY` 的审阅记录。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。
 - 有产物但未满足 gate 时，报告 BLOCKED，不算完成；JSON 损坏也必须报告 BLOCKED，不输出 stack trace。
 - 普通 `check` 只检查已有输入并明确输出 INCOMPLETE；只有 `--require production|final|full` 可作为阶段验收。
@@ -69,7 +69,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 ## 反模式
 
 ❌ 看见 `01-口播稿.md` 就认为整期可拍。  
-✅ 先检查 config、事实核验、封面选择和拍摄契约。
+✅ 先检查 config、事实核验、封面最小合同和拍摄契约。
 
 ❌ 自动跳过 no_result 或技术失败。  
 ✅ 保留 BLOCKED，并返回产生该决策的上游步骤。
