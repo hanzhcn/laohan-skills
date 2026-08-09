@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "1.7.0"
+version: "1.8.0"
 ---
 
 # 统一创作引擎
@@ -94,6 +94,7 @@ schema 3 至少包含：
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
+- `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
 
 字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；未出现 `PASS chuangzuo script contract schema=3` 时不得声称②完成。
 
@@ -226,6 +227,7 @@ schema 3 至少包含：
 1. **内容充足度**：把热点或素材能支持的独立内容单位全部列出。每个单位必须包含新判断、支撑和观众价值；只有措辞不同的不算新单位。
 2. **自然稿长决策**：热点短小但已经能形成完整判断时写 `KEEP_NATURAL_LENGTH`，允许短稿；只有找到新的机制、案例、反例、操作或边界才能写 `EXPANDED_WITH_NEW_UNITS`。禁止为了 `expected_duration_seconds`、`typical_duration_seconds` 或字数补同义段落。
 3. **结构合同**：确有多个并列层级时，规划连续的 `1、2、3……`；没有真实层级时保持自然叙述，不为了形式拆段。
+4. **发布文案策略**：从正文核心冲突中生成3个标题候选，登记标题公式和至少两条正文证据，再按明确理由只选1个主推标题。观点型/产品回归介绍按“观众问题 → 可信证据 → 核心内容 → 下一步 → 互动”规划；教程型按“观众问题 → 核心内容 → 实测或步骤证据 → 下一步 → 互动”规划，不能临时拼接与正文无关的卖点。
 
 ## Step 4：写口播稿
 
@@ -234,6 +236,7 @@ schema 3 至少包含：
 - **固定开场**：第一段必须以“嘿，你有没有这种感觉，”开头，并在5秒内给锚点；教程型也先使用这句，再接专用钩子
 - **停更/回归/产品开发题**：第一段强制使用 `ACTIVE_STYLE_FILE` 的“问题先行四问开场”，依次回答观众问题、停更动机、可信行动、产物定义；“做了一个”却不说明产品类别、目标用户和使用结果，Step 4 不通过
 - 第一行 `# 标题`（≤30字，模式A「动词+工具/场景+结果」，模式B「主题句+情绪句」）
+- **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，并且每次必须包含抖音活动标签 `#AI新星计划`；这一区域不进入口播、TTS、内容单位或段落审计
 - 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
 
 **写稿时同步自检：**
@@ -297,6 +300,12 @@ schema 3 至少包含：
 - 废话感以原版≥4种为默认目标
 - 任何删减都写入 `创作决策.json`，说明为什么删后效果更好；没有证据时保留原版
 
+**F. 发布文案检查：**
+- 主推标题有3个候选、至少2条正文证据和非空选择理由，最终稿只保留选中的1个
+- 标题承诺能被正文兑现；观点型突出可信证据与反常结果，教程型突出搜索词、动作和具体结果
+- 视频介绍按当前内容类型完成五段信息结构，数字、功能和结果不超出正文事实边界
+- 视频介绍只保留1个互动问题，并且标签原样包含 `#AI新星计划`
+
 ## Step 6：通过/重试
 
 - ✅ 全部通过 → Step 7
@@ -307,7 +316,8 @@ schema 3 至少包含：
 1. 独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
 2. 独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整试读并用 `ffprobe` 记录真实时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA。
-4. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
+4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
+5. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。
 

@@ -10,6 +10,7 @@ schema 3 必须先证明它执行了创作规划，而不是落稿后补一个ha
 - `fact_boundary`、`alternative_structures`、`unproven_assumptions` 均为非空字符串数组；
 - `argument_plan.opening_contract`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations` 均非空，`reasoning_path` 是非空步骤数组；
 - `original_contributions` 至少2项，每项必须同时写非空 `judgement` 与 `viewer_value`。schema 2 的字符串数组不能冒充 schema 3 原创增量。
+- `publish_copy_contract` 必须在Step 3登记3个标题候选、唯一主推标题、选择理由、至少两条可回到正文的标题证据、视频介绍证据及其结构；落稿后再绑定主推标题原文和视频介绍SHA。
 
 Episode模式由编排器先核对①的主题、假设、内容形式和受众，再把其余 schema 3 机械检查统一交给本validator；不得在编排器内另写一套互相冲突的schema 3字段规则。
 
@@ -40,6 +41,52 @@ Episode模式由编排器先核对①的主题、假设、内容形式和受众�
 同一内容单位只能在一个 `CONTENT` 段承担新增信息；后文需要回扣时使用 `CALLBACK` 并增加新的后果或行动，不能再次把它登记成内容增量。
 
 两遍 `semantic_redundancy_review` 固定为：第一遍逐段核对内容单位，第二遍排除人味设备后复核同义判断。发现重复只能 `MERGED`、`REMOVED`，或在确有新后果时 `ALLOWED_CALLBACK`。
+
+## 抖音发布信息
+
+每份口播稿在正文之后固定追加以下非口播区域：
+
+```markdown
+## 抖音发布信息
+
+### 主推标题
+[本期唯一主推标题]
+
+### 视频介绍
+[本期视频介绍]
+
+#本题标签 #AI新星计划
+```
+
+主推标题和视频介绍都必须非空；视频介绍中的标签按本题选择，但每次必须原样包含抖音活动标签 `#AI新星计划`。发布信息不进入口播段落、内容单位、逐段审计、句长统计或TTS，整份Markdown的 `script_hash` 仍必须绑定它，防止正文与发布文案脱节。
+
+`publish_copy_contract` 最小合同：
+
+```json
+{
+  "platform": "douyin",
+  "status": "PASS",
+  "title_strategy": "SPECIFIC_EVIDENCE_PLUS_COUNTERINTUITIVE_RESULT",
+  "title_evidence": ["正文证据一", "正文证据二"],
+  "title_candidates": ["候选一", "候选二", "候选三"],
+  "recommended_title": "稿件中的主推标题原文",
+  "selection_rationale": "为什么这一条比另外两条更适合",
+  "description_evidence": ["介绍证据一", "介绍证据二"],
+  "video_description_structure": [
+    "AUDIENCE_PROBLEM",
+    "CREDIBILITY_EVIDENCE",
+    "CORE_CONTENT",
+    "NEXT_EXPECTATION_OR_ACTION",
+    "INTERACTION"
+  ],
+  "video_description_sha256": "视频介绍区全文sha256",
+  "required_hashtags": ["#AI新星计划"]
+}
+```
+
+主推标题生成顺序固定为：先提炼正文唯一核心冲突，再挑可核验的数字、时间、成本、动作或结果，最后选择匹配本题的公式。观点型优先“具体证据 + 反常结果/追问”；教程型优先“工具或场景 + 动作 + 具体结果”。必须生成3个不重复候选，按信息具体、冲突或搜索词清楚、正文兑现、念着顺口四项选出唯一主推，并登记非空选择理由。至少一条 `title_evidence` 必须直接出现在主推标题中，全部证据必须能在正文、标题或介绍中找到；禁止拿陌生品牌名、空泛情绪或正文没有兑现的夸张承诺硬做钩子。
+
+观点型和产品回归的视频介绍固定覆盖“观众问题 → 可信证据 → 核心内容 → 下一步 → 单一互动问题”；教程型覆盖“观众问题 → 核心内容 → 实测或步骤证据 → 下一步 → 单一互动问题”。`description_evidence`至少两条且必须出现在正文或介绍中。介绍不是正文摘要，也不重复整篇口播；标签通常选择题材、工具、内容类型和品牌词，必须保留 `#AI新星计划`。
 
 ## 人味与结构
 
@@ -84,4 +131,4 @@ node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mj
   --base "$PWD"
 ```
 
-只有命令输出 `PASS chuangzuo script contract schema=3` 才完成。validator检查固定开场、当前稿/风格SHA、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。
+只有命令输出 `PASS chuangzuo script contract schema=3` 才完成。validator检查固定开场、当前稿/风格SHA、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。

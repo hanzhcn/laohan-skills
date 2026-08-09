@@ -57,16 +57,55 @@ const script = readFileSync(scriptPath, 'utf8').replace(/\r\n/g, '\n');
 const title = script.match(/^#\s+(.+)$/m)?.[1]?.trim();
 if (!title) fail('稿件第一行必须是非空一级标题');
 
-const body = script.replace(/^#\s+.+\n?/, '').split(/^##\s+拍摄备注\s*$/m)[0];
+const publishHeading = /^##\s+抖音发布信息\s*$/m.exec(script);
+if (!publishHeading) fail('稿件必须包含“## 抖音发布信息”');
+const titleLineEnd = script.indexOf('\n');
+const shootingNotesIndex = script.search(/^##\s+拍摄备注\s*$/m);
+const bodyEnd = Math.min(publishHeading.index, shootingNotesIndex >= 0 ? shootingNotesIndex : publishHeading.index);
+const body = script.slice(titleLineEnd + 1, bodyEnd);
 const paragraphs = body
   .split(/\n\s*\n/)
   .map((block) => block.split('\n').filter((line) => !/^\s*(?:---|>|##\s)/.test(line)).join('\n').trim())
   .filter(Boolean);
 if (!paragraphs.length) fail('稿件没有有效口播段落');
 
+const publishStart = publishHeading.index + publishHeading[0].length;
+const publishTail = script.slice(publishStart);
+const nextLevelTwoHeading = publishTail.search(/^##\s+/m);
+const publishBlock = (nextLevelTwoHeading >= 0 ? publishTail.slice(0, nextLevelTwoHeading) : publishTail).trim();
+const publishSubsection = (name) => {
+  const heading = new RegExp(`^###\\s+${name}\\s*$`, 'm').exec(publishBlock);
+  if (!heading) return '';
+  const tail = publishBlock.slice(heading.index + heading[0].length).replace(/^\s*\n/, '');
+  const nextHeading = tail.search(/^###\s+/m);
+  return (nextHeading >= 0 ? tail.slice(0, nextHeading) : tail).trim();
+};
+const recommendedTitle = publishSubsection('主推标题');
+const videoDescription = publishSubsection('视频介绍');
+if (!nonEmpty(recommendedTitle) || recommendedTitle.includes('\n') || Array.from(recommendedTitle).length > 30) fail('抖音主推标题必须是30字以内的单行非空标题');
+if (!nonEmpty(videoDescription)) fail('抖音视频介绍不能为空');
+const descriptionHashtags = videoDescription.match(/#[\p{L}\p{N}_-]+/gu) || [];
+if (!descriptionHashtags.includes('#AI新星计划')) fail('抖音视频介绍必须包含#AI新星计划');
+if ((videoDescription.match(/[？?]/g) || []).length !== 1) fail('抖音视频介绍必须且只能包含一个明确互动问题');
+
 if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') fail('创作决策必须使用 schema 3 / content-units-v1');
 if (decision.script_title !== title || decision.script_hash !== shaFile(scriptPath)) fail('创作决策未绑定当前稿标题与SHA-256');
 if (!nonEmpty(decision.active_style_file) || !existsSync(decision.active_style_file) || !statSync(decision.active_style_file).isFile() || decision.active_style_sha256 !== shaFile(decision.active_style_file)) fail('active style 路径或SHA-256无效');
+
+const publish = decision.publish_copy_contract || {};
+const allowedTitleStrategies = new Set(['SPECIFIC_EVIDENCE_PLUS_COUNTERINTUITIVE_RESULT', 'SEARCHABLE_TOOL_ACTION_RESULT', 'AUDIENCE_PROBLEM_PLUS_UNEXPECTED_RESULT']);
+const allowedDescriptionStructures = new Set([
+  JSON.stringify(['AUDIENCE_PROBLEM', 'CREDIBILITY_EVIDENCE', 'CORE_CONTENT', 'NEXT_EXPECTATION_OR_ACTION', 'INTERACTION']),
+  JSON.stringify(['AUDIENCE_PROBLEM', 'CORE_CONTENT', 'CREDIBILITY_EVIDENCE', 'NEXT_EXPECTATION_OR_ACTION', 'INTERACTION'])
+]);
+if (publish.platform !== 'douyin' || publish.status !== 'PASS' || !allowedTitleStrategies.has(publish.title_strategy) || publish.recommended_title !== recommendedTitle || !nonEmpty(publish.selection_rationale) || publish.video_description_sha256 !== shaText(videoDescription) || !allowedDescriptionStructures.has(JSON.stringify(publish.video_description_structure)) || !uniqueNonEmpty(publish.required_hashtags) || !publish.required_hashtags.includes('#AI新星计划')) fail('publish_copy_contract 未绑定标题选择、视频介绍结构与必带标签');
+if (!uniqueNonEmpty(publish.title_evidence) || publish.title_evidence.length < 2) fail('publish_copy_contract 至少需要两条标题证据');
+if (!uniqueNonEmpty(publish.title_candidates) || publish.title_candidates.length !== 3 || !publish.title_candidates.includes(recommendedTitle) || publish.title_candidates.some((candidate) => candidate.includes('\n') || Array.from(candidate).length > 30)) fail('publish_copy_contract 必须登记3个30字以内候选并选中唯一主推标题');
+if (!uniqueNonEmpty(publish.description_evidence) || publish.description_evidence.length < 2) fail('publish_copy_contract 至少需要两条视频介绍证据');
+const publishEvidenceCorpus = `${recommendedTitle}\n${paragraphs.join('\n')}\n${videoDescription}`;
+if (!publish.title_evidence.some((evidence) => recommendedTitle.includes(evidence)) || publish.title_evidence.some((evidence) => !publishEvidenceCorpus.includes(evidence))) fail('主推标题证据必须来自标题、正文或视频介绍，且至少一条直接进入标题');
+const descriptionEvidenceCorpus = `${paragraphs.join('\n')}\n${videoDescription}`;
+if (publish.description_evidence.some((evidence) => !descriptionEvidenceCorpus.includes(evidence))) fail('视频介绍证据必须来自正文或介绍');
 
 const requiredPlanningFields = ['topic_thesis', 'hypothesis_id', 'content_form', 'audience', 'expected_audience_effect', 'input_mode', 'structure_tool', 'structure_rationale'];
 if (!requiredPlanningFields.every((key) => nonEmpty(decision[key])) || !uniqueNonEmpty(decision.fact_boundary) || !uniqueNonEmpty(decision.alternative_structures) || !uniqueNonEmpty(decision.unproven_assumptions)) fail('schema 3 缺主题、受众、结构或事实边界规划');
@@ -173,4 +212,4 @@ const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', '
 if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.read_aloud_note)) fail('质量检查没有覆盖内容、人味、时长、结构与原有六关');
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
 
-console.log(`PASS chuangzuo script contract schema=3 paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} tts_seconds=${duration.actual_tts_seconds}`);
+console.log(`PASS chuangzuo script contract schema=3 paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);
