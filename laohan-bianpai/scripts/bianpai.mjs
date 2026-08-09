@@ -40,6 +40,8 @@ const vendorPreflightVerifier = join(root, 'scripts/verify-vendor-preflight.mjs'
 const dependencyChecker = join(root, 'scripts/check-production-dependencies.mjs');
 const runtimeChecker = join(root, 'scripts/check-workflow-runtime.mjs');
 const runtimeLock = join(root, 'workflow-runtime-lock.json');
+const skillsRoot = resolve(process.env.LAOHAN_SKILLS_ROOT || join(process.env.HOME, 'Documents/laohan-skills'));
+const scriptContractChecker = join(skillsRoot, 'laohan-chuangzuo/scripts/check-script-contract.mjs');
 if (!existsSync(checker)) {
   console.error('未找到工作流契约检查器: ' + checker);
   process.exit(2);
@@ -442,9 +444,19 @@ const scriptState = () => safely(() => {
   const plan = decision.argument_plan || {};
   const checks = decision.quality_checks || {};
   const checkKeys = ['content_floor', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
-  const validPlan = ['opening_contract', 'reasoning_path', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'].every((key) => typeof plan[key] === 'string' && plan[key].trim());
+  const validLegacyPlan = ['opening_contract', 'reasoning_path', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'].every((key) => typeof plan[key] === 'string' && plan[key].trim());
   const validSteps = completedSteps.every((key) => steps[key]?.status === 'COMPLETED') && skippedOrCompleted.every((key) => ['COMPLETED', 'SKIPPED'].includes(steps[key]?.status) && typeof steps[key]?.reason === 'string' && steps[key].reason.trim());
-  if (decision.schema_version !== 2 || decision.topic_thesis !== topic.thesis || decision.hypothesis_id !== topic.experiment?.hypothesis_id || decision.content_form !== topic.content_form || decision.audience !== topic.audience || decision.script_hash !== scriptHash() || decision.script_title !== title || Number.isNaN(Date.parse(decision.completed_at)) || typeof decision.input_mode !== 'string' || !decision.input_mode.trim() || typeof decision.active_style_file !== 'string' || !decision.active_style_file.trim() || !/^[a-f0-9]{64}$/.test(decision.active_style_sha256 || '') || typeof decision.structure_tool !== 'string' || !decision.structure_tool.trim() || typeof decision.structure_rationale !== 'string' || !decision.structure_rationale.trim() || !nonEmptyStrings(decision.fact_boundary) || typeof decision.expected_audience_effect !== 'string' || !decision.expected_audience_effect.trim() || !nonEmptyStrings(decision.alternative_structures) || !nonEmptyStrings(decision.unproven_assumptions) || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0 || !validPlan || !nonEmptyStrings(decision.original_contributions) || decision.original_contributions.length < 2 || !validSteps || !checkKeys.every((key) => checks[key] === 'PASS') || typeof checks.read_aloud_note !== 'string' || !checks.read_aloud_note.trim()) return {done: false, reason: 'schema 2 创作决策必须绑定当前稿/①，并证明 Step -1—7、论证与拍摄规划、至少两项原创增量、六关检查和试读已完成'};
+  const executorLock = readJson('00-编排/executor-lock.json');
+  const lockedVersion = executorLock.selected_executors?.find((item) => String(item.node) === '2' && item.id === 'laohan-chuangzuo')?.version;
+  const commonValid = decision.topic_thesis === topic.thesis && decision.hypothesis_id === topic.experiment?.hypothesis_id && decision.content_form === topic.content_form && decision.audience === topic.audience && decision.script_hash === scriptHash() && decision.script_title === title && !Number.isNaN(Date.parse(decision.completed_at)) && typeof decision.input_mode === 'string' && decision.input_mode.trim() && typeof decision.active_style_file === 'string' && decision.active_style_file.trim() && /^[a-f0-9]{64}$/.test(decision.active_style_sha256 || '') && typeof decision.structure_tool === 'string' && decision.structure_tool.trim() && typeof decision.structure_rationale === 'string' && decision.structure_rationale.trim() && nonEmptyStrings(decision.fact_boundary) && typeof decision.expected_audience_effect === 'string' && decision.expected_audience_effect.trim() && nonEmptyStrings(decision.alternative_structures) && nonEmptyStrings(decision.unproven_assumptions) && validSteps;
+  if (lockedVersion === '1.7.0') {
+    if (decision.schema_version !== 3 || !commonValid) return {done: false, reason: 'schema 3 创作决策必须绑定当前稿/①、完整规划与至少两项原创增量'};
+    if (!existsSync(scriptContractChecker)) return {done: false, reason: '缺 laohan-chuangzuo schema 3 validator'};
+    const contract = spawnSync('node', [scriptContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
+    if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || 'schema 3创作机械合同失败').trim()};
+    return {done: true, reason: (contract.stdout || 'schema 3创作机械合同通过').trim()};
+  }
+  if (decision.schema_version !== 2 || !commonValid || !validLegacyPlan || !nonEmptyStrings(decision.original_contributions) || decision.original_contributions.length < 2 || !Number.isFinite(decision.expected_duration_seconds) || decision.expected_duration_seconds <= 0 || !checkKeys.every((key) => checks[key] === 'PASS') || typeof checks.read_aloud_note !== 'string' || !checks.read_aloud_note.trim()) return {done: false, reason: 'schema 2 创作决策必须绑定当前稿/①，并证明 Step -1—7、论证与拍摄规划、至少两项原创增量、六关检查和试读已完成'};
   return {done: true, reason: 'schema 2 创作执行记录已绑定当前稿与选题合同'};
 }, '创作决策无法读取');
 const animationState = () => {
@@ -574,7 +586,7 @@ let directProduction = false;
 try { directProduction = readJson('episode-config.json').renderer_mode === 'CODEX_DIRECT'; } catch {}
 const steps = [
   {id: '①', name: '选题决策', skill: 'laohan-redian（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
-  {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '01-口播稿.md + 02-创作工作稿/创作决策.json'},
+  {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '01-口播稿.md + schema 3创作决策 + 本机TTS + chuangzuo validator PASS'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},

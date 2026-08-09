@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "1.6.0"
+version: "1.7.0"
 ---
 
 # 统一创作引擎
@@ -11,6 +11,8 @@ version: "1.6.0"
 ## 核心理念
 
 一份方法论、一个入口——所有写作走同一个管线，避免不同入口产出质量参差不齐。素材先整理（Layer A/B）再写稿，确保口播稿建立在结构化理解之上，而非对原始素材的直接改写。
+
+内容长度由独立内容单位决定，不由预设字数或分钟数决定。内容重复与人味废话是两条不同的审计线：同一判断换词复述必须合并；结巴、语气词、自嘲、反问和停顿继续按风格保留，不能因去重被误删，也不能冒充内容增量。
 
 ## 不适用场景
 
@@ -25,6 +27,7 @@ version: "1.6.0"
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
+- **创作机械合同**：`references/creation-contract.md`（schema 3内容单位、逐段审计、人味、自然时长、TTS与validator）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -76,20 +79,25 @@ OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 ep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。同时写 schema 2 `02-创作工作稿/创作决策.json`，它既是动笔前规划，也是落稿后的执行记录；最终必须绑定当前稿 SHA-256，不能靠旧决策给新稿放行。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
+当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。同时写 schema 3 `02-创作工作稿/创作决策.json`，它既是动笔前规划，也是落稿后的执行记录；最终必须绑定当前稿 SHA-256，不能靠旧决策给新稿放行。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
-schema 2 至少包含：
+schema 3 至少包含：
 
 - 与①一致的 `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`；
-- `input_mode`、`active_style_file`、`active_style_sha256`、`structure_tool`、`structure_rationale`、`expected_duration_seconds`；
+- `contract_version=content-units-v1`、`input_mode`、`active_style_file`、`active_style_sha256`、`structure_tool`、`structure_rationale`；
 - 非空数组 `fact_boundary`、`alternative_structures`、`unproven_assumptions`；
 - Step 3 的 `argument_plan`：`opening_contract`、`reasoning_path`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations`；
 - 至少两项 `original_contributions`，每项写清新增判断及其观众价值；
+- `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
+- `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
+- `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS音频、SHA和 `ffprobe` 实测时长；
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
-- `quality_checks` 的 `content_floor`、`originality`、`regex`、`style_boundary`、`ai_taste`、`technique_purpose` 均为 `PASS`，另有非空 `read_aloud_note`；
+- `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 
-任一改动改变 `01-口播稿.md` hash，都使②立即失效。错字或标点之外的实质改稿必须回 Step 3，重做规划、六关检查和试读，再写新的 schema 2 决策记录；不得只替换 hash。
+字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；未出现 `PASS chuangzuo script contract schema=3` 时不得声称②完成。
+
+任一改动改变 `01-口播稿.md` hash，都使②立即失效。错字或标点之外的实质改稿必须回 Step 3，重做规划、质量检查和试读，再写新的 schema 3 决策记录；不得只替换 hash。
 
 ## 执行清单（每步完成后打勾）
 
@@ -99,7 +107,7 @@ schema 2 至少包含：
 - [ ] Step 1: [素材模式] Layer A/B 整理
 - [ ] Step 1.5: [自由模式] 生成大纲→用户确认
 - [ ] Step 2: 选题确认（模式A/B选择+主题锁定）
-- [ ] Step 3: 规划（原版12项，不可跳过；可以增加，不得无依据删减）
+- [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
 - [ ] Step 5: 质量检查（6关）
 - [ ] Step 6: 通过/重试
@@ -213,11 +221,17 @@ schema 2 至少包含：
 11. **金句/比喻处理**：保留引用或替换；替换不得弱于原版冲击力
 12. **增量点与事实边界**：至少2处独立判断，同时标清来源、待⑤核验主张和不能伪装成亲测的内容
 
+原版12项完成后必须再产出三份硬结果，不能直接进入Step 4：
+
+1. **内容充足度**：把热点或素材能支持的独立内容单位全部列出。每个单位必须包含新判断、支撑和观众价值；只有措辞不同的不算新单位。
+2. **自然稿长决策**：热点短小但已经能形成完整判断时写 `KEEP_NATURAL_LENGTH`，允许短稿；只有找到新的机制、案例、反例、操作或边界才能写 `EXPANDED_WITH_NEW_UNITS`。禁止为了 `expected_duration_seconds`、`typical_duration_seconds` 或字数补同义段落。
+3. **结构合同**：确有多个并列层级时，规划连续的 `1、2、3……`；没有真实层级时保持自然叙述，不为了形式拆段。
+
 ## Step 4：写口播稿
 
 按规划写稿。硬性要求：
 
-- **原版开场默认**：通用模式优先使用“你有没有这种感觉，”并在5秒内给锚点；教程型按其完整规则选择专用钩子。只有本题存在更强的实证开场时才替换，并在 `创作决策.json` 记录理由
+- **固定开场**：第一段必须以“嘿，你有没有这种感觉，”开头，并在5秒内给锚点；教程型也先使用这句，再接专用钩子
 - 第一行 `# 标题`（≤30字，模式A「动词+工具/场景+结果」，模式B「主题句+情绪句」）
 - 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
 
@@ -227,6 +241,8 @@ schema 2 至少包含：
 - 标点：冒号→逗号，双引号→「」，「---」做句末停顿
 - #19“是不是有点意思”按原版3—5次目标自然融入；若本题语气不适合可减少并记录原因
 - 至少4种原版“废话感”元素，保持真人口播呼吸感
+- 人味废话单独登记为 `VOICE_ONLY` 或具体人味设备；内容审计时排除它们，不能因为不增加事实就删除
+- 每个内容段必须绑定至少一个内容单位并写清新增信息；同一判断只换词、没有新增支撑/例子/推论/操作/边界时直接合并
 - 节奏按原版快慢交替：开头拉满→缓冲→加速→缓冲→结尾加速→减速
 
 ## Step 5：质量检查
@@ -235,11 +251,12 @@ schema 2 至少包含：
 - 核心论点、关键证据和必要边界均已覆盖；素材覆盖度以原版≥80%为默认目标
 - 有明确反常识论点或足够强的结果演示
 - 结尾行动号召源自素材中的可执行精华
-- 标题核心词在正文形成持续记忆点，原版≥5处作为默认目标
+- 标题核心词在开场和关键结论自然出现；不设出现次数，不为记忆点复述同一内容
 - 核心主题贯穿全文，无偏离段落
 - 至少1个核心生活场景，并有代入式互动或动作链
 - 全文至少有一句离开本期经历、判断或边界就不能成立的具体表达；纯中性说明书不通过
-- 教程型默认350—1200字（约1.5—5分钟）；超出时在 `创作决策.json` 说明原因
+- 字数与时长没有默认下限或为凑时长设置的目标；完稿后以本机TTS实测记录自然时长
+- 两遍内容重复审计都必须通过：第一遍逐段检查新增内容单位，第二遍排除人味设备后检查同义判断；未解决的重复一律不通过
 
 **E2. 教程型专用（模式 A 时执行）：**
 - 有 ≥1 个明确操作步骤
@@ -287,7 +304,9 @@ schema 2 至少包含：
 ## Step 7：输出口播初稿
 
 1. 独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
-2. Episode 模式对最终文件计算 SHA-256，把最终标题、hash、Step -1—7 状态、六关结论和试读说明写回 schema 2 `创作决策.json`。没有这一步，写稿只算草稿，不算②完成。
+2. 独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
+3. 用本机 `say` 完整试读并用 `ffprobe` 记录真实时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA。
+4. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。
 
@@ -323,6 +342,8 @@ output/
 ├── organize-YYYY-MM-DD.md      ← Step 1 整理结果（素材模式）
 ├── outline-YYYY-MM-DD.md       ← Step 1.5 大纲（自由模式/热点模式）
 ├── script-YYYY-MM-DD.md        ← Step 7 口播初稿（本 skill 唯一终产物）
+├── script-YYYY-MM-DD.decision.json ← schema 3创作执行证据
+├── script-YYYY-MM-DD.tts.aiff  ← 本机实际试读证据
 └── (cover-prompts 不在此产出，由 laohan-fengmianqiuzhi 独立 skill 后续生成)
 ```
 
@@ -334,8 +355,9 @@ Episode 模式的完整中间产物固定为：
 episodes/<slug>/
 ├── 01-口播稿.md
 └── 02-创作工作稿/
-    ├── 创作决策.json
-    ├── 创作决策.md       ← 可选人类摘要
+　  ├── 创作决策.json
+　  ├── 创作决策.md       ← 可选人类摘要
+　  ├── tts-read-aloud.aiff ← 本机实际试读证据
     ├── transcript.md
     ├── content.md
     ├── organize.md

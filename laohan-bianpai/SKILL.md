@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.14.0"
+version: "1.15.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -50,7 +50,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 - schema 2在①前必须有distribution contract与executor lock；⑥开始前distribution必须锁定。⑦前必须有shooting_contract；⑦通过后Claude Code交接Codex执行⑧—⑪。⑨前必须有绑定当前raw/稿件的raw-transcript、edit-candidates、schema 2 edit-decision、edit-render、clean、large-v3 clean-transcript/SRT provenance、spoken-script-variance、Codex edit-review与schema 5 edit-manifest；候选必须逐项裁决，不确定KEEP，不路由人工审批。
 - schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。唯一 SELECTED 必须锁定 why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。教程型 lane 的 SELECTED 候选还必须绑定 `tutorial_proof`：`status: VERIFIED`、本机真实执行产物的 `evidence_path` 与 `evidence_sha256`、`version_boundary` 与 `recovery` 方法，对应 CLAUDE.md 第13条“教程写成确定步骤前仍须本机真实执行、版本边界和恢复方法”。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
-- schema 2 的②必须用 schema 2 `创作决策.json` 绑定当前稿 hash、最终标题、Step -1—7 执行状态、Step 3 规划、至少两项原创增量和六关质量结论。稿件 hash 改变时旧记录立即失效。
+- 新期②必须使用 `laohan-chuangzuo` schema 3，并实际通过其 `scripts/check-script-contract.mjs`：固定“嘿”开场、独立内容单位、逐段SHA、两遍内容重复审计、至少4种人味设备、自然稿长、连续分层编号和本机TTS缺一不可。旧episode按其 executor lock 中的1.6.x继续验证schema 2，不静默迁移。
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
 - ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；9次 provider request、selected cover 与 review 必须逐项绑定本期 reference 路径/SHA，且项目真源、本期副本、config SHA 必须一致。最终只能选1个风格并保留其3个尺寸；provider 必须等于 executor lock 的⑥ image-provider，`reference_mode=NONE`、纯文字描述人物或未传头像的新图生成都是硬失败。候选 `style_id` 固定为 `V1`/`V2`/`V3`，尺寸后缀固定为 `3x4`/`4x3`/`16x9`，`candidate_id` 固定为 `${style_id}-${size_suffix}`（如 `V1-3x4`）；该命名契约与 `laohan-fengmianqiuzhi` 候选命名强耦合，改命名必须两 skill 同步。
 - 封面延后仅允许进入⑧—⑪候选生产，不算⑥完成。`--require production` 可接受有效的本期延后授权；`--require final|full`、Jeffrey候选接受及⑫仍必须让真实 `coverState` 通过。
