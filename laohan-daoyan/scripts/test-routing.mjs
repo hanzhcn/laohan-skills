@@ -15,8 +15,8 @@ const legacy = read(join(skillRoot, 'references/method-lab-legacy.md'), 'METHOD_
 const method = JSON.parse(read(join(project, 'animation-method/director-system/method-v5.json'), 'V5方法真源'));
 const template = read(join(project, 'templates/director-state-v5.md'), 'V5导演状态模板');
 
-if (!/^version:\s*["']?2\.0\.0["']?\s*$/m.test(skill) || !/^description:.*V5导演预制入口.*WAITING_FOR_FOOTAGE/m.test(skill)) throw new Error('laohan-daoyan元数据必须把V5导演预制声明为默认入口');
-for (const token of ['UNDERSTAND_CONTENT', 'DIVERGE_2_TO_3_DIRECTIONS', 'CONVERGE_ONE_COHERENT_PLAN', 'method-v5.json', 'director-state-v5.md', 'LIGHTWEIGHT_RESULT_ONLY', '唯一新增业务产物', 'status: WAITING_FOR_FOOTAGE']) {
+if (!/^version:\s*["']?2\.0\.1["']?\s*$/m.test(skill) || !/^description:.*V5导演预制入口.*WAITING_FOR_FOOTAGE/m.test(skill)) throw new Error('laohan-daoyan元数据必须把V5导演预制声明为默认入口');
+for (const token of ['UNDERSTAND_CONTENT', 'DIVERGE_2_TO_3_DIRECTIONS', 'CONVERGE_ONE_COHERENT_PLAN', 'method-v5.json', 'director-state-v5.md', 'LIGHTWEIGHT_RESULT_ONLY', '唯一新增业务产物', 'status: WAITING_FOR_FOOTAGE', '_status.md', 'check-episode-contract.sh', '不得引用窗口开始时的旧PASS']) {
   if (!skill.includes(token)) throw new Error(`V5导演Skill缺少当前路线标记: ${token}`);
 }
 for (const forbiddenDefault of ['缺 clean.mp4、subtitles.srt', '在 09-导演/ 写入：导演简报.md', 'renderer_mode 为 CROSS_RENDER_VALIDATION_PAIR']) {

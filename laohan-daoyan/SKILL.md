@@ -1,6 +1,6 @@
 ---
 name: laohan-daoyan
-version: "2.0.0"
+version: "2.0.1"
 description: laohanAI真人口播新episode的V5导演预制入口。根据最终口播稿并可参考真人原片构图，执行UNDERSTAND→DIVERGE→CONVERGE，只落盘director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
 ---
 
@@ -57,7 +57,7 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 
 ## 落盘与停止
 
-唯一新增业务产物是当前episode的`09-导演/director-state.md`。新建episode产生的配置、状态和准入骨架不算导演产物。
+唯一新增业务产物是当前episode的`09-导演/director-state.md`。新建episode产生的配置、状态和准入骨架不算导演产物；`_status.md`是必须同步的编排元数据，不是第二个业务产物。
 
 完成时必须满足：
 
@@ -68,8 +68,12 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 - 每个内容段都有画面动作和轻量执行提示；
 - 高级技术、素材策略和拍摄后待确认项已记录；
 - 最终方案明确确认轻量视觉底线。
+- `_status.md`已把当前位置同步为V5导演预制完成，并勾选`V5导演预制`；已有raw但缺shooting record时不得把⑦误写为完成。
+- 最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`并取得PASS；不得引用窗口开始时的旧PASS，也不得用干净Git状态替代episode准入。
 
 随后立即停止并向Jeffrey报告`director-state.md`地址。即使真人原片已经存在，也不得在本窗口继续剪辑或实现；下一制作窗口再读取导演状态进入⑧—⑪。
+
+若实时config因registry/runtime漂移失败，必须报告实际错误并停止，不能手改executor lock。只有Jeffrey明确授权时，才可交由工作流受控迁移命令修复；修复后仍要重新运行实时config gate。
 
 ## V5禁止产物
 
