@@ -1,27 +1,30 @@
 ---
 name: laohan-sucai
-version: "1.1.0-candidate"
+version: "1.2.0-candidate"
 description: B-roll 素材供应器。读取⑨导演的 source manifest，搜索、下载、抽帧并记录可授权现实素材；只有视觉复核通过的资产可交⑪动画生产。Use when 用户说配素材、找B-roll、补真实场景、下载素材、审核素材、进入⑩素材，或⑨导演将 beat 路由为 BROLL_STOCK。
 ---
 
 # B-roll 素材供应器
 
-只为已经判定为 BROLL_STOCK 的现实场景找素材。它不决定动画、不把库存素材伪装成事实、不合成视频。
+只为已经判定为 BROLL_STOCK 的现实场景找素材。它不决定动画、不把库存素材伪装成事实、不合成视频。V5默认采用“永久本地素材Top-K＋网络高权重多样性”策略：本地catalog负责快速复用，Pexels/Pixabay/Coverr仍并行提供新候选；只下载最终选择项。
 
 ## 输入与停止条件
 
 正式入口是 09-导演/source-manifest.json 的 broll_requests，以及已批准的 PROOF_PUBLIC/PROOF_USER source_entries。每项 BROLL 必须有 beat_id、source_mode=BROLL_STOCK、visual_need 和 must_not_imply；PROOF 必须有 evidence.id。
 
-🛑 STOP：没有 broll_requests 或请求不是 BROLL_STOCK 时，不搜索、不下载。没有 provider key 时只写出 `no_result` 与 `provider_errors`，不会发起搜索或下载。
+🛑 STOP：没有 broll_requests 或请求不是 BROLL_STOCK 时，不搜索、不下载。是否生成请求由⑨素材策略决定；只要真实B-roll能增加具体性或画面变化，默认生成请求，只有明确`SKIP_WITH_REASON`才跳过网络。没有 provider key 时记录`provider_errors`并继续永久本地素材召回。
 
 ## 命令
 
 ~~~bash
-# 搜索候选：Pexels/Pixabay/Coverr 并行检索；至少配置一个 key
+# 搜索候选：默认读取项目本地catalog，同时并行检索Pexels/Pixabay/Coverr
 node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材
 
-# 本地素材库优先参与；local 候选会复制到本 episode 后再抽帧
+# 非项目cwd时可显式指定本地库；local候选会复制到本episode后再抽帧
 node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材 --local-library "/绝对路径/你的素材库"
+
+# accepted final使用过的网络素材才晋升永久素材库
+node scripts/material-library.mjs promote-episode episodes/<slug>
 
 # 下载一个候选，并生成缩略图供实际视觉检查
 node scripts/sucai.mjs download --manifest 10-素材/素材清单.json --beat B01 --candidate pexels:123
@@ -41,13 +44,15 @@ node scripts/register-proof-asset.mjs episodes/<slug> B03 <proof-file> <thumb-fi
 ## 工作流
 
 1. 读取 broll_requests 的 query_terms；缺 query_terms 时只用 visual_need，记录搜索理由。
-2. 若传入 --local-library 或 LAOHAN_LOCAL_BROLL_DIR，先把本地库加入候选来源；随后并行调用 Pexels、Pixabay、Coverr。Mixkit 不做自动抓取。
-3. 记录每个 provider 的 status、candidate_count、elapsed_ms、rate_limits；单个 provider 的无 key、限流或失败不阻断其他 provider。
-4. 写入 10-素材/素材清单.json、素材清单.md、_credits.md；素材清单必须记录当前 source_manifest_sha256，候选初始状态都是 candidate_unverified。
-5. 下载选择的 candidate，使用 FFmpeg 抽帧；local candidate 先复制到本 episode。
-6. 实际检查人物、动作、画幅、水印、错误文字、字幕安全区和 must_not_imply。
-7. 只有 verify pass 才把 item 标为 visually_verified；selected candidate 必须在本期 `10-素材/broll-assets/` 内，含 local_path、thumb_path 与文件 SHA-256；⑪只读取这种资产。
-8. PROOF 不进入库存搜索池。只把⑨已批准且绑定⑤ `SUPPORTED claim_id` 的同源 evidence 复制到 `10-素材/proof-assets/`，写 `proof-assets.json` 并绑定 claim ID、evidence ID、source URL、本地文件/缩略图 SHA 与 visually_verified；不重做事实判断。
+2. 默认读取项目`本地素材库/catalog.json`，只返回相关度最高的本地视频候选；catalog不存在时才回退到文件名扫描。不得把整个素材库塞进导演上下文。
+3. 无论本地是否命中，Pexels、Pixabay、Coverr默认仍并行提供网络候选，以增加画面多样性。只有本期明确`--providers local`时才只查本地；Mixkit不做自动抓取。
+4. 记录每个provider的status、candidate_count、elapsed_ms、rate_limits，并分别记录本地/网络候选数；单个provider的无key、限流或失败不阻断其他provider。
+5. 写入`10-素材/素材清单.json`、`素材清单.md`、`_credits.md`；清单绑定当前source manifest，候选初始状态都是candidate_unverified。
+6. 只下载选择的candidate并使用FFmpeg抽帧；local候选先复制到本episode。
+7. 实际检查人物、动作、画幅、水印、错误文字、字幕安全区和must_not_imply。
+8. 只有verify pass才标为visually_verified；selected candidate必须位于本期`10-素材/broll-assets/`并绑定文件/缩略图SHA，⑪只读取这种资产。
+9. Jeffrey接受final后，只把实际使用且已核验的网络素材通过`material-library.mjs promote-episode`晋升永久库；未采用的网络候选不入库。
+10. PROOF不进入库存B-roll搜索池。只把⑨已批准且绑定⑤`SUPPORTED claim_id`的同源evidence复制到`10-素材/proof-assets/`，不重做事实判断。
 
 ## 失败处理
 

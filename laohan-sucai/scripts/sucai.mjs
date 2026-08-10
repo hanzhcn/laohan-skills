@@ -156,6 +156,13 @@ const searchCoverr = async (query, perPage) => {
 
 const localVideoExtensions = new Set(['.mp4', '.mov', '.mkv', '.m4v', '.webm']);
 
+const materialTokens = (query) => {
+  const base = query.toLowerCase().split(/[^a-z0-9\u4e00-\u9fff]+/i).filter((term) => term.length > 1);
+  const tokens = new Set(base);
+  for (const value of base) if (/^[\u4e00-\u9fff]{4,}$/.test(value)) for (let index = 0; index < value.length - 1; index += 1) tokens.add(value.slice(index, index + 2));
+  return [...tokens];
+};
+
 const walkLocalVideos = (root, files = []) => {
   if (files.length >= 2000) return files;
   for (const entry of readdirSync(root, {withFileTypes: true})) {
@@ -171,7 +178,34 @@ const searchLocal = async (query, perPage, library) => {
   if (!library) throw new Error('缺 --local-library 或 LAOHAN_LOCAL_BROLL_DIR');
   const root = resolve(library);
   if (!existsSync(root)) throw new Error('本地素材库不存在: ' + root);
-  const terms = query.toLowerCase().split(/[^a-z0-9\u4e00-\u9fff]+/i).filter((term) => term.length > 1);
+  const catalogPath = join(root, 'catalog.json');
+  const terms = materialTokens(query);
+  if (existsSync(catalogPath)) {
+    const catalog = readJson(catalogPath);
+    if (catalog.schema_version !== 1 || !Array.isArray(catalog.assets)) throw new Error('本地素材catalog格式非法');
+    const candidates = catalog.assets.filter((asset) => asset.status === 'VERIFIED' && asset.reusable === true && asset.media_type === 'video').map((asset) => {
+      const searchable = [asset.title, asset.summary, asset.search_text, ...(asset.keywords || [])].join(' ').toLowerCase();
+      const exact = searchable.includes(query.toLowerCase()) ? 12 : 0;
+      const score = exact + terms.reduce((total, term) => total + (searchable.includes(term) ? (term.length >= 4 ? 4 : 2) : 0), 0);
+      return {asset, score};
+    }).filter((entry) => entry.score > 0).sort((a, b) => b.score - a.score || a.asset.asset_id.localeCompare(b.asset.asset_id)).slice(0, perPage).map(({asset}) => ({
+      provider: 'local',
+      asset_id: asset.asset_id,
+      catalog_asset_id: asset.asset_id,
+      page_url: asset.source_url || null,
+      download_url: null,
+      local_source_path: join(root, asset.local_path),
+      preview_url: asset.preview_path ? join(root, asset.preview_path) : null,
+      creator: asset.source_kind || 'local-library',
+      creator_url: null,
+      width: asset.width || null,
+      height: asset.height || null,
+      duration_s: asset.duration_s || null,
+      tags: asset.keywords || [],
+      fact_boundary: asset.fact_boundary || 'ILLUSTRATIVE_NOT_PROOF',
+    }));
+    return {rate_limit: {}, candidates};
+  }
   const candidates = walkLocalVideos(root).map((file) => {
     const searchable = relative(root, file).toLowerCase();
     const score = terms.reduce((total, term) => total + (searchable.includes(term) ? 1 : 0), 0);
@@ -253,7 +287,8 @@ const createSearchManifest = async () => {
   const sourceFile = required('--source');
   const out = required('--out');
   const perProvider = Number(option('--per-provider', '4'));
-  const localLibrary = option('--local-library', process.env.LAOHAN_LOCAL_BROLL_DIR || null);
+  const projectLibrary = join(process.cwd(), '本地素材库');
+  const localLibrary = option('--local-library', process.env.LAOHAN_LOCAL_BROLL_DIR || (existsSync(projectLibrary) ? projectLibrary : null));
   const selectedProviders = option('--providers', 'pexels,pixabay,coverr').split(',').map((name) => name.trim()).filter(Boolean);
   if (localLibrary && !selectedProviders.includes('local')) selectedProviders.unshift('local');
   const source = readJson(sourceFile);
@@ -262,12 +297,15 @@ const createSearchManifest = async () => {
   mkdir(join(root, 'files'));
   mkdir(join(root, 'thumbs'));
   const manifest = {
-    version: 1,
+    version: 2,
     generated_at: now(),
     source_manifest: sourceFile,
     source_manifest_sha256: sha256(sourceFile),
     providers_requested: selectedProviders,
-    search_policy: 'parallel_fan_out',
+    search_policy: 'local_catalog_top_k_plus_network_diversity',
+    network_search_weight: 'HIGH',
+    download_policy: 'selected_only',
+    reuse_policy: 'promote_accepted_only',
     local_library: localLibrary || null,
     items: [],
   };
@@ -301,6 +339,8 @@ const createSearchManifest = async () => {
       status: candidates.length ? 'candidate_unverified' : 'no_result',
       selected_candidate_id: null,
       candidates,
+      local_candidate_count: candidates.filter((candidate) => candidate.provider === 'local').length,
+      network_candidate_count: candidates.filter((candidate) => candidate.provider !== 'local').length,
       provider_health: provider_health.map(({candidates: _candidates, ...health}) => health),
       provider_errors,
     });
