@@ -1,94 +1,84 @@
 ---
 name: laohan-daoyan
-version: "1.5.0-candidate"
-description: METHOD_LAB/历史 episode 的真人口播语义导演。默认 CODEX_DIRECT 生产不使用本 skill；只有用户明确要求方法实验、旧 AST/双 renderer 路线或恢复历史 episode 时使用。
+version: "2.0.0"
+description: laohanAI真人口播新episode的V5导演预制入口。根据最终口播稿并可参考真人原片构图，执行UNDERSTAND→DIVERGE→CONVERGE，只落盘director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
 ---
 
-# 真人口播语义导演
+# 老韩V5导演预制
 
-> 2026-07-16 起，本 skill 不是新 episode 默认。默认⑨—⑪由 `codex-direct-production` 连续完成，只写 direct brief/source manifest 并直接制作 Remotion 成片。下面的 AST/styleframe/animatic 合同仅适用于 Jeffrey 明确发起的 METHOD_LAB 或历史 episode。
+本Skill是新episode默认导演预制入口，但不是另一套方法真源。当前方法只读取视频项目中的：
 
-先决定观众在哪句话会失去理解，再决定是否需要画面。renderer 和素材库不能替代这个判断。
+- `animation-method/director-system/method-v5.json`
+- `templates/director-state-v5.md`
+- `docs/Codex媒体生产接口规格.md`的“V5导演预制”部分
 
-## 输入
+项目规则和上述文件优先于本Skill。不得把历史METHOD_LAB、V4 motion-plan或旧episode实现混入V5上下文。
 
-读取当前 episode：
+## 路由
 
-1. 01-口播稿.md：内容真值；
-2. 07-剪辑/clean.mp4：剪后真人视频；
-3. 07-剪辑/subtitles.srt：实际口播与时间真值；
-4. episode-config.json：画布、平台、workflow_mode、renderer_mode、primary_renderer。
-5. 07-剪辑/edit-manifest.json：当前 raw、clean、字幕与口播稿的 SHA-256，且 subtitles_confirmed=true。
-6. 06-拍摄素材/shooting-record.json：当前稿与 raw 的 SHA-256。
-7. 07-剪辑/spoken-script-variance.json：当前稿/字幕的差异审阅，必须 `CLEAR` 且事实偏离为 0。
+### 默认：V5新期导演预制
 
-缺任一项就列出缺失文件并停止。不得用原稿的预估时长代替剪后字幕时间。
+用户说“新建一期”“做导演预制”“只做导演层”或同义表达时，固定进入本路线。
 
-🛑 STOP：缺 clean.mp4、subtitles.srt、edit-manifest 或有效 episode-config.json 时，不产生 beat sheet。
+### 例外：历史METHOD_LAB
 
-## 工作流
+只有用户明确说出“METHOD_LAB”“旧AST/双renderer”“恢复历史episode”之一时，才读取`references/method-lab-legacy.md`。不得根据缺少clean/SRT或看到旧文件自行切换历史路线。
 
-### 1. 验证输入与事实边界
+## V5输入
 
-- 检查字幕覆盖 clean.mp4 的首尾、画布与 fps 已声明。
-- 口播稿和字幕不一致时：文字以实际说出的话为准。事实偏离不得由导演解释或继续制作，必须写入 variance record 并回②/⑤/④；只有非事实差异已明确审阅后才能写入导演简报。
-- 声称真实产品、数据、结果或用户界面时标为 PROOF_PUBLIC 或 PROOF_USER；没有来源不得画成证据。
+1. 当前最终口播稿；它是内容真值，不在导演阶段改稿。
+2. 视频项目的`method-v5.json`和`director-state-v5.md`。
+3. 当前episode的`episode-config.json`与`09-导演/director-state.md`。
+4. 如果Jeffrey已经提供真人原片，只用于观察显示方向、构图、人物位置、手势和安全区；不剪辑、不转录、不生成clean/SRT。
 
-### 2. 生成语义 beat
+如果用户要求“新建一期”，从视频项目根运行`node scripts/new-episode.mjs <slug>`；已有当前episode时该命令会阻断，不复制或覆盖旧期。
 
-按实际字幕切分，不按固定秒数切分。每个 beat 写：
+## 三轮导演预制
 
-| 字段 | 要求 |
-|---|---|
-| beat_id | 稳定编号 |
-| quote | 实际口播原话 |
-| start_s/end_s | 来自字幕 |
-| understanding_problem | 观众为什么难理解 |
-| selected | YES 或 NO |
-| source_mode | HERO / PROOF_PUBLIC / PROOF_USER / BROLL_STOCK / ILLUSTRATIVE / NONE |
-| must_not_imply | 不能误导成什么 |
-| entry_exit | 与哪句原声建立和结束 |
-| acceptance_question | 如何判断是否降低理解成本 |
+### 1. UNDERSTAND_CONTENT
 
-没有明确理解障碍时选 HERO 或 NONE。禁止覆盖率、每 N 秒一场、固定 scene 数、固定文案和固定颜色。
+- 提炼观众真正要理解的判断、论证关系、情绪推进和结尾记忆点。
+- 判断哪些内容需要图形解释、真实素材、产品画面或只保留真人。
+- 不把每句话机械变成动画。
 
-### 3. 建立四层动画合同并路由素材
+### 2. DIVERGE_2_TO_3_DIRECTIONS
 
-- 只有 BROLL_STOCK beat 写入 source-manifest 的素材请求。
-- ILLUSTRATIVE beat 写入 EDL 的动画 slot。
-- HERO/NONE beat 不创建素材或动画任务。
-- renderer_mode 为 CROSS_RENDER_VALIDATION_PAIR 时，给 Remotion 与 HyperFrames 相同事实层、不同 renderer brief；不得共享具体布局、代码或转场。
-- renderer_mode 为 PRIMARY_RENDERER 时，primary_renderer 必须是 remotion 或 hyperframes，且有已接受的验证记录；否则停止并改回 CROSS_RENDER_VALIDATION_PAIR。
-- EDL、source manifest 与 animation brief 使用项目 动画生产接口规格.md 的 schema；source_entries 覆盖每个 selected beat，broll_requests 只保留 BROLL_STOCK beat。
-- 每个 selected beat 必须有非空 quote、understanding_problem、entry_exit、acceptance_question 和 must_not_imply；时间不得重叠或越出 clean.mp4。
-- schema 2 的每个动画 beat 必须写 `semantic_contract → art_direction → parity_plan → native_challenge`：先明确 audience job、理解障碍、无动画反事实、证据边界和验收题，再明确注意力/人物/reading bands/字幕关系，最后才列可观察 state/transition、native capability allow-list 和 must-preserve。
-- `animation-ast.json` 只能在 workflow 根运行 `node animation-method/scripts/compile-animation-ast.mjs episodes/<slug>/09-导演` 由批准 brief 确定性生成；禁止手填，禁止 JSX/HTML/CSS/GSAP/Remotion、绝对像素或视觉样式参数进入 AST。随后必须运行同命令加 `--check`。
-- `renderer_track: NATIVE` 时禁止在 EDL 写固定 `visual.render_plan` 代替 animation brief；同时输出 hash-bound `renderer-route.json` 和统一的 `caption-style.json`。route 只决定候选/证据状态，不替 renderer 作视觉实现；caption style 必须匹配 `shooting_contract.caption_safe_area.bottom_reserved_pct`。⑪分别提交 native proposal。`renderer_track: PARITY` 只用于旧 render_plan 的等义执行/回归，不代表视觉上限。
-- `acceptance_question` 只供 QA，禁止作为屏幕文案。屏幕文字必须来自 art direction 的 approved copy/copy contract，renderer 不得补写。
-- PROOF_PUBLIC/PROOF_USER 必须声明⑤ `04-事实主张.json` 中 `SUPPORTED` 的 `claim_id`，以及与该 claim 同源的 `evidence.id` 与 URL/本地来源；真实资产由⑩物化到本期并核验，⑨不下载素材。
+- 发散2—3个完整视觉方向，而不是罗列互不相关的特效。
+- 每个方向说明视觉世界、段落推进、信息层级、真人与overlay关系、素材角色和关键高级技术。
+- 需要Remotion高级能力时可按需读取相关官方Plugin Skill；不得一次加载全部知识，也不得因为本地未知就提前降级创意。
 
-### 4. 落盘
+### 3. CONVERGE_ONE_COHERENT_PLAN
 
-在 09-导演/ 写入：导演简报.md、beat-sheet.md、edl.json、animation-brief.json、animation-ast.json、source-manifest.json、renderer-brief.md、styleframes/、animatic-manifest.json、review-checklist.md；NATIVE 还必须写 `renderer-route.json` 与 `caption-style.json`。`edl.json` 与 `source-manifest.json` 都必须记录 `edit_manifest_sha256`，并引用同一当前 edit-manifest。格式遵循项目 动画生产接口规格.md。
+- 选择一个最适合当前口播的统一方案，并说明取舍。
+- 每个内容段写画面动作，并补一行：`执行提示：推荐能力或包 + 大致手法 + 时长/节奏 + 安全区与退场。`
+- 拍摄前只写大致秒数；已有原片也不在本阶段虚构clean时间轴或精确帧数。
+- 最终方案用一句话确认`LIGHTWEIGHT_RESULT_ONLY`视觉底线：手机可读大字、透明/无大面积实体底板、清晰色彩层级、内容专属视觉、完整进入—发展/转折—退出、眼睛/嘴/字幕安全区。
+- 不固定字号、坐标、配色、旧组件、模板或高级效果数量。
 
-styleframe 先验证主状态的焦点、信息层级、人物/字幕安全区；animatic 必须绑定真实 clean.mp4/SRT 和 entry/establish/change/hold/exit 帧。静态帧拥挤、误导或读取时间不足时停在⑨，不把问题交给 motion 掩盖。
+## 落盘与停止
 
-REVIEW_GATED 时，在 EDL、brief、styleframe 与 animatic 落盘后标记等待审阅；AUTONOMOUS_RUN 时继续⑩或⑪，但不允许代替 Jeffrey 写 viewer verdict。
+唯一新增业务产物是当前episode的`09-导演/director-state.md`。新建episode产生的配置、状态和准入骨架不算导演产物。
 
-🔴 CHECKPOINT：REVIEW_GATED 的 EDL、animation brief、styleframe、animatic、renderer route 与 caption style 必须获得审阅结论，才能交⑩或⑪；AST 重新编译后 SHA 必须与审阅输入一致。
+完成时必须满足：
 
-## 失败处理
+- `method: V5`；
+- `status: WAITING_FOR_FOOTAGE`；
+- 已绑定当前稿件版本；
+- 内容理解、2—3个发散方向、最终统一方案均非空；
+- 每个内容段都有画面动作和轻量执行提示；
+- 高级技术、素材策略和拍摄后待确认项已记录；
+- 最终方案明确确认轻量视觉底线。
 
-| 情况 | 动作 |
-|---|---|
-| 字幕与视频时长不匹配 | 回⑧重新转录或修正字幕，不规划动画 |
-| 需要真实证据但没有来源 | 标记 proof_missing，停在该 beat，不用示意图伪装 |
-| stock 无结果 | 保持 no_result，回到本 skill 重判，不自动改为动画 |
-| 两个 renderer 看起来像同一模板 | 保留相同语义，重写各自 renderer brief，不改 beat 真值 |
+随后立即停止并向Jeffrey报告`director-state.md`地址。即使真人原片已经存在，也不得在本窗口继续剪辑或实现；下一制作窗口再读取导演状态进入⑧—⑪。
 
-## 不做什么
+## V5禁止产物
 
-- 不调用素材 API、不下载、不合成、不渲染；
-- 不把全稿逐句变成动画；
-- 不复用上一期的文字、画面、颜色、场景数或时长；
-- 不在没有 Jeffrey 发布确认时发布。
+本路线不得创建或修改：
+
+- `clean.mp4`、转录、SRT和剪辑决定；
+- `beat-sheet.md`、EDL、animation brief/AST、styleframe、animatic或旧renderer route；
+- direct brief、source manifest的拍摄后时间轴版本；
+- Remotion/React代码、candidate或final；
+- 网络素材下载、发布或外部回复。
+
+若这些产物已由其他阶段存在，只读判断边界，不在导演预制窗口重写。

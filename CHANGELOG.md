@@ -6,6 +6,7 @@
 
 ### 变更
 
+- **laohan-daoyan** v2.0.0 — 从默认禁用的METHOD_LAB旧导演改为V5新期导演预制入口；只执行UNDERSTAND→DIVERGE→CONVERGE并写`director-state.md`，旧AST/双renderer合同移入显式legacy参考。
 - **laohan-douyinsousuo** v3.0.0 — 删除 DrissionPage、cookie 注入、独立 Chrome profile 与项目脚本，改为只编排已安装的 OpenCLI；失败链固定为 adapter → trace/autofix → OpenCLI Browser Bridge。
 - **laohan-xiazai** — 抖音关键词搜索移除 DrissionPage/Playwright 降级，统一回到 OpenCLI 成熟能力。
 
