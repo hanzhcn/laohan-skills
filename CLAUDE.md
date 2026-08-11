@@ -8,7 +8,7 @@
 
 真人口播动画默认采用 CODEX_DIRECT + Remotion：
 
-- 新episode的导演预制默认调用`laohan-daoyan` v2：它只读取视频项目当前`method-v5.json`和`director-state-v5.md`，完成UNDERSTAND→DIVERGE→CONVERGE并停在`WAITING_FOR_FOOTAGE`。完成时必须同步本期`_status.md`，并在最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`；不能用开始时PASS或干净Git代替episode准入。它不得剪辑、生成clean/SRT、写旧beat-sheet/EDL/motion-plan、实现Remotion或渲染。旧METHOD_LAB只在Jeffrey明确要求历史路线时读取`laohan-daoyan/references/method-lab-legacy.md`。
+- 新episode的导演预制默认调用`laohan-daoyan` v2.1.1：它只读取视频项目当前`method-v5.json`和`director-state-v5.md`，第一请求完成UNDERSTAND→DIVERGE→CONVERGE，第二请求只做最终复审，两者都停在`WAITING_FOR_FOOTAGE`。终审对真正值得增强的位置先定义观众理解任务，再在内部发散2—3个本质不同的候选；非穷尽技术搜索地图只提醒搜索维度，不是必选清单，未入选候选不落盘。完成时必须同步本期`_status.md`，并在最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`；不能用开始时PASS或干净Git代替episode准入。它不得剪辑、生成clean/SRT、写旧beat-sheet/EDL/motion-plan、实现Remotion或渲染。旧METHOD_LAB只在Jeffrey明确要求历史路线时读取`laohan-daoyan/references/method-lab-legacy.md`。
 - ⑧—⑪由同一个 Codex 任务连续完成：完整观看原片并剪辑、写direct brief与按需source manifest、直接实现Remotion、渲染完整candidate并交Jeffrey观看。`laohan-donghua`、AST、双renderer与proposal/extension/seal只用于Jeffrey明确发起的METHOD_LAB或历史episode。
 - `laohan-sucai/SKILL.md`：⑩仅在 source manifest 有真实 PROOF/BROLL 请求时供应 provider/license/source/SHA 完整且 visually_verified 的本期素材；无请求标 not_applicable，不创建空素材任务。
 - `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanAI视频创作` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
