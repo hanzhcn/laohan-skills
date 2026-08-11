@@ -113,12 +113,15 @@ const argumentPlan = decision.argument_plan || {};
 const requiredArgumentFields = ['opening_contract', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'];
 if (!requiredArgumentFields.every((key) => nonEmpty(argumentPlan[key])) || !uniqueNonEmpty(argumentPlan.reasoning_path)) fail('argument_plan 必须包含开场、论证路径、素材取舍、可拍表达与原创引用规划');
 const originalContributions = decision.original_contributions;
-if (!Array.isArray(originalContributions) || originalContributions.length < 2 || originalContributions.some((item) => !nonEmpty(item?.judgement) || !nonEmpty(item?.viewer_value))) fail('original_contributions 必须至少两项并写清新增判断与观众价值');
+if (!Array.isArray(originalContributions) || originalContributions.length < 1 || originalContributions.some((item) => !nonEmpty(item?.judgement) || !nonEmpty(item?.viewer_value)) || (originalContributions.length === 1 && !nonEmpty(decision.single_contribution_rationale))) fail('original_contributions 必须至少一项；只有一项时需说明不硬凑第二项的理由');
 
 const opening = decision.opening_contract || {};
-if (opening.required_prefix !== '嘿，你有没有这种感觉，' || opening.status !== 'PASS' || !paragraphs[0].startsWith(opening.required_prefix) || !nonEmpty(opening.anchor_text)) fail('固定开场必须为“嘿，你有没有这种感觉，”且登记第一段锚点');
+if (opening.status !== 'PASS' || !nonEmpty(opening.anchor_text) || !['DEFAULT_SIGNATURE', 'TOPIC_SPECIFIC_HOOK'].includes(opening.mode)) fail('opening_contract 必须登记合法开场模式与第一段锚点');
+if (opening.mode === 'DEFAULT_SIGNATURE' && (opening.required_prefix !== '嘿，你有没有这种感觉，' || !paragraphs[0].startsWith(opening.required_prefix))) fail('DEFAULT_SIGNATURE 必须以“嘿，你有没有这种感觉，”开头');
+if (opening.mode === 'TOPIC_SPECIFIC_HOOK' && (opening.required_prefix !== null || !nonEmpty(opening.exception_reason))) fail('TOPIC_SPECIFIC_HOOK 必须取消固定前缀并登记具体例外理由');
 const anchorIndex = paragraphs[0].indexOf(opening.anchor_text);
-if (anchorIndex < opening.required_prefix.length) fail('opening_contract.anchor_text 必须真实出现在第一段固定开场之后');
+const minimumAnchorIndex = opening.mode === 'DEFAULT_SIGNATURE' ? opening.required_prefix.length : 0;
+if (anchorIndex < minimumAnchorIndex) fail('opening_contract.anchor_text 必须真实出现在第一段合法位置');
 const anchorText = paragraphs[0].slice(0, anchorIndex + opening.anchor_text.length);
 const anchorTemp = mkdtempSync(join(tmpdir(), 'chuangzuo-opening-'));
 try {
@@ -142,6 +145,8 @@ if (!uniqueNonEmpty(unitIds) || units.some((unit) => !nonEmpty(unit.claim) || !n
 if (sufficiency.selected_content_unit_count !== units.length) fail('content_sufficiency 的内容单位数量与实际不一致');
 const normalizedClaims = units.map((unit) => unit.claim.replace(/[\s，。！？、,.!?]/g, '').toLowerCase());
 if (new Set(normalizedClaims).size !== normalizedClaims.length) fail('content_units 存在重复判断');
+const visualAnchors = decision.visual_anchors;
+if (!Array.isArray(visualAnchors) || visualAnchors.length < 1 || visualAnchors.some((item) => !unitIds.includes(item?.content_unit_id) || !nonEmpty(item?.audience_understanding) || !nonEmpty(item?.visual_expression))) fail('visual_anchors 必须至少绑定一个内容单位，并写清观众理解任务与可视化表达');
 
 const audit = decision.paragraph_audit;
 if (!Array.isArray(audit) || audit.length !== paragraphs.length) fail('paragraph_audit 必须逐段覆盖全部有效口播段落');

@@ -9,12 +9,13 @@ schema 3 必须先证明它执行了创作规划，而不是落稿后补一个ha
 - `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`、`input_mode`、`structure_tool`、`structure_rationale` 均非空；
 - `fact_boundary`、`alternative_structures`、`unproven_assumptions` 均为非空字符串数组；
 - `argument_plan.opening_contract`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations` 均非空，`reasoning_path` 是非空步骤数组；
-- `original_contributions` 至少2项，每项必须同时写非空 `judgement` 与 `viewer_value`。schema 2 的字符串数组不能冒充 schema 3 原创增量。
+- `original_contributions` 至少1项，每项必须同时写非空 `judgement` 与 `viewer_value`。只有1项时必须有非空 `single_contribution_rationale`，说明为什么这一题不该硬凑第二项；schema 2 的字符串数组不能冒充 schema 3 原创增量。
+- `visual_anchors` 至少1项，每项包含存在于 `content_units` 的 `content_unit_id`、非空 `audience_understanding` 与 `visual_expression`。它证明稿件给导演留下了可视化抓手，不规定具体动画技术。
 - `publish_copy_contract` 必须在Step 3登记3个标题候选、唯一主推标题、选择理由、至少两条可回到正文的标题证据、视频介绍证据及其结构；落稿后再绑定主推标题原文和视频介绍SHA。
 
 Episode模式由编排器先核对①的主题、假设、内容形式和受众，再把其余 schema 3 机械检查统一交给本validator；不得在编排器内另写一套互相冲突的schema 3字段规则。
 
-`opening_contract.required_prefix` 固定为“嘿，你有没有这种感觉，”，`anchor_text` 必须是第一段固定开场后的真实原文；validator用本机TTS测量从开头到该锚点的时长，超过5秒即BLOCKED。
+`opening_contract.mode` 只能是 `DEFAULT_SIGNATURE` 或 `TOPIC_SPECIFIC_HOOK`。前者要求 `required_prefix` 为“嘿，你有没有这种感觉，”并位于第一段开头；后者要求 `required_prefix` 为 `null`、`exception_reason` 非空，且第一段直接使用题目专属的具体结果、数字、动作、冲突或直问。两种模式的 `anchor_text` 都必须是第一段真实原文；validator用本机TTS测量从开头到该锚点的时长，超过5秒即BLOCKED。
 
 ## 内容单位
 
@@ -131,4 +132,4 @@ node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mj
   --base "$PWD"
 ```
 
-只有命令输出 `PASS chuangzuo script contract schema=3` 才完成。validator检查固定开场、当前稿/风格SHA、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。
+只有命令输出 `PASS chuangzuo script contract schema=3` 才完成。validator检查默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。

@@ -1,6 +1,6 @@
 ---
 name: laohan-redian
-version: 2.3.0
+version: 2.4.0
 description: 真人口播①选题决策主写者；从 AIHOT 与已安装 OpenCLI 的当前信号生成观点/教程候选，核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源后，只选一个可生产且可复盘的主题。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -62,12 +62,13 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 形成候选前恢复原版分析：以“AI/GPT/Claude/大模型/机器人/自动化/编程/副业”等直接词和“教育/职业/消费/创业/职场”等间接词标注相关度，但保留可能产生新角度的边缘信号；统计安装教程/进阶技巧/方法论/对比评测/实战/资源推荐等内容类型；标出多平台共振、单平台独有、已拥挤角度和竞品未覆盖机会。它们用于扩大候选，不替代后面的 PRIMARY 与抖音关键词核验。
 
 - 唯一 `id`、稳定非空 `event_cluster_id`、非空 `why_now`、`title`、`content_form: opinion-video|tutorial-video`、`audience_level: BEGINNER|INTERMEDIATE|ADVANCED`、`audience_problem`、`audience_promise`、`thesis`。
+- `creator_fit` 必须写清 `basis: FIRSTHAND_EXPERIENCE|BUILT_OR_TESTED|OWNED_EVIDENCE|LONG_TERM_PRACTICE|RESEARCHED_JUDGMENT|NOT_ESTABLISHED`、`why_jeffrey` 与 `distinctive_judgment`。它回答“为什么由 Jeffrey 讲、他的依据是什么、相比通用复述多了什么判断”。SELECTED 不允许 `NOT_ESTABLISHED`；没有亲历时可以使用 `RESEARCHED_JUDGMENT`，但必须形成有证据边界的独立判断，不能把“我也关注了”冒充个人优势。
 - `assumed_prerequisites` 与 `jargon_to_explain` 字符串数组。BEGINNER 候选必须把标题和论点里的关键工具、命令、迁移/导入概念列入解释清单，不能只提高 `audience_fit` 分。
 - 非空 `signal_ids` 和 `evidence_ids`。
 - 非空 `platform_query_intent`；`platform_alignment` 含 `status: ALIGNED|ADJACENT|CONTRADICTED|UNRESOLVED|UNAVAILABLE`、非空 `rationale` 和 `evidence_ids`。有平台结果时 evidence ids 必须真实；平台访问失败时写 `UNAVAILABLE` 和空数组。
 - `content_gap` 含 `status: CONFIRMED|NOT_CONFIRMED|UNAVAILABLE`、非空 `rationale` 和 `evidence_ids`。只有平台直接提供搜索量、供给或缺口证据时才能写前两种；搜索结果条数、互动字段缺失或模型判断一律不能冒充内容缺口。`UNAVAILABLE` 合法且不参与机械淘汰。
 - 非空 `claim_evidence_map`；每条含唯一 `claim_id`、非空 `claim`、`evidence_ids`。它要把技术事实绑定 PRIMARY；平台证据可用时，把“平台有人关心什么”绑定 PLATFORM_SIGNAL，不能让相邻关键词替另一个论点背书。平台 `UNAVAILABLE` 时不虚构 PLATFORM_SIGNAL claim。
-- `scorecard` 六维整数 1—5：`audience_fit`、`evidence_strength`、`platform_relevance`、`differentiation`、`production_feasibility`、`learning_value`。
+- `scorecard` 七维整数 1—5：`audience_fit`、`evidence_strength`、`platform_relevance`、`differentiation`、`creator_fit`、`production_feasibility`、`learning_value`。
 - 非空 `rationale` 与 `disposition: SELECTED|REJECTED`；最终只能一个 SELECTED。
 
 分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
@@ -100,7 +101,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 写 schema 2 `00-选题.json`：
 
 - `schema_version: 2`、`selected_candidate_id`、非空 `rejected_candidate_ids`。
-- 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap` 和 `claim_evidence_map`。
+- 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap` 和 `claim_evidence_map`。
 - `audience`、`thesis`、`evidence`、`selection_rationale`、`not_do_reason`。
 - evidence 全部属于选中候选，且至少一条 PRIMARY；平台可用时至少一条 PLATFORM_SIGNAL，`platform_alignment.status=UNAVAILABLE` 时可没有。
 - experiment 含唯一主要 intervention、合法 `metric_keys`、正整数 `T+N`、`observation_window_unit: DAY` 和逐键 `metric_targets`。

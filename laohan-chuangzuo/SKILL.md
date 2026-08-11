@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "1.8.0"
+version: "1.9.0"
 ---
 
 # 统一创作引擎
@@ -87,8 +87,9 @@ schema 3 至少包含：
 - `contract_version=content-units-v1`、`input_mode`、`active_style_file`、`active_style_sha256`、`structure_tool`、`structure_rationale`；
 - 非空数组 `fact_boundary`、`alternative_structures`、`unproven_assumptions`；
 - Step 3 的 `argument_plan`：`opening_contract`、`reasoning_path`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations`；
-- 至少两项 `original_contributions`，每项写清新增判断及其观众价值；
-- `opening_contract.anchor_text` 绑定第一段5秒内的真实锚点；`content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
+- 至少一项 `original_contributions`，每项写清新增判断及其观众价值；只有一项时必须登记 `single_contribution_rationale`，证明没有为了数量硬凑第二个观点；
+- `opening_contract` 登记 `mode: DEFAULT_SIGNATURE|TOPIC_SPECIFIC_HOOK`。默认使用“嘿，你有没有这种感觉，”，只有题目存在明显更强的具体结果、数字、动作、冲突或直问时才允许题目专属开场，并记录 `exception_reason`；两种模式的 `anchor_text` 都必须绑定第一段5秒内真实锚点；
+- `visual_anchors` 至少一项，每项绑定一个内容单位，写清观众理解任务与可视化表达；它只给后续导演可拍依据，不规定动画技术；同时保留 `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
 - `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS音频、SHA和 `ffprobe` 实测时长；
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
@@ -220,7 +221,7 @@ schema 3 至少包含：
 9. **技法选配**：骨架 #1—#4、反常识钩子、#15/#18/#19、横向对比及动态技法；若删去原版默认技法，记录具体原因
 10. **结构错位方案**：原序与叙述序，避免照搬素材结构
 11. **金句/比喻处理**：保留引用或替换；替换不得弱于原版冲击力
-12. **增量点与事实边界**：至少2处独立判断，同时标清来源、待⑤核验主张和不能伪装成亲测的内容
+12. **增量点与事实边界**：通常规划2处以上独立判断；题目只有1个足够强且完整的原创判断时允许保留1处，但必须说明不硬凑第二项的理由。同时标清来源、待⑤核验主张和不能伪装成亲测的内容
 
 原版12项完成后必须再产出三份硬结果，不能直接进入Step 4：
 
@@ -228,12 +229,13 @@ schema 3 至少包含：
 2. **自然稿长决策**：热点短小但已经能形成完整判断时写 `KEEP_NATURAL_LENGTH`，允许短稿；只有找到新的机制、案例、反例、操作或边界才能写 `EXPANDED_WITH_NEW_UNITS`。禁止为了 `expected_duration_seconds`、`typical_duration_seconds` 或字数补同义段落。
 3. **结构合同**：确有多个并列层级时，规划连续的 `1、2、3……`；没有真实层级时保持自然叙述，不为了形式拆段。
 4. **发布文案策略**：从正文核心冲突中生成3个标题候选，登记标题公式和至少两条正文证据，再按明确理由只选1个主推标题。观点型/产品回归介绍按“观众问题 → 可信证据 → 核心内容 → 下一步 → 互动”规划；教程型按“观众问题 → 核心内容 → 实测或步骤证据 → 下一步 → 互动”规划，不能临时拼接与正文无关的卖点。
+5. **可视化锚点**：至少选择1个最需要画面帮助理解的内容单位，写清观众要看懂什么，以及适合用对比、过程、因果、证据、真实场景或产品画面中的哪种表达；不在②指定Remotion技术。
 
 ## Step 4：写口播稿
 
 按规划写稿。硬性要求：
 
-- **固定开场**：第一段必须以“嘿，你有没有这种感觉，”开头，并在5秒内给锚点；教程型也先使用这句，再接专用钩子
+- **开场默认与例外**：默认以“嘿，你有没有这种感觉，”开头。只有题目专属的具体结果、数字、动作、冲突或直问明显更强、更自然时，才可直接使用该钩子，并在 `opening_contract.exception_reason` 说明为什么；两种模式都必须在5秒内给真实锚点，不能用例外制造空泛标题党
 - **停更/回归/产品开发题**：第一段强制使用 `ACTIVE_STYLE_FILE` 的“问题先行四问开场”，依次回答观众问题、停更动机、可信行动、产物定义；“做了一个”却不说明产品类别、目标用户和使用结果，Step 4 不通过
 - 第一行 `# 标题`（≤30字，模式A「动词+工具/场景+结果」，模式B「主题句+情绪句」）
 - **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，并且每次必须包含抖音活动标签 `#AI新星计划`；这一区域不进入口播、TTS、内容单位或段落审计
@@ -259,6 +261,7 @@ schema 3 至少包含：
 - 核心主题贯穿全文，无偏离段落
 - 至少1个核心生活场景，并有代入式互动或动作链
 - 全文至少有一句离开本期经历、判断或边界就不能成立的具体表达；纯中性说明书不通过
+- 至少有一个内容单位被转成明确可视化锚点，说明画面承担的理解任务；只有“放大文字、变颜色”而没有内容关系的不算
 - 字数与时长没有默认下限或为凑时长设置的目标；完稿后以本机TTS实测记录自然时长
 - 两遍内容重复审计都必须通过：第一遍逐段检查新增内容单位，第二遍排除人味设备后检查同义判断；未解决的重复一律不通过
 
@@ -269,7 +272,7 @@ schema 3 至少包含：
 - 结尾恢复资源钩子、收藏引导、互动引导和行动式结尾；资源必须真实存在，不能虚构
 
 **D. 原创性检查（命中 = 不通过）：**
-- 老韩增量 ≥2 处，无空泛总结
+- 老韩增量通常 ≥2 处；只有1处时必须是足够强且完整的原创判断，并登记不硬凑第二项的理由；无空泛总结
 - 引用原话 ≤2 处，伪装成自己的 → 不通过
 - 「我实测」类声明可溯源到素材
 
