@@ -1,10 +1,10 @@
 ---
 name: laohan-daoyan
-version: "2.0.1"
-description: laohanAI真人口播新episode的V5导演预制入口。根据最终口播稿并可参考真人原片构图，执行UNDERSTAND→DIVERGE→CONVERGE，只落盘director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
+version: "2.1.0"
+description: laohanAI真人口播新episode的V5.1导演预制入口。分为导演初稿与一次最终复审，共用director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
 ---
 
-# 老韩V5导演预制
+# 老韩V5.1导演预制
 
 本Skill是新episode默认导演预制入口，但不是另一套方法真源。当前方法只读取视频项目中的：
 
@@ -16,9 +16,9 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 
 ## 路由
 
-### 默认：V5新期导演预制
+### 默认：V5.1新期导演预制
 
-用户说“新建一期”“做导演预制”“只做导演层”或同义表达时，固定进入本路线。
+用户说“新建一期”“做导演初稿”“最终导演复审”“只做导演层”或同义表达时，固定进入本路线，并根据`director_draft`与`director_review`进入正确阶段。
 
 ### 例外：历史METHOD_LAB
 
@@ -33,7 +33,7 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 
 如果用户要求“新建一期”，从视频项目根运行`node scripts/new-episode.mjs <slug>`；已有当前episode时该命令会阻断，不复制或覆盖旧期。
 
-## 三轮导演预制
+## 第一阶段：三轮导演初稿
 
 ### 1. UNDERSTAND_CONTENT
 
@@ -55,6 +55,36 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 - 最终方案用一句话确认`LIGHTWEIGHT_RESULT_ONLY`视觉底线：手机可读大字、透明/无大面积实体底板、清晰色彩层级、内容专属视觉、完整进入—发展/转折—退出、眼睛/嘴/字幕安全区。
 - 不固定字号、坐标、配色、旧组件、模板或高级效果数量。
 
+初稿完成后写：
+
+- `director_draft: COMPLETED`；
+- `director_review: PENDING`；
+- `status: WAITING_FOR_FOOTAGE`。
+
+随后停止，不能在同一用户请求里自动进入最终复审。
+
+## 第二阶段：一次最终导演复审
+
+只有用户明确要求继续完善当前导演稿、最终复审或使用固定第二阶段提示词时进入。读取同一个`director-state.md`，不重跑完整初稿，不改变已成立的内容主线和视觉世界：
+
+### DENSITY_REVIEW
+
+- 查真人或静态画面过久、密度失衡、注意力竞争、高潮不足和跨段断裂。
+
+### ADVANCED_EXPRESSION_CHALLENGE
+
+- 只对真正值得增强的位置发散高级表达，按需读取最小范围Remotion Plugin知识。
+- 高级表达必须承担关系、过程、因果、空间或记忆任务，不能只增加字体弹入、放大或变色。
+- 不因本地能力未知提前降低创意，也不把技术选择题交给Jeffrey。
+
+### COHERENT_RECONVERGENCE
+
+- 把入选增强直接写回原分段，补齐进入、发展/转折、退出、跨段接力、工程建议、节奏、安全区和等价实现。
+- 不设效果数量配额；全片新增独立依赖包总数最多2项，Remotion core与已核验runtime能力可自由组合。
+- 保留已成立部分，不推倒重写。
+
+复审完成后写`director_review: COMPLETED`并继续保持`status: WAITING_FOR_FOOTAGE`，随后停止。
+
 ## 落盘与停止
 
 唯一新增业务产物是当前episode的`09-导演/director-state.md`。新建episode产生的配置、状态和准入骨架不算导演产物；`_status.md`是必须同步的编排元数据，不是第二个业务产物。
@@ -62,12 +92,14 @@ description: laohanAI真人口播新episode的V5导演预制入口。根据最�
 完成时必须满足：
 
 - `method: V5`；
+- `workflow_revision: V5.1`；
 - `status: WAITING_FOR_FOOTAGE`；
 - 已绑定当前稿件版本；
 - 内容理解、2—3个发散方向、最终统一方案均非空；
 - 每个内容段都有画面动作和轻量执行提示；
 - 高级技术、素材策略和拍摄后待确认项已记录；
 - 最终方案明确确认轻量视觉底线。
+- 初稿请求结束时是`director_draft: COMPLETED / director_review: PENDING`；最终复审请求结束时是`director_review: COMPLETED`。
 - `_status.md`已把当前位置同步为V5导演预制完成，并勾选`V5导演预制`；已有raw但缺shooting record时不得把⑦误写为完成。
 - 最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`并取得PASS；不得引用窗口开始时的旧PASS，也不得用干净Git状态替代episode准入。
 

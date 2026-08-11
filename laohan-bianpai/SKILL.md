@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.17.0"
+version: "1.18.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -41,10 +41,11 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 1. 恢复工作先运行 `vendors`。它把当时可用 vendor 的状态和完整 HEAD SHA 写入 schema 3 `FROZEN_ON_RESUME`；进行中 episode 只能在两方 HEAD 与原冻结值一致时续用，旧 schema 2 因缺 commit 证据必须 BLOCKED，不能从当前 HEAD 猜填。`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
    已存在且通过机械核验的 `00-编排/supersession-record.json` 必须优先返回 `SUPERSEDED`，不得继续 vendors/status/next/check，也不得用新 lock 覆盖旧 lock。
 2. 读取 `episode-config.json`，先运行 config gate。失败时停在①之前，不路由任何内容或生产步骤。
-3. 按①—⑭检查标准产物。新episode默认 `CODEX_DIRECT + Remotion`：⑧—⑪由同一个Codex任务连续完成；⑧先落large-v3 raw转录和项目内剪辑候选，再由Codex逐项双遍裁决且不确定KEEP，最后落确定性渲染、剪后SRT与完整观看证据；⑨落 `direct-brief.json + source-manifest.json`；第⑩步只在source manifest有真实素材请求时运行，无request标为not_applicable。
+3. 按①—⑭检查标准产物，并在⑥与⑦之间检查V5.1导演初稿`D1`和最终复审`D2`。新episode默认 `CODEX_DIRECT + Remotion`：⑧—⑪由同一个Codex任务连续完成；⑧先落large-v3 raw转录和项目内剪辑候选，再由Codex逐项双遍裁决且不确定KEEP，最后落确定性渲染、剪后SRT与完整观看证据；⑨落 `direct-brief.json + source-manifest.json`；第⑩步只在source manifest有真实素材请求时运行，无request标为not_applicable。
 4. ④先记录带原始隔离 JSON 的 score；编排器只验证绑定、无污染和证据级别，不替评分器判断内容质量。此时状态为 PARTIAL，再进入⑤；⑤报告与 `04-事实主张.json` 匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。
-5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。`AUTONOMOUS_RUN` 在①—⑥输出 `AUTO_CONTINUE_REQUIRED` 和 `stop_condition: ⑦`，宿主 Agent 不得逐步询问；到⑦输出 `WAITING_FOR_JEFFREY_SHOOTING` 并停下。这是计划内人工交接，不是 `BLOCKED`。只有当前 episode 记录 Jeffrey 本人、ISO时间和原话的 `DEFERRED_UNTIL_CANDIDATE_SELECTION` 时，⑥才标记为延后并允许继续⑦及⑧—⑪候选生产；默认路线不变。
-6. 唯一下一步始终是最早失效节点。④已评分、⑤已完成或⑥曾有产物都不能覆盖破损的①—③；下游文件可以保留为历史证据，但在前缀恢复前不算可继续状态。
+5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。`AUTONOMOUS_RUN` 在标准①—⑥输出 `AUTO_CONTINUE_REQUIRED`；D1导演初稿与D2最终复审分别等待对应固定提示词，D2完成后才路由⑦。到⑦输出 `WAITING_FOR_JEFFREY_SHOOTING` 并停下。这是计划内人工交接，不是 `BLOCKED`。只有当前 episode 记录 Jeffrey 本人、ISO时间和原话的 `DEFERRED_UNTIL_CANDIDATE_SELECTION` 时，⑥才标记为延后并允许继续导演及⑧—⑪候选生产；默认路线不变。
+6. Jeffrey明确提供最终口播稿和真人原片时，只接受`episode_entry_contract.mode=USER_PROVIDED_FINAL_SCRIPT_AND_RAW`和`00-编排/user-provided-inputs.json`的SHA闭合记录。①—⑤显示`~`用户输入替代态，不伪造完成证据，也不再错误路由回①；先走D1、D2，再核验⑦拍摄记录。
+7. 唯一下一步始终是最早失效节点。④已评分、⑤已完成或⑥曾有产物都不能覆盖破损的①—③；下游文件可以保留为历史证据，但在前缀恢复前不算可继续状态。
 
 ## 硬规则
 
@@ -54,6 +55,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
 - ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；项目真源、本期副本与 config SHA 必须一致。最小完成合同为：绑定当前稿和本期 reference 的 `cover-prompts.md`，加 `05-封面/` 根目录至少1张真实可解码候选图。九图、provider request、review和 `selected-cover.json` 均不是成片门槛；任何实际生成仍必须传入本期头像，纯文字描述人物或 brand-new generation 都是硬失败。
 - 封面延后仅用于提示词或首张候选尚未完成时的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐最小合同后 `--require final|full` 直接通过⑥，不等待额外图片或预先选图。
+- V5.1制作前必须在同一个`09-导演/director-state.md`同时满足`director_draft: COMPLETED`和两处`director_review: COMPLETED`。初稿的`PENDING`只能路由最终复审，不能进入⑧。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA。默认由 Jeffrey 看过并接受；仅当前 episode 预先记录 Jeffrey 本人、ISO时间和原话的 `final_selection_contract.mode=AGENT_PROXY` 时，Codex可在完整QA后代为选择，并写 `selection_mode=AGENT_PROXY` 的审阅记录。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。

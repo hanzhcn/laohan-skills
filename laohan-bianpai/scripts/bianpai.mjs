@@ -143,6 +143,43 @@ const safely = (fn, fallback) => {
     return {done: false, reason: fallback + ': ' + error.message};
   }
 };
+const userProvidedInputsState = () => safely(() => {
+  const config = readJson('episode-config.json');
+  const entry = config.episode_entry_contract || {mode: 'STANDARD_PIPELINE'};
+  if (entry.mode !== 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW') return {done: false, reason: '标准①—⑦入口'};
+  if (entry.record_path !== '00-编排/user-provided-inputs.json' || !/^[a-f0-9]{64}$/.test(entry.record_sha256 || '') || !nonEmptyFile(entry.record_path)) return {done: false, reason: '用户定稿+原片入口缺标准登记记录或SHA'};
+  const record = readJson(entry.record_path);
+  if (entry.record_sha256 !== shaPath(file(entry.record_path))
+    || record.schema_version !== 1
+    || record.mode !== 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW'
+    || record.episode !== basename(episodeDir)
+    || record.authorized_by !== 'Jeffrey'
+    || typeof record.authorization_note !== 'string'
+    || !record.authorization_note.trim()
+    || Number.isNaN(Date.parse(record.registered_at))
+    || record.script?.episode_path !== '01-口播稿.md'
+    || record.raw?.episode_path !== '06-拍摄素材/raw.mp4'
+    || !nonEmptyFile('01-口播稿.md')
+    || !nonEmptyFile('06-拍摄素材/raw.mp4')
+    || record.script.sha256 !== scriptHash()
+    || record.raw.sha256 !== shaPath(file('06-拍摄素材/raw.mp4'))) return {done: false, reason: '用户定稿+原片登记未绑定当前文件'};
+  return {done: true, reason: 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW已绑定；①—⑤为用户输入替代态，不伪造审核产物'};
+}, '用户定稿+原片入口无法读取');
+const directorDraftState = () => safely(() => {
+  if (!nonEmptyFile('09-导演/director-state.md')) return {done: false, reason: '缺09-导演/director-state.md'};
+  const body = readFileSync(file('09-导演/director-state.md'), 'utf8');
+  const reviews = [...body.matchAll(/^director_review:\s*(NOT_STARTED|PENDING|COMPLETED)\s*$/gm)].map((match) => match[1]);
+  if (!/^method:\s*V5\s*$/m.test(body) || !/^workflow_revision:\s*V5\.1\s*$/m.test(body) || !/^director_draft:\s*COMPLETED\s*$/m.test(body) || !/^(status:\s*(WAITING_FOR_FOOTAGE|READY_FOR_IMPLEMENTATION))\s*$/m.test(body) || reviews.length < 2 || !reviews.every((value) => ['PENDING', 'COMPLETED'].includes(value))) return {done: false, reason: '导演初稿必须绑定V5.1并写director_draft=COMPLETED、director_review=PENDING'};
+  return {done: true, reason: 'V5.1导演初稿已落盘'};
+}, '导演初稿状态无法读取');
+const directorReviewState = () => safely(() => {
+  const draft = directorDraftState();
+  if (!draft.done) return draft;
+  const body = readFileSync(file('09-导演/director-state.md'), 'utf8');
+  const reviews = [...body.matchAll(/^director_review:\s*(NOT_STARTED|PENDING|COMPLETED)\s*$/gm)].map((match) => match[1]);
+  if (reviews.length < 2 || !reviews.every((value) => value === 'COMPLETED')) return {done: false, reason: 'V5.1最终导演复审尚未完成；制作前必须写director_review: COMPLETED'};
+  return {done: true, reason: 'V5.1最终导演复审已完成'};
+}, '最终导演复审状态无法读取');
 const coverDeferralState = () => safely(() => {
   const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
   if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
@@ -528,6 +565,8 @@ const steps = [
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
   {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 至少1张真实候选图'},
+  {id: 'D1', name: 'V5.1导演初稿', skill: 'laohan-daoyan', done: () => directorDraftState().done, output: '09-导演/director-state.md（director_draft=COMPLETED，director_review=PENDING）'},
+  {id: 'D2', name: 'V5.1最终导演复审', skill: 'laohan-daoyan', done: () => directorReviewState().done, output: '同一director-state.md（director_review=COMPLETED）'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
   {id: '⑧', name: 'Codex自动剪辑与实际字幕', skill: directProduction ? 'codex-direct-production' : 'whisper-timestamped + registered edit executor', done: () => gateState('director', '剪辑输入契约未通过').done, output: '07-剪辑/{raw-transcript.json,edit-candidates.json,edit-decision.json,edit-render.json,clean.mp4,clean-transcript.json,subtitles.srt,spoken-script-variance.json,edit-review.json,edit-manifest.json}'},
   {id: '⑨', name: directProduction ? 'Codex Direct导演' : 'METHOD_LAB语义导演', skill: directProduction ? 'codex-direct-production' : 'laohan-daoyan', done: () => gateState('director-output', directProduction ? 'Direct brief 契约未通过' : '导演输出契约未通过').done, output: directProduction ? '09-导演/{direct-brief.json,source-manifest.json}' : '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
@@ -618,11 +657,13 @@ if (runtime.status) {
 }
 if (command === 'check') {
   if (requiredStage === 'final' || requiredStage === 'production' || requiredStage === 'full') {
+    const userProvidedInputs = userProvidedInputsState();
     const coverReadyForProduction = coverState().done || coverDeferralState().done;
     const coverReady = requiredStage === 'production' ? coverReadyForProduction : coverState().done;
-    const prerequisites = [topicState().done, scriptState().done, complianceState().done, calibrationState().done, deepScanState().done, coverReady, shootingState().done];
+    const contentReady = userProvidedInputs.done || (topicState().done && scriptState().done && complianceState().done && calibrationState().done && deepScanState().done);
+    const prerequisites = [contentReady, coverReady, directorReviewState().done, shootingState().done];
     if (prerequisites.some((value) => !value)) {
-      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成①—⑤、⑦，并完成⑥最小合同或登记Jeffrey本期封面延后授权' : '发布/闭环前必须真实完成①—⑦；⑥只要求提示词加至少1张真实候选') + '；最终盲预测必须RECORDED，且所有稿件绑定当前hash');
+      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成标准①—⑤或有效用户定稿+原片登记、V5.1导演终审、⑦，并完成⑥最小合同或登记Jeffrey本期封面延后授权' : '发布/闭环前必须完成标准①—⑤或有效用户输入登记、V5.1导演终审、⑦与⑥最小合同') + '；标准路线最终盲预测必须RECORDED，所有输入必须绑定当前hash');
       process.exit(1);
     }
   }
@@ -641,7 +682,8 @@ if (command === 'check') {
   }
   if (exitCode) process.exit(exitCode);
   const checkedStates = steps.map((step) => ({...step, done: step.done()}));
-  const actualIncomplete = checkedStates.filter((step) => !step.done);
+  const importedPrefix = userProvidedInputsState().done;
+  const actualIncomplete = checkedStates.filter((step) => !step.done && !(importedPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id)));
   const incomplete = requiredStage === 'full' ? actualIncomplete : actualIncomplete.filter((step) => step.id !== '⑥' || !coverDeferralState().done);
   if (requiredStage === 'full' && actualIncomplete.length) {
     console.error('FAIL full workflow incomplete: ' + actualIncomplete.map((step) => step.id + step.name).join('、'));
@@ -665,18 +707,20 @@ if (['status', 'next'].includes(command)) {
 }
 
 const states = steps.map((step) => ({...step, done: step.done()}));
+const userProvidedInputs = userProvidedInputsState();
 const calibration = calibrationState();
 const deepScan = deepScanState();
 const coverDeferred = coverDeferralState();
 const coverMayBeDeferredForRouting = coverDeferred.done && !animationState().done;
-const routeIncomplete = (step) => !step.done && !(step.id === '⑥' && coverMayBeDeferredForRouting);
+const importedContentPrefix = userProvidedInputs.done;
+const routeIncomplete = (step) => !step.done && !(importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id)) && !(step.id === '⑥' && coverMayBeDeferredForRouting);
 let next = states.find(routeIncomplete);
-const contentPrefixDone = states.slice(0, 3).every((step) => step.done);
-if (contentPrefixDone && calibration.scoreDone && !deepScan.done) next = states[4];
-if (contentPrefixDone && calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
+const contentPrefixDone = importedContentPrefix || states.slice(0, 3).every((step) => step.done);
+if (!importedContentPrefix && contentPrefixDone && calibration.scoreDone && !deepScan.done) next = states[4];
+if (!importedContentPrefix && contentPrefixDone && calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
   next = {...states[3], name: '最终盲预测', skill: 'laohan-cheat → cheat-on-content cheat-predict', output: '03-校准报告.md（prediction_status=RECORDED）'};
 }
-if (contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
+if (!importedContentPrefix && contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
   next = states.slice(5).find(routeIncomplete);
 }
 if (command === 'next') {
@@ -690,8 +734,8 @@ if (command === 'next') {
 
 console.log('# 编排状态\n');
 for (const step of states) {
-  const detail = step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + (step.done ? coverState().reason : coverDeferred.done ? coverDeferred.reason : coverState().reason) : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
-  const marker = (step.id === '④' && calibration.scoreDone && !calibration.done) || (step.id === '⑥' && !step.done && coverDeferred.done) ? '~' : step.done ? 'x' : ' ';
+  const detail = importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id) ? ' · ' + userProvidedInputs.reason : step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + (step.done ? coverState().reason : coverDeferred.done ? coverDeferred.reason : coverState().reason) : step.id === 'D1' ? ' · ' + directorDraftState().reason : step.id === 'D2' ? ' · ' + directorReviewState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
+  const marker = (importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id)) || (step.id === '④' && calibration.scoreDone && !calibration.done) || (step.id === '⑥' && !step.done && coverDeferred.done) ? '~' : step.done ? 'x' : ' ';
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }
 if (next) {
