@@ -6,7 +6,7 @@
 
 ### 变更
 
-- **laohan-bianpai** v1.18.0 — 增加`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`输入替代态，以及V5.1导演初稿D1、最终复审D2的机械路由和制作前门禁。
+- **laohan-bianpai** v1.18.1 — 增加旧V5待验收candidate升级V5.1时的SHA冻结兼容路由，并把已有candidate明确停在`JEFFREY_REVIEW`；v1.18.0同时加入`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`输入替代态、D1/D2机械路由和制作前门禁。
 - **laohan-daoyan** v2.1.0 — 把导演预制分为初稿与一次最终复审，两阶段只更新同一个`director-state.md`；终审执行密度审查、高级表达挑战和统一收敛。
 - **laohan-daoyan** v2.0.0 — 从默认禁用的METHOD_LAB旧导演改为V5新期导演预制入口；只执行UNDERSTAND→DIVERGE→CONVERGE并写`director-state.md`，旧AST/双renderer合同移入显式legacy参考。
 - **laohan-douyinsousuo** v3.0.0 — 删除 DrissionPage、cookie 注入、独立 Chrome profile 与项目脚本，改为只编排已安装的 OpenCLI；失败链固定为 adapter → trace/autofix → OpenCLI Browser Bridge。

@@ -12,6 +12,7 @@
 - ⑧—⑪由同一个 Codex 任务连续完成：完整观看原片并剪辑、写direct brief与按需source manifest、直接实现Remotion、渲染完整candidate并交Jeffrey观看。`laohan-donghua`、AST、双renderer与proposal/extension/seal只用于Jeffrey明确发起的METHOD_LAB或历史episode。
 - `laohan-sucai/SKILL.md`：⑩仅在 source manifest 有真实 PROOF/BROLL 请求时供应 provider/license/source/SHA 完整且 visually_verified 的本期素材；无请求标 not_applicable，不创建空素材任务。
 - `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanAI视频创作` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
+- V5旧期已有pending candidate再接入V5.1时，只能使用workflow受控迁移冻结原candidate与director-state SHA；bianpai视该期D1/D2为历史兼容完成并停在`JEFFREY_REVIEW`，不得倒退覆盖已生成样片。
 - episode 存在且通过 workflow `verify-episode-supersession.mjs` 的 `supersession-record.json` 时，bianpai 必须优先返回 `SUPERSEDED` 并拒绝 vendors/status/next/check；不得覆盖旧 executor lock 或把作废期迁移到新 runtime。
 - `laohan-cheat/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
 - `laohan-yunying/SKILL.md`：⑫—⑭的抖音运营编排器。发布准备要求 `bianpai check --require final`；真实发布仍必须 Jeffrey 确认。它保存 publish-record、数据快照和评论洞察，随后交给 upstream cheat-publish/retro；不自动发布、回复或改预测。
@@ -26,7 +27,7 @@
 - ⑧的实际字幕必须经过 `spoken-script-variance.json` 与当前稿的事实差异审阅。任何事实偏离都回②→⑤→④，⑨不得自行解释或继续生产；仅 `CLEAR`、事实偏离为零的当前记录可放行。
 - bianpai `vendors` 成功后必须为本期写入绑定 runtime lock 的 `00-编排/vendor-preflight.json`；`status/next` 缺少或检测到漂移时只能 BLOCKED，不能隐式联网或继续路由。
 - ⑤必须输出当前稿/事实报告绑定的 claim ledger。每个 PROOF beat 与 proof asset 都要绑定 `SUPPORTED claim_id` 和同源 evidence；只有 URL 或本地文件不能冒充该画面已证明口播事实。
-- 配套 workflow 的唯一回归命令是 `cd ~/Documents/laohanAI视频创作 && node scripts/test-workflow-contracts.mjs`；修改被 `workflow-runtime-lock.json` 锁定的 skill 后必须同步更新内容 SHA，否则 bianpai 必须 BLOCKED。
+- 配套V5.1回归使用项目中真实存在的`node scripts/test-v5-director-method.mjs`和`node scripts/test-codex-direct-contracts.mjs`，并先运行`node scripts/check-workflow-runtime.mjs`；不得引用不存在的聚合脚本。修改被`workflow-runtime-lock.json`锁定的skill后必须同步更新内容SHA，否则bianpai必须BLOCKED。
 - dbskill 不再由 `npx --all` 更新：完整 vendor 在 `~/Documents/dbskill`，并由 workflow 的 `sync-content-vendors.sh` fast-forward 后受管 symlink 到 Claude/Codex 通用 skills。视频 workflow 只固定调用 dbs-script-flow/dbs-resonate，条件调用 hook/ai-check/spread；其余能力见项目 `docs/dbskill-编排映射.md`。
 - `laohan-daoyan` v2是V5导演预制的轻入口，不另建方法真源；实时config因registry/runtime漂移失败时必须报告阻断并停止，禁止手改lock。只有Jeffrey明确授权，才可由视频工作流的受控导演预制期迁移修复。V5仍为PILOT，真实本期candidate经Jeffrey验收前不得称为accepted或效果最优。⑩`laohan-sucai`按当前素材合同执行；`laohan-donghua`只保留METHOD_LAB历史兼容。
 - `laohan-xiazai` 的抖音下载按其 `references/douyin.md`：先用 `opencli douyin user-videos` 取得临时 `play_url` 并立即下载；opencli 失效才降级到移动端 UA + iesdouyin `_ROUTER_DATA`，再按文档后续降级。抖音不存在 YouTube/yt-dlp 路径。对标/cheat 批量文字转录用 MLX 未量化 large-v3；⑧停顿和词级时间真值用 whisper-timestamped large-v3。ASR-B01 证明 MLX 会合并静音间隔，不能替代⑧；不要使用会出现 NaN/吞吐异常的 Torch MPS。路径见 workflow `CLAUDE.md` 第24条。

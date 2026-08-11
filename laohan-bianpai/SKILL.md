@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.18.0"
+version: "1.18.1"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -45,7 +45,8 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 4. ④先记录带原始隔离 JSON 的 score；编排器只验证绑定、无污染和证据级别，不替评分器判断内容质量。此时状态为 PARTIAL，再进入⑤；⑤报告与 `04-事实主张.json` 匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。
 5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。`AUTONOMOUS_RUN` 在标准①—⑥输出 `AUTO_CONTINUE_REQUIRED`；D1导演初稿与D2最终复审分别等待对应固定提示词，D2完成后才路由⑦。到⑦输出 `WAITING_FOR_JEFFREY_SHOOTING` 并停下。这是计划内人工交接，不是 `BLOCKED`。只有当前 episode 记录 Jeffrey 本人、ISO时间和原话的 `DEFERRED_UNTIL_CANDIDATE_SELECTION` 时，⑥才标记为延后并允许继续导演及⑧—⑪候选生产；默认路线不变。
 6. Jeffrey明确提供最终口播稿和真人原片时，只接受`episode_entry_contract.mode=USER_PROVIDED_FINAL_SCRIPT_AND_RAW`和`00-编排/user-provided-inputs.json`的SHA闭合记录。①—⑤显示`~`用户输入替代态，不伪造完成证据，也不再错误路由回①；先走D1、D2，再核验⑦拍摄记录。
-7. 唯一下一步始终是最早失效节点。④已评分、⑤已完成或⑥曾有产物都不能覆盖破损的①—③；下游文件可以保留为历史证据，但在前缀恢复前不算可继续状态。
+7. 如果旧V5 episode已经生成待验收candidate，再升级V5.1时只接受`FROZEN_PENDING_CANDIDATE_PREDATES_V5_1_STATE_FIELDS`受控迁移。迁移必须冻结原candidate和director-state SHA；编排器把D1/D2视为本期已完成的兼容事实，并停在`JEFFREY_REVIEW`，不得倒退重写导演稿或重新生产。
+8. 唯一下一步始终是最早失效节点。④已评分、⑤已完成或⑥曾有产物都不能覆盖破损的①—③；下游文件可以保留为历史证据，但在前缀恢复前不算可继续状态。
 
 ## 硬规则
 
@@ -56,6 +57,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 - ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；项目真源、本期副本与 config SHA 必须一致。最小完成合同为：绑定当前稿和本期 reference 的 `cover-prompts.md`，加 `05-封面/` 根目录至少1张真实可解码候选图。九图、provider request、review和 `selected-cover.json` 均不是成片门槛；任何实际生成仍必须传入本期头像，纯文字描述人物或 brand-new generation 都是硬失败。
 - 封面延后仅用于提示词或首张候选尚未完成时的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐最小合同后 `--require final|full` 直接通过⑥，不等待额外图片或预先选图。
 - V5.1制作前必须在同一个`09-导演/director-state.md`同时满足`director_draft: COMPLETED`和两处`director_review: COMPLETED`。初稿的`PENDING`只能路由最终复审，不能进入⑧。
+- 已存在pending candidate的V5.1兼容迁移是一次性历史例外：只承认迁移记录冻结的candidate与director-state，不允许借兼容字段跳过新episode的D1/D2。candidate存在但未接受时，唯一状态是`JEFFREY_REVIEW`；Jeffrey无需掌握Remotion技术，只需接受或指出时间点/肉眼问题。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA。默认由 Jeffrey 看过并接受；仅当前 episode 预先记录 Jeffrey 本人、ISO时间和原话的 `final_selection_contract.mode=AGENT_PROXY` 时，Codex可在完整QA后代为选择，并写 `selection_mode=AGENT_PROXY` 的审阅记录。
 - ⑫发布、账号操作、评论回复与方法论升级都不自动执行。

@@ -165,7 +165,25 @@ const userProvidedInputsState = () => safely(() => {
     || record.raw.sha256 !== shaPath(file('06-拍摄素材/raw.mp4'))) return {done: false, reason: '用户定稿+原片登记未绑定当前文件'};
   return {done: true, reason: 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW已绑定；①—⑤为用户输入替代态，不伪造审核产物'};
 }, '用户定稿+原片入口无法读取');
+const frozenPendingCandidateDirectorState = () => safely(() => {
+  const config = readJson('episode-config.json');
+  const migrationContract = config.motion_director_contract?.director_review_migration || {};
+  if (migrationContract.mode !== 'FROZEN_PENDING_CANDIDATE_PREDATES_V5_1_STATE_FIELDS' || migrationContract.record_path !== '00-编排/v5-pending-candidate-workflow-migration.json' || !nonEmptyFile(migrationContract.record_path)) return {done: false, reason: '没有V5.1冻结candidate导演兼容记录'};
+  const migration = readJson(migrationContract.record_path);
+  if (migration.status !== 'MIGRATED_DURING_V5_PENDING_CANDIDATE_WORKFLOW_REVISION'
+    || migration.preserved_director_state_sha256 !== shaPath(file('09-导演/director-state.md'))
+    || !/^11-动画\/candidates\/remotion-v[1-9][0-9]*\.mp4$/.test(migration.preserved_candidate_path || '')
+    || !nonEmptyFile(migration.preserved_candidate_path)
+    || migration.preserved_candidate_sha256 !== shaPath(file(migration.preserved_candidate_path))) return {done: false, reason: 'V5.1冻结candidate记录未绑定当前导演稿或candidate'};
+  const manifest = readJson('11-动画/render-manifest.json');
+  const candidateRelative = migration.preserved_candidate_path.slice('11-动画/'.length);
+  const candidate = manifest.candidates?.find((item) => item.path === candidateRelative);
+  if (!['PENDING', 'ACCEPTED'].includes(manifest.viewer_verdict) || !candidate || candidate.sha256 !== migration.preserved_candidate_sha256 || candidate.director_state_sha256 !== migration.preserved_director_state_sha256) return {done: false, reason: 'V5.1冻结candidate不再存在于当前manifest'};
+  return {done: true, reason: '本期candidate在V5.1字段落盘前已完成实质导演终审；迁移保留原导演稿和candidate SHA'};
+}, 'V5.1冻结candidate导演状态无法读取');
 const directorDraftState = () => safely(() => {
+  const frozen = frozenPendingCandidateDirectorState();
+  if (frozen.done) return frozen;
   if (!nonEmptyFile('09-导演/director-state.md')) return {done: false, reason: '缺09-导演/director-state.md'};
   const body = readFileSync(file('09-导演/director-state.md'), 'utf8');
   const reviews = [...body.matchAll(/^director_review:\s*(NOT_STARTED|PENDING|COMPLETED)\s*$/gm)].map((match) => match[1]);
@@ -173,6 +191,8 @@ const directorDraftState = () => safely(() => {
   return {done: true, reason: 'V5.1导演初稿已落盘'};
 }, '导演初稿状态无法读取');
 const directorReviewState = () => safely(() => {
+  const frozen = frozenPendingCandidateDirectorState();
+  if (frozen.done) return frozen;
   const draft = directorDraftState();
   if (!draft.done) return draft;
   const body = readFileSync(file('09-导演/director-state.md'), 'utf8');
@@ -437,6 +457,17 @@ const animationState = () => {
   if (!exists('11-动画/render-manifest.json')) return {done: false, reason: '缺 11-动画/render-manifest.json'};
   return gateState('accepted-final', '动画尚未接受为 final');
 };
+const candidateReviewState = () => safely(() => {
+  if (!nonEmptyFile('11-动画/render-manifest.json')) return {done: false, reason: '缺render-manifest'};
+  const manifest = readJson('11-动画/render-manifest.json');
+  const candidates = Array.isArray(manifest.candidates) ? manifest.candidates : [];
+  if (manifest.viewer_verdict !== 'PENDING' || manifest.selected_candidate !== null || !candidates.length) return {done: false, reason: '没有待Jeffrey验收的candidate'};
+  for (const candidate of candidates) {
+    const relative = '11-动画/' + candidate.path;
+    if (!/^11-动画\/candidates\/remotion-v[1-9][0-9]*\.mp4$/.test(relative) || !nonEmptyFile(relative) || candidate.sha256 !== shaPath(file(relative)) || candidate.technical_qa !== 'PASS') return {done: false, reason: 'pending candidate文件、SHA或技术QA无效'};
+  }
+  return {done: true, reason: 'candidate已完成并停在JEFFREY_REVIEW；等待Jeffrey接受或指出肉眼可见问题'};
+}, 'candidate验收状态无法读取');
 const shootingState = () => safely(() => {
   if (!nonEmptyFile('06-拍摄素材/raw.mp4') || !exists('06-拍摄素材/shooting-record.json')) return {done: false, reason: '缺 raw.mp4 或 shooting-record.json'};
   const record = readJson('06-拍摄素材/shooting-record.json');
@@ -725,6 +756,7 @@ if (!importedContentPrefix && contentPrefixDone && calibration.done && deepScan.
 }
 if (command === 'next') {
   if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
+  else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\nnext_scope: ⑧—⑪\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；成功后重跑 bianpai 并自动继续，不逐步询问 Jeffrey。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log(`# 下一步：⑦拍摄\n\nWAITING_FOR_JEFFREY_SHOOTING\nworkflow_mode: AUTONOMOUS_RUN\nplanned_manual_handoff: true\n\n- 需要落盘：${next.output}\n- 说明：到达计划内唯一拍摄交接；等 Jeffrey 拍摄，这不是 BLOCKED。`);
@@ -734,13 +766,14 @@ if (command === 'next') {
 
 console.log('# 编排状态\n');
 for (const step of states) {
-  const detail = importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id) ? ' · ' + userProvidedInputs.reason : step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + (step.done ? coverState().reason : coverDeferred.done ? coverDeferred.reason : coverState().reason) : step.id === 'D1' ? ' · ' + directorDraftState().reason : step.id === 'D2' ? ' · ' + directorReviewState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + animationState().reason : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
+  const detail = importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id) ? ' · ' + userProvidedInputs.reason : step.id === '①' ? ' · ' + topicState().reason : step.id === '②' ? ' · ' + scriptState().reason : step.id === '③' ? ' · ' + complianceState().reason : step.id === '④' ? ' · ' + calibration.reason : step.id === '⑤' ? ' · ' + deepScan.reason : step.id === '⑥' ? ' · ' + (step.done ? coverState().reason : coverDeferred.done ? coverDeferred.reason : coverState().reason) : step.id === 'D1' ? ' · ' + directorDraftState().reason : step.id === 'D2' ? ' · ' + directorReviewState().reason : step.id === '⑦' ? ' · ' + shootingState().reason : step.id === '⑩' ? ' · ' + materialState().reason : step.id === '⑪' ? ' · ' + (candidateReviewState().done ? candidateReviewState().reason : animationState().reason) : step.id === '⑫' ? ' · ' + publishState().reason : step.id === '⑬' ? ' · ' + snapshotState().reason : step.id === '⑭' ? ' · ' + commentState().reason : '';
   const marker = (importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id)) || (step.id === '④' && calibration.scoreDone && !calibration.done) || (step.id === '⑥' && !step.done && coverDeferred.done) ? '~' : step.done ? 'x' : ' ';
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }
 if (next) {
   console.log(`\n当前唯一下一步：${next.id}${next.name}（${next.skill}）`);
-  if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production next_scope=⑧—⑪`);
+  if (next.id === '⑪' && candidateReviewState().done) console.log('JEFFREY_REVIEW：接受则完结；不接受只需指出时间点或明显问题，不需要固定修改提示词。');
+  else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production next_scope=⑧—⑪`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log('WAITING_FOR_JEFFREY_SHOOTING planned_manual_handoff=true blocked=false');
 }

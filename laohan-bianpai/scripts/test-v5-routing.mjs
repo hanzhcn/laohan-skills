@@ -14,7 +14,7 @@ const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('he
 const run = (...args) => spawnSync(process.execPath, [bianpai, ...args, '--episode', episode], {encoding: 'utf8'});
 
 try {
-  write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\necho "PASS $2"\n');
+  write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\nif [ "$2" = "accepted-final" ]; then exit 1; fi\necho "PASS $2"\n');
   write(join(testRoot, 'scripts/check-workflow-runtime.mjs'), 'console.log("PASS runtime");\n');
   write(join(testRoot, 'scripts/verify-vendor-preflight.mjs'), 'console.log("PASS vendor preflight");\n');
   write(join(testRoot, 'scripts/check-production-dependencies.mjs'), 'console.log("{}");\n');
@@ -58,7 +58,20 @@ try {
   const status = run('status');
   if (status.status !== 0 || !status.stdout.includes('- [~] ①') || !status.stdout.includes('用户输入替代态') || !status.stdout.includes('- [x] D2')) throw new Error(status.stderr || status.stdout || '状态未正确显示用户输入替代态和导演终审');
 
-  console.log('PASS laohan-bianpai USER_PROVIDED inputs -> D1 -> D2 -> ⑦ routing');
+  write(join(episode, '09-导演/director-state.md'), '# V5旧字段导演稿\nmethod: V5\nstatus: READY_FOR_IMPLEMENTATION\n');
+  json(join(episode, '09-导演/source-manifest.json'), {schema_version: 1});
+  json(join(episode, '06-拍摄素材/shooting-record.json'), {script_sha256: sha(join(episode, '01-口播稿.md')), raw_sha256: sha(join(episode, '06-拍摄素材/raw.mp4'))});
+  write(join(episode, '11-动画/candidates/remotion-v1.mp4'), 'candidate');
+  json(join(episode, '11-动画/render-manifest.json'), {version: 7, viewer_verdict: 'PENDING', selected_candidate: null, candidates: [{path: 'candidates/remotion-v1.mp4', sha256: sha(join(episode, '11-动画/candidates/remotion-v1.mp4')), director_state_sha256: sha(join(episode, '09-导演/director-state.md')), technical_qa: 'PASS'}]});
+  const migrationPath = join(episode, '00-编排/v5-pending-candidate-workflow-migration.json');
+  json(migrationPath, {schema_version: 1, status: 'MIGRATED_DURING_V5_PENDING_CANDIDATE_WORKFLOW_REVISION', preserved_candidate_path: '11-动画/candidates/remotion-v1.mp4', preserved_candidate_sha256: sha(join(episode, '11-动画/candidates/remotion-v1.mp4')), preserved_director_state_sha256: sha(join(episode, '09-导演/director-state.md'))});
+  const migratedConfig = JSON.parse(readFileSync(join(episode, 'episode-config.json'), 'utf8'));
+  migratedConfig.motion_director_contract = {workflow_revision: 'V5.1', director_review_required: true, director_review_migration: {mode: 'FROZEN_PENDING_CANDIDATE_PREDATES_V5_1_STATE_FIELDS', record_path: '00-编排/v5-pending-candidate-workflow-migration.json'}};
+  json(join(episode, 'episode-config.json'), migratedConfig);
+  const migratedReview = run('next');
+  if (migratedReview.status !== 0 || !migratedReview.stdout.includes('JEFFREY_REVIEW') || migratedReview.stdout.includes('HANDOFF_TO_CODEX')) throw new Error(migratedReview.stderr || migratedReview.stdout || '冻结的pending candidate必须停在Jeffrey验收，不得倒退到D1/D2或重新生产');
+
+  console.log('PASS laohan-bianpai USER_PROVIDED inputs -> D1 -> D2 -> ⑦ + frozen candidate review routing');
 } finally {
   rmSync(testRoot, {recursive: true, force: true});
 }
