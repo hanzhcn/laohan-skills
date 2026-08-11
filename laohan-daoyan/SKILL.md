@@ -10,7 +10,7 @@ description: laohanAI真人口播新episode的V5.1导演预制入口。分为导
 
 - `animation-method/director-system/method-v5.json`
 - `templates/director-state-v5.md`
-- `docs/Codex媒体生产接口规格.md`的“V5导演预制”部分
+- `docs/Codex媒体生产接口规格.md`的“V5.1导演预制”部分
 
 项目规则和上述文件优先于本Skill。不得把历史METHOD_LAB、V4 motion-plan或旧episode实现混入V5上下文。
 
@@ -100,7 +100,7 @@ description: laohanAI真人口播新episode的V5.1导演预制入口。分为导
 - 高级技术、素材策略和拍摄后待确认项已记录；
 - 最终方案明确确认轻量视觉底线。
 - 初稿请求结束时是`director_draft: COMPLETED / director_review: PENDING`；最终复审请求结束时是`director_review: COMPLETED`。
-- `_status.md`已把当前位置同步为V5导演预制完成，并勾选`V5导演预制`；已有raw但缺shooting record时不得把⑦误写为完成。
+- `_status.md`已把当前位置同步为对应的D1导演初稿或D2最终复审，并勾选正确阶段；已有raw但缺shooting record时不得把⑦误写为完成。
 - 最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`并取得PASS；不得引用窗口开始时的旧PASS，也不得用干净Git状态替代episode准入。
 
 随后立即停止并向Jeffrey报告`director-state.md`地址。即使真人原片已经存在，也不得在本窗口继续剪辑或实现；下一制作窗口再读取导演状态进入⑧—⑪。

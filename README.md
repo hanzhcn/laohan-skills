@@ -51,7 +51,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封�
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 幻灯片图片
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 录屏自动化
-npx skills add hanzhcn/laohan-skills --skill laohan-daoyan          # 🎬 V5导演预制（只写director-state）
+npx skills add hanzhcn/laohan-skills --skill laohan-daoyan          # 🎬 V5.1导演初稿+终审（同一director-state）
 npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay 成片
 npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 多平台改写（抖音/小红书/公众号）
 ```
