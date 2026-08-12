@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex 轻量初始化"
+  short_description: "安全配置、验证闭环与 Codex 最小初始化实用方案"
+  default_prompt: "Use $laohan-chushicodex to audit a new Codex installation and apply only the essential setup."

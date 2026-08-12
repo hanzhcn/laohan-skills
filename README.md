@@ -6,17 +6,17 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-16-blue.svg)](https://github.com/hanzhcn/laohan-skills)
-[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![Skills](https://img.shields.io/badge/Skills-21-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenClaw-green.svg)](https://agentskills.io/)
 
-**Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
-**Claude Code 超级技能包** — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定
+**Agent Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
+**Agent 超级技能包** — 内容创作全流程 + 30 平台内容获取 + 开发者工具，一句话搞定
 
 </div>
 
 **[English](./README.en.md)** | 中文
 
-由 [laohanAI](https://github.com/hanzhcn) 出品 · 抖音搜索「**laohanAI**」看实战教程 · 基于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [OpenClaw](https://github.com/openclaw/openclaw)
+由 [laohanAI](https://github.com/hanzhcn) 出品 · 抖音搜索「**laohanAI**」看实战教程 · 支持 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) / [OpenClaw](https://github.com/openclaw/openclaw)
 
 ---
 
@@ -25,7 +25,7 @@
 > **不必全装**——挑你要的技能单独装，避免装一堆用不上的。完整单装命令见「[按需安装](#按需安装)」。
 
 ```bash
-# 一键全装（16 个技能，需要 Claude Code 或 OpenClaw）
+# 一键全装（21 个技能，需要 Claude Code、Codex 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills -g -y
 
 # 单装一个（推荐：按需挑）
@@ -33,15 +33,18 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
 
 # 多选几个
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
+
+# Codex 专用初始化 skill（只安装到 Codex）
+npx skills add hanzhcn/laohan-skills -g -y --agent codex --skill laohan-chushicodex
 ```
 
 ---
 
 ## 按需安装
 
-不必全装。挑你要的，复制对应命令（前提：已装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)）：
+不必全装。挑你要的，复制对应命令（前提：已装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 OpenClaw）：
 
-**内容创作（11 个）**
+**内容创作（10 个）**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 AI 热点三路并行抓取
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
@@ -53,7 +56,6 @@ npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 幻�
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 录屏自动化
 npx skills add hanzhcn/laohan-skills --skill laohan-daoyan          # 🎬 V5.1导演初稿+终审（同一director-state）
 npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay 成片
-npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 多平台改写（抖音/小红书/公众号）
 ```
 
 **内容获取（2 个）**
@@ -62,12 +64,21 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai           # 📥 30+�
 npx skills add hanzhcn/laohan-skills --skill laohan-douyinsousuo     # 🔍 抖音关键词搜索
 ```
 
-**开发者工具（4 个 · 自用/进阶，内容创作者可跳过）**
+**开发者与工作流工具（8 个 · 自用/进阶，内容创作者可跳过）**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 技术文档联网审查
 npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 工具版本检查
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 配置教程路由
 npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ 创建/修改 skill
+npx skills add hanzhcn/laohan-skills --skill laohan-chushicodex      # ⚙️ Codex 轻量初始化
+npx skills add hanzhcn/laohan-skills --skill laohan-bianpai          # 🧭 视频工作流状态路由
+npx skills add hanzhcn/laohan-skills --skill laohan-sucai            # 📦 B-roll 素材供应
+npx skills add hanzhcn/laohan-skills --skill laohan-yunying          # 📈 发布后运营与复盘
+```
+
+**多平台改写（1 个）**
+```bash
+npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 抖音/小红书/公众号改写
 ```
 
 > 一键全装：`npx skills add hanzhcn/laohan-skills -g -y`
@@ -222,7 +233,7 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 
 ---
 
-## 开发者工具（4 个 · 自用/进阶）
+## 开发者与工作流工具（8 个 · 自用/进阶）
 
 > ⚠️ 以下为开发者维护、配置、审查用，**内容创作者可跳过此板块**。
 
@@ -232,6 +243,10 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 | 🔄 **gengxin** | 工具版本检查更新 — npm/brew/pip/GitHub/plugins | "检查更新" |
 | 📖 **jiaocheng** | 教程路由器 — claude-mem/GLM/ECC/Gemini 等 5 个教程 | "教程" |
 | 🛠️ **skillcreator** | 元技能 — 创建/修改/优化 Claude Code Skill | "创建 skill" |
+| ⚙️ **chushicodex** | 新装或待整顿 Codex 的安全最小配置与验证闭环 | "初始化 Codex" |
+| 🧭 **bianpai** | 视频 workflow 的状态路由与机械 gate | "进入哪步" |
+| 📦 **sucai** | 按 source manifest 供应并核验 B-roll 素材 | "配素材" |
+| 📈 **yunying** | 发布登记、数据、评论与复盘交接 | "运营" |
 
 ---
 
@@ -245,7 +260,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 ## 前置依赖
 
-> 只需 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可使用全部技能。以下为可选增强。
+> 只需 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可使用全部技能。以下为可选增强。
 
 | 工具 | 安装 | 增强哪些技能 |
 |------|------|-------------|
@@ -258,7 +273,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm（幻灯片生成） |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo（本地语音转录） |
 
-无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing；douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
+无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · laohan-chushicodex · fengmian · fenjing；douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
 
 ---
 
@@ -271,6 +286,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [Chrome Gemini 侧边栏修复](./docs/gemini-sidebar-fix.md) | Mac + Windows 双平台脚本 |
 | [Claude Code + 智谱 GLM 接入](./docs/claude-code-glm.md) | 环境变量、thinking、超时、模型切换 |
 | [ECC 插件安装维护指南](./docs/ecc-plugin-guide.md) | rules 分发、hooks 机制、升级清单 |
+| `laohan-chushicodex` | 新装或待整顿 Codex 的安全最小配置、分层 `AGENTS.md`、项目验证与证据闭环 |
 
 ---
 
