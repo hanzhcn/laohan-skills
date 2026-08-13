@@ -176,7 +176,7 @@ redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm 
 
 | 技能 | 一句话 | 说 |
 |------|--------|-----|
-| 🎨 **fengmian** | Gemini 封面提示词（秋芝 2046 风格，3 种 × 3 比例） | "生成封面" |
+| 🎨 **fengmian** | 默认只走秋芝方向，从45套词典选3个不同模板族，按推荐顺序生成3张带准确中文的9:16完整封面 | "生成封面" |
 | 🎬 **fenjing** | 分镜提示词（FLUX / SDXL / Gemini，质量校验后拆分） | "拆分镜" |
 | 📑 **notebooklm** | 口播稿 → 幻灯片图片（NotebookLM，剪映直接用） | "做 PPT" |
 | 🎥 **luping** | 录屏自动化（ffmpeg 物理屏 + Playwright 浏览器 → 1080p MP4） | "录屏" |

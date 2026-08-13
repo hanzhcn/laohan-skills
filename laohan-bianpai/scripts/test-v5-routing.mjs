@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
-import {spawnSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
 import {chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -57,6 +57,26 @@ try {
 
   const status = run('status');
   if (status.status !== 0 || !status.stdout.includes('- [~] ①') || !status.stdout.includes('用户输入替代态') || !status.stdout.includes('- [x] D2')) throw new Error(status.stderr || status.stdout || '状态未正确显示用户输入替代态和导演终审');
+
+  const projectReference = join(testRoot, 'assets/identity/jeffrey-cover-reference.jpg');
+  const episodeReference = join(episode, '05-封面/reference/jeffrey-reference.jpg');
+  write(projectReference, 'jeffrey-reference');
+  write(episodeReference, 'jeffrey-reference');
+  const coverConfig = JSON.parse(readFileSync(join(episode, 'episode-config.json'), 'utf8'));
+  coverConfig.cover_schedule = {mode: 'REQUIRED_BEFORE_SHOOTING', authorized_by: null, authorized_at: null, authorization_note: null};
+  coverConfig.cover_identity_contract = {reference_mode: 'REQUIRED', project_asset: 'assets/identity/jeffrey-cover-reference.jpg', episode_asset: '05-封面/reference/jeffrey-reference.jpg', reference_sha256: sha(projectReference)};
+  json(join(episode, 'episode-config.json'), coverConfig);
+  write(join(episode, '05-封面/cover-prompts.md'), `---\nscript_hash: ${sha(join(episode, '01-口播稿.md'))}\nprompt_executor: cover-prompt-strategy\nimage_provider: fixture\nreference_mode: REQUIRED\nreference_asset: reference/jeffrey-reference.jpg\nreference_sha256: ${sha(projectReference)}\nstrategy: QIUZHI_THREE_RANKED_DIRECT_COVERS\nrequired_generated_candidate_count: 3\npublish_priority: "01>02>03"\ndefault_publish_candidate: cover-01-qiuzhi-9x16\n---\n\n## 01｜秋芝方向｜最推荐\n- 模板族：角色戏剧\n\n## 02｜秋芝方向｜第二推荐\n- 模板族：现实动作\n\n## 03｜秋芝方向｜第三推荐\n- 模板族：符号隐喻\n`);
+  const cover01 = join(episode, '05-封面/cover-01-qiuzhi-9x16.png');
+  const cover02 = join(episode, '05-封面/cover-02-qiuzhi-9x16.png');
+  const cover03 = join(episode, '05-封面/cover-03-qiuzhi-9x16.png');
+  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=purple:s=180x320', '-frames:v', '1', cover01]);
+  const oneCover = run('status');
+  if (oneCover.status !== 0 || !oneCover.stdout.includes('缺秋芝9:16排序候选：02、03') || oneCover.stdout.includes('- [x] ⑥')) throw new Error(oneCover.stderr || oneCover.stdout || '只有01时⑥必须保持未完成');
+  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=green:s=180x320', '-frames:v', '1', cover02]);
+  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=orange:s=180x320', '-frames:v', '1', cover03]);
+  const threeCovers = run('status');
+  if (threeCovers.status !== 0 || !threeCovers.stdout.includes('- [x] ⑥') || !threeCovers.stdout.includes('自动发布默认=cover-01-qiuzhi-9x16.png')) throw new Error(threeCovers.stderr || threeCovers.stdout || '01—03三张9:16齐全后⑥必须完成并默认01');
 
   write(join(episode, '09-导演/director-state.md'), '# V5旧字段导演稿\nmethod: V5\nstatus: READY_FOR_IMPLEMENTATION\n');
   json(join(episode, '09-导演/source-manifest.json'), {schema_version: 1});

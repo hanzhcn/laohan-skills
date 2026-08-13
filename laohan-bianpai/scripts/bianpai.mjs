@@ -204,7 +204,7 @@ const coverDeferralState = () => safely(() => {
   const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
   if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
   if (schedule.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(schedule.authorized_at)) || typeof schedule.authorization_note !== 'string' || !schedule.authorization_note.trim()) return {done: false, reason: '封面延后授权缺 Jeffrey、ISO时间或原话'};
-  return {done: true, reason: 'Jeffrey 已授权本期封面延后；提示词和首张候选尚未齐全时⑥仍未PASS'};
+  return {done: true, reason: 'Jeffrey 已授权本期封面延后；提示词和01—03三张排序候选尚未齐全时⑥仍未PASS'};
 }, 'cover_schedule 无法读取');
 const coverState = () => safely(() => {
   if (!nonEmptyFile('05-封面/cover-prompts.md')) return {done: false, reason: '缺非空 05-封面/cover-prompts.md'};
@@ -227,17 +227,31 @@ const coverState = () => safely(() => {
   if (field('script_hash') !== scriptHash() || field('prompt_executor') !== 'cover-prompt-strategy' || !field('image_provider') || field('reference_mode') !== 'REQUIRED' || !['reference/jeffrey-reference.jpg', identity.episode_asset].includes(field('reference_asset')) || field('reference_sha256') !== identity.reference_sha256) {
     return {done: false, reason: 'cover-prompts.md 必须绑定当前稿、cover-prompt-strategy、image_provider 与本期 REQUIRED reference 路径/SHA'};
   }
+  const publishPriority = field('publish_priority')?.replace(/^['"]|['"]$/g, '');
+  const templateFamilies = [...prompt.matchAll(/^- 模板族：\s*(.+?)\s*$/gm)].map((match) => match[1].trim());
+  if (field('strategy') !== 'QIUZHI_THREE_RANKED_DIRECT_COVERS' || field('required_generated_candidate_count') !== '3' || publishPriority !== '01>02>03' || field('default_publish_candidate') !== 'cover-01-qiuzhi-9x16') {
+    return {done: false, reason: 'cover-prompts.md 必须声明秋芝三张排序策略、01>02>03发布优先级与默认候选01'};
+  }
+  if (templateFamilies.length !== 3 || new Set(templateFamilies).size !== 3) return {done: false, reason: 'cover-prompts.md 必须为01、02、03记录3个不同模板族'};
   const candidateImages = readdirSync(coverRoot, {withFileTypes: true})
-    .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
-    .map((entry) => ({name: entry.name, path: join(coverRoot, entry.name)}))
+    .filter((entry) => entry.isFile() && /^cover-(01|02|03)-qiuzhi-9x16\.(png|jpe?g|webp)$/i.test(entry.name))
+    .map((entry) => ({name: entry.name, rank: entry.name.match(/^cover-(01|02|03)-/i)?.[1], path: join(coverRoot, entry.name)}))
     .filter((candidate) => statSync(candidate.path).size > 0 && realpathSync(candidate.path).startsWith(assetRoot));
-  const decodable = candidateImages.find((candidate) => {
-    try { return Boolean(imageDimensions(candidate.path)); }
-    catch { return false; }
-  });
-  if (!decodable) return {done: false, reason: '05-封面/ 根目录至少需要1张真实可解码 PNG、JPEG 或 WebP 候选图'};
-  return {done: true, reason: `封面最小合同已完成：提示词绑定当前稿与本期头像，首张真实候选=${decodable.name}`};
-}, '封面最小合同无法读取');
+  const ranked = new Map();
+  for (const candidate of candidateImages) {
+    if (ranked.has(candidate.rank)) return {done: false, reason: `封面推荐序号${candidate.rank}存在多个文件，必须只保留一个明确候选`};
+    try {
+      const dimensions = imageDimensions(candidate.path);
+      if (Math.abs(dimensions.width / dimensions.height - 9 / 16) > 0.002) return {done: false, reason: `${candidate.name}必须是9:16`};
+      ranked.set(candidate.rank, candidate);
+    } catch {
+      return {done: false, reason: `${candidate.name}必须是真实可解码PNG、JPEG或WebP`};
+    }
+  }
+  const missingRanks = ['01', '02', '03'].filter((rank) => !ranked.has(rank));
+  if (missingRanks.length) return {done: false, reason: `05-封面/ 缺秋芝9:16排序候选：${missingRanks.join('、')}`};
+  return {done: true, reason: `封面合同已完成：3张秋芝9:16候选按推荐顺序齐全，自动发布默认=${ranked.get('01').name}`};
+}, '封面合同无法读取');
 const calibrationState = () => safely(() => {
   if (!exists('03-校准报告.md')) return {done: false, reason: '缺 03-校准报告.md'};
   const report = readFileSync(file('03-校准报告.md'), 'utf8');
@@ -603,7 +617,7 @@ const steps = [
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
-  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 至少1张真实候选图'},
+  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 秋芝方向01/02/03三张9:16排序候选'},
   {id: 'D1', name: 'V5.1导演初稿', skill: 'laohan-daoyan', done: () => directorDraftState().done, output: '09-导演/director-state.md（director_draft=COMPLETED，director_review=PENDING）'},
   {id: 'D2', name: 'V5.1最终导演复审', skill: 'laohan-daoyan', done: () => directorReviewState().done, output: '同一director-state.md（director_review=COMPLETED）'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
@@ -702,7 +716,7 @@ if (command === 'check') {
     const contentReady = userProvidedInputs.done || (topicState().done && scriptState().done && complianceState().done && calibrationState().done && deepScanState().done);
     const prerequisites = [contentReady, coverReady, directorReviewState().done, shootingState().done];
     if (prerequisites.some((value) => !value)) {
-      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成标准①—⑤或有效用户定稿+原片登记、V5.1导演终审、⑦，并完成⑥最小合同或登记Jeffrey本期封面延后授权' : '发布/闭环前必须完成标准①—⑤或有效用户输入登记、V5.1导演终审、⑦与⑥最小合同') + '；标准路线最终盲预测必须RECORDED，所有输入必须绑定当前hash');
+      console.error('FAIL ' + (requiredStage === 'production' ? '生产前必须完成标准①—⑤或有效用户定稿+原片登记、V5.1导演终审、⑦，并完成⑥三张排序封面合同或登记Jeffrey本期封面延后授权' : '发布/闭环前必须完成标准①—⑤或有效用户输入登记、V5.1导演终审、⑦与⑥三张排序封面合同') + '；标准路线最终盲预测必须RECORDED，所有输入必须绑定当前hash');
       process.exit(1);
     }
   }
