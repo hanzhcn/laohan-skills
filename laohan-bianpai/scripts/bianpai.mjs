@@ -207,11 +207,14 @@ const mediaWindowState = () => safely(() => {
   let status = null;
   if (nonEmptyFile('10-素材/real-media-status.json')) {
     status = readJson('10-素材/real-media-status.json');
-    if (status.schema_version !== 1 || status.source_manifest_sha256 !== shaPath(file(sourceRelative))) return {done: false, reason: 'real-media-status 未绑定当前 source-manifest'};
+    if (status.schema_version !== 1 || status.source_manifest_sha256 !== shaPath(file(sourceRelative))) {
+      const promptId = networkRequests.length ? '07-network' : captureRequests.length ? '08-local-capture' : '09-candidate';
+      return {done: false, promptId, reason: 'real-media-status 未绑定当前 source-manifest'};
+    }
   }
-  const complete = (group, requests) => requests.length === 0 || ['COMPLETED', 'NOT_NEEDED'].includes(status?.[group]?.state);
-  if (!complete('network', networkRequests)) return {done: false, promptId: '07-network', reason: 'source-manifest 存在未完成网络素材请求'};
-  if (!complete('local_capture', captureRequests)) return {done: false, promptId: '08-local-capture', reason: 'source-manifest 存在未完成 LOCAL_CAPTURE 请求'};
+  const complete = (group, requests) => requests.length === 0 || status?.[group]?.state === 'COMPLETED';
+  if (!complete('network', networkRequests)) return {done: false, promptId: '07-network', reason: `source-manifest 存在未完成网络素材请求（${status?.network?.state || 'WAITING'}）`};
+  if (!complete('local_capture', captureRequests)) return {done: false, promptId: '08-local-capture', reason: `source-manifest 存在未完成 LOCAL_CAPTURE 请求（${status?.local_capture?.state || 'WAITING'}）`};
   return {done: true, promptId: '09-candidate', reason: '网络素材与本机录屏均为已复核或 NOT_NEEDED'};
 }, '素材窗口状态无法读取');
 const promptIdFor = (step, mediaWindow) => {
@@ -617,24 +620,40 @@ const publishState = () => safely(() => {
       const relative = `12-发布/${platform}-publish-results.jsonl`;
       if (!nonEmptyFile(relative)) { missing.push(platform); continue; }
       const lines = readFileSync(file(relative), 'utf8').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-      let receipt;
-      try { receipt = JSON.parse(lines.at(-1)); } catch { missing.push(platform); continue; }
-      if (receipt.final_sha256 !== finalHash
-        || receipt.auto_publish_authorized !== true
-        || receipt.publish_result !== 'PUBLISHED'
-        || receipt.authorization_note !== automation.authorization_note
-        || Number.isNaN(Date.parse(receipt.recorded_at))
-        || (platform !== 'douyin' && receipt.platform !== platform)) missing.push(platform);
+      let receipts;
+      try { receipts = lines.map((line) => JSON.parse(line)); } catch { missing.push(platform); continue; }
+      const normalized = (record) => {
+        const publishedAt = Date.parse(record?.published_at);
+        const recordedAt = Date.parse(record?.recorded_at);
+        const authorizedAt = Date.parse(record?.authorized_at);
+        const hasReceiptIdentity = (typeof record?.receipt_id === 'string' && record.receipt_id.trim()) || (typeof record?.url === 'string' && record.url.trim());
+        return record?.platform === platform
+          && record.final_sha256 === finalHash
+          && record.publish_result === 'PUBLISHED'
+          && record.auto_publish_authorized === true
+          && hasReceiptIdentity
+          && typeof record.platform_title === 'string' && record.platform_title.trim()
+          && !Number.isNaN(publishedAt) && !Number.isNaN(recordedAt) && !Number.isNaN(authorizedAt)
+          && publishedAt >= authorizedAt && recordedAt >= publishedAt
+          && record.authorized_by === automation.authorized_by
+          && record.authorized_at === automation.authorized_at
+          && record.authorization_note === automation.authorization_note
+          && record.bound_input_record_sha256 === automation.input_record_sha256;
+      };
+      const receipt = [...receipts].reverse().find(normalized);
+      if (!receipt) missing.push(platform);
     }
     return missing.length
       ? {done: false, reason: '完整自动化仍缺当前final的真实发布回执：' + missing.join('、')}
-      : {done: true, reason: '四平台自动发布回执均已绑定当前final与本期授权'};
+      : {done: true, reason: '四平台自动发布归一化回执均已绑定当前final与本期授权'};
   }
   if (!exists('12-发布/publish-record.json')) return {done: false, reason: '缺 12-发布/publish-record.json'};
   const record = readJson('12-发布/publish-record.json');
   const config = readJson('episode-config.json');
   if (!config.platforms?.includes('douyin')) return {done: false, reason: '手动发布前 episode-config.platforms 必须明确含 douyin'};
-  if (record.platform !== 'douyin' || record.status !== 'PUBLISHED' || !record.url || !record.aweme_id || !record.platform_title || !record.published_at || record.source !== 'user-confirmed' || !record.url.includes(String(record.aweme_id))) {
+  const canonicalManualSource = record.source === 'USER_CONFIRMED_MANUAL';
+  const historicalManualSource = record.source === 'user-confirmed' && Number(config.schema_version) < 4;
+  if (record.platform !== 'douyin' || record.status !== 'PUBLISHED' || !record.url || !record.aweme_id || !record.platform_title || !record.published_at || (!canonicalManualSource && !historicalManualSource) || !record.url.includes(String(record.aweme_id))) {
     return {done: false, reason: 'publish-record 必须为用户确认且 URL/aweme_id/platform_title 一致的已发布抖音记录'};
   }
   if (Number.isNaN(Date.parse(record.published_at)) || !gateState('accepted-final', 'final 未接受').done) {
@@ -915,10 +934,19 @@ if (gateState('director-output', 'Direct brief 契约未通过').done && !exists
   if (mediaWindow.promptId === '07-network' || mediaWindow.promptId === '08-local-capture') next = {...states[10], name: mediaWindow.promptId === '07-network' ? '网络素材窗口' : '本机录屏窗口'};
   else if (mediaWindow.done && mediaWindow.promptId === '09-candidate') next = states[11];
 }
+const promptRoute = next
+  ? safely(() => ({done: true, fields: promptFields(next, mediaWindow)}), '固定 Prompt 路由不合法')
+  : {done: true, fields: ''};
+const promptContractDrift = () => {
+  console.error('PROMPT_SKILL_CONTRACT_DRIFT\n- ' + promptRoute.reason);
+  process.exit(1);
+};
 if (command === 'next') {
-  const fields = next ? promptFields(next, mediaWindow) : '';
+  if (!promptRoute.done) promptContractDrift();
+  const fields = promptRoute.fields;
   if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
-  else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一步：⑪代理验收到⑫四平台发布\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 完整观看candidate并验证声音、方向、节奏、开场和连续性；通过后使用 accept-render-candidate-v5.mjs --agent-selected 落盘代理验收。\n- 随后生成默认rank 01的3张共享尺寸封面，创建schema 8发布包，并依次以 --auto-publish 启动抖音、视频号、小红书和哔哩哔哩。\n- 热点绑定失败不阻断抖音发布；只有四个平台真实PUBLISHED回执齐全才完成⑫。`);
+  else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一窗口：09-candidate 代理验收\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\n${fields}\n\n- 只在09窗口完成candidate的完整观看QA，并用AGENT_PROXY记录接受或定向返工。
+- 本窗口到candidate验收为止；封面、finalize与发布由后续独立Prompt路由。`);
   else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n${fields}\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
   else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥默认rank 01三尺寸共享封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: DEFAULT_COVER_RANK_01\n${fields}\n\n- 使用排序第一的同一视觉提案，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后继续⑫，不等待Jeffrey确认。`);
   else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
@@ -937,8 +965,10 @@ for (const step of states) {
   console.log(`- [${marker}] ${step.id}${step.name} → ${step.output}${detail}`);
 }
 if (next) {
+  if (!promptRoute.done) promptContractDrift();
   console.log(`\n当前唯一下一步：${next.id}${next.name}（${next.skill}）`);
-  if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log('AUTO_CONTINUE_FULL_PIPELINE selection_mode=AGENT_PROXY publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
+  if (promptRoute.fields) console.log(promptRoute.fields);
+  if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log('AUTO_CONTINUE_FULL_PIPELINE selection_mode=AGENT_PROXY');
   else if (next.id === '⑪' && candidateReviewState().done) console.log('JEFFREY_REVIEW：接受则完结；不接受只需指出时间点或明显问题，不需要固定修改提示词。');
   else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=DEFAULT_COVER_RANK_01 publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);

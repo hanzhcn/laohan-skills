@@ -40,6 +40,11 @@ const mediaStatus = (manifest, network, capture) => ({
   network: {state: network, tasks: []},
   local_capture: {state: capture, tasks: []},
 });
+const promptManifest = () => ({
+  schema_version: 1,
+  executable_prompt_count: promptEntries.length,
+  prompts: promptEntries.map(([id, promptFile, window_rule]) => ({id, file: promptFile, window_rule}))
+});
 
 try {
   write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\nif [ "$2" = "accepted-final" ]; then exit 1; fi\necho "PASS $2"\n');
@@ -51,11 +56,8 @@ try {
   chmodSync(join(testRoot, 'scripts/sync-content-vendors.sh'), 0o755);
   write(join(testRoot, 'workflow-runtime-lock.json'), '{}\n');
   for (const [, promptFile] of promptEntries) write(join(testRoot, 'docs/固定提示词', promptFile), '# fixture prompt\n');
-  json(join(testRoot, 'docs/固定提示词/manifest.json'), {
-    schema_version: 1,
-    executable_prompt_count: promptEntries.length,
-    prompts: promptEntries.map(([id, promptFile, window_rule]) => ({id, file: promptFile, window_rule}))
-  });
+  const promptManifestPath = join(testRoot, 'docs/固定提示词/manifest.json');
+  json(promptManifestPath, promptManifest());
   write(join(episode, '01-口播稿.md'), '# 最终稿\n');
   write(join(episode, '06-拍摄素材/raw.mp4'), 'raw');
   const now = new Date().toISOString();
@@ -137,16 +139,38 @@ try {
   if (noRequests.status !== 0) throw new Error(noRequests.stderr || noRequests.stdout || '无素材请求路由失败');
   assert.match(noRequests.stdout, /prompt_id: 09-candidate/);
   assert.match(noRequests.stdout, /window_rule: MUST_CREATE/);
+  assert.match(noRequests.stdout, new RegExp('prompt_file: ' + testRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/docs/固定提示词/09-成片candidate制作.md'));
+  const noRequestsStatus = run('status');
+  assert.equal(noRequestsStatus.status, 0, noRequestsStatus.stderr || noRequestsStatus.stdout);
+  assert.match(noRequestsStatus.stdout, /prompt_id: 09-candidate/);
+  assert.match(noRequestsStatus.stdout, /window_rule: MUST_CREATE/);
+
+  json(promptManifestPath, {schema_version: 0, executable_prompt_count: 0, prompts: []});
+  const drift = run('next');
+  assert.notEqual(drift.status, 0, '无效 Prompt manifest 必须停止');
+  assert.match(drift.stdout + drift.stderr, /PROMPT_SKILL_CONTRACT_DRIFT/);
+  assert.doesNotMatch(drift.stdout + drift.stderr, /at file:|node:internal\/modules/);
+  json(promptManifestPath, promptManifest());
 
   json(sourceManifestPath, sourceManifest({network: true}));
   const networkOnly = run('next');
   if (networkOnly.status !== 0) throw new Error(networkOnly.stderr || networkOnly.stdout || '网络素材路由失败');
   assert.match(networkOnly.stdout, /prompt_id: 07-network/);
 
+  json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'NOT_NEEDED', 'NOT_NEEDED'));
+  const requiredNetworkNotNeeded = run('next');
+  assert.match(requiredNetworkNotNeeded.stdout, /prompt_id: 07-network/);
+  assert.doesNotMatch(requiredNetworkNotNeeded.stdout, /prompt_id: 09-candidate/);
+
   json(sourceManifestPath, sourceManifest({network: true, capture: true}));
   const outputAfterEditPrep = run('next').stdout;
   assert.match(outputAfterEditPrep, /prompt_id: 07-network/);
   assert.doesNotMatch(outputAfterEditPrep, /next_scope: ⑧—⑪|next_scope: ⑧—⑫/);
+
+  json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'COMPLETED', 'NOT_NEEDED'));
+  const requiredCaptureNotNeeded = run('next');
+  assert.match(requiredCaptureNotNeeded.stdout, /prompt_id: 08-local-capture/);
+  assert.doesNotMatch(requiredCaptureNotNeeded.stdout, /prompt_id: 09-candidate/);
 
   json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'COMPLETED', 'WAITING'));
   const outputAfterNetwork = run('next').stdout;
@@ -184,19 +208,45 @@ try {
   automatedConfig.cover_schedule = {mode: 'AUTO_DEFAULT_RANK_01_AFTER_CANDIDATE', ...automationAuth};
   json(join(episode, 'episode-config.json'), automatedConfig);
   const automatedReview = run('next');
-  if (automatedReview.status !== 0 || !automatedReview.stdout.includes('AUTO_CONTINUE_FULL_PIPELINE') || !automatedReview.stdout.includes('AGENT_PROXY') || !automatedReview.stdout.includes('FOUR_PLATFORM_AUTO_PUBLISH') || automatedReview.stdout.includes('JEFFREY_REVIEW')) throw new Error(automatedReview.stderr || automatedReview.stdout || '完整自动化授权必须从pending candidate代理验收继续到四平台发布，不得停在Jeffrey验收');
+  if (automatedReview.status !== 0 || !automatedReview.stdout.includes('AUTO_CONTINUE_FULL_PIPELINE') || !automatedReview.stdout.includes('AGENT_PROXY') || automatedReview.stdout.includes('JEFFREY_REVIEW')) throw new Error(automatedReview.stderr || automatedReview.stdout || '完整自动化授权的pending candidate必须回到09完成代理验收，不得停在Jeffrey验收');
+  assert.match(automatedReview.stdout, /prompt_id: 09-candidate/);
+  assert.doesNotMatch(automatedReview.stdout, /生成默认rank 01|创建schema 8发布包|--auto-publish/);
 
   write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\necho "PASS $2"\n');
   chmodSync(join(testRoot, 'scripts/check-episode-contract.sh'), 0o755);
   write(join(episode, '07-剪辑/final.mp4'), 'candidate');
   json(join(episode, '11-动画/render-manifest.json'), {version: 7, viewer_verdict: 'ACCEPTED', selected_candidate: 'candidates/remotion-v1.mp4', candidates: [{path: 'candidates/remotion-v1.mp4', sha256: sha(join(episode, '07-剪辑/final.mp4')), director_state_sha256: sha(join(episode, '09-导演/director-state.md')), technical_qa: 'PASS'}]});
+  const finalSha = sha(join(episode, '07-剪辑/final.mp4'));
+  const receipt = (platform, overrides = {}) => ({
+    platform,
+    receipt_id: `${platform}-receipt-001`,
+    platform_title: `${platform} 标题`,
+    published_at: now,
+    recorded_at: now,
+    final_sha256: finalSha,
+    authorized_by: 'Jeffrey',
+    authorized_at: now,
+    authorization_note: automationNote,
+    bound_input_record_sha256: sha(inputRecordPath),
+    auto_publish_authorized: true,
+    publish_result: 'PUBLISHED',
+    ...overrides,
+  });
+  const malformedReceipts = {
+    douyin: receipt('douyin', {platform: undefined}),
+    weixin_channels: receipt('weixin_channels', {receipt_id: undefined}),
+    xiaohongshu: receipt('xiaohongshu', {published_at: undefined}),
+    bilibili: receipt('bilibili', {platform_title: undefined}),
+  };
+  for (const [platform, value] of Object.entries(malformedReceipts)) write(join(episode, `12-发布/${platform}-publish-results.jsonl`), JSON.stringify(value) + '\n');
+  const incompleteReceipts = run('status');
+  if (incompleteReceipts.status !== 0 || incompleteReceipts.stdout.includes('- [x] ⑫')) throw new Error(incompleteReceipts.stderr || incompleteReceipts.stdout || '缺归一化字段的回执不得完成⑫');
   for (const platform of ['douyin', 'weixin_channels', 'xiaohongshu', 'bilibili']) {
-    const receipt = {recorded_at: now, final_sha256: sha(join(episode, '07-剪辑/final.mp4')), authorization_note: automationNote, auto_publish_authorized: true, publish_result: 'PUBLISHED'};
-    if (platform !== 'douyin') receipt.platform = platform;
-    write(join(episode, `12-发布/${platform}-publish-results.jsonl`), JSON.stringify(receipt) + '\n');
+    const path = join(episode, `12-发布/${platform}-publish-results.jsonl`);
+    write(path, JSON.stringify(receipt(platform)) + '\n' + JSON.stringify(receipt(platform, {publish_result: 'FAILED'})) + '\n');
   }
   const publishedStatus = run('status');
-  if (publishedStatus.status !== 0 || !publishedStatus.stdout.includes('- [x] ⑫') || !publishedStatus.stdout.includes('四平台自动发布回执均已绑定当前final与本期授权')) throw new Error(publishedStatus.stderr || publishedStatus.stdout || '四平台真实PUBLISHED回执齐全后⑫必须完成');
+  if (publishedStatus.status !== 0 || !publishedStatus.stdout.includes('- [x] ⑫') || !publishedStatus.stdout.includes('四平台自动发布归一化回执均已绑定当前final与本期授权')) throw new Error(publishedStatus.stderr || publishedStatus.stdout || '四平台真实PUBLISHED回执齐全后⑫必须完成');
 
   console.log('PASS laohan-bianpai manual review and FULL_PIPELINE_TO_PUBLISH routing');
 } finally {
