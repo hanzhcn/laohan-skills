@@ -1,6 +1,6 @@
 ---
 name: laohan-shencha
-version: 1.4.0
+version: 1.7.0
 description: 深度联网核验器，验证技术文档的外部声明，或核验口播稿中可外部验证的事实主张。Use when 用户说"深度审查""老韩审查""联网审查""技术文档审查""核验口播事实"或要求对技术方案、部署脚本、配置文件、口播稿的事实主张进行查证；默认只审查，只有用户明确要求修复或工作流合同授权时才改文件，不做纯文风审查。
 ---
 
@@ -18,10 +18,39 @@ LLM 写技术文档时天然相信自己写的声明是对的。本 Skill 的唯
 
 - `TECH_CLAIMS`：默认模式，用于技术文档、脚本、配置和外部资源声明。
 - `CONTENT_CLAIMS`：仅在真人口播工作流⑤或用户明确要求核验口播事实时使用。
+- `RECORDED_FINAL_INPUT_GUARD + AUDIT_ONLY`：仅在已录制最终稿的编排入口使用，审计是否必须重录。
 - `AUDIT_ONLY`：用户说“审查、核验、看看有没有问题”时的默认动作，只出发现与证据，不改文件。
 - `VERIFY_AND_FIX`：只有用户明确要求“修复、改掉”，或上游工作流合同明确授权修改时使用。
 
 选择 `CONTENT_CLAIMS` 不等于降低事实标准，选择 `VERIFY_AND_FIX` 也不授权修改文风、方法论或与事实无关的内容。
+
+## RECORDED_FINAL_INPUT_GUARD + AUDIT_ONLY
+
+仅当episode记录`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`且上游Prompt明确指定`RECORDED_FINAL_INPUT_GUARD + AUDIT_ONLY`时启用。读取当前`01-口播稿.md`与`06-拍摄素材/raw.mp4`，分别计算SHA-256；只做不改口播的阻断性审计。普通不可核验、非核心措辞和可安全剪辑的问题写入非阻断观察后继续，不得自动回②、重跑③—⑤或伪造常规审核历史。
+
+固定写入`00-编排/recorded-input-guard.json`和`00-编排/recorded-input-guard.md`。JSON必须为：
+
+```json
+{
+  "schema_version": 1,
+  "mode": "RECORDED_FINAL_INPUT_GUARD",
+  "script_sha256": "64 lowercase hex",
+  "raw_sha256": "64 lowercase hex",
+  "status": "CLEAR_WITH_NOTES|BLOCKED_REQUIRES_RERECORD",
+  "blocking_reasons": [],
+  "non_blocking_observations": [],
+  "checked_at": "ISO-8601"
+}
+```
+
+`blocking_reasons`只允许以下四项，且只有其中至少一项成立时状态才可为`BLOCKED_REQUIRES_RERECORD`：
+
+- `HIGH_RISK_PLATFORM_VIOLATION`
+- `CORE_FACT_DIRECTLY_CONTRADICTED`
+- `SCRIPT_RAW_MATERIAL_MISMATCH`
+- `RERECORD_ONLY_REMEDIATION`
+
+本模式不得写`04-事实核验.md`、`04-事实主张.json`或`fact_check_status: CLEAR`，不得编辑脚本。人类报告必须复述同一script/raw SHA、状态、阻断理由与非阻断观察，供`RECORDED_FINAL_INPUT_GUARD`下游汇总。
 
 ## CONTENT_CLAIMS 模式（真人口播⑤）
 

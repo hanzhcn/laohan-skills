@@ -165,6 +165,84 @@ const userProvidedInputsState = () => safely(() => {
     || record.raw.sha256 !== shaPath(file('06-拍摄素材/raw.mp4'))) return {done: false, reason: '用户定稿+原片登记未绑定当前文件'};
   return {done: true, reason: 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW已绑定；①—⑤为用户输入替代态，不伪造审核产物'};
 }, '用户定稿+原片入口无法读取');
+const FULL_AUTOMATION_SCOPES = ['DEFAULT_COVER_RANK_01', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO'];
+const fullAutomationState = () => safely(() => {
+  const inputs = userProvidedInputsState();
+  if (!inputs.done) return {done: false, reason: '完整自动化缺当前用户定稿+原片入口'};
+  const config = readJson('episode-config.json');
+  const entry = config.episode_entry_contract || {};
+  const record = readJson(entry.record_path || '');
+  const automation = config.automation_contract || {};
+  const selection = config.final_selection_contract || {};
+  const sameScopes = (value) => JSON.stringify(value) === JSON.stringify(FULL_AUTOMATION_SCOPES);
+  const sameAuthorization = selection.mode === 'AGENT_PROXY'
+    && selection.authorized_by === automation.authorized_by
+    && selection.authorized_at === automation.authorized_at
+    && selection.authorization_note === automation.authorization_note;
+  if (config.workflow_mode !== 'AUTONOMOUS_RUN'
+    || automation.mode !== 'FULL_PIPELINE_TO_PUBLISH'
+    || automation.authorized_by !== 'Jeffrey'
+    || Number.isNaN(Date.parse(automation.authorized_at))
+    || typeof automation.authorization_note !== 'string'
+    || !automation.authorization_note.trim()
+    || !sameAuthorization
+    || automation.input_record_path !== entry.record_path
+    || automation.input_record_sha256 !== entry.record_sha256
+    || automation.input_record_sha256 !== shaPath(file(entry.record_path))
+    || record.automation?.mode !== automation.mode
+    || !sameScopes(record.automation?.scopes)
+    || !sameScopes(automation.scopes)) return {done: false, reason: '完整自动化授权未同时绑定当前输入记录、AGENT_PROXY和四平台范围'};
+  return {done: true, reason: 'FULL_PIPELINE_TO_PUBLISH已绑定当前稿件、原片、AGENT_PROXY与四平台发布'};
+}, '完整自动化授权无法读取');
+const mediaWindowState = () => safely(() => {
+  const sourceRelative = '09-导演/source-manifest.json';
+  if (!nonEmptyFile(sourceRelative)) return {done: false, reason: '缺 09-导演/source-manifest.json'};
+  const source = readJson(sourceRelative);
+  if (!Array.isArray(source.source_entries) || !Array.isArray(source.broll_requests) || !Array.isArray(source.capture_requests)) return {done: false, reason: 'source-manifest 必须包含 source_entries、broll_requests 和 capture_requests'};
+  const networkRequests = [
+    ...source.broll_requests,
+    ...source.source_entries.filter((entry) => ['PROOF_PUBLIC', 'PROOF_USER'].includes(entry?.source_mode)),
+  ];
+  const captureRequests = source.capture_requests;
+  let status = null;
+  if (nonEmptyFile('10-素材/real-media-status.json')) {
+    status = readJson('10-素材/real-media-status.json');
+    if (status.schema_version !== 1 || status.source_manifest_sha256 !== shaPath(file(sourceRelative))) return {done: false, reason: 'real-media-status 未绑定当前 source-manifest'};
+  }
+  const complete = (group, requests) => requests.length === 0 || ['COMPLETED', 'NOT_NEEDED'].includes(status?.[group]?.state);
+  if (!complete('network', networkRequests)) return {done: false, promptId: '07-network', reason: 'source-manifest 存在未完成网络素材请求'};
+  if (!complete('local_capture', captureRequests)) return {done: false, promptId: '08-local-capture', reason: 'source-manifest 存在未完成 LOCAL_CAPTURE 请求'};
+  return {done: true, promptId: '09-candidate', reason: '网络素材与本机录屏均为已复核或 NOT_NEEDED'};
+}, '素材窗口状态无法读取');
+const promptIdFor = (step, mediaWindow) => {
+  if (mediaWindow?.promptId) return mediaWindow.promptId;
+  if (step.id === '①') return '01-topic-creation';
+  if (['②', '③', '④', '⑤'].includes(step.id)) return '02-content-review';
+  if (step.id === '⑥') return '03-cover';
+  if (step.id === 'D1') return '04-director-draft';
+  if (step.id === 'D2') return '05-director-final';
+  if (['⑧', '⑨'].includes(step.id)) return '06-edit-prep';
+  if (step.id === '⑩') return '07-network';
+  if (step.id === '⑪') return candidateReviewState().done && !fullAutomationState().done ? '10-finalize' : '09-candidate';
+  if (step.id === '⑫') return '11-publish';
+  if (['⑬', '⑭'].includes(step.id)) return '12-retro';
+  return null;
+};
+const promptFields = (step, mediaWindow) => {
+  const promptId = promptIdFor(step, mediaWindow);
+  if (!promptId) return '';
+  const promptRoot = join(root, 'docs/固定提示词');
+  const manifestPath = join(promptRoot, 'manifest.json');
+  if (!existsSync(manifestPath) || lstatSync(manifestPath).isSymbolicLink()) throw new Error('缺固定 Prompt manifest');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  if (manifest.schema_version !== 1 || manifest.executable_prompt_count !== 13 || !Array.isArray(manifest.prompts) || manifest.prompts.length !== 13) throw new Error('固定 Prompt manifest 必须是13项 schema 1目录');
+  const prompt = manifest.prompts.find((item) => item?.id === promptId);
+  if (!prompt || typeof prompt.file !== 'string' || !['MUST_CREATE', 'CONDITIONAL_CREATE', 'NO_NEW_TASK'].includes(prompt.window_rule)) throw new Error('固定 Prompt manifest 缺路由项: ' + promptId);
+  const promptFile = resolve(promptRoot, prompt.file);
+  const promptRootReal = realpathSync(promptRoot);
+  if (!existsSync(promptFile) || lstatSync(promptFile).isSymbolicLink() || !statSync(promptFile).isFile() || !realpathSync(promptFile).startsWith(promptRootReal + '/')) throw new Error('Prompt 文件不存在或越界: ' + promptId);
+  return `prompt_id: ${promptId}\nprompt_file: ${promptFile}\nwindow_rule: ${prompt.window_rule}`;
+};
 const frozenPendingCandidateDirectorState = () => safely(() => {
   const config = readJson('episode-config.json');
   const migrationContract = config.motion_director_contract?.director_review_migration || {};
@@ -202,6 +280,12 @@ const directorReviewState = () => safely(() => {
 }, '最终导演复审状态无法读取');
 const coverDeferralState = () => safely(() => {
   const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
+  if (schedule.mode === 'AUTO_DEFAULT_RANK_01_AFTER_CANDIDATE') {
+    const automation = fullAutomationState();
+    const contract = readJson('episode-config.json').automation_contract || {};
+    if (!automation.done || schedule.authorized_by !== contract.authorized_by || schedule.authorized_at !== contract.authorized_at || schedule.authorization_note !== contract.authorization_note) return {done: false, reason: '自动选择封面rank 01未绑定同一份完整自动化授权'};
+    return {done: true, reason: '完整自动化已授权候选完成后默认选择rank 01；生成3张共享尺寸成品前⑥仍未PASS'};
+  }
   if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
   if (schedule.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(schedule.authorized_at)) || typeof schedule.authorization_note !== 'string' || !schedule.authorization_note.trim()) return {done: false, reason: '封面延后授权缺 Jeffrey、ISO时间或原话'};
   return {done: true, reason: 'Jeffrey 已授权本期封面延后；提示词和01—03三张排序候选尚未齐全时⑥仍未PASS'};
@@ -229,8 +313,8 @@ const coverState = () => safely(() => {
   }
   const publishPriority = field('publish_priority')?.replace(/^['"]|['"]$/g, '');
   const templateFamilies = [...prompt.matchAll(/^- 模板族：\s*(.+?)\s*$/gm)].map((match) => match[1].trim());
-  if (field('strategy') !== 'QIUZHI_THREE_RANKED_DIRECT_COVERS' || field('required_generated_candidate_count') !== '3' || publishPriority !== '01>02>03' || field('default_publish_candidate') !== 'cover-01-qiuzhi-9x16') {
-    return {done: false, reason: 'cover-prompts.md 必须声明秋芝三张排序策略、01>02>03发布优先级与默认候选01'};
+  if (field('strategy') !== 'QIUZHI_THREE_RANKED_DIRECT_COVERS' || field('required_generated_candidate_count') !== '3' || field('required_physical_cover_count') !== '3' || field('required_logical_cover_usage_count') !== '7' || publishPriority !== '01>02>03' || field('default_publish_candidate') !== 'cover-01-qiuzhi-9x16') {
+    return {done: false, reason: 'cover-prompts.md 必须声明秋芝三张排序策略、默认01的3张共享真实尺寸封面、7个逻辑用途与01>02>03发布优先级'};
   }
   if (templateFamilies.length !== 3 || new Set(templateFamilies).size !== 3) return {done: false, reason: 'cover-prompts.md 必须为01、02、03记录3个不同模板族'};
   const candidateImages = readdirSync(coverRoot, {withFileTypes: true})
@@ -250,7 +334,28 @@ const coverState = () => safely(() => {
   }
   const missingRanks = ['01', '02', '03'].filter((rank) => !ranked.has(rank));
   if (missingRanks.length) return {done: false, reason: `05-封面/ 缺秋芝9:16排序候选：${missingRanks.join('、')}`};
-  return {done: true, reason: `封面合同已完成：3张秋芝9:16候选按推荐顺序齐全，自动发布默认=${ranked.get('01').name}`};
+  const platformCovers = [
+    ['cover-01-qiuzhi-3x4', 1080, 1440],
+    ['cover-01-qiuzhi-4x3', 1440, 1080],
+    ['cover-01-qiuzhi-16x9', 1920, 1080],
+  ];
+  const missingPlatformCovers = [];
+  for (const [base, width, height] of platformCovers) {
+    const matches = readdirSync(coverRoot, {withFileTypes: true}).filter((entry) => entry.isFile() && new RegExp(`^${base}\\.(png|jpe?g|webp)$`, 'i').test(entry.name));
+    if (matches.length !== 1) {
+      missingPlatformCovers.push(base);
+      continue;
+    }
+    const path = join(coverRoot, matches[0].name);
+    try {
+      const dimensions = imageDimensions(path);
+      if (statSync(path).size === 0 || !realpathSync(path).startsWith(assetRoot) || dimensions.width !== width || dimensions.height !== height) return {done: false, reason: `${matches[0].name}必须是${width}×${height}的真实可解码平台封面`};
+    } catch {
+      return {done: false, reason: `${matches[0].name}必须是真实可解码且比例正确的平台封面`};
+    }
+  }
+  if (missingPlatformCovers.length) return {done: false, reason: `缺默认01共享真实封面：${missingPlatformCovers.join('、')}`};
+  return {done: true, reason: `封面合同已完成：3张秋芝9:16候选与默认01的3张共享真实封面齐全，映射7个平台用途`};
 }, '封面合同无法读取');
 const calibrationState = () => safely(() => {
   if (!exists('03-校准报告.md')) return {done: false, reason: '缺 03-校准报告.md'};
@@ -488,7 +593,10 @@ const candidateReviewState = () => safely(() => {
     const relative = '11-动画/' + candidate.path;
     if (!/^11-动画\/candidates\/remotion-v[1-9][0-9]*\.mp4$/.test(relative) || !nonEmptyFile(relative) || candidate.sha256 !== shaPath(file(relative)) || candidate.technical_qa !== 'PASS') return {done: false, reason: 'pending candidate文件、SHA或技术QA无效'};
   }
-  return {done: true, reason: 'candidate已完成并停在JEFFREY_REVIEW；等待Jeffrey接受或指出肉眼可见问题'};
+  const automation = fullAutomationState();
+  return automation.done
+    ? {done: true, reason: 'candidate技术QA通过；本期AGENT_PROXY授权允许代理完整观看并选择后继续'}
+    : {done: true, reason: 'candidate已完成并停在JEFFREY_REVIEW；等待Jeffrey接受或指出肉眼可见问题'};
 }, 'candidate验收状态无法读取');
 const shootingState = () => safely(() => {
   if (!nonEmptyFile('06-拍摄素材/raw.mp4') || !exists('06-拍摄素材/shooting-record.json')) return {done: false, reason: '缺 raw.mp4 或 shooting-record.json'};
@@ -498,6 +606,30 @@ const shootingState = () => safely(() => {
     ? {done: true, reason: '拍摄记录绑定当前稿与 raw'} : {done: false, reason: 'shooting-record 未绑定当前稿或 raw'};
 }, 'shooting-record.json 无法读取');
 const publishState = () => safely(() => {
+  const automationState = fullAutomationState();
+  if (automationState.done) {
+    if (!nonEmptyFile('07-剪辑/final.mp4') || !gateState('accepted-final', 'final 未接受').done) return {done: false, reason: '四平台发布回执前当前final必须通过accepted-final gate'};
+    const finalHash = shaPath(file('07-剪辑/final.mp4'));
+    const automation = readJson('episode-config.json').automation_contract;
+    const platforms = ['douyin', 'weixin_channels', 'xiaohongshu', 'bilibili'];
+    const missing = [];
+    for (const platform of platforms) {
+      const relative = `12-发布/${platform}-publish-results.jsonl`;
+      if (!nonEmptyFile(relative)) { missing.push(platform); continue; }
+      const lines = readFileSync(file(relative), 'utf8').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      let receipt;
+      try { receipt = JSON.parse(lines.at(-1)); } catch { missing.push(platform); continue; }
+      if (receipt.final_sha256 !== finalHash
+        || receipt.auto_publish_authorized !== true
+        || receipt.publish_result !== 'PUBLISHED'
+        || receipt.authorization_note !== automation.authorization_note
+        || Number.isNaN(Date.parse(receipt.recorded_at))
+        || (platform !== 'douyin' && receipt.platform !== platform)) missing.push(platform);
+    }
+    return missing.length
+      ? {done: false, reason: '完整自动化仍缺当前final的真实发布回执：' + missing.join('、')}
+      : {done: true, reason: '四平台自动发布回执均已绑定当前final与本期授权'};
+  }
   if (!exists('12-发布/publish-record.json')) return {done: false, reason: '缺 12-发布/publish-record.json'};
   const record = readJson('12-发布/publish-record.json');
   const config = readJson('episode-config.json');
@@ -617,7 +749,7 @@ const steps = [
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
-  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 秋芝方向01/02/03三张9:16排序候选'},
+  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 01/02/03三张9:16候选 + 默认01三张共享真实尺寸封面（映射7个发布入口）'},
   {id: 'D1', name: 'V5.1导演初稿', skill: 'laohan-daoyan', done: () => directorDraftState().done, output: '09-导演/director-state.md（director_draft=COMPLETED，director_review=PENDING）'},
   {id: 'D2', name: 'V5.1最终导演复审', skill: 'laohan-daoyan', done: () => directorReviewState().done, output: '同一director-state.md（director_review=COMPLETED）'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
@@ -625,7 +757,7 @@ const steps = [
   {id: '⑨', name: directProduction ? 'Codex Direct导演' : 'METHOD_LAB语义导演', skill: directProduction ? 'codex-direct-production' : 'laohan-daoyan', done: () => gateState('director-output', directProduction ? 'Direct brief 契约未通过' : '导演输出契约未通过').done, output: directProduction ? '09-导演/{direct-brief.json,source-manifest.json}' : '09-导演/{edl.json,source-manifest.json,renderer-brief.md}'},
   {id: '⑩', name: '按需素材', skill: directProduction ? 'codex-direct-production + laohan-sucai（仅有请求时）' : 'laohan-sucai', done: () => materialState().done, output: '10-素材/真实已核验资产，或 not_applicable'},
   {id: '⑪', name: directProduction ? 'Codex Direct成片与选片' : 'METHOD_LAB动画与选片', skill: directProduction ? 'codex-direct-production' : 'laohan-donghua', done: () => animationState().done, output: directProduction ? 'Remotion candidates + 完整观看 QA + accepted final' : 'renderer candidates + QA + accepted final'},
-  {id: '⑫', name: '发布登记', skill: 'laohan-yunying', done: () => publishState().done, output: '12-发布/publish-record.json'},
+  {id: '⑫', name: '发布登记', skill: 'laohan-yunying', done: () => publishState().done, output: '12-发布/publish-record.json（人工）或四平台 *-publish-results.jsonl（完整自动化）'},
   {id: '⑬', name: '数据快照', skill: 'laohan-yunying', done: () => snapshotState().done, output: '13-数据/snapshots.jsonl'},
   {id: '⑭', name: '评论洞察', skill: 'laohan-yunying', done: () => commentState().done, output: '14-评论/{comments.jsonl,insights.md}'},
 ];
@@ -764,6 +896,7 @@ const userProvidedInputs = userProvidedInputsState();
 const calibration = calibrationState();
 const deepScan = deepScanState();
 const coverDeferred = coverDeferralState();
+const fullAutomation = fullAutomationState();
 const coverMayBeDeferredForRouting = coverDeferred.done && !animationState().done;
 const importedContentPrefix = userProvidedInputs.done;
 const routeIncomplete = (step) => !step.done && !(importedContentPrefix && ['①', '②', '③', '④', '⑤'].includes(step.id)) && !(step.id === '⑥' && coverMayBeDeferredForRouting);
@@ -776,13 +909,24 @@ if (!importedContentPrefix && contentPrefixDone && calibration.scoreDone && deep
 if (!importedContentPrefix && contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
   next = states.slice(5).find(routeIncomplete);
 }
+let mediaWindow = null;
+if (gateState('director-output', 'Direct brief 契约未通过').done && !exists('11-动画/render-manifest.json')) {
+  mediaWindow = mediaWindowState();
+  if (mediaWindow.promptId === '07-network' || mediaWindow.promptId === '08-local-capture') next = {...states[10], name: mediaWindow.promptId === '07-network' ? '网络素材窗口' : '本机录屏窗口'};
+  else if (mediaWindow.done && mediaWindow.promptId === '09-candidate') next = states[11];
+}
 if (command === 'next') {
+  const fields = next ? promptFields(next, mediaWindow) : '';
   if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
-  else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
-  else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\nnext_scope: ⑧—⑪\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
-  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；成功后重跑 bianpai 并自动继续，不逐步询问 Jeffrey。`);
+  else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一步：⑪代理验收到⑫四平台发布\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 完整观看candidate并验证声音、方向、节奏、开场和连续性；通过后使用 accept-render-candidate-v5.mjs --agent-selected 落盘代理验收。\n- 随后生成默认rank 01的3张共享尺寸封面，创建schema 8发布包，并依次以 --auto-publish 启动抖音、视频号、小红书和哔哩哔哩。\n- 热点绑定失败不阻断抖音发布；只有四个平台真实PUBLISHED回执齐全才完成⑫。`);
+  else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n${fields}\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
+  else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥默认rank 01三尺寸共享封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: DEFAULT_COVER_RANK_01\n${fields}\n\n- 使用排序第一的同一视觉提案，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后继续⑫，不等待Jeffrey确认。`);
+  else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
+  else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
+  else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
+  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n${fields}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；成功后重跑 bianpai 并自动继续，不逐步询问 Jeffrey。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log(`# 下一步：⑦拍摄\n\nWAITING_FOR_JEFFREY_SHOOTING\nworkflow_mode: AUTONOMOUS_RUN\nplanned_manual_handoff: true\n\n- 需要落盘：${next.output}\n- 说明：到达计划内唯一拍摄交接；等 Jeffrey 拍摄，这不是 BLOCKED。`);
-  else console.log(`# 下一步：${next.id}${next.name}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留。`);
+  else console.log(`# 下一步：${next.id}${next.name}\n\n${fields}\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留。`);
   process.exit(0);
 }
 
@@ -794,8 +938,11 @@ for (const step of states) {
 }
 if (next) {
   console.log(`\n当前唯一下一步：${next.id}${next.name}（${next.skill}）`);
-  if (next.id === '⑪' && candidateReviewState().done) console.log('JEFFREY_REVIEW：接受则完结；不接受只需指出时间点或明显问题，不需要固定修改提示词。');
-  else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production next_scope=⑧—⑪`);
+  if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log('AUTO_CONTINUE_FULL_PIPELINE selection_mode=AGENT_PROXY publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
+  else if (next.id === '⑪' && candidateReviewState().done) console.log('JEFFREY_REVIEW：接受则完结；不接受只需指出时间点或明显问题，不需要固定修改提示词。');
+  else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=DEFAULT_COVER_RANK_01 publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
+  else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
+  else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log('WAITING_FOR_JEFFREY_SHOOTING planned_manual_handoff=true blocked=false');
 }

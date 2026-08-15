@@ -1,22 +1,29 @@
 ---
 name: laohan-yunying
-version: "1.0.0"
+version: "1.1.0"
 description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登记的作品记录，回收作品数据和评论洞察，并把真实数据交给 cheat-on-content 复盘。Use when 用户说抓作品数据、复盘评论、登记手动发布结果、进入⑬数据或⑭评论。
 ---
 
 # 抖音数据与评论编排器
 
-本 skill 不发布、不准备发布文案、不代替 Jeffrey 点击平台。它只读取手动发布事实，保存数据和评论证据；`cheat-on-content` 是预测与复盘引擎。
+本 skill 不发布、不准备发布文案、不代替 Jeffrey 点击平台。它只登记人工确认或本机Chrome适配器已经验证的发布事实，保存数据和评论证据；`cheat-on-content` 是预测与复盘引擎。
 
 ## 工作流
 
-### 1. 手动发布事实登记
+### 1. 发布事实登记
 
-Jeffrey 在平台手动发布后，提供 URL、aweme_id 与平台显示的精确标题 platform_title；先运行 `bianpai check --require final`，再由本 skill 写 `12-发布/publish-record.json`。Jeffrey 只负责平台点击，本 skill 只登记事实；不得生成 release-ready、发布文案、定时发布或任何平台点击自动化。
+先运行 `bianpai check --require final`，再登记以下两种发布证据来源：
 
-### 2. 手动发布记录
+- `USER_CONFIRMED_MANUAL`：沿用`publish-record.json`。Jeffrey 在平台手动发布后提供平台身份、URL（抖音还须aweme_id）与平台显示的精确标题`platform_title`。
+- `ADAPTER_VERIFIED_RECEIPT`：读取`12-发布/*-publish-results.jsonl`中与当前`final.mp4` SHA匹配的最后一个`PUBLISHED`记录。
 
-只登记 Jeffrey 提供的作品 URL、aweme_id 与 platform_title；不调用 URL 解析、平台浏览器、发布 adapter 或任何替代发布工具。URL 必须包含同一 aweme_id；缺任一身份字段则停，不能编造。
+归一化登记记录必须保留`platform`、`source`、`receipt_id|url`、`published_at`、`final_sha256`和`platform_title`。`ADAPTER_VERIFIED_RECEIPT`只接受与当前final SHA匹配、平台身份明确且状态为`PUBLISHED`的最后一条回执；缺少任何绑定字段就停，不能编造。
+
+本Skill不得承担发布点击、上传、表单填写或浏览器控制；这些只属于release package与本机Chrome适配器。自动发布回执只证明对应平台已发布，不证明该平台运营数据已经接通。
+
+### 2. 人工发布记录
+
+`USER_CONFIRMED_MANUAL`只登记 Jeffrey 提供的作品 URL、aweme_id 与 platform_title；不调用 URL 解析、平台浏览器、发布 adapter 或任何替代发布工具。URL 必须包含同一 aweme_id；缺任一身份字段则停，不能编造。`ADAPTER_VERIFIED_RECEIPT`只读取既有回执，不调用或驱动发布 adapter。
 
 写 `12-发布/publish-record.json`：
 
@@ -30,7 +37,7 @@ Jeffrey 在平台手动发布后，提供 URL、aweme_id 与平台显示的精�
   "published_at": "2026-07-10T20:00:00+08:00",
   "final_path": "07-剪辑/final.mp4",
   "final_sha256": "当前 final.mp4 的 SHA-256",
-  "source": "user-confirmed"
+  "source": "USER_CONFIRMED_MANUAL"
 }
 ```
 
@@ -46,7 +53,7 @@ TzFilm 的飞书同步仅作为外部看板；不读取飞书作为数据源，�
 
 发布后默认按① `00-选题.json.experiment.observation_window` 回收；不得在发布后改窗口。`metric_keys` 是预注册的指标键（`plays`、`likes`、`comments`、`shares`、`favorites`、`ctr5s`、`avg_duration_sec`）。当前只接受用户提供的创作者中心数据；不得把未验证的 opencli 或浏览器抓取写成默认链路。TzFilm adapter 验收完成后再更新这一段的自动化优先级和降级链。
 
-每次追加一行到 `13-数据/snapshots.jsonl`：
+当前⑬/⑭默认数据与评论真值仍限抖音；其他平台写`UNSUPPORTED_SOURCE`或`NOT_COLLECTED`，不写`0`。每次追加一行到 `13-数据/snapshots.jsonl`：
 
 ```json
 {"platform":"douyin","aweme_id":"<id>","observed_at":"ISO-8601","observation_window":"T+3","measurement_role":"TARGET|CONTEXT","metric_dictionary_version":1,"source":"creator-center|manual","metrics":{"plays":0,"likes":0,"comments":0,"shares":0,"favorites":0}}
