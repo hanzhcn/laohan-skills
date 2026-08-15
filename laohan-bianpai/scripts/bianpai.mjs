@@ -619,12 +619,14 @@ const finalizeHandoffState = () => safely(() => {
   const validEvent = (entry, event) => {
     if (entry?.schema_version !== 1 || entry.event !== event || !nonEmptyString(entry.handoff_id)
       || entry.mode !== 'FULL_PIPELINE_TO_PUBLISH' || entry.episode !== basename(episodeDir)
-      || !nonEmptyString(entry.from_stage) || !nonEmptyString(entry.to_stage)
+      || entry.from_stage !== '03-cover' || entry.to_stage !== '10-finalize'
       || entry.prompt_id !== '10-finalize' || entry.prompt_path !== currentPromptPath || entry.prompt_sha256 !== currentPromptSha
       || entry.precondition_gate !== 'PASS' || !nonEmptyString(entry.thread_id) || !validIso(entry.created_at)
       || !nonEmptyString(entry.next_decision)) return false;
-    if (event === 'CREATED') return entry.completed_at === null && entry.result === 'RUNNING' && entry.artifact_gate === 'PENDING';
-    return validIso(entry.completed_at) && ['COMPLETED', 'PARTIAL', 'BLOCKED'].includes(entry.result) && ['PASS', 'FAIL'].includes(entry.artifact_gate);
+    if (event === 'CREATED') return entry.completed_at === null && entry.result === 'RUNNING' && entry.artifact_gate === 'PENDING' && entry.next_decision === '10-finalize';
+    if (!validIso(entry.completed_at) || !['COMPLETED', 'PARTIAL', 'BLOCKED'].includes(entry.result) || !['PASS', 'FAIL'].includes(entry.artifact_gate)) return false;
+    const succeeded = entry.result === 'COMPLETED' && entry.artifact_gate === 'PASS';
+    return succeeded ? entry.next_decision === '11-publish' : entry.next_decision !== '11-publish';
   };
   const created = [...entries].reverse().find((entry) => entry?.prompt_id === '10-finalize' && entry.event === 'CREATED');
   if (!created) return {done: false, reason: 'task-handoffs 缺 10-finalize CREATED 记录'};

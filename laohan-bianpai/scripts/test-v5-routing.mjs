@@ -315,6 +315,18 @@ echo "PASS $2"
   appendHandoff(handoff('h-current', 'COMPLETED', {result: 'BLOCKED', artifact_gate: 'FAIL', next_decision: '10-finalize'}));
   const latestFinalizeFailed = run('next');
   assert.match(latestFinalizeFailed.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-wrong-from', 'CREATED', {from_stage: '11-publish'}));
+  appendHandoff(handoff('h-wrong-from', 'COMPLETED', {from_stage: '11-publish'}));
+  const wrongFinalizeFromStage = run('next');
+  assert.match(wrongFinalizeFromStage.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-wrong-to', 'CREATED', {to_stage: '03-cover'}));
+  appendHandoff(handoff('h-wrong-to', 'COMPLETED', {to_stage: '03-cover'}));
+  const wrongFinalizeToStage = run('next');
+  assert.match(wrongFinalizeToStage.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-wrong-success-next', 'CREATED'));
+  appendHandoff(handoff('h-wrong-success-next', 'COMPLETED', {next_decision: '10-finalize'}));
+  const wrongFinalizeSuccessNextDecision = run('next');
+  assert.match(wrongFinalizeSuccessNextDecision.stdout, /prompt_id: 10-finalize/);
   appendHandoff(handoff('h-retry', 'CREATED'));
   appendHandoff(handoff('h-retry', 'COMPLETED'));
   const publishAfterFinalize = run('next');
