@@ -15,9 +15,9 @@ description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登�
 先运行 `bianpai check --require final`，再登记以下两种发布证据来源：
 
 - `USER_CONFIRMED_MANUAL`：当前唯一人工发布 source，沿用`publish-record.json`。Jeffrey 在平台手动发布后提供平台身份、URL（抖音还须aweme_id）与平台显示的精确标题`platform_title`。历史`source: "user-confirmed"`仅允许schema <4 episode只读兼容；迁移或新登记必须写`USER_CONFIRMED_MANUAL`。
-- `ADAPTER_VERIFIED_RECEIPT`：读取`12-发布/*-publish-results.jsonl`中与当前`final.mp4` SHA匹配的最后一个`PUBLISHED`记录。
+- `ADAPTER_VERIFIED_RECEIPT`：读取`12-发布/*-publish-results.jsonl`中与当前`final.mp4` SHA匹配的最后一个`PUBLISHED`记录；自动回执的 canonical source 固定为 source: ADAPTER_VERIFIED_RECEIPT，缺失或为其他值都不得登记。
 
-归一化登记记录必须保留`platform`、`source`、`receipt_id|url`、`published_at`、`final_sha256`和`platform_title`。`ADAPTER_VERIFIED_RECEIPT`读取每个平台完整JSONL后，从后向前选择首条同时匹配该平台、当前final SHA且`publish_result: PUBLISHED`的合法回执；后续FAILED或其他final记录不得遮蔽它。回执还必须绑定`authorized_by`、`authorized_at`、`authorization_note`和`bound_input_record_sha256`，并与本期`FULL_PIPELINE_TO_PUBLISH`授权完全一致；`published_at`与`recorded_at`必须是有效时间且不得早于授权。缺少任何绑定字段就停，不能编造。
+归一化登记记录必须保留`platform`、`source`、`receipt_id|url`、`published_at`、`final_sha256`和`platform_title`。`ADAPTER_VERIFIED_RECEIPT`读取每个平台完整JSONL后，从后向前选择首条同时匹配该平台、当前final SHA、`publish_result: PUBLISHED`且`source`精确为`ADAPTER_VERIFIED_RECEIPT`的合法回执；后续FAILED或其他final记录不得遮蔽它。回执还必须绑定`authorized_by`、`authorized_at`、`authorization_note`和`bound_input_record_sha256`，并与本期`FULL_PIPELINE_TO_PUBLISH`授权完全一致；`published_at`与`recorded_at`必须是有效时间且不得早于授权。缺少任何绑定字段就停，不能编造。
 
 ⑫只消费上述归一化登记；原始JSONL行、浏览器页面或“点击过”都不是完成证据。
 

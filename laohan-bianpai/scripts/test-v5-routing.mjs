@@ -34,12 +34,25 @@ const sourceManifest = ({network = false, capture = false} = {}) => ({
   broll_requests: network ? [{request_id: 'network-001', beat_id: 'B01', source_mode: 'BROLL_STOCK', required: true, visual_need: '真实产品画面', start_s: 0, end_s: 2, must_not_imply: []}] : [],
   capture_requests: capture ? [{request_id: 'capture-001', beat_id: 'B02', source_mode: 'LOCAL_CAPTURE', required: true, capture_kind: 'PUBLIC_BROWSER_VIEWPORT', visual_need: '本机演示', start_s: 2, end_s: 4, must_not_imply: []}] : [],
 });
-const mediaStatus = (manifest, network, capture) => ({
-  schema_version: 1,
-  source_manifest_sha256: sha(manifest),
-  network: {state: network, tasks: []},
-  local_capture: {state: capture, tasks: []},
-});
+const mediaStatus = (manifest, network, capture, {emptyTasks = false} = {}) => {
+  const source = JSON.parse(readFileSync(manifest, 'utf8'));
+  const networkRequests = [...source.broll_requests, ...source.source_entries.filter((entry) => ['PROOF_PUBLIC', 'PROOF_USER'].includes(entry.source_mode))];
+  const task = (request, kind, state) => ({
+    request_id: request.request_id,
+    beat_id: request.beat_id,
+    kind,
+    required: request.required,
+    status: state,
+    review_verdict: state === 'COMPLETED' ? 'PASS' : undefined,
+    handoff: state === 'COMPLETED' ? {episode_path: `10-素材/${request.request_id}/asset.mp4`, sha256: 'a'.repeat(64)} : undefined,
+  });
+  return {
+    schema_version: 1,
+    source_manifest_sha256: sha(manifest),
+    network: {state: network, tasks: emptyTasks ? [] : networkRequests.map((request) => task(request, 'NETWORK_MATERIAL', network))},
+    local_capture: {state: capture, tasks: emptyTasks ? [] : source.capture_requests.map((request) => task(request, 'LOCAL_CAPTURE', capture))},
+  };
+};
 const promptManifest = () => ({
   schema_version: 1,
   executable_prompt_count: promptEntries.length,
@@ -47,7 +60,29 @@ const promptManifest = () => ({
 });
 
 try {
-  write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\nif [ "$2" = "accepted-final" ]; then exit 1; fi\necho "PASS $2"\n');
+  write(join(testRoot, 'scripts/check-episode-contract.sh'), `#!/usr/bin/env bash
+if [ "$2" = "accepted-final" ]; then exit 1; fi
+if [ "$2" = "materials" ]; then
+  node - "$1" <<'NODE'
+const fs = require('node:fs');
+const path = require('node:path');
+const episode = process.argv[2];
+const source = JSON.parse(fs.readFileSync(path.join(episode, '09-导演/source-manifest.json'), 'utf8'));
+const status = JSON.parse(fs.readFileSync(path.join(episode, '10-素材/real-media-status.json'), 'utf8'));
+const network = [...source.broll_requests, ...source.source_entries.filter((entry) => ['PROOF_PUBLIC', 'PROOF_USER'].includes(entry.source_mode))];
+for (const [requests, group] of [[network, 'network'], [source.capture_requests, 'local_capture']]) {
+  const tasks = status[group]?.tasks;
+  if (!Array.isArray(tasks) || tasks.length !== requests.length) throw new Error(group + ' request/task set mismatch');
+  for (const request of requests) {
+    const task = tasks.find((item) => item.request_id === request.request_id);
+    if (!task || task.required !== request.required || task.status !== 'COMPLETED' || task.review_verdict !== 'PASS' || !task.handoff?.episode_path || !task.handoff?.sha256) throw new Error(group + ' request lacks completed reviewed handoff');
+  }
+}
+NODE
+  if [ $? -ne 0 ]; then exit 1; fi
+fi
+echo "PASS $2"
+`);
   write(join(testRoot, 'scripts/check-workflow-runtime.mjs'), 'console.log("PASS runtime");\n');
   write(join(testRoot, 'scripts/verify-vendor-preflight.mjs'), 'console.log("PASS vendor preflight");\n');
   write(join(testRoot, 'scripts/check-production-dependencies.mjs'), 'console.log("{}");\n');
@@ -179,6 +214,11 @@ try {
   json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'COMPLETED', 'COMPLETED'));
   const outputAfterMaterials = run('next').stdout;
   assert.match(outputAfterMaterials, /prompt_id: 09-candidate/);
+  json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'COMPLETED', 'COMPLETED', {emptyTasks: true}));
+  const emptyCompletedTasks = run('next');
+  assert.match(emptyCompletedTasks.stdout, /prompt_id: 07-network/);
+  assert.doesNotMatch(emptyCompletedTasks.stdout, /prompt_id: 09-candidate/);
+  json(join(episode, '10-素材/real-media-status.json'), mediaStatus(sourceManifestPath, 'COMPLETED', 'COMPLETED'));
   write(join(episode, '11-动画/candidates/remotion-v1.mp4'), 'candidate');
   json(join(episode, '11-动画/render-manifest.json'), {version: 7, viewer_verdict: 'PENDING', selected_candidate: null, candidates: [{path: 'candidates/remotion-v1.mp4', sha256: sha(join(episode, '11-动画/candidates/remotion-v1.mp4')), director_state_sha256: sha(join(episode, '09-导演/director-state.md')), technical_qa: 'PASS'}]});
   const migrationPath = join(episode, '00-编排/v5-pending-candidate-workflow-migration.json');
@@ -214,11 +254,26 @@ try {
 
   write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\necho "PASS $2"\n');
   chmodSync(join(testRoot, 'scripts/check-episode-contract.sh'), 0o755);
+  for (const [name] of platformCoverFixtures) rmSync(join(episode, '05-封面', name));
+  write(join(episode, '07-剪辑/final.mp4'), 'candidate');
+  json(join(episode, '11-动画/render-manifest.json'), {version: 7, viewer_verdict: 'ACCEPTED', selected_candidate: 'candidates/remotion-v1.mp4', candidates: [{path: 'candidates/remotion-v1.mp4', sha256: sha(join(episode, '07-剪辑/final.mp4')), director_state_sha256: sha(join(episode, '09-导演/director-state.md')), technical_qa: 'PASS'}]});
+  const coverAfterAgentAcceptance = run('next');
+  assert.match(coverAfterAgentAcceptance.stdout, /prompt_id: 03-cover/);
+  for (const [name, size] of exactPlatformCoverFixtures) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', `color=c=blue:s=${size}`, '-frames:v', '1', join(episode, '05-封面', name)]);
+  const finalizeAfterCover = run('next');
+  assert.match(finalizeAfterCover.stdout, /prompt_id: 10-finalize/);
+  write(join(episode, '00-编排/task-handoffs.jsonl'), JSON.stringify({prompt_id: '10-finalize', event: 'COMPLETED', result: 'COMPLETED', artifact_gate: 'PASS', completed_at: now}) + '\n');
+  const publishAfterFinalize = run('next');
+  assert.match(publishAfterFinalize.stdout, /prompt_id: 11-publish/);
+
+  write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\necho "PASS $2"\n');
+  chmodSync(join(testRoot, 'scripts/check-episode-contract.sh'), 0o755);
   write(join(episode, '07-剪辑/final.mp4'), 'candidate');
   json(join(episode, '11-动画/render-manifest.json'), {version: 7, viewer_verdict: 'ACCEPTED', selected_candidate: 'candidates/remotion-v1.mp4', candidates: [{path: 'candidates/remotion-v1.mp4', sha256: sha(join(episode, '07-剪辑/final.mp4')), director_state_sha256: sha(join(episode, '09-导演/director-state.md')), technical_qa: 'PASS'}]});
   const finalSha = sha(join(episode, '07-剪辑/final.mp4'));
   const receipt = (platform, overrides = {}) => ({
     platform,
+    source: 'ADAPTER_VERIFIED_RECEIPT',
     receipt_id: `${platform}-receipt-001`,
     platform_title: `${platform} 标题`,
     published_at: now,
@@ -232,6 +287,12 @@ try {
     publish_result: 'PUBLISHED',
     ...overrides,
   });
+  for (const platform of ['douyin', 'weixin_channels', 'xiaohongshu', 'bilibili']) write(join(episode, `12-发布/${platform}-publish-results.jsonl`), JSON.stringify(receipt(platform, {source: undefined})) + '\n');
+  const missingReceiptSource = run('status');
+  if (missingReceiptSource.status !== 0 || missingReceiptSource.stdout.includes('- [x] ⑫')) throw new Error(missingReceiptSource.stderr || missingReceiptSource.stdout || '缺 ADAPTER_VERIFIED_RECEIPT source 的回执不得完成⑫');
+  for (const platform of ['douyin', 'weixin_channels', 'xiaohongshu', 'bilibili']) write(join(episode, `12-发布/${platform}-publish-results.jsonl`), JSON.stringify(receipt(platform, {source: 'user-confirmed'})) + '\n');
+  const wrongReceiptSource = run('status');
+  if (wrongReceiptSource.status !== 0 || wrongReceiptSource.stdout.includes('- [x] ⑫')) throw new Error(wrongReceiptSource.stderr || wrongReceiptSource.stdout || '错误 source 的自动回执不得完成⑫');
   const malformedReceipts = {
     douyin: receipt('douyin', {platform: undefined}),
     weixin_channels: receipt('weixin_channels', {receipt_id: undefined}),

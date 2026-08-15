@@ -215,9 +215,14 @@ const mediaWindowState = () => safely(() => {
   const complete = (group, requests) => requests.length === 0 || status?.[group]?.state === 'COMPLETED';
   if (!complete('network', networkRequests)) return {done: false, promptId: '07-network', reason: `source-manifest 存在未完成网络素材请求（${status?.network?.state || 'WAITING'}）`};
   if (!complete('local_capture', captureRequests)) return {done: false, promptId: '08-local-capture', reason: `source-manifest 存在未完成 LOCAL_CAPTURE 请求（${status?.local_capture?.state || 'WAITING'}）`};
+  if (networkRequests.length || captureRequests.length) {
+    const materials = materialState();
+    if (!materials.done) return {done: false, promptId: networkRequests.length ? '07-network' : '08-local-capture', reason: '真实素材请求尚未逐项完成、复核并交接：' + materials.reason};
+  }
   return {done: true, promptId: '09-candidate', reason: '网络素材与本机录屏均为已复核或 NOT_NEEDED'};
 }, '素材窗口状态无法读取');
 const promptIdFor = (step, mediaWindow) => {
+  if (step.promptId) return step.promptId;
   if (mediaWindow?.promptId) return mediaWindow.promptId;
   if (step.id === '①') return '01-topic-creation';
   if (['②', '③', '④', '⑤'].includes(step.id)) return '02-content-review';
@@ -601,6 +606,19 @@ const candidateReviewState = () => safely(() => {
     ? {done: true, reason: 'candidate技术QA通过；本期AGENT_PROXY授权允许代理完整观看并选择后继续'}
     : {done: true, reason: 'candidate已完成并停在JEFFREY_REVIEW；等待Jeffrey接受或指出肉眼可见问题'};
 }, 'candidate验收状态无法读取');
+const finalizeHandoffState = () => safely(() => {
+  const relative = '00-编排/task-handoffs.jsonl';
+  if (!nonEmptyFile(relative)) return {done: false, reason: '缺 10-finalize 的 task-handoffs 终态'};
+  const entries = readFileSync(file(relative), 'utf8').split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => JSON.parse(line));
+  const completed = [...entries].reverse().find((entry) => entry?.prompt_id === '10-finalize'
+    && entry.event === 'COMPLETED'
+    && entry.result === 'COMPLETED'
+    && entry.artifact_gate === 'PASS'
+    && !Number.isNaN(Date.parse(entry.completed_at)));
+  return completed
+    ? {done: true, reason: '10-finalize 已在 task-handoffs 记录 COMPLETED/PASS 终态'}
+    : {done: false, reason: 'task-handoffs 未记录 10-finalize 的 COMPLETED/PASS 终态'};
+}, '10-finalize task-handoffs 无法读取');
 const shootingState = () => safely(() => {
   if (!nonEmptyFile('06-拍摄素材/raw.mp4') || !exists('06-拍摄素材/shooting-record.json')) return {done: false, reason: '缺 raw.mp4 或 shooting-record.json'};
   const record = readJson('06-拍摄素材/shooting-record.json');
@@ -628,6 +646,7 @@ const publishState = () => safely(() => {
         const authorizedAt = Date.parse(record?.authorized_at);
         const hasReceiptIdentity = (typeof record?.receipt_id === 'string' && record.receipt_id.trim()) || (typeof record?.url === 'string' && record.url.trim());
         return record?.platform === platform
+          && record.source === 'ADAPTER_VERIFIED_RECEIPT'
           && record.final_sha256 === finalHash
           && record.publish_result === 'PUBLISHED'
           && record.auto_publish_authorized === true
@@ -934,6 +953,9 @@ if (gateState('director-output', 'Direct brief 契约未通过').done && !exists
   if (mediaWindow.promptId === '07-network' || mediaWindow.promptId === '08-local-capture') next = {...states[10], name: mediaWindow.promptId === '07-network' ? '网络素材窗口' : '本机录屏窗口'};
   else if (mediaWindow.done && mediaWindow.promptId === '09-candidate') next = states[11];
 }
+if (fullAutomation.done && animationState().done && coverState().done && !finalizeHandoffState().done) {
+  next = {id: 'FINALIZE', name: 'candidate验收与本地完结', skill: 'codex-direct-production', output: '10-finalize task-handoff（COMPLETED + artifact_gate=PASS）', promptId: '10-finalize', done: false};
+}
 const promptRoute = next
   ? safely(() => ({done: true, fields: promptFields(next, mediaWindow)}), '固定 Prompt 路由不合法')
   : {done: true, fields: ''};
@@ -948,7 +970,7 @@ if (command === 'next') {
   else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一窗口：09-candidate 代理验收\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\n${fields}\n\n- 只在09窗口完成candidate的完整观看QA，并用AGENT_PROXY记录接受或定向返工。
 - 本窗口到candidate验收为止；封面、finalize与发布由后续独立Prompt路由。`);
   else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n${fields}\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
-  else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥默认rank 01三尺寸共享封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: DEFAULT_COVER_RANK_01\n${fields}\n\n- 使用排序第一的同一视觉提案，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后继续⑫，不等待Jeffrey确认。`);
+  else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥默认rank 01三尺寸共享封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: DEFAULT_COVER_RANK_01\n${fields}\n\n- 使用排序第一的同一视觉提案，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后独立路由10-finalize，不等待Jeffrey确认。`);
   else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
