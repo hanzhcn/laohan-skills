@@ -610,14 +610,34 @@ const finalizeHandoffState = () => safely(() => {
   const relative = '00-编排/task-handoffs.jsonl';
   if (!nonEmptyFile(relative)) return {done: false, reason: '缺 10-finalize 的 task-handoffs 终态'};
   const entries = readFileSync(file(relative), 'utf8').split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => JSON.parse(line));
-  const completed = [...entries].reverse().find((entry) => entry?.prompt_id === '10-finalize'
-    && entry.event === 'COMPLETED'
-    && entry.result === 'COMPLETED'
-    && entry.artifact_gate === 'PASS'
-    && !Number.isNaN(Date.parse(entry.completed_at)));
-  return completed
-    ? {done: true, reason: '10-finalize 已在 task-handoffs 记录 COMPLETED/PASS 终态'}
-    : {done: false, reason: 'task-handoffs 未记录 10-finalize 的 COMPLETED/PASS 终态'};
+  const fields = promptFields({promptId: '10-finalize'}, null).match(/^prompt_id: 10-finalize\nprompt_file: (.+)\nwindow_rule: .+$/);
+  if (!fields) throw new Error('无法解析当前 10-finalize Prompt 路径');
+  const currentPromptPath = fields[1];
+  const currentPromptSha = shaPath(currentPromptPath);
+  const nonEmptyString = (value) => typeof value === 'string' && value.trim();
+  const validIso = (value) => nonEmptyString(value) && !Number.isNaN(Date.parse(value));
+  const validEvent = (entry, event) => {
+    if (entry?.schema_version !== 1 || entry.event !== event || !nonEmptyString(entry.handoff_id)
+      || entry.mode !== 'FULL_PIPELINE_TO_PUBLISH' || entry.episode !== basename(episodeDir)
+      || !nonEmptyString(entry.from_stage) || !nonEmptyString(entry.to_stage)
+      || entry.prompt_id !== '10-finalize' || entry.prompt_path !== currentPromptPath || entry.prompt_sha256 !== currentPromptSha
+      || entry.precondition_gate !== 'PASS' || !nonEmptyString(entry.thread_id) || !validIso(entry.created_at)
+      || !nonEmptyString(entry.next_decision)) return false;
+    if (event === 'CREATED') return entry.completed_at === null && entry.result === 'RUNNING' && entry.artifact_gate === 'PENDING';
+    return validIso(entry.completed_at) && ['COMPLETED', 'PARTIAL', 'BLOCKED'].includes(entry.result) && ['PASS', 'FAIL'].includes(entry.artifact_gate);
+  };
+  const created = [...entries].reverse().find((entry) => entry?.prompt_id === '10-finalize' && entry.event === 'CREATED');
+  if (!created) return {done: false, reason: 'task-handoffs 缺 10-finalize CREATED 记录'};
+  if (!validEvent(created, 'CREATED')) return {done: false, reason: '最新 10-finalize CREATED 缺批准的完整交接字段或当前 Prompt 绑定'};
+  const terminal = [...entries].reverse().find((entry) => entry?.handoff_id === created.handoff_id && entry.event === 'COMPLETED');
+  if (!terminal) return {done: false, reason: '最新 10-finalize handoff 尚无终态'};
+  if (!validEvent(terminal, 'COMPLETED')) return {done: false, reason: '最新 10-finalize terminal 缺批准的完整交接字段或当前 Prompt 绑定'};
+  for (const key of ['mode', 'episode', 'from_stage', 'to_stage', 'prompt_id', 'prompt_path', 'prompt_sha256', 'precondition_gate', 'thread_id', 'created_at']) {
+    if (terminal[key] !== created[key]) return {done: false, reason: '最新 10-finalize terminal 未绑定同一 CREATED handoff'};
+  }
+  return terminal.result === 'COMPLETED' && terminal.artifact_gate === 'PASS'
+    ? {done: true, reason: '最新 10-finalize handoff 已记录 COMPLETED/PASS 终态并绑定当前 Prompt'}
+    : {done: false, reason: '最新 10-finalize handoff terminal 不是 COMPLETED/PASS'};
 }, '10-finalize task-handoffs 无法读取');
 const shootingState = () => safely(() => {
   if (!nonEmptyFile('06-拍摄素材/raw.mp4') || !exists('06-拍摄素材/shooting-record.json')) return {done: false, reason: '缺 raw.mp4 或 shooting-record.json'};

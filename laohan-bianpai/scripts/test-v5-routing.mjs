@@ -7,6 +7,8 @@ import {dirname, join, resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 
 const bianpai = resolve(dirname(new URL(import.meta.url).pathname), 'bianpai.mjs');
+const videoProject = resolve(process.env.LAOHAN_VIDEO_PROJECT || process.cwd());
+const realMediaWorkflow = join(videoProject, 'scripts/real-media-workflow.mjs');
 const testRoot = mkdtempSync(join(tmpdir(), 'laohan-bianpai-v51-'));
 const episode = join(testRoot, 'episodes/imported');
 const write = (path, value) => { mkdirSync(dirname(path), {recursive: true}); writeFileSync(path, value); };
@@ -36,16 +38,34 @@ const sourceManifest = ({network = false, capture = false} = {}) => ({
 });
 const mediaStatus = (manifest, network, capture, {emptyTasks = false} = {}) => {
   const source = JSON.parse(readFileSync(manifest, 'utf8'));
+  const episodeRoot = resolve(dirname(manifest), '..');
   const networkRequests = [...source.broll_requests, ...source.source_entries.filter((entry) => ['PROOF_PUBLIC', 'PROOF_USER'].includes(entry.source_mode))];
-  const task = (request, kind, state) => ({
-    request_id: request.request_id,
-    beat_id: request.beat_id,
-    kind,
-    required: request.required,
-    status: state,
-    review_verdict: state === 'COMPLETED' ? 'PASS' : undefined,
-    handoff: state === 'COMPLETED' ? {episode_path: `10-素材/${request.request_id}/asset.mp4`, sha256: 'a'.repeat(64)} : undefined,
-  });
+  const task = (request, kind, state) => {
+    const outputRoot = kind === 'NETWORK_MATERIAL' ? 'network' : 'local-capture';
+    const assetRelative = `10-素材/${outputRoot}/${request.request_id}/asset.mp4`;
+    const previewRelative = `10-素材/${outputRoot}/${request.request_id}/preview.jpg`;
+    const asset = join(episodeRoot, assetRelative);
+    const preview = join(episodeRoot, previewRelative);
+    if (state === 'COMPLETED') {
+      write(asset, `asset-${request.request_id}`);
+      write(preview, `preview-${request.request_id}`);
+    }
+    return {
+      request_id: request.request_id,
+      beat_id: request.beat_id,
+      kind,
+      source_mode: request.source_mode,
+      required: request.required,
+      visual_need: request.visual_need,
+      start_s: request.start_s,
+      end_s: request.end_s,
+      must_not_imply: request.must_not_imply,
+      ...(request.capture_kind ? {capture_kind: request.capture_kind} : {}),
+      status: state,
+      review_verdict: state === 'COMPLETED' ? 'PASS' : undefined,
+      handoff: state === 'COMPLETED' ? {episode_path: assetRelative, absolute_path: asset, sha256: sha(asset), preview_episode_path: previewRelative, preview_absolute_path: preview, preview_sha256: sha(preview)} : undefined,
+    };
+  };
   return {
     schema_version: 1,
     source_manifest_sha256: sha(manifest),
@@ -63,23 +83,8 @@ try {
   write(join(testRoot, 'scripts/check-episode-contract.sh'), `#!/usr/bin/env bash
 if [ "$2" = "accepted-final" ]; then exit 1; fi
 if [ "$2" = "materials" ]; then
-  node - "$1" <<'NODE'
-const fs = require('node:fs');
-const path = require('node:path');
-const episode = process.argv[2];
-const source = JSON.parse(fs.readFileSync(path.join(episode, '09-导演/source-manifest.json'), 'utf8'));
-const status = JSON.parse(fs.readFileSync(path.join(episode, '10-素材/real-media-status.json'), 'utf8'));
-const network = [...source.broll_requests, ...source.source_entries.filter((entry) => ['PROOF_PUBLIC', 'PROOF_USER'].includes(entry.source_mode))];
-for (const [requests, group] of [[network, 'network'], [source.capture_requests, 'local_capture']]) {
-  const tasks = status[group]?.tasks;
-  if (!Array.isArray(tasks) || tasks.length !== requests.length) throw new Error(group + ' request/task set mismatch');
-  for (const request of requests) {
-    const task = tasks.find((item) => item.request_id === request.request_id);
-    if (!task || task.required !== request.required || task.status !== 'COMPLETED' || task.review_verdict !== 'PASS' || !task.handoff?.episode_path || !task.handoff?.sha256) throw new Error(group + ' request lacks completed reviewed handoff');
-  }
-}
-NODE
-  if [ $? -ne 0 ]; then exit 1; fi
+  node "${realMediaWorkflow}" verify --episode "$1"
+  exit $?
 fi
 echo "PASS $2"
 `);
@@ -111,7 +116,17 @@ echo "PASS $2"
     workflow_mode: 'AUTONOMOUS_RUN',
     renderer_mode: 'CODEX_DIRECT',
     episode_entry_contract: {mode: 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW', record_path: '00-编排/user-provided-inputs.json', record_sha256: sha(inputRecordPath)},
-    cover_schedule: {mode: 'DEFERRED_UNTIL_CANDIDATE_SELECTION', authorized_by: 'Jeffrey', authorized_at: now, authorization_note: '最终稿和原片已附上，封面延后'}
+    cover_schedule: {mode: 'DEFERRED_UNTIL_CANDIDATE_SELECTION', authorized_by: 'Jeffrey', authorized_at: now, authorization_note: '最终稿和原片已附上，封面延后'},
+    real_media_contract: {
+      schema_version: 1,
+      network_executor: 'network-material-mvp',
+      capture_executor: 'local-capture-mvp',
+      workflow_adapter: 'real-media-workflow',
+      network_output_root: '10-素材/network',
+      capture_output_root: '10-素材/local-capture',
+      status_path: '10-素材/real-media-status.json',
+      required_failure_routes: ['NEEDS_USER_ACTION', 'NEEDS_REPLAN']
+    }
   });
   write(join(episode, '00-编排/vendor-preflight.json'), '{}\n');
 
@@ -262,7 +277,46 @@ echo "PASS $2"
   for (const [name, size] of exactPlatformCoverFixtures) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', `color=c=blue:s=${size}`, '-frames:v', '1', join(episode, '05-封面', name)]);
   const finalizeAfterCover = run('next');
   assert.match(finalizeAfterCover.stdout, /prompt_id: 10-finalize/);
-  write(join(episode, '00-编排/task-handoffs.jsonl'), JSON.stringify({prompt_id: '10-finalize', event: 'COMPLETED', result: 'COMPLETED', artifact_gate: 'PASS', completed_at: now}) + '\n');
+  const handoffs = join(episode, '00-编排/task-handoffs.jsonl');
+  const finalizePrompt = join(testRoot, 'docs/固定提示词/10-candidate验收与本地完结.md');
+  const handoff = (handoffId, event, overrides = {}) => ({
+    schema_version: 1,
+    event,
+    handoff_id: handoffId,
+    mode: 'FULL_PIPELINE_TO_PUBLISH',
+    episode: 'imported',
+    from_stage: '03-cover',
+    to_stage: '10-finalize',
+    prompt_id: '10-finalize',
+    prompt_path: finalizePrompt,
+    prompt_sha256: sha(finalizePrompt),
+    precondition_gate: 'PASS',
+    thread_id: `task-${handoffId}`,
+    created_at: now,
+    completed_at: event === 'CREATED' ? null : now,
+    result: event === 'CREATED' ? 'RUNNING' : 'COMPLETED',
+    artifact_gate: event === 'CREATED' ? 'PENDING' : 'PASS',
+    next_decision: event === 'CREATED' ? '10-finalize' : '11-publish',
+    ...overrides,
+  });
+  const appendHandoff = (value) => writeFileSync(handoffs, JSON.stringify(value) + '\n', {flag: 'a'});
+  appendHandoff(handoff('h-old', 'CREATED'));
+  appendHandoff(handoff('h-old', 'COMPLETED'));
+  appendHandoff(handoff('h-current', 'CREATED'));
+  const staleHandoff = run('next');
+  assert.match(staleHandoff.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-current', 'COMPLETED', {next_decision: undefined}));
+  const missingFinalizeField = run('next');
+  assert.match(missingFinalizeField.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-current', 'COMPLETED', {prompt_sha256: '0'.repeat(64)}));
+  const stalePromptSha = run('next');
+  assert.match(stalePromptSha.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-current', 'COMPLETED'));
+  appendHandoff(handoff('h-current', 'COMPLETED', {result: 'BLOCKED', artifact_gate: 'FAIL', next_decision: '10-finalize'}));
+  const latestFinalizeFailed = run('next');
+  assert.match(latestFinalizeFailed.stdout, /prompt_id: 10-finalize/);
+  appendHandoff(handoff('h-retry', 'CREATED'));
+  appendHandoff(handoff('h-retry', 'COMPLETED'));
   const publishAfterFinalize = run('next');
   assert.match(publishAfterFinalize.stdout, /prompt_id: 11-publish/);
 
