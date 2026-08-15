@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "1.9.0"
+version: "2.0.2"
 ---
 
 # 统一创作引擎
@@ -96,6 +96,7 @@ schema 3 至少包含：
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
+- Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#laohanAI`，哔哩哔哩标签固定包含 `laohanAI`。
 
 字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；未出现 `PASS chuangzuo script contract schema=3` 时不得声称②完成。
 
@@ -320,7 +321,8 @@ schema 3 至少包含：
 2. 独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整试读并用 `ffprobe` 记录真实时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA。
 4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
-5. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
+5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#laohanAI`，B站标签必须带 `laohanAI`。
+6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。
 
@@ -368,6 +370,8 @@ Episode 模式的完整中间产物固定为：
 ```
 episodes/<slug>/
 ├── 01-口播稿.md
+├── 12-发布/
+│   └── 多平台发布内容.md
 └── 02-创作工作稿/
 　  ├── 创作决策.json
 　  ├── 创作决策.md       ← 可选人类摘要

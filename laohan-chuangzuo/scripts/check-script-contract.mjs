@@ -107,6 +107,53 @@ if (!publish.title_evidence.some((evidence) => recommendedTitle.includes(evidenc
 const descriptionEvidenceCorpus = `${paragraphs.join('\n')}\n${videoDescription}`;
 if (publish.description_evidence.some((evidence) => !descriptionEvidenceCorpus.includes(evidence))) fail('视频介绍证据必须来自正文或介绍');
 
+if (episodeArg) {
+  const multiPath = join(base, '12-发布/多平台发布内容.md');
+  const multiReal = requireFile(multiPath, '多平台发布内容.md');
+  if (!multiReal.startsWith(baseReal + '/')) fail('多平台发布内容必须位于指定episode内');
+  const multi = readFileSync(multiPath, 'utf8').replace(/\r\n/g, '\n');
+  if (!multi.includes(`- 源口播稿SHA256：${shaFile(scriptPath)}`)) fail('多平台发布内容未绑定当前口播稿SHA-256');
+  const headings = [...multi.matchAll(/^##\s+(抖音|视频号|小红书|哔哩哔哩)\s*$/gm)];
+  if (headings.length !== 4 || new Set(headings.map((item) => item[1])).size !== 4) fail('多平台发布内容必须且只能包含四个平台');
+  const blocks = new Map(headings.map((item, index) => [item[1], multi.slice(item.index + item[0].length, headings[index + 1]?.index ?? multi.length)]));
+  const subsection = (platform, name) => {
+    const block = blocks.get(platform) || '';
+    const heading = new RegExp(`^###\\s+${name}\\s*$`, 'm').exec(block);
+    if (!heading) fail(`${platform}缺少${name}`);
+    const tail = block.slice(heading.index + heading[0].length).replace(/^\s*\n/, '');
+    const next = tail.search(/^###\s+/m);
+    const value = (next >= 0 ? tail.slice(0, next) : tail).trim();
+    if (!value) fail(`${platform}${name}不能为空`);
+    return value;
+  };
+  const normalizeCopy = (value) => value.replace(/#[\p{L}\p{N}_-]+/gu, '').replace(/[\s，。！？、,.!?；;：:“”「」『』（）()《》【】\[\]-]/g, '').toLowerCase();
+  const titles = headings.map((item) => subsection(item[1], '标题'));
+  if (new Set(titles.map(normalizeCopy)).size !== 4) fail('四个平台标题必须分别创作');
+  if (Array.from(subsection('抖音', '标题')).length > 30) fail('抖音标题必须在30字以内');
+  if (Array.from(subsection('视频号', '标题')).length > 16) fail('视频号标题必须在16字以内');
+  if (Array.from(subsection('小红书', '标题')).length > 20) fail('小红书标题必须在20字以内');
+  const bodies = [subsection('抖音', '介绍'), subsection('视频号', '介绍'), subsection('小红书', '正文'), subsection('哔哩哔哩', '简介')];
+  if (new Set(bodies.map(normalizeCopy)).size !== 4) fail('四个平台介绍或正文必须分别创作');
+  const paragraphCopies = new Set(paragraphs.map(normalizeCopy));
+  if (bodies.some((value) => paragraphCopies.has(normalizeCopy(value)))) fail('平台介绍或正文不得直接复制完整口播段落');
+  if ((bodies[0].match(/[？?]/g) || []).length !== 1) fail('抖音介绍必须且只能包含一个明确互动问题');
+  for (const platform of headings.map((item) => item[1])) {
+    const strategy = blocks.get(platform).match(/^\s*-\s*平台策略：(.+)$/m)?.[1]?.trim();
+    if (!strategy || Array.from(strategy).length < 12) fail(`${platform}平台策略必须说明受众与表达取舍`);
+  }
+  const topics = (platform) => subsection(platform, '话题').split('\n').filter((line) => /^\s*-\s+/.test(line)).map((line) => line.replace(/^\s*-\s+/, '').trim());
+  const douyinTopics = topics('抖音');
+  if (!douyinTopics.includes('#AI新星计划')) fail('抖音话题必须包含#AI新星计划');
+  for (const platform of ['抖音', '视频号', '小红书']) {
+    if (!topics(platform).includes('#laohanAI')) fail(`${platform}话题必须包含#laohanAI`);
+  }
+  if (subsection('哔哩哔哩', '投稿类型') !== '自制') fail('哔哩哔哩投稿类型必须为自制');
+  const biliTags = subsection('哔哩哔哩', '标签').split('\n').filter((line) => /^\s*-\s+/.test(line));
+  if (!biliTags.length || biliTags.length > 6) fail('哔哩哔哩标签必须为1至6个');
+  if (biliTags.some((line) => Array.from(line.replace(/^\s*-\s+/, '').trim()).length > 20)) fail('哔哩哔哩单个标签最多20个字符');
+  if (!biliTags.map((line) => line.replace(/^\s*-\s+/, '').trim()).includes('laohanAI')) fail('哔哩哔哩标签必须包含laohanAI');
+}
+
 const requiredPlanningFields = ['topic_thesis', 'hypothesis_id', 'content_form', 'audience', 'expected_audience_effect', 'input_mode', 'structure_tool', 'structure_rationale'];
 if (!requiredPlanningFields.every((key) => nonEmpty(decision[key])) || !uniqueNonEmpty(decision.fact_boundary) || !uniqueNonEmpty(decision.alternative_structures) || !uniqueNonEmpty(decision.unproven_assumptions)) fail('schema 3 缺主题、受众、结构或事实边界规划');
 const argumentPlan = decision.argument_plan || {};
