@@ -1,6 +1,6 @@
 ---
 name: laohan-sucai
-version: "1.2.0-candidate"
+version: "1.2.1-candidate"
 description: B-roll 素材供应器。读取⑨导演的 source manifest，搜索、下载、抽帧并记录可授权现实素材；只有视觉复核通过的资产可交⑪动画生产。Use when 用户说配素材、找B-roll、补真实场景、下载素材、审核素材、进入⑩素材，或⑨导演将 beat 路由为 BROLL_STOCK。
 ---
 
@@ -18,22 +18,22 @@ description: B-roll 素材供应器。读取⑨导演的 source manifest，搜�
 
 ~~~bash
 # 搜索候选：默认读取项目本地catalog，同时并行检索Pexels/Pixabay/Coverr
-node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材
+node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材/network
 
 # 非项目cwd时可显式指定本地库；local候选会复制到本episode后再抽帧
-node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材 --local-library "/绝对路径/你的素材库"
+node scripts/sucai.mjs search --source 09-导演/source-manifest.json --out 10-素材/network --local-library "/绝对路径/你的素材库"
 
 # accepted final使用过的网络素材才晋升永久素材库
 node scripts/material-library.mjs promote-episode episodes/<slug>
 
 # 下载一个候选，并生成缩略图供实际视觉检查
-node scripts/sucai.mjs download --manifest 10-素材/素材清单.json --beat B01 --candidate pexels:123
+node scripts/sucai.mjs download --manifest 10-素材/network/素材清单.json --beat B01 --candidate pexels:123
 
 # 先实际查看缩略图或 contact sheet，再记录判定
-node scripts/sucai.mjs verify --manifest 10-素材/素材清单.json --beat B01 --candidate pexels:123 --verdict pass --reason "主体、构图和事实边界均匹配"
+node scripts/sucai.mjs verify --manifest 10-素材/network/素材清单.json --beat B01 --candidate pexels:123 --verdict pass --reason "主体、构图和事实边界均匹配"
 
 # 查看当前清单
-node scripts/sucai.mjs report --manifest 10-素材/素材清单.json
+node scripts/sucai.mjs report --manifest 10-素材/network/素材清单.json
 
 # PROOF 只物化已批准证据；显式视觉确认后复制到本期并登记
 node scripts/register-proof-asset.mjs episodes/<slug> B03 <proof-file> <thumb-file> --visually-verified
@@ -47,12 +47,12 @@ node scripts/register-proof-asset.mjs episodes/<slug> B03 <proof-file> <thumb-fi
 2. 默认读取项目`本地素材库/catalog.json`，只返回相关度最高的本地视频候选；catalog不存在时才回退到文件名扫描。不得把整个素材库塞进导演上下文。
 3. 无论本地是否命中，Pexels、Pixabay、Coverr默认仍并行提供网络候选，以增加画面多样性。只有本期明确`--providers local`时才只查本地；Mixkit不做自动抓取。
 4. 记录每个provider的status、candidate_count、elapsed_ms、rate_limits，并分别记录本地/网络候选数；单个provider的无key、限流或失败不阻断其他provider。
-5. 写入`10-素材/素材清单.json`、`素材清单.md`、`_credits.md`；清单绑定当前source manifest，候选初始状态都是candidate_unverified。
+5. 写入`10-素材/network/素材清单.json`、`素材清单.md`、`_credits.md`；清单绑定当前source manifest，候选初始状态都是candidate_unverified。`material-library.mjs promote-episode`仍兼容历史episode的`10-素材/素材清单.json`，新episode只使用network分区。
 6. 只下载选择的candidate并使用FFmpeg抽帧；local候选先复制到本episode。
 7. 实际检查人物、动作、画幅、水印、错误文字、字幕安全区和must_not_imply。
-8. 只有verify pass才标为visually_verified；selected candidate必须位于本期`10-素材/broll-assets/`并绑定文件/缩略图SHA，⑪只读取这种资产。
+8. 只有verify pass才标为visually_verified；selected candidate必须位于本期`10-素材/network/broll-assets/`并绑定文件/缩略图SHA，⑪只读取这种资产。
 9. Jeffrey接受final后，只把实际使用且已核验的网络素材通过`material-library.mjs promote-episode`晋升永久库；未采用的网络候选不入库。
-10. PROOF不进入库存B-roll搜索池。只把⑨已批准且绑定⑤`SUPPORTED claim_id`的同源evidence复制到`10-素材/proof-assets/`，不重做事实判断。
+10. PROOF不进入库存B-roll搜索池。只把⑨已批准且绑定⑤`SUPPORTED claim_id`的同源evidence复制到`10-素材/network/proof-assets/`，不重做事实判断。
 
 ## 失败处理
 
