@@ -1,6 +1,6 @@
 ---
 name: laohan-redian
-version: 3.0.0
+version: 3.1.0
 description: 真人口播①选题决策主写者；从 AIHOT 与已安装 OpenCLI 的当前信号生成观点/教程候选，核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源后，只选一个可生产且可复盘的主题。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -40,7 +40,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
+候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > BROAD_HOTSPOT(2) > PERSONAL_EXPRESSION(3)`；这是找题效率顺序，不是自动入选分数，个人题仍可在获得公共兴趣证据后胜出。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
 
 脚本只写：
 
@@ -62,6 +62,8 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 形成候选前恢复原版分析：以“AI/GPT/Claude/大模型/机器人/自动化/编程/副业”等直接词和“教育/职业/消费/创业/职场”等间接词标注相关度，但保留可能产生新角度的边缘信号；统计安装教程/进阶技巧/方法论/对比评测/实战/资源推荐等内容类型；标出多平台共振、单平台独有、已拥挤角度和竞品未覆盖机会。它们用于扩大候选，不替代后面的 PRIMARY 与抖音关键词核验。
 
 - 唯一 `id`、稳定非空 `event_cluster_id`、非空 `why_now`、`title`、`content_form: opinion-video|tutorial-video`、`audience_level: BEGINNER|INTERMEDIATE|ADVANCED`、`audience_problem`、`audience_promise`、`thesis`。
+- `candidate_origin` 必须登记 `primary_lane`、对应的 `priority_rank`、非空 `origin_signal_ids` 与 `corroborating_lanes`。交叉印证可以提高可信度，但不能把个人表达来源伪装成对标爆款来源。
+- `tension` 必须登记 `type: CONFLICT|MISCONCEPTION|COUNTERINTUITIVE|TRADEOFF`、`common_assumption`、`jeffrey_position` 和一句可由正文兑现的 `conflict_statement`。只写领域名、产品发布或“值得关注”不算候选。
 - `creator_fit` 必须写清 `basis: FIRSTHAND_EXPERIENCE|BUILT_OR_TESTED|OWNED_EVIDENCE|LONG_TERM_PRACTICE|RESEARCHED_JUDGMENT|NOT_ESTABLISHED`、`why_jeffrey` 与 `distinctive_judgment`。它回答“为什么由 Jeffrey 讲、他的依据是什么、相比通用复述多了什么判断”。SELECTED 不允许 `NOT_ESTABLISHED`；没有亲历时可以使用 `RESEARCHED_JUDGMENT`，但必须形成有证据边界的独立判断，不能把“我也关注了”冒充个人优势。
 - `assumed_prerequisites` 与 `jargon_to_explain` 字符串数组。BEGINNER 候选必须把标题和论点里的关键工具、命令、迁移/导入概念列入解释清单，不能只提高 `audience_fit` 分。
 - 非空 `signal_ids` 和 `evidence_ids`。
@@ -89,7 +91,12 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 ### 5. Jeffrey情绪与表达欲筛选
 
-候选完成后进入`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。一次展示3—5个候选，要求Jeffrey基于真实第一反应选一个，并记录：`first_reaction`、`challenge_or_addition`、`firsthand_detail`、`would_say_without_heat=true`。Jeffrey确认后，先把唯一候选改为`SELECTED`、其余改为`REJECTED`，再写schema 1 `00-选题-Jeffrey筛选.json`绑定这份最终候选文件SHA和唯一候选ID。没有这份SHA闭合的Jeffrey记录，不得生成最终选题。
+候选完成后进入`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。一次展示3—5个候选，要求Jeffrey基于真实第一反应选择一个，或明确选择“全部无感”。
+
+- 选中一个：记录`first_reaction`、`challenge_or_addition`、`firsthand_detail`、`would_say_without_heat=true`。先把唯一候选改为`SELECTED`、其余改为`REJECTED`，再写schema 1 `00-选题-Jeffrey筛选.json`绑定当前候选SHA和唯一候选ID。
+- 全部无感：写`status=REJECTED_ALL`，绑定当前候选SHA，并记录`rejection_reason`、`strongest_near_miss`和`rescan_direction`。进入`TOPIC_RESCAN_REQUIRED`，在同一01任务回到三路扫描；不得勉强SELECTED、生成最终选题或进入②。新一轮候选替换旧候选前，必须把这四项与旧候选SHA原样写入新`00-选题-candidates.json.screening_summary.rejection_history[]`；validator据此从`TOPIC_RESCAN_REQUIRED`切回`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。最终接受记录可以覆盖筛选文件，但否决历史继续保留在候选文件中。
+
+没有SHA闭合的Jeffrey记录，不得生成最终选题。
 
 ### 6. 写最终决策与 source health
 
@@ -138,6 +145,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/check-topic-contract.mjs --
 | 抖音返回合法空数组 | 记录 EMPTY；不得推断没有竞争 |
 | OpenCLI 登录/adapter 全路径失败 | 平台证据记 `UNAVAILABLE` 并继续；不安装替代爬虫，不推断蓝海 |
 | 最终候选无 PRIMARY | 缩窄论点或换候选；仍无则 BLOCKED |
+| Jeffrey对全部候选无感 | 写`REJECTED_ALL`并进入`TOPIC_RESCAN_REQUIRED`；按否决原因重新扫描，不进入② |
 | 平台结果只支持相邻话题 | 标 `ADJACENT`，补充查询；仍相邻时如实说明差异化与风险，可参加最终比较，不得冒充直接对齐 |
 | 教程候选没有本机真实执行证据 | 保持 REJECTED；可保留为待验证候选，不能写成教程已可交付 |
 | 候选不可在既有⑬指标测量 | 换 intervention/metric 或换候选 |

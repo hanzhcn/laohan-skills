@@ -4,7 +4,7 @@
 
 ## Episode采访与大纲确认
 
-标准Episode必须使用schema 4 / `content-units-v2`。`反向采访.json`绑定当前schema 3选题，包含6—12轮有效问答并覆盖真实场景、情绪转折、独特判断和观众行动；`大纲确认.json`必须由Jeffrey接受并绑定采访与`大纲.md` SHA。`创作决策.json`再绑定这四份上游SHA，且`hook_contract.designed_after_outline_acceptance=true`。确认前不得写全文或锁钩子。
+标准Episode必须使用schema 4 / `content-units-v2`。`反向采访.json`绑定当前schema 3选题；6—12轮只是常用范围，完成条件不是轮数，而是为真实场景、情绪转折、独特判断和观众行动逐项登记`completion_evidence`，每项绑定有效问答序号和非空提取摘要，同时`remaining_gaps=[]`并写明`completion_reason`。材料未齐时即使超过12轮也必须继续，材料完整且继续追问不再改变观点或结构时可以停止。`大纲确认.json`必须由Jeffrey接受并绑定采访与`大纲.md` SHA。`创作决策.json`再绑定这四份上游SHA，且`hook_contract.designed_after_outline_acceptance=true`。确认前不得写全文或锁钩子。
 
 独立模式继续兼容schema 3 / `content-units-v1`，不伪造Episode人工记录。
 
@@ -140,4 +140,4 @@ node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mj
   --base "$PWD"
 ```
 
-Episode只有命令输出 `PASS chuangzuo script contract schema=4` 才完成；独立模式仍输出schema 3。validator检查采访/大纲确认、钩子时序、默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。
+Episode只有命令输出 `PASS chuangzuo script contract schema=4` 才完成；独立模式仍输出schema 3。validator检查采访四类完成证据与空缺口、大纲确认、钩子时序、默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。

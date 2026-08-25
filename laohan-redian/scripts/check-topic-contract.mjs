@@ -43,15 +43,53 @@ const candidatesPath = target('00-选题-candidates.json');
 const candidates = readJson('00-选题-candidates.json');
 const items = Array.isArray(candidates.candidates) ? candidates.candidates : [];
 if (candidates.schema_version !== 3 || items.length < 2 || new Set(items.map((item) => item?.id)).size !== items.length) block('candidates必须是schema 3且至少两个唯一候选');
+let calibratedContract = true;
+if (existsSync(target('00-编排/executor-lock.json'))) {
+  const executorLock = readJson('00-编排/executor-lock.json');
+  const lockedVersion = executorLock.selected_executors?.find((item) => String(item?.node) === '1' && item?.id === 'laohan-redian')?.version;
+  const match = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) block('executor lock 中 laohan-redian 版本无效');
+  calibratedContract = Number(match[1]) > 3 || (Number(match[1]) === 3 && Number(match[2]) >= 1);
+}
 const signalIds = new Set(sources.flatMap((source) => Array.isArray(source.results) ? source.results.map((item) => item?.id) : []));
 const publicSignalIds = new Set(sources.filter((source) => source?.source_id !== 'personal-expression-pool').flatMap((source) => Array.isArray(source.results) ? source.results.map((item) => item?.id) : []));
+const laneForSource = (sourceId) => sourceId === 'tracked-douyin-creators' ? 'BENCHMARK_CREATOR' : sourceId === 'personal-expression-pool' ? 'PERSONAL_EXPRESSION' : 'BROAD_HOTSPOT';
+const signalLane = new Map(sources.flatMap((source) => Array.isArray(source.results) ? source.results.map((item) => [item?.id, laneForSource(source.source_id)]) : []));
+const lanePriority = new Map([['BENCHMARK_CREATOR', 1], ['BROAD_HOTSPOT', 2], ['PERSONAL_EXPRESSION', 3]]);
+const tensionTypes = new Set(['CONFLICT', 'MISCONCEPTION', 'COUNTERINTUITIVE', 'TRADEOFF']);
 for (const item of items) {
   const publicInterestIds = Array.isArray(item?.public_interest_evidence_ids) ? item.public_interest_evidence_ids : item?.signal_ids;
   if (!nonEmpty(item?.id) || !nonEmpty(item?.title) || !nonEmpty(item?.audience || item?.audience_problem) || !nonEmpty(item?.thesis) || !Array.isArray(publicInterestIds) || !publicInterestIds.some((id) => publicSignalIds.has(id)) || publicInterestIds.some((id) => !signalIds.has(id)) || !nonEmpty(item?.creator_fit?.why_jeffrey) || !nonEmpty(item?.creator_fit?.distinctive_judgment)) block('每个候选必须有非个人池的大众兴趣信号、受众问题、论点和Jeffrey个人依据');
+  if (calibratedContract) {
+    const itemSignalIds = Array.isArray(item?.signal_ids) ? item.signal_ids : [];
+    const origin = item?.candidate_origin || {};
+    const originSignalIds = Array.isArray(origin.origin_signal_ids) ? origin.origin_signal_ids : [];
+    const corroborating = Array.isArray(origin.corroborating_lanes) ? origin.corroborating_lanes : [];
+    if (!lanePriority.has(origin.primary_lane) || origin.priority_rank !== lanePriority.get(origin.primary_lane) || !originSignalIds.length || originSignalIds.some((id) => !itemSignalIds.includes(id) || signalLane.get(id) !== origin.primary_lane) || new Set(corroborating).size !== corroborating.length || corroborating.some((lane) => !lanePriority.has(lane) || lane === origin.primary_lane || !itemSignalIds.some((id) => signalLane.get(id) === lane))) block('每个候选必须登记可追溯的来源优先级：对标账号=1、全面热点=2、个人表达=3；交叉印证不能伪造');
+    const tension = item?.tension || {};
+    if (!tensionTypes.has(tension.type) || !nonEmpty(tension.common_assumption) || !nonEmpty(tension.jeffrey_position) || !nonEmpty(tension.conflict_statement)) block('每个候选必须提炼可由正文兑现的冲突性判断，而不是只给领域或事件名称');
+  }
 }
+if (calibratedContract && items.some((item, index) => index > 0 && item.candidate_origin.priority_rank < items[index - 1].candidate_origin.priority_rank)) block('候选展示顺序必须遵循来源优先级：对标账号在前、全面热点其次、个人表达最后；该排序不替Jeffrey定题');
 
-if (!existsSync(target('00-选题-Jeffrey筛选.json'))) block('等待Jeffrey从候选中按情绪与表达欲选择', 'WAITING_FOR_JEFFREY_EMOTION_SELECTION');
+if (!existsSync(target('00-选题-Jeffrey筛选.json'))) {
+  if (items.some((item) => item.disposition !== 'AWAITING_JEFFREY') || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md'))) block('Jeffrey确认前所有候选必须为AWAITING_JEFFREY，且不得预写最终选题');
+  block('等待Jeffrey从候选中按情绪与表达欲选择', 'WAITING_FOR_JEFFREY_EMOTION_SELECTION');
+}
 const selection = readJson('00-选题-Jeffrey筛选.json');
+if (selection.status === 'REJECTED_ALL') {
+  const rejectionRecordValid = selection.schema_version === 1 && selection.authorized_by === 'Jeffrey' && !Number.isNaN(Date.parse(selection.rejected_at)) && !nonEmpty(selection.selected_candidate_id) && nonEmpty(selection.rejection_reason) && nonEmpty(selection.strongest_near_miss) && nonEmpty(selection.rescan_direction) && /^[a-f0-9]{64}$/.test(selection.candidates_sha256 || '');
+  if (!rejectionRecordValid) block('Jeffrey全部否决记录必须绑定候选，并说明无感原因、最接近项和下一轮扫描方向');
+  if (selection.candidates_sha256 !== shaFile(candidatesPath)) {
+    const history = Array.isArray(candidates.screening_summary?.rejection_history) ? candidates.screening_summary.rejection_history : [];
+    const carried = history.some((item) => item?.candidates_sha256 === selection.candidates_sha256 && item?.rejected_at === selection.rejected_at && item?.rejection_reason === selection.rejection_reason && item?.strongest_near_miss === selection.strongest_near_miss && item?.rescan_direction === selection.rescan_direction);
+    if (!carried) block('重新扫描后的候选必须在screening_summary.rejection_history保留上一轮Jeffrey全部否决记录');
+    if (items.some((item) => item.disposition !== 'AWAITING_JEFFREY') || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md'))) block('重新扫描后的候选必须全部等待Jeffrey选择，且不得保留最终选题');
+    block('新一轮候选已生成并保留上一轮否决原因，等待Jeffrey重新进行情绪与表达欲筛选', 'WAITING_FOR_JEFFREY_EMOTION_SELECTION');
+  }
+  if (items.some((item) => item.disposition !== 'REJECTED') || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md'))) block('Jeffrey全部无感时所有候选必须为REJECTED，且不得存在最终选题');
+  block('Jeffrey已否决全部候选；保留否决原因并回到三路扫描，不得勉强选题或进入写稿', 'TOPIC_RESCAN_REQUIRED');
+}
 if (selection.schema_version !== 1 || selection.status !== 'ACCEPTED' || selection.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(selection.accepted_at)) || selection.candidates_sha256 !== shaFile(candidatesPath) || !nonEmpty(selection.selected_candidate_id) || !nonEmpty(selection.first_reaction) || !nonEmpty(selection.challenge_or_addition) || !nonEmpty(selection.firsthand_detail) || selection.would_say_without_heat !== true) block('Jeffrey筛选必须绑定当前候选并记录第一反应、补充/反驳、亲历细节与无热度表达意愿');
 const selected = items.filter((item) => item.disposition === 'SELECTED');
 if (selected.length !== 1 || selected[0].id !== selection.selected_candidate_id || items.some((item) => !['SELECTED', 'REJECTED'].includes(item.disposition))) block('Jeffrey接受后必须且只能有一个匹配的SELECTED候选');

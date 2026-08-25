@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.0.0"
+version: "3.1.0"
 ---
 
 # 统一创作引擎
@@ -79,7 +79,7 @@ OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 ep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，先读取 schema 3 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。先围绕当前题目反向采访Jeffrey，写`02-创作工作稿/反向采访.json`；完成6—12轮有效追问后只写`02-创作工作稿/大纲.md`。Jeffrey明确接受并写入`大纲确认.json`前，不得生成全文或锁定钩子。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
+当参数含 `--episode episodes/<slug>` 时，先读取 schema 3 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。先围绕当前题目反向采访Jeffrey，写`02-创作工作稿/反向采访.json`；6—12轮只是常用范围，完成条件是四类材料均有可追溯回答，未齐就继续追问，已齐且继续追问不再改变观点或结构即可停止。采访完成后只写`02-创作工作稿/大纲.md`。Jeffrey明确接受并写入`大纲确认.json`前，不得生成全文或锁定钩子。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
 Episode schema 4 在原schema 3全部内容之外，至少增加：
 
@@ -180,7 +180,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 ## Step 1.5：反向采访与大纲确认
 
-Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题必须由上一回答推进，最终覆盖真实场景、情绪转折、独特判断和观众行动。完成6—12轮后写`反向采访.json`，然后只生成`大纲.md`。Jeffrey确认前进入`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，不写全文，不设计标题和前三秒钩子。
+Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题必须由上一回答推进。6—12轮是常用范围，不是凑数或封顶：四类材料未齐时即使到第12轮也继续；四类材料已齐，且继续追问不再改变观点或结构时即可停止。`反向采访.json`必须为真实场景、情绪转折、独特判断和观众行动逐项写`completion_evidence`，绑定回答序号与提取摘要，并写空的`remaining_gaps`和具体`completion_reason`。之后只生成`大纲.md`。Jeffrey确认前进入`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，不写全文，不设计标题和前三秒钩子。
 
 独立自由模式无素材时生成大纲：
 

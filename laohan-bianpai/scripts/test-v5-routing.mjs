@@ -14,7 +14,8 @@ const episode = join(testRoot, 'episodes/imported');
 const write = (path, value) => { mkdirSync(dirname(path), {recursive: true}); writeFileSync(path, value); };
 const json = (path, value) => write(path, JSON.stringify(value, null, 2) + '\n');
 const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
-const run = (...args) => spawnSync(process.execPath, [bianpai, ...args, '--episode', episode], {encoding: 'utf8'});
+const runEpisode = (targetEpisode, ...args) => spawnSync(process.execPath, [bianpai, ...args, '--episode', targetEpisode], {encoding: 'utf8'});
+const run = (...args) => runEpisode(episode, ...args);
 const promptEntries = [
   ['00-controller', '00-全自动编排控制器.md', 'NO_NEW_TASK'],
   ['01-topic-creation', '01-新期选题与创作.md', 'MUST_CREATE'],
@@ -98,6 +99,87 @@ echo "PASS $2"
   for (const [, promptFile] of promptEntries) write(join(testRoot, 'docs/固定提示词', promptFile), '# fixture prompt\n');
   const promptManifestPath = join(testRoot, 'docs/固定提示词/manifest.json');
   json(promptManifestPath, promptManifest());
+
+  const contentGateEpisode = join(testRoot, 'episodes/standard-content-gates');
+  const contentGateNow = new Date().toISOString();
+  json(join(contentGateEpisode, 'episode-config.json'), {schema_version: 1, workflow_mode: 'AUTONOMOUS_RUN', renderer_mode: 'CODEX_DIRECT'});
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
+  write(join(contentGateEpisode, '00-编排/vendor-preflight.json'), '{}\n');
+  const accounts = Array.from({length: 9}, (_, index) => ({name: `creator-${index + 1}`, sec_uid: `sec-${index + 1}`, status: 'OK', result_count: 1}));
+  const creatorSignals = accounts.map((item, index) => ({id: `creator-signal-${index + 1}`, title: `post-${index + 1}`, creator_name: item.name, creator_sec_uid: item.sec_uid}));
+  const source = (source_id, status, results, extra = {}) => ({source_id, command_or_url: source_id, attempted_at: contentGateNow, status, result_count: results.length, results, ...extra});
+  json(join(contentGateEpisode, '00-选题-signals.json'), {
+    schema_version: 2,
+    episode: 'standard-content-gates',
+    sources: [
+      source('hackernews', 'OK', [{id: 'hot-1', title: 'AI launch'}]),
+      source('tracked-douyin-creators', 'OK', creatorSignals, {coverage: {expected: 9, attempted: 9, completed: 9, failed: 0, accounts}}),
+      source('personal-expression-pool', 'EMPTY', [])
+    ]
+  });
+  const baseCandidates = {
+    schema_version: 3,
+    episode: 'standard-content-gates',
+    candidates: [
+      {id: 'C01', title: '完成AI工作流的人反而少装工具', audience: 'AI小白', thesis: '工具数量不等于完成能力', signal_ids: ['creator-signal-1', 'hot-1'], public_interest_evidence_ids: ['creator-signal-1', 'hot-1'], candidate_origin: {primary_lane: 'BENCHMARK_CREATOR', priority_rank: 1, origin_signal_ids: ['creator-signal-1'], corroborating_lanes: ['BROAD_HOTSPOT']}, tension: {type: 'COUNTERINTUITIVE', common_assumption: '工具越多越强', jeffrey_position: '完成闭环更重要', conflict_statement: '收藏越来越多，完成越来越少'}, creator_fit: {why_jeffrey: '亲自搭过工作流', distinctive_judgment: '闭环比工具数量重要'}, disposition: 'REJECTED'},
+      {id: 'C02', title: '热点不是选题', audience: 'AI用户', thesis: '没有个人增量的热点不值得拍', signal_ids: ['hot-1'], public_interest_evidence_ids: ['hot-1'], candidate_origin: {primary_lane: 'BROAD_HOTSPOT', priority_rank: 2, origin_signal_ids: ['hot-1'], corroborating_lanes: []}, tension: {type: 'MISCONCEPTION', common_assumption: '热点都应该跟', jeffrey_position: '没有增量就不拍', conflict_statement: '热度很高但没有可负责的新判断'}, creator_fit: {why_jeffrey: '长期观察AI内容', distinctive_judgment: '表达欲是最终门槛'}, disposition: 'REJECTED'}
+    ]
+  };
+  json(join(contentGateEpisode, '00-选题-candidates.json'), baseCandidates);
+  const malformedInitial = runEpisode(contentGateEpisode, 'next');
+  assert.equal(malformedInitial.status, 0, malformedInitial.stderr || malformedInitial.stdout);
+  assert.match(malformedInitial.stdout, /TOPIC_CONTRACT_BLOCKED/);
+  assert.doesNotMatch(malformedInitial.stdout, /WAITING_FOR_JEFFREY_EMOTION_SELECTION|AUTO_CONTINUE_REQUIRED|②写稿/);
+  assert.match(malformedInitial.stdout, /AWAITING_JEFFREY/);
+
+  const rejectedCandidatesSha = sha(join(contentGateEpisode, '00-选题-candidates.json'));
+  const rejectedSelection = {schema_version: 1, status: 'REJECTED_ALL', authorized_by: 'Jeffrey', rejected_at: contentGateNow, candidates_sha256: rejectedCandidatesSha, rejection_reason: '都没有明显表达欲', strongest_near_miss: 'C01最接近但缺新细节', rescan_direction: '继续扫描对标账号异常爆款'};
+  json(join(contentGateEpisode, '00-选题-Jeffrey筛选.json'), rejectedSelection);
+  const rescanRequired = runEpisode(contentGateEpisode, 'next');
+  assert.equal(rescanRequired.status, 0, rescanRequired.stderr || rescanRequired.stdout);
+  assert.match(rescanRequired.stdout, /TOPIC_RESCAN_REQUIRED/);
+  assert.doesNotMatch(rescanRequired.stdout, /AUTO_CONTINUE_REQUIRED|②写稿/);
+
+  const rescannedCandidates = structuredClone(baseCandidates);
+  rescannedCandidates.screening_summary = {rejection_history: [{candidates_sha256: rejectedSelection.candidates_sha256, rejected_at: rejectedSelection.rejected_at, rejection_reason: rejectedSelection.rejection_reason, strongest_near_miss: rejectedSelection.strongest_near_miss, rescan_direction: rejectedSelection.rescan_direction}]};
+  for (const item of rescannedCandidates.candidates) item.disposition = 'AWAITING_JEFFREY';
+  rescannedCandidates.candidates[0].title = '重扫后更具体的工作流冲突';
+  json(join(contentGateEpisode, '00-选题-candidates.json'), rescannedCandidates);
+  const emotionWaiting = runEpisode(contentGateEpisode, 'next');
+  assert.equal(emotionWaiting.status, 0, emotionWaiting.stderr || emotionWaiting.stdout);
+  assert.match(emotionWaiting.stdout, /WAITING_FOR_JEFFREY_EMOTION_SELECTION/);
+  assert.doesNotMatch(emotionWaiting.stdout, /AUTO_CONTINUE_REQUIRED|②写稿/);
+
+  rescannedCandidates.candidates[0].disposition = 'SELECTED';
+  rescannedCandidates.candidates[1].disposition = 'REJECTED';
+  json(join(contentGateEpisode, '00-选题-candidates.json'), rescannedCandidates);
+  json(join(contentGateEpisode, '00-选题-Jeffrey筛选.json'), {schema_version: 1, status: 'ACCEPTED', authorized_by: 'Jeffrey', accepted_at: contentGateNow, candidates_sha256: sha(join(contentGateEpisode, '00-选题-candidates.json')), selected_candidate_id: 'C01', first_reaction: '想反驳收藏工具的人', challenge_or_addition: '真正问题是没有闭环', firsthand_detail: '我亲自收敛过多个AI工具', would_say_without_heat: true});
+  json(join(contentGateEpisode, '00-选题.json'), {schema_version: 3, selected_candidate_id: 'C01', audience: 'AI小白', thesis: '工具数量不等于完成能力', evidence: [{id: 'primary-1', source: '官方文档'}], experiment: {hypothesis_id: 'H01', intervention: '冲突性判断开题', expected_metric: '提升完播', metric_keys: ['plays'], observation_window: 'T+1'}, not_do_reason: '不做工具清单'});
+  write(join(contentGateEpisode, '00-选题.md'), '# 完成AI工作流的人反而少装工具\n');
+
+  const legacyInterview = {schema_version: 1, status: 'COMPLETED', selected_candidate_id: 'C01', topic_sha256: sha(join(contentGateEpisode, '00-选题.json')), coverage: ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'], exchanges: Array.from({length: 6}, (_, index) => ({question: `问题${index + 1}`, answer: `回答${index + 1}`, follow_up_basis: `基于回答${index + 1}`})), completed_at: contentGateNow};
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.0.0'}]});
+  json(join(contentGateEpisode, '02-创作工作稿/反向采访.json'), legacyInterview);
+  const legacyContinue = runEpisode(contentGateEpisode, 'next');
+  assert.equal(legacyContinue.status, 0, legacyContinue.stderr || legacyContinue.stdout);
+  assert.match(legacyContinue.stdout, /AUTO_CONTINUE_REQUIRED/);
+  assert.doesNotMatch(legacyContinue.stdout, /WAITING_FOR_JEFFREY_INTERVIEW/);
+
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
+  json(join(contentGateEpisode, '02-创作工作稿/反向采访.json'), {schema_version: 1, status: 'IN_PROGRESS', selected_candidate_id: 'C01', topic_sha256: sha(join(contentGateEpisode, '00-选题.json')), coverage: ['TRUE_SCENE'], exchanges: [{question: '第一次遇到是什么时候？', answer: '收藏很多工具却没完成工作。', follow_up_basis: '继续追问情绪转折'}]});
+  const interviewWaiting = runEpisode(contentGateEpisode, 'next');
+  assert.equal(interviewWaiting.status, 0, interviewWaiting.stderr || interviewWaiting.stdout);
+  assert.match(interviewWaiting.stdout, /WAITING_FOR_JEFFREY_INTERVIEW/);
+  assert.doesNotMatch(interviewWaiting.stdout, /AUTO_CONTINUE_REQUIRED/);
+
+  const completeInterview = {schema_version: 1, status: 'COMPLETED', selected_candidate_id: 'C01', topic_sha256: sha(join(contentGateEpisode, '00-选题.json')), coverage: ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'], exchanges: Array.from({length: 4}, (_, index) => ({question: `问题${index + 1}`, answer: `回答${index + 1}`, follow_up_basis: `基于回答${index + 1}`})), completion_evidence: {TRUE_SCENE: {exchange_indexes: [1], summary: '具体场景'}, EMOTION_TURN: {exchange_indexes: [2], summary: '情绪转折'}, DISTINCTIVE_JUDGMENT: {exchange_indexes: [3], summary: '独特判断'}, VIEWER_ACTION: {exchange_indexes: [4], summary: '观众行动'}}, remaining_gaps: [], completion_reason: '四类材料完整', completed_at: contentGateNow};
+  json(join(contentGateEpisode, '02-创作工作稿/反向采访.json'), completeInterview);
+  write(join(contentGateEpisode, '02-创作工作稿/大纲.md'), '# 大纲\n');
+  const outlineWaiting = runEpisode(contentGateEpisode, 'next');
+  assert.equal(outlineWaiting.status, 0, outlineWaiting.stderr || outlineWaiting.stdout);
+  assert.match(outlineWaiting.stdout, /WAITING_FOR_JEFFREY_OUTLINE_APPROVAL/);
+  assert.doesNotMatch(outlineWaiting.stdout, /AUTO_CONTINUE_REQUIRED/);
+
   write(join(episode, '01-口播稿.md'), '# 最终稿\n');
   write(join(episode, '06-拍摄素材/raw.mp4'), 'raw');
   const now = new Date().toISOString();
@@ -375,7 +457,7 @@ echo "PASS $2"
   const publishedStatus = run('status');
   if (publishedStatus.status !== 0 || !publishedStatus.stdout.includes('- [x] ⑫') || !publishedStatus.stdout.includes('四平台自动发布归一化回执均已绑定当前final与本期授权')) throw new Error(publishedStatus.stderr || publishedStatus.stdout || '四平台真实PUBLISHED回执齐全后⑫必须完成');
 
-  console.log('PASS laohan-bianpai manual review and FULL_PIPELINE_TO_PUBLISH routing');
+  console.log('PASS laohan-bianpai topic rescan + three Jeffrey waits + frozen 3.0 + manual review + FULL_PIPELINE_TO_PUBLISH routing');
 } finally {
   rmSync(testRoot, {recursive: true, force: true});
 }

@@ -448,7 +448,15 @@ const materialState = () => {
 const topicState = () => safely(() => {
   if (exists('00-选题-candidates.json')) {
     const candidatesPreview = readJson('00-选题-candidates.json');
-    if (candidatesPreview.schema_version === 3 && !exists('00-选题-Jeffrey筛选.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_EMOTION_SELECTION：候选池已完成，等待Jeffrey按第一反应、表达欲与亲历内容选出唯一候选'};
+    if (candidatesPreview.schema_version === 3) {
+      if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian schema 3 validator'};
+      const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
+      const contractMessage = (contract.stderr || contract.stdout || '').trim();
+      if (contract.status !== 0) {
+        if (contractMessage.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION') || contractMessage.includes('TOPIC_RESCAN_REQUIRED')) return {done: false, reason: contractMessage};
+        return {done: false, reason: `TOPIC_CONTRACT_BLOCKED：${contractMessage || 'schema 3选题机械合同失败'}`};
+      }
+    }
   }
   if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
   const topic = readJson('00-选题.json');
@@ -566,8 +574,23 @@ const topicState = () => safely(() => {
   return {done: true, reason: topic.schema_version >= 2 ? '选题决策已绑定唯一内容 lane、小白合同、PRIMARY/平台语义对齐、Jeffrey门槛与可测实验' : '历史选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
+  const executorLock = readJson('00-编排/executor-lock.json');
+  const lockedVersion = executorLock.selected_executors?.find((item) => String(item.node) === '2' && item.id === 'laohan-chuangzuo')?.version;
+  const versionMatch = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!versionMatch) return {done: false, reason: 'executor lock 中 laohan-chuangzuo 版本无效'};
+  const [, majorText, minorText] = versionMatch;
   if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) {
     if (!exists('02-创作工作稿/反向采访.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_INTERVIEW：选题已确认，等待AI围绕真实场景、情绪、独特判断和观众行动完成反向采访'};
+    const interview = readJson('02-创作工作稿/反向采访.json');
+    const exchanges = Array.isArray(interview.exchanges) ? interview.exchanges : [];
+    const requiredCoverage = ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'];
+    const coverage = new Set(Array.isArray(interview.coverage) ? interview.coverage : []);
+    const commonInterviewComplete = interview.status === 'COMPLETED' && exchanges.every((item) => typeof item?.question === 'string' && item.question.trim() && typeof item?.answer === 'string' && item.answer.trim() && typeof item?.follow_up_basis === 'string' && item.follow_up_basis.trim()) && requiredCoverage.every((item) => coverage.has(item));
+    const adaptiveInterview = Number(majorText) > 3 || (Number(majorText) === 3 && Number(minorText) >= 1);
+    const completionEvidence = interview.completion_evidence || {};
+    const adaptiveComplete = exchanges.length >= 4 && requiredCoverage.every((key) => typeof completionEvidence[key]?.summary === 'string' && completionEvidence[key].summary.trim() && Array.isArray(completionEvidence[key]?.exchange_indexes) && completionEvidence[key].exchange_indexes.length > 0 && completionEvidence[key].exchange_indexes.every((index) => Number.isInteger(index) && index >= 1 && index <= exchanges.length)) && Array.isArray(interview.remaining_gaps) && interview.remaining_gaps.length === 0 && typeof interview.completion_reason === 'string' && interview.completion_reason.trim();
+    const legacyComplete = exchanges.length >= 6 && exchanges.length <= 12;
+    if (!commonInterviewComplete || (adaptiveInterview ? !adaptiveComplete : !legacyComplete)) return {done: false, reason: 'WAITING_FOR_JEFFREY_INTERVIEW：反向采访已开始，但真实场景、情绪转折、独特判断和观众行动尚未全部形成可追溯材料；继续一次只问一个问题'};
     if (nonEmptyFile('02-创作工作稿/大纲.md') && !exists('02-创作工作稿/大纲确认.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_OUTLINE_APPROVAL：采访已形成大纲，等待Jeffrey确认后才能写全文和设计钩子'};
     return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
   }
@@ -585,12 +608,7 @@ const scriptState = () => safely(() => {
   const checkKeys = ['content_floor', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
   const validLegacyPlan = ['opening_contract', 'reasoning_path', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'].every((key) => typeof plan[key] === 'string' && plan[key].trim());
   const validSteps = completedSteps.every((key) => steps[key]?.status === 'COMPLETED') && skippedOrCompleted.every((key) => ['COMPLETED', 'SKIPPED'].includes(steps[key]?.status) && typeof steps[key]?.reason === 'string' && steps[key].reason.trim());
-  const executorLock = readJson('00-编排/executor-lock.json');
-  const lockedVersion = executorLock.selected_executors?.find((item) => String(item.node) === '2' && item.id === 'laohan-chuangzuo')?.version;
   const commonValid = decision.topic_thesis === topic.thesis && decision.hypothesis_id === topic.experiment?.hypothesis_id && decision.content_form === topic.content_form && decision.audience === topic.audience && decision.script_hash === scriptHash() && decision.script_title === title && !Number.isNaN(Date.parse(decision.completed_at)) && typeof decision.input_mode === 'string' && decision.input_mode.trim() && typeof decision.active_style_file === 'string' && decision.active_style_file.trim() && /^[a-f0-9]{64}$/.test(decision.active_style_sha256 || '') && typeof decision.structure_tool === 'string' && decision.structure_tool.trim() && typeof decision.structure_rationale === 'string' && decision.structure_rationale.trim() && nonEmptyStrings(decision.fact_boundary) && typeof decision.expected_audience_effect === 'string' && decision.expected_audience_effect.trim() && nonEmptyStrings(decision.alternative_structures) && nonEmptyStrings(decision.unproven_assumptions) && validSteps;
-  const versionMatch = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
-  if (!versionMatch) return {done: false, reason: 'executor lock 中 laohan-chuangzuo 版本无效'};
-  const [, majorText, minorText] = versionMatch;
   if (Number(majorText) >= 3) {
     if (decision.schema_version !== 4) return {done: false, reason: '标准新期必须使用schema 4创作决策并绑定采访与Jeffrey大纲确认'};
     if (!existsSync(scriptContractChecker)) return {done: false, reason: '缺 laohan-chuangzuo schema 4 validator'};
@@ -1018,7 +1036,9 @@ if (command === 'next') {
   else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log(`# 当前阶段：TOPIC_RESCAN_REQUIRED\n\nplanned_iteration: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- 保留Jeffrey的否决原因和下一轮扫描方向，在同一01任务重新执行三路扫描并生成新候选；不得进入②。`);
   else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_EMOTION_SELECTION\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- AI只展示候选与证据，Jeffrey选中后在同一01任务继续。`);
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_CONTRACT_BLOCKED')) console.log(`# 当前阶段：TOPIC_CONTRACT_BLOCKED\n\nblocked: true\n${fields}\n\n- ${topicState().reason}\n- 修正候选、筛选回执或最终选题的非法状态后重跑；不得进入②。`);
   else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_INTERVIEW\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 一次只问一个能改变观点或结构的问题；采访完成后先交大纲。`);
   else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_OUTLINE_APPROVAL\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 未确认前不得写全文或锁定前三秒钩子。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n${fields}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；三个计划内Jeffrey门槛除外，其余成功后重跑 bianpai 并自动继续。`);
@@ -1042,7 +1062,9 @@ if (next) {
   else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=DEFAULT_COVER_RANK_01 publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log('TOPIC_RESCAN_REQUIRED planned_iteration=true blocked=false');
   else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log('WAITING_FOR_JEFFREY_EMOTION_SELECTION planned_manual_gate=true blocked=false');
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_CONTRACT_BLOCKED')) console.log('TOPIC_CONTRACT_BLOCKED blocked=true');
   else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log('WAITING_FOR_JEFFREY_INTERVIEW planned_manual_gate=true blocked=false');
   else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL planned_manual_gate=true blocked=false');
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');

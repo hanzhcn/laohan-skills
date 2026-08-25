@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.22.0"
+version: "1.23.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -50,7 +50,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
    09-成片candidate制作：独立任务，只消费已复核或NOT_NEEDED的⑩状态后执行⑪。
    ```
 4. ④先记录带原始隔离 JSON 的 score；编排器只验证绑定、无污染和证据级别，不替评分器判断内容质量。此时状态为 PARTIAL，再进入⑤；⑤报告与 `04-事实主张.json` 匹配当前稿后，④必须写最终盲预测并成为 COMPLETE，才可进入⑥或任何 production/final gate。
-5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。`AUTONOMOUS_RUN` 除①的Jeffrey情绪筛选、②的反向采访回答与大纲确认外，在标准①—⑥输出 `AUTO_CONTINUE_REQUIRED`；三个门槛分别输出`WAITING_FOR_JEFFREY_EMOTION_SELECTION`、`WAITING_FOR_JEFFREY_INTERVIEW`、`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，均为计划内等待而非BLOCKED。D1导演初稿与D2最终复审分别继续对应固定任务，D2完成后才路由⑦。标准入口到⑦输出 `WAITING_FOR_JEFFREY_SHOOTING` 并停下。`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`不补造三个内容门槛；具备完整`FULL_PIPELINE_TO_PUBLISH`授权时，已提供最终稿入口仍不得增加新的Jeffrey确认卡点。
+5. 输出唯一下一步的 skill、必要输入、应落盘产物与不能跨越的 gate。`AUTONOMOUS_RUN` 除①的Jeffrey情绪筛选、②的反向采访回答与大纲确认外，在标准①—⑥输出 `AUTO_CONTINUE_REQUIRED`；三个门槛分别输出`WAITING_FOR_JEFFREY_EMOTION_SELECTION`、`WAITING_FOR_JEFFREY_INTERVIEW`、`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，均为计划内等待而非BLOCKED。Jeffrey对全部候选无感时输出`TOPIC_RESCAN_REQUIRED`，作为同一01任务内的计划内回退，不进入②，也不算BLOCKED；新候选携带旧否决历史后回到`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。D1导演初稿与D2最终复审分别继续对应固定任务，D2完成后才路由⑦。标准入口到⑦输出 `WAITING_FOR_JEFFREY_SHOOTING` 并停下。`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`不补造三个内容门槛；具备完整`FULL_PIPELINE_TO_PUBLISH`授权时，已提供最终稿入口仍不得增加新的Jeffrey确认卡点。
 6. Jeffrey明确提供最终口播稿和真人原片时，只接受`episode_entry_contract.mode=USER_PROVIDED_FINAL_SCRIPT_AND_RAW`和`00-编排/user-provided-inputs.json`的SHA闭合记录。登记器同步生成绑定当前稿与raw的`shooting-record.json`；①—⑤显示`~`用户输入替代态，不伪造完成证据，也不再错误路由回①；D1、D2及后续生产按本期授权自动继续。
 7. 如果旧V5 episode已经生成待验收candidate，再升级V5.1时只接受`FROZEN_PENDING_CANDIDATE_PREDATES_V5_1_STATE_FIELDS`受控迁移。迁移必须冻结原candidate和director-state SHA；编排器把D1/D2视为本期已完成的兼容事实，不得倒退重写导演稿或重新生产。默认停在`JEFFREY_REVIEW`；仅完整自动化授权改走`AGENT_PROXY`。
 8. 唯一下一步始终是最早失效节点。④已评分、⑤已完成或⑥曾有产物都不能覆盖破损的①—③；下游文件可以保留为历史证据，但在前缀恢复前不算可继续状态。
@@ -59,7 +59,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 - schema 2在①前必须有distribution contract与executor lock；⑥开始前distribution必须锁定。⑦前必须有shooting_contract；⑦通过后Claude Code交接06窗口完成⑧和⑨，再按source-manifest分别路由07、08和09。⑨前必须有绑定当前raw/稿件的raw-transcript、edit-candidates、schema 2 edit-decision、edit-render、clean、large-v3 clean-transcript/SRT provenance、spoken-script-variance、Codex edit-review与schema 5 edit-manifest；候选必须逐项裁决，不确定KEEP，不路由人工审批。
 - schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。每个候选都必须登记 `creator_fit`，唯一 SELECTED 还必须锁定可成立的 Jeffrey 个人依据、独特判断、why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。教程型 lane 的 SELECTED 候选还必须绑定 `tutorial_proof`：`status: VERIFIED`、本机真实执行产物的 `evidence_path` 与 `evidence_sha256`、`version_boundary` 与 `recovery` 方法，对应 CLAUDE.md 第13条“教程写成确定步骤前仍须本机真实执行、版本边界和恢复方法”。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
-- 标准新期①必须通过`laohan-redian` schema 3 validator，证明9个对标抖音账号无遗漏、热点源与个人表达池已读取，并有Jeffrey情绪筛选记录。新期②必须使用 `laohan-chuangzuo` schema 4，并实际通过其 `scripts/check-script-contract.mjs`，证明反向采访、大纲确认和钩子时序；原有内容单位、原创增量、可视化锚点、逐段SHA、人味、自然稿长和本机TTS合同继续有效。旧episode按其 executor lock 继续验证冻结合同，不静默迁移。
+- 标准新期①必须通过`laohan-redian` schema 3 validator，证明9个对标抖音账号无遗漏、热点源与个人表达池已读取，候选标明三路来源优先级与冲突性判断，并有Jeffrey情绪筛选记录；全部无感必须退回扫描。新期②必须使用 `laohan-chuangzuo` schema 4，并实际通过其 `scripts/check-script-contract.mjs`，证明反向采访四类材料完整、大纲确认和钩子时序；原有内容单位、原创增量、可视化锚点、逐段SHA、人味、自然稿长和本机TTS合同继续有效。旧episode按其 executor lock 继续验证冻结合同，不静默迁移。
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
 - ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；项目真源、本期副本与 config SHA 必须一致。完成合同为：绑定当前稿和本期 reference 的 `cover-prompts.md`、01/02/03三张真实9:16排序候选，以及默认01同一视觉主张分别重新构图生成的3张共享真实尺寸封面：3:4复用到抖音竖版、视频号个人主页和小红书，4:3复用到抖音横版、视频号分享和B站首页推荐，16:9用于B站个人空间，共映射7个发布入口。任何一张缺失、比例错误、不可解码或由简单裁切冒充都不通过；provider request、review和 `selected-cover.json` 不是硬门槛。
 - 封面延后仅用于提示词、三张候选或三张共享发布封面尚未完成时的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐完整合同后 `--require final|full` 才通过⑥。
