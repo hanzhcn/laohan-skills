@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, renameSync, statSync, writeFileSync} from 'node:fs';
-import {basename, isAbsolute, join, resolve} from 'node:path';
+import {basename, dirname, isAbsolute, join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 
 const args = process.argv.slice(2);
@@ -56,6 +56,90 @@ const normalizeItem = (sourceId, item, index) => {
   };
 };
 
+const skillRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
+const trackedCreatorsPath = resolve(process.env.LAOHAN_TRACKED_DOUYIN_CREATORS || join(skillRoot, 'references/tracked-douyin-creators.json'));
+const localExpressionPoolPath = join(process.cwd(), 'script-pool/Jeffrey个人表达池.md');
+const expressionPoolPath = resolve(process.env.LAOHAN_PERSONAL_EXPRESSION_POOL || (existsSync(localExpressionPoolPath) ? localExpressionPoolPath : join(process.cwd(), 'templates/Jeffrey个人表达池.md')));
+
+function collectTrackedCreators() {
+  const attemptedAt = nowIso();
+  let creators;
+  try {
+    const payload = JSON.parse(readFileSync(trackedCreatorsPath, 'utf8'));
+    creators = Array.isArray(payload?.creators) ? payload.creators : [];
+  } catch (error) {
+    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `对标账号清单不可读: ${error.message}`, results: [], coverage: {expected: 9, attempted: 0, completed: 0, failed: 9, accounts: []}};
+  }
+  const uniqueIds = new Set(creators.map((item) => item?.sec_uid));
+  if (creators.length !== 9 || uniqueIds.size !== 9 || creators.some((item) => !String(item?.name || '').trim() || !String(item?.sec_uid || '').trim())) {
+    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: '对标账号清单必须恰好包含9个唯一且完整的name/sec_uid', results: [], coverage: {expected: 9, attempted: 0, completed: 0, failed: 9, accounts: []}};
+  }
+
+  const results = [];
+  const accounts = [];
+  for (const creator of creators) {
+    const args = ['douyin', 'user-videos', creator.sec_uid, '--limit', '20', '--with_comments', 'false', '-f', 'json'];
+    let finalRun = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      finalRun = spawnSync('opencli', args, {encoding: 'utf8', timeout: 90000, maxBuffer: 16 * 1024 * 1024});
+      if (!finalRun.error && [0, 66].includes(finalRun.status)) break;
+    }
+    if (finalRun.error || ![0, 66].includes(finalRun.status)) {
+      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: 'FAILED', result_count: 0, error: String(finalRun.error?.message || finalRun.stderr || `exit ${finalRun.status}`).trim()});
+      continue;
+    }
+    try {
+      const payload = finalRun.stdout.trim() ? JSON.parse(finalRun.stdout) : [];
+      const rawItems = normalizeArray(payload);
+      const counts = rawItems.map((item) => Number(item?.statistics?.digg_count ?? item?.digg_count ?? 0)).filter((value) => Number.isFinite(value) && value >= 0).sort((a, b) => a - b);
+      const median = counts.length ? (counts[Math.floor((counts.length - 1) / 2)] + counts[Math.ceil((counts.length - 1) / 2)]) / 2 : 0;
+      const creatorResults = rawItems.map((item, index) => {
+        const normalized = normalizeItem('tracked-douyin-creators', item, index);
+        const diggCount = Number(item?.statistics?.digg_count ?? item?.digg_count ?? 0);
+        const performanceRatio = median > 0 ? Number((diggCount / median).toFixed(2)) : null;
+        return {
+          ...normalized,
+          url: normalized.url || (item?.aweme_id ? `https://www.douyin.com/video/${item.aweme_id}` : ''),
+          creator_name: creator.name,
+          creator_sec_uid: creator.sec_uid,
+          digg_count: diggCount,
+          recent_digg_median: median,
+          performance_ratio: performanceRatio,
+          anomaly_status: performanceRatio !== null && performanceRatio >= 2 ? 'ANOMALY' : 'NORMAL'
+        };
+      });
+      results.push(...creatorResults);
+      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: creatorResults.length ? 'OK' : 'EMPTY', result_count: creatorResults.length});
+    } catch (error) {
+      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: 'FAILED', result_count: 0, error: `JSON 解析失败: ${error.message}`});
+    }
+  }
+  const failed = accounts.filter((item) => item.status === 'FAILED').length;
+  const coverage = {expected: 9, attempted: accounts.length, completed: accounts.length - failed, failed, accounts};
+  return {
+    source_id: 'tracked-douyin-creators',
+    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 20 --with_comments false -f json',
+    attempted_at: attemptedAt,
+    status: failed ? 'FAILED' : results.length ? 'OK' : 'EMPTY',
+    result_count: failed ? 0 : results.length,
+    ...(failed ? {error: `${failed}个对标账号扫描失败，候选生成必须停止`} : {}),
+    results: failed ? [] : results,
+    coverage
+  };
+}
+
+function collectPersonalExpressionPool() {
+  const attemptedAt = nowIso();
+  try {
+    const content = readFileSync(expressionPoolPath, 'utf8');
+    const ideas = content.split(/\r?\n/).map((line) => line.match(/^\s*-\s*\[\s*\]\s+(.+?)\s*$/)?.[1]?.trim()).filter(Boolean);
+    const results = ideas.map((title, index) => ({id: stableId('personal-expression-pool', title, '', index + 1), rank: index + 1, title, url: '', published_at: null, raw: {title}}));
+    return {source_id: 'personal-expression-pool', command_or_url: expressionPoolPath, attempted_at: attemptedAt, status: results.length ? 'OK' : 'EMPTY', result_count: results.length, results};
+  } catch (error) {
+    return {source_id: 'personal-expression-pool', command_or_url: expressionPoolPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `个人表达池不可读: ${error.message}`, results: []};
+  }
+}
+
 async function collectAihot() {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
   const url = `https://aihot.virxact.com/api/public/items?mode=selected&since=${encodeURIComponent(since)}&take=100`;
@@ -93,13 +177,15 @@ for (const sourceId of selectedSources) {
   const definition = sourceDefinitions[sourceId];
   records.push(definition.type === 'http' ? await collectAihot() : collectOpencli(sourceId, definition.args));
 }
+records.push(collectTrackedCreators());
+records.push(collectPersonalExpressionPool());
 
 const collectedAt = nowIso();
 const signals = {
-  schema_version: 1,
+  schema_version: 2,
   episode: basename(episode),
   collected_at: collectedAt,
-  source_plan: selectedSources,
+  source_plan: [...selectedSources, 'tracked-douyin-creators', 'personal-expression-pool'],
   sources: records.map((record) => ({...record, record_sha256: sha(JSON.stringify(record.results))}))
 };
 const signalsBody = JSON.stringify(signals, null, 2) + '\n';
@@ -114,7 +200,7 @@ const health = {
   collected_at: collectedAt,
   sources: records.map((record) => ({
     source_id: record.source_id,
-    source_role: 'DISCOVERY',
+    source_role: record.source_id === 'tracked-douyin-creators' ? 'BENCHMARK_CREATOR' : record.source_id === 'personal-expression-pool' ? 'PERSONAL_EXPRESSION' : 'DISCOVERY',
     command_or_url: record.command_or_url,
     attempted_at: record.attempted_at,
     status: record.status,
@@ -131,7 +217,9 @@ writeFileSync(healthTmp, JSON.stringify(health, null, 2) + '\n');
 renameSync(healthTmp, healthPath);
 
 const okCount = records.filter((record) => record.status === 'OK').length;
+const hotOkCount = records.filter((record) => selectedSources.includes(record.source_id) && record.status === 'OK').length;
+const trackedComplete = records.find((record) => record.source_id === 'tracked-douyin-creators')?.coverage?.failed === 0;
 console.log(`signals=${signalsPath}`);
 console.log(`source_health=${healthPath}`);
 console.log(`sources=${records.length} ok=${okCount} empty=${records.filter((record) => record.status === 'EMPTY').length} failed=${records.filter((record) => record.status === 'FAILED').length}`);
-if (okCount === 0) process.exitCode = 1;
+if (hotOkCount === 0 || !trackedComplete) process.exitCode = 1;

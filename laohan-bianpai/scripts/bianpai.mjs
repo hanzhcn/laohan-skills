@@ -42,6 +42,7 @@ const runtimeChecker = join(root, 'scripts/check-workflow-runtime.mjs');
 const runtimeLock = join(root, 'workflow-runtime-lock.json');
 const skillsRoot = resolve(process.env.LAOHAN_SKILLS_ROOT || join(process.env.HOME, 'Documents/laohan-skills'));
 const scriptContractChecker = join(skillsRoot, 'laohan-chuangzuo/scripts/check-script-contract.mjs');
+const topicContractChecker = join(skillsRoot, 'laohan-redian/scripts/check-topic-contract.mjs');
 if (!existsSync(checker)) {
   console.error('未找到工作流契约检查器: ' + checker);
   process.exit(2);
@@ -445,11 +446,20 @@ const materialState = () => {
   return gateState('materials', '素材契约未通过');
 };
 const topicState = () => safely(() => {
+  if (exists('00-选题-candidates.json')) {
+    const candidatesPreview = readJson('00-选题-candidates.json');
+    if (candidatesPreview.schema_version === 3 && !exists('00-选题-Jeffrey筛选.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_EMOTION_SELECTION：候选池已完成，等待Jeffrey按第一反应、表达欲与亲历内容选出唯一候选'};
+  }
   if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
   const topic = readJson('00-选题.json');
+  if (topic.schema_version === 3) {
+    if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian schema 3 validator'};
+    const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
+    if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || 'schema 3选题机械合同失败').trim()};
+  }
   const experiment = topic.experiment;
   const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec']);
-  if (![1, 2].includes(topic.schema_version) || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || !Array.isArray(experiment.metric_keys) || !experiment.metric_keys.length || new Set(experiment.metric_keys).size !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => typeof key === 'string' && allowedMetricKeys.has(key)) || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标键/T+N 窗口与不做理由'};
+  if (![1, 2, 3].includes(topic.schema_version) || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || !Array.isArray(experiment.metric_keys) || !experiment.metric_keys.length || new Set(experiment.metric_keys).size !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => typeof key === 'string' && allowedMetricKeys.has(key)) || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标键/T+N 窗口与不做理由'};
   const config = readJson('episode-config.json');
   if (config.schema_version === 2) {
     const types = new Set(['PRIMARY', 'PLATFORM_SIGNAL', 'SECONDARY']);
@@ -466,7 +476,7 @@ const topicState = () => safely(() => {
     const signalSourceIds = signalSources.map((item) => item?.source_id);
     const signalIds = signalSources.flatMap((item) => Array.isArray(item?.results) ? item.results.map((result) => result?.id) : []);
     const signalStatuses = new Set(['OK', 'EMPTY', 'FAILED']);
-    if (signals.schema_version !== 1 || signals.episode !== basename(episodeDir) || !validTime(signals.collected_at) || !uniqueNonEmpty(signalSourceIds) || !signalSources.every((item) => typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && signalStatuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && Array.isArray(item.results) && item.results.length === item.result_count && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && item.record_sha256 === createHash('sha256').update(JSON.stringify(item.results)).digest('hex')) || !uniqueNonEmpty(signalIds)) return {done: false, reason: 'signals 必须绑定本期、route/结果 ID 唯一、状态条数一致且 record SHA 正确'};
+    if (![1, 2].includes(signals.schema_version) || signals.episode !== basename(episodeDir) || !validTime(signals.collected_at) || !uniqueNonEmpty(signalSourceIds) || !signalSources.every((item) => typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && signalStatuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && Array.isArray(item.results) && item.results.length === item.result_count && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && item.record_sha256 === createHash('sha256').update(JSON.stringify(item.results)).digest('hex')) || !uniqueNonEmpty(signalIds)) return {done: false, reason: 'signals 必须绑定本期、route/结果 ID 唯一、状态条数一致且 record SHA 正确'};
 
     const candidates = readJson('00-选题-candidates.json');
     const candidateItems = Array.isArray(candidates.candidates) ? candidates.candidates : [];
@@ -479,7 +489,7 @@ const topicState = () => safely(() => {
     const validLonglistItem = (item) => item && typeof item.event_cluster_id === 'string' && item.event_cluster_id.trim() && typeof item.working_title === 'string' && item.working_title.trim() && uniqueNonEmpty(item.signal_ids) && item.signal_ids.every((id) => signalIds.includes(id)) && Number.isInteger(item.source_count) && item.source_count === new Set(item.signal_ids.map((id) => signalSourceById.get(id))).size && ['SHORTLISTED', 'REJECTED'].includes(item.disposition) && typeof item.reason === 'string' && item.reason.trim();
     const baseScoreKeys = ['audience_fit', 'evidence_strength', 'platform_relevance', 'differentiation', 'production_feasibility', 'learning_value'];
     const validScorecard = (scorecard) => {
-      const scoreKeys = candidates.schema_version === 2 ? [...baseScoreKeys, 'creator_fit'] : baseScoreKeys;
+      const scoreKeys = candidates.schema_version >= 2 ? [...baseScoreKeys, 'creator_fit'] : baseScoreKeys;
       return scorecard && scoreKeys.every((key) => Number.isInteger(scorecard[key]) && scorecard[key] >= 1 && scorecard[key] <= 5) && typeof scorecard.rationale === 'string' && scorecard.rationale.trim();
     };
     const nonEmptyStrings = (items) => Array.isArray(items) && items.every((item) => typeof item === 'string' && item.trim()) && new Set(items).size === items.length;
@@ -517,11 +527,11 @@ const topicState = () => safely(() => {
     const shortlistedClusters = new Set(longlist.filter((item) => item?.disposition === 'SHORTLISTED').map((item) => item.event_cluster_id));
     const candidateClusters = new Set(candidateItems.map((item) => item?.event_cluster_id));
     const validScreening = screening && screening.raw_signal_count === signalIds.length && Number.isInteger(screening.event_cluster_count) && screening.event_cluster_count >= longlist.length && longlist.length >= minLonglist && longlist.length <= 12 && new Set(longlist.map((item) => item?.event_cluster_id)).size === longlist.length && longlist.every(validLonglistItem) && [...candidateClusters].every((id) => shortlistedClusters.has(id)) && [...shortlistedClusters].every((id) => candidateClusters.has(id));
-    if (![1, 2].includes(candidates.schema_version) || !validTime(candidates.collected_at) || candidateItems.length < 2 || !uniqueNonEmpty(candidateIds) || !uniqueNonEmpty(candidateEvidenceIds) || !candidateEvidence.every(validEvidence) || (candidates.schema_version === 2 && !validScreening) || !candidateItems.every((item) => validBaseCandidate(item) && (candidates.schema_version === 1 || validV2Candidate(item))) || candidateItems.filter((item) => item.disposition === 'SELECTED').length !== 1) return {done: false, reason: 'candidates 必须留下 signals→longlist→短名单链路，引用真实 evidence、七维分数完整且只有一个 SELECTED；schema 2 同时锁定 Jeffrey 个人依据、独特判断、why-now、lane、小白合同、claim map 与平台语义状态'};
+    if (![1, 2, 3].includes(candidates.schema_version) || !validTime(candidates.collected_at) || candidateItems.length < 2 || !uniqueNonEmpty(candidateIds) || !uniqueNonEmpty(candidateEvidenceIds) || !candidateEvidence.every(validEvidence) || (candidates.schema_version >= 2 && !validScreening) || !candidateItems.every((item) => validBaseCandidate(item) && (candidates.schema_version === 1 || validV2Candidate(item))) || candidateItems.filter((item) => item.disposition === 'SELECTED').length !== 1) return {done: false, reason: 'candidates 必须留下 signals→longlist→短名单链路，引用真实 evidence、七维分数完整且只有一个 SELECTED；schema 2/3 同时锁定 Jeffrey 个人依据、独特判断、why-now、lane、小白合同、claim map 与平台语义状态'};
     const selected = candidateItems.find((item) => item.disposition === 'SELECTED');
     const rejectedIds = candidateItems.filter((item) => item.disposition === 'REJECTED').map((item) => item.id);
     if (topic.selected_candidate_id !== selected.id || !uniqueNonEmpty(topic.rejected_candidate_ids) || !topic.rejected_candidate_ids.every((id) => rejectedIds.includes(id)) || typeof topic.selection_rationale !== 'string' || !topic.selection_rationale.trim() || !topic.evidence.every((item) => selected.evidence_ids.includes(item.id))) return {done: false, reason: '最终选题必须绑定唯一 SELECTED、非空淘汰项、选择理由及其候选 evidence'};
-    if (candidates.schema_version === 2 && (topic.schema_version !== 2 || topic.content_form !== selected.content_form || topic.audience_level !== selected.audience_level || topic.audience_promise !== selected.audience_promise || JSON.stringify(topic.creator_fit) !== JSON.stringify(selected.creator_fit) || JSON.stringify(topic.assumed_prerequisites) !== JSON.stringify(selected.assumed_prerequisites) || JSON.stringify(topic.jargon_to_explain) !== JSON.stringify(selected.jargon_to_explain) || topic.platform_query_intent !== selected.platform_query_intent || JSON.stringify(topic.platform_alignment) !== JSON.stringify(selected.platform_alignment) || JSON.stringify(topic.content_gap) !== JSON.stringify(selected.content_gap) || JSON.stringify(topic.claim_evidence_map) !== JSON.stringify(selected.claim_evidence_map))) return {done: false, reason: 'schema 2 最终选题必须原样绑定 SELECTED 的 Jeffrey个人依据、lane、小白合同、平台对齐、内容缺口与 claim evidence map'};
+    if (candidates.schema_version >= 2 && (topic.schema_version !== candidates.schema_version || topic.content_form !== selected.content_form || topic.audience_level !== selected.audience_level || topic.audience_promise !== selected.audience_promise || JSON.stringify(topic.creator_fit) !== JSON.stringify(selected.creator_fit) || JSON.stringify(topic.assumed_prerequisites) !== JSON.stringify(selected.assumed_prerequisites) || JSON.stringify(topic.jargon_to_explain) !== JSON.stringify(selected.jargon_to_explain) || topic.platform_query_intent !== selected.platform_query_intent || JSON.stringify(topic.platform_alignment) !== JSON.stringify(selected.platform_alignment) || JSON.stringify(topic.content_gap) !== JSON.stringify(selected.content_gap) || JSON.stringify(topic.claim_evidence_map) !== JSON.stringify(selected.claim_evidence_map))) return {done: false, reason: 'schema 2/3 最终选题必须原样绑定 SELECTED 的 Jeffrey个人依据、lane、小白合同、平台对齐、内容缺口与 claim evidence map'};
     if (selected.platform_alignment.status !== 'UNAVAILABLE' && !topic.evidence.some((item) => item.source_type === 'PLATFORM_SIGNAL')) return {done: false, reason: '平台可用的 schema 2 最终 evidence 必须含 PLATFORM_SIGNAL'};
     if (candidates.schema_version === 1 && topic.schema_version !== 1) return {done: false, reason: '历史 candidates schema 1 必须匹配 topic schema 1'};
 
@@ -538,25 +548,30 @@ const topicState = () => safely(() => {
 
     const health = readJson('00-选题-source-health.json');
     const statuses = new Set(['OK', 'EMPTY', 'FAILED', 'SKIPPED']);
-    const roles = new Set(['DISCOVERY', 'DOUYIN_SEARCH', 'PRIMARY_PROOF']);
+    const roles = new Set(['DISCOVERY', 'BENCHMARK_CREATOR', 'PERSONAL_EXPRESSION', 'DOUYIN_SEARCH', 'PRIMARY_PROOF']);
     const healthSources = Array.isArray(health.sources) ? health.sources : [];
     const healthIds = healthSources.map((item) => item?.source_id);
     const validResultFile = (item) => {
       if (typeof item.result_file !== 'string' || !item.result_file.trim() || item.result_file.includes('..') || !nonEmptyFile(item.result_file)) return false;
       return /^[a-f0-9]{64}$/.test(item.result_sha256 || '') && item.result_sha256 === shaPath(file(item.result_file));
     };
-    if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthIds) || !healthSources.every((item) => roles.has(item.source_role) && typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && (item.status !== 'SKIPPED' || (typeof item.reason === 'string' && item.reason.trim())) && validResultFile(item)) || !healthSources.some((item) => item.source_role === 'DISCOVERY' && item.status === 'OK') || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY', 'FAILED'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && item.status === 'OK')) return {done: false, reason: 'source health 必须三类角色齐全、状态/条数一致，并绑定本期真实结果文件 SHA；Douyin FAILED 只表示 UNAVAILABLE'};
+    if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthIds) || !healthSources.every((item) => roles.has(item.source_role) && typeof item.command_or_url === 'string' && item.command_or_url.trim() && validTime(item.attempted_at) && statuses.has(item.status) && Number.isInteger(item.result_count) && item.result_count >= 0 && ((item.status === 'OK' && item.result_count > 0) || (item.status !== 'OK' && item.result_count === 0)) && (item.status !== 'FAILED' || (typeof item.error === 'string' && item.error.trim())) && (item.status !== 'SKIPPED' || (typeof item.reason === 'string' && item.reason.trim())) && validResultFile(item)) || !healthSources.some((item) => item.source_role === 'DISCOVERY' && item.status === 'OK') || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY', 'FAILED'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && item.status === 'OK')) return {done: false, reason: 'source health 必须保留所需来源角色、状态/条数一致，并绑定本期真实结果文件 SHA；Douyin FAILED 只表示 UNAVAILABLE'};
+    if (candidates.schema_version === 3 && (!healthSources.some((item) => item.source_role === 'BENCHMARK_CREATOR' && ['OK', 'EMPTY'].includes(item.status)) || !healthSources.some((item) => item.source_role === 'PERSONAL_EXPRESSION' && ['OK', 'EMPTY'].includes(item.status)))) return {done: false, reason: 'schema 3 source health必须保留9个对标账号和Jeffrey个人表达池角色'};
     if (!healthSources.filter((item) => item.source_role === 'DISCOVERY').every((item) => signalSourceIds.includes(item.source_id)) || !healthSources.some((item) => item.source_role === 'DOUYIN_SEARCH' && item.result_file === '00-抖音搜索证据.json') || !healthSources.some((item) => item.source_role === 'PRIMARY_PROOF' && topic.evidence.some((evidence) => evidence.source_type === 'PRIMARY' && evidence.url === item.command_or_url))) return {done: false, reason: 'source health 必须绑定 signals route、抖音 JSON 与最终 PRIMARY URL'};
 
     const targetKeys = Array.isArray(experiment.metric_targets) ? experiment.metric_targets.map((item) => item?.key) : [];
     const directions = new Set(['INCREASE', 'DECREASE', 'MAINTAIN']);
     if (Number(experiment.observation_window.slice(2)) <= 0 || experiment.observation_window_unit !== 'DAY' || !uniqueNonEmpty(targetKeys) || targetKeys.length !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => targetKeys.includes(key)) || !experiment.metric_targets.every((item) => allowedMetricKeys.has(item.key) && directions.has(item.direction) && typeof item.baseline_ref === 'string' && item.baseline_ref.trim() && item.measurement_source === 'douyin_creator_center')) return {done: false, reason: 'schema 2 experiment 必须用正整数 T+N/DAY，并为每个 metric key 预注册方向、基线和抖音创作者中心来源'};
   }
-  return {done: true, reason: topic.schema_version === 2 ? '选题决策已绑定唯一内容 lane、小白合同、PRIMARY/平台语义对齐与可测实验' : '历史选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
+  return {done: true, reason: topic.schema_version >= 2 ? '选题决策已绑定唯一内容 lane、小白合同、PRIMARY/平台语义对齐、Jeffrey门槛与可测实验' : '历史选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
-  if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
-  if (!nonEmptyFile('02-创作工作稿/organize.md') && !nonEmptyFile('02-创作工作稿/outline.md')) return {done: false, reason: '②必须产出 02-创作工作稿/organize.md（素材模式 Layer A/B 整理）或 outline.md（自由模式大纲）作为整理执行证据'};
+  if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) {
+    if (!exists('02-创作工作稿/反向采访.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_INTERVIEW：选题已确认，等待AI围绕真实场景、情绪、独特判断和观众行动完成反向采访'};
+    if (nonEmptyFile('02-创作工作稿/大纲.md') && !exists('02-创作工作稿/大纲确认.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_OUTLINE_APPROVAL：采访已形成大纲，等待Jeffrey确认后才能写全文和设计钩子'};
+    return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json'};
+  }
+  if (!nonEmptyFile('02-创作工作稿/organize.md') && !nonEmptyFile('02-创作工作稿/outline.md') && !nonEmptyFile('02-创作工作稿/大纲.md')) return {done: false, reason: '②必须产出 organize.md、outline.md 或Jeffrey确认的大纲.md作为整理执行证据'};
   const topic = readJson('00-选题.json');
   const decision = readJson('02-创作工作稿/创作决策.json');
   const nonEmptyStrings = (items) => Array.isArray(items) && items.length > 0 && items.every((item) => typeof item === 'string' && item.trim());
@@ -576,6 +591,13 @@ const scriptState = () => safely(() => {
   const versionMatch = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
   if (!versionMatch) return {done: false, reason: 'executor lock 中 laohan-chuangzuo 版本无效'};
   const [, majorText, minorText] = versionMatch;
+  if (Number(majorText) >= 3) {
+    if (decision.schema_version !== 4) return {done: false, reason: '标准新期必须使用schema 4创作决策并绑定采访与Jeffrey大纲确认'};
+    if (!existsSync(scriptContractChecker)) return {done: false, reason: '缺 laohan-chuangzuo schema 4 validator'};
+    const contract = spawnSync('node', [scriptContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
+    if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || 'schema 4创作机械合同失败').trim()};
+    return {done: true, reason: (contract.stdout || 'schema 4创作机械合同通过').trim()};
+  }
   const schema3 = Number(majorText) > 1 || (Number(majorText) === 1 && Number(minorText) >= 7);
   if (schema3) {
     if (decision.schema_version !== 3 || !commonValid) return {done: false, reason: 'schema 3 创作决策必须绑定当前稿/①、完整规划与至少两项原创增量'};
@@ -805,7 +827,7 @@ let directProduction = false;
 try { directProduction = readJson('episode-config.json').renderer_mode === 'CODEX_DIRECT'; } catch {}
 const steps = [
   {id: '①', name: '选题决策', skill: 'laohan-redian（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
-  {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '01-口播稿.md + schema 3创作决策 + 本机TTS + chuangzuo validator PASS'},
+  {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '反向采访 + Jeffrey大纲确认 + 01-口播稿.md + 当前executor合同创作决策 + 本机TTS + validator PASS'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
@@ -996,7 +1018,10 @@ if (command === 'next') {
   else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
-  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n${fields}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；成功后重跑 bianpai 并自动继续，不逐步询问 Jeffrey。`);
+  else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_EMOTION_SELECTION\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- AI只展示候选与证据，Jeffrey选中后在同一01任务继续。`);
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_INTERVIEW\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 一次只问一个能改变观点或结构的问题；采访完成后先交大纲。`);
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_OUTLINE_APPROVAL\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 未确认前不得写全文或锁定前三秒钩子。`);
+  else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n${fields}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；三个计划内Jeffrey门槛除外，其余成功后重跑 bianpai 并自动继续。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log(`# 下一步：⑦拍摄\n\nWAITING_FOR_JEFFREY_SHOOTING\nworkflow_mode: AUTONOMOUS_RUN\nplanned_manual_handoff: true\n\n- 需要落盘：${next.output}\n- 说明：到达计划内唯一拍摄交接；等 Jeffrey 拍摄，这不是 BLOCKED。`);
   else console.log(`# 下一步：${next.id}${next.name}\n\n${fields}\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留。`);
   process.exit(0);
@@ -1017,6 +1042,9 @@ if (next) {
   else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=DEFAULT_COVER_RANK_01 publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
+  else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log('WAITING_FOR_JEFFREY_EMOTION_SELECTION planned_manual_gate=true blocked=false');
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log('WAITING_FOR_JEFFREY_INTERVIEW planned_manual_gate=true blocked=false');
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL planned_manual_gate=true blocked=false');
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log('WAITING_FOR_JEFFREY_SHOOTING planned_manual_handoff=true blocked=false');
 }

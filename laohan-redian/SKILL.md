@@ -1,6 +1,6 @@
 ---
 name: laohan-redian
-version: 2.4.0
+version: 3.0.0
 description: 真人口播①选题决策主写者；从 AIHOT 与已安装 OpenCLI 的当前信号生成观点/教程候选，核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源后，只选一个可生产且可复盘的主题。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -27,7 +27,7 @@ Episode 模式必须读取：
 2. 本期已显式登记的反馈快照；没有就记录 `NOT_AVAILABLE`，不得扫描旧 episode 猜经验。
 3. 本轮真实 signals 与抖音搜索证据。
 
-默认 `AUTONOMOUS_DISCOVERY`：自主完成①。Jeffrey 明确给题时走 `USER_SEED`，可缩短广泛发现，但仍必须给出至少一个真实替代候选、抖音取证、PRIMARY 证据和测量合同。`REVIEW_GATED` 才等待 Jeffrey 选题。
+标准 Episode 固定为 `REVIEW_GATED`：AI自主完成发现与候选，但不得替Jeffrey选中。Jeffrey 明确给题时走 `USER_SEED`，仍须给出至少一个真实替代候选、抖音取证、PRIMARY 证据和测量合同；最终同样经过情绪与表达欲筛选。
 
 ## 工作流
 
@@ -40,7 +40,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-恢复原版“AIHOT精选 + 全平台热榜 + 抖音视角”三路发现法。默认实际 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某路失败如实记录，其他路继续。需要缩小或替换时才传 `--sources`，总数2—10路。全部仍使用现有 AIHOT/OpenCLI，不安装第二套工具。
+候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
 
 脚本只写：
 
@@ -51,7 +51,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 ### 2. 标准化、去重、形成候选
 
-读取 signals，按稳定 signal id 聚类同一事实事件；排除同 URL/同承诺/同路径的重复表达。同一事件只有在“帮观众作判断”和“带观众完成任务”分别成立时才生成两个形态。写 schema 2 `00-选题-candidates.json`，先用顶层 `screening_summary` 留下筛选链路，再写至少两个真正不同的短名单候选。`screening_summary` 只包含：
+读取 signals，按稳定 signal id 聚类同一事实事件；排除同 URL/同承诺/同路径的重复表达。对标账号只提炼母题、公众需求和异常信号，不复制标题、文案、案例或结论。同一事件只有在“帮观众作判断”和“带观众完成任务”分别成立时才生成两个形态。写 schema 3 `00-选题-candidates.json`，先用顶层 `screening_summary` 留下筛选链路，再写至少两个真正不同的短名单候选。`screening_summary` 只包含：
 
 - `raw_signal_count`：signals 中实际结果总数；`event_cluster_count`：去重后的事件簇总数。
 - `longlist`：有效事件足够时记8—12条，不足8条时全部记录。每条含唯一 `event_cluster_id`、`working_title`、非空 `signal_ids`、正整数 `source_count`、`disposition: SHORTLISTED|REJECTED` 和具体 `reason`。
@@ -69,7 +69,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 - `content_gap` 含 `status: CONFIRMED|NOT_CONFIRMED|UNAVAILABLE`、非空 `rationale` 和 `evidence_ids`。只有平台直接提供搜索量、供给或缺口证据时才能写前两种；搜索结果条数、互动字段缺失或模型判断一律不能冒充内容缺口。`UNAVAILABLE` 合法且不参与机械淘汰。
 - 非空 `claim_evidence_map`；每条含唯一 `claim_id`、非空 `claim`、`evidence_ids`。它要把技术事实绑定 PRIMARY；平台证据可用时，把“平台有人关心什么”绑定 PLATFORM_SIGNAL，不能让相邻关键词替另一个论点背书。平台 `UNAVAILABLE` 时不虚构 PLATFORM_SIGNAL claim。
 - `scorecard` 七维整数 1—5：`audience_fit`、`evidence_strength`、`platform_relevance`、`differentiation`、`creator_fit`、`production_feasibility`、`learning_value`。
-- 非空 `rationale` 与 `disposition: SELECTED|REJECTED`；最终只能一个 SELECTED。
+- 非空 `rationale`。Jeffrey筛选前全部使用 `disposition: AWAITING_JEFFREY`；AI只展示候选、证据与风险，不得直接SELECTED。
 
 分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
 
@@ -87,18 +87,28 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 把 PRIMARY 与 PLATFORM_SIGNAL evidence 写入候选文件；每条有稳定 `id`、`source`、`source_type`、`url`、`retrieved_at`。缺 PRIMARY 时缩窄论点为可证范围；仍无法成立就换候选或 BLOCKED。
 
-### 5. 写最终决策与 source health
+### 5. Jeffrey情绪与表达欲筛选
+
+候选完成后进入`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。一次展示3—5个候选，要求Jeffrey基于真实第一反应选一个，并记录：`first_reaction`、`challenge_or_addition`、`firsthand_detail`、`would_say_without_heat=true`。Jeffrey确认后，先把唯一候选改为`SELECTED`、其余改为`REJECTED`，再写schema 1 `00-选题-Jeffrey筛选.json`绑定这份最终候选文件SHA和唯一候选ID。没有这份SHA闭合的Jeffrey记录，不得生成最终选题。
+
+### 6. 写最终决策与 source health
 
 更新 `00-选题-source-health.json`，每路记录：
 
-- 唯一 `source_id` 与 `source_role: DISCOVERY|DOUYIN_SEARCH|PRIMARY_PROOF`。
+- 唯一 `source_id` 与 `source_role: DISCOVERY|BENCHMARK_CREATOR|PERSONAL_EXPRESSION|DOUYIN_SEARCH|PRIMARY_PROOF`。schema 3必须保留后两条本地发现角色；个人表达池允许`EMPTY`，对标账号只允许完整扫描后的`OK|EMPTY`。
 - 实际 `command_or_url`、`attempted_at`、`status`、`result_count`。
 - 本期相对 `result_file` 与真实 `result_sha256`。
 - FAILED 写 `error`；SKIPPED 写 `reason`。
 
 状态必须一致：OK 条数大于 0，EMPTY/FAILED/SKIPPED 条数为 0。至少一条 DISCOVERY 为 OK、一条 DOUYIN_SEARCH 有真实尝试记录、一条 PRIMARY_PROOF 为 OK；DOUYIN_SEARCH 可以 FAILED，但必须绑定本期抖音证据文件与原始错误。
 
-写 schema 2 `00-选题.json`：
+写 schema 3 `00-选题.json`，保留原schema 2字段并绑定Jeffrey选中的候选。最后执行：
+
+```bash
+node ~/Documents/laohan-skills/laohan-redian/scripts/check-topic-contract.mjs --episode episodes/<slug>
+```
+
+只有输出`PASS redian topic contract schema=3`才算①完成。
 
 - `schema_version: 2`、`selected_candidate_id`、非空 `rejected_candidate_ids`。
 - 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap` 和 `claim_evidence_map`。

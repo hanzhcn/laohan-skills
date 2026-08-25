@@ -88,7 +88,35 @@ const descriptionHashtags = videoDescription.match(/#[\p{L}\p{N}_-]+/gu) || [];
 if (!descriptionHashtags.includes('#AI新星计划')) fail('抖音视频介绍必须包含#AI新星计划');
 if ((videoDescription.match(/[？?]/g) || []).length !== 1) fail('抖音视频介绍必须且只能包含一个明确互动问题');
 
-if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') fail('创作决策必须使用 schema 3 / content-units-v1');
+if (episodeArg) {
+  if (decision.schema_version !== 4 || decision.contract_version !== 'content-units-v2') fail('Episode创作决策必须使用 schema 4 / content-units-v2');
+  const topicPath = join(base, '00-选题.json');
+  const interviewPath = join(base, '02-创作工作稿/反向采访.json');
+  const outlinePath = join(base, '02-创作工作稿/大纲.md');
+  const approvalPath = join(base, '02-创作工作稿/大纲确认.json');
+  for (const [path, label] of [[topicPath, '00-选题.json'], [interviewPath, '反向采访.json'], [outlinePath, '大纲.md'], [approvalPath, '大纲确认.json']]) {
+    if (!requireFile(path, label).startsWith(baseReal + '/')) fail(label + '必须位于当前episode');
+  }
+  let topic;
+  let interview;
+  let approval;
+  try {
+    topic = JSON.parse(readFileSync(topicPath, 'utf8'));
+    interview = JSON.parse(readFileSync(interviewPath, 'utf8'));
+    approval = JSON.parse(readFileSync(approvalPath, 'utf8'));
+  } catch {
+    fail('选题、反向采访或大纲确认不是合法JSON');
+  }
+  const exchanges = Array.isArray(interview.exchanges) ? interview.exchanges : [];
+  const coverage = new Set(Array.isArray(interview.coverage) ? interview.coverage : []);
+  const requiredCoverage = ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'];
+  if (topic.schema_version !== 3 || !nonEmpty(topic.selected_candidate_id) || interview.schema_version !== 1 || interview.status !== 'COMPLETED' || interview.selected_candidate_id !== topic.selected_candidate_id || interview.topic_sha256 !== shaFile(topicPath) || exchanges.length < 6 || exchanges.length > 12 || exchanges.some((item) => !nonEmpty(item?.question) || !nonEmpty(item?.answer) || !nonEmpty(item?.follow_up_basis)) || requiredCoverage.some((item) => !coverage.has(item)) || Number.isNaN(Date.parse(interview.completed_at))) fail('反向采访必须绑定当前选题，完成6—12轮有效追问并覆盖场景、情绪、独特判断和观众行动');
+  if (approval.schema_version !== 1 || approval.status !== 'ACCEPTED' || approval.accepted_by !== 'Jeffrey' || Number.isNaN(Date.parse(approval.accepted_at)) || approval.interview_sha256 !== shaFile(interviewPath) || approval.outline_sha256 !== shaFile(outlinePath) || !nonEmpty(approval.authorization_note)) fail('大纲确认必须由Jeffrey明确接受并绑定当前采访与大纲SHA');
+  const hook = decision.hook_contract || {};
+  if (decision.topic_sha256 !== shaFile(topicPath) || decision.interview_sha256 !== shaFile(interviewPath) || decision.outline_sha256 !== shaFile(outlinePath) || decision.outline_approval_sha256 !== shaFile(approvalPath) || hook.designed_after_outline_acceptance !== true || hook.outline_accepted_at !== approval.accepted_at) fail('schema 4必须绑定选题、采访、大纲、确认，并证明钩子在大纲确认后设计');
+} else if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') {
+  fail('独立模式创作决策必须使用 schema 3 / content-units-v1');
+}
 if (decision.script_title !== title || decision.script_hash !== shaFile(scriptPath)) fail('创作决策未绑定当前稿标题与SHA-256');
 if (!nonEmpty(decision.active_style_file) || !existsSync(decision.active_style_file) || !statSync(decision.active_style_file).isFile() || decision.active_style_sha256 !== shaFile(decision.active_style_file)) fail('active style 路径或SHA-256无效');
 
@@ -263,5 +291,6 @@ const checks = decision.quality_checks || {};
 const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', 'dynamic_duration', 'structure_clarity', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
 if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.read_aloud_note)) fail('质量检查没有覆盖内容、人味、时长、结构与原有六关');
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
+if (episodeArg && Date.parse(decision.completed_at) <= Date.parse(decision.hook_contract.outline_accepted_at)) fail('全文与钩子完成时间必须晚于Jeffrey大纲确认');
 
-console.log(`PASS chuangzuo script contract schema=3 paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);
+console.log(`PASS chuangzuo script contract schema=${decision.schema_version} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);

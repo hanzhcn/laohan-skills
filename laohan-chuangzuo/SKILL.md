@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "2.0.2"
+version: "3.0.0"
 ---
 
 # 统一创作引擎
@@ -27,7 +27,7 @@ version: "2.0.2"
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
-- **创作机械合同**：`references/creation-contract.md`（schema 3内容单位、逐段审计、人味、自然时长、TTS与validator）
+- **创作机械合同**：`references/creation-contract.md`（Episode schema 4的采访/大纲确认、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -79,9 +79,15 @@ OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 ep
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。中间整理和大纲写入 `episodes/<slug>/02-创作工作稿/`；最终定稿只能写 `episodes/<slug>/01-口播稿.md`。同时写 schema 3 `02-创作工作稿/创作决策.json`，它既是动笔前规划，也是落稿后的执行记录；最终必须绑定当前稿 SHA-256，不能靠旧决策给新稿放行。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
+当参数含 `--episode episodes/<slug>` 时，先读取 schema 3 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。先围绕当前题目反向采访Jeffrey，写`02-创作工作稿/反向采访.json`；完成6—12轮有效追问后只写`02-创作工作稿/大纲.md`。Jeffrey明确接受并写入`大纲确认.json`前，不得生成全文或锁定钩子。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
-schema 3 至少包含：
+Episode schema 4 在原schema 3全部内容之外，至少增加：
+
+- `topic_sha256`、`interview_sha256`、`outline_sha256`、`outline_approval_sha256`；
+- `hook_contract.designed_after_outline_acceptance=true`并绑定确认时间；
+- `contract_version=content-units-v2`。独立模式仍使用schema 3 / `content-units-v1`。
+
+原内容合同继续包含：
 
 - 与①一致的 `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`；
 - `contract_version=content-units-v1`、`input_mode`、`active_style_file`、`active_style_sha256`、`structure_tool`、`structure_rationale`；
@@ -98,9 +104,9 @@ schema 3 至少包含：
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
 - Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#laohanAI`，哔哩哔哩标签固定包含 `laohanAI`。
 
-字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；未出现 `PASS chuangzuo script contract schema=3` 时不得声称②完成。
+字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；Episode未出现 `PASS chuangzuo script contract schema=4` 时不得声称②完成。
 
-任一改动改变 `01-口播稿.md` hash，都使②立即失效。错字或标点之外的实质改稿必须回 Step 3，重做规划、质量检查和试读，再写新的 schema 3 决策记录；不得只替换 hash。
+任一改动改变 `01-口播稿.md` hash，都使②立即失效。错字或标点之外的实质改稿必须回 Step 3，重做规划、质量检查和试读，再写新的 schema 4 决策记录；不得只替换 hash。
 
 ## 执行清单（每步完成后打勾）
 
@@ -108,7 +114,7 @@ schema 3 至少包含：
 - [ ] Pre-A/B: 前置处理（如需；Pre-C 热点转译已移除，搜索归工作流①）
 - [ ] Step 0: 判断输入模式（大纲/素材/自由）
 - [ ] Step 1: [素材模式] Layer A/B 整理
-- [ ] Step 1.5: [自由模式] 生成大纲→用户确认
+- [ ] Step 1.5: [Episode] 反向采访→只生成大纲→Jeffrey确认；[独立自由模式] 生成大纲→用户确认
 - [ ] Step 2: 选题确认（模式A/B选择+主题锁定）
 - [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
@@ -172,7 +178,11 @@ schema 3 至少包含：
 
 独立写作时整理结果输出到 `output/organize-YYYY-MM-DD.md`；Episode 模式输出到 `episodes/<slug>/02-创作工作稿/organize.md`，进入 Step 2。
 
-## Step 1.5：自由模式 — 生成大纲
+## Step 1.5：反向采访与大纲确认
+
+Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题必须由上一回答推进，最终覆盖真实场景、情绪转折、独特判断和观众行动。完成6—12轮后写`反向采访.json`，然后只生成`大纲.md`。Jeffrey确认前进入`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，不写全文，不设计标题和前三秒钩子。
+
+独立自由模式无素材时生成大纲：
 
 无素材时，基于用户提供的主题（或交互询问）生成大纲：
 
@@ -204,7 +214,7 @@ schema 3 至少包含：
    - 选 B 信号：行业观点/新闻/深度思考/人物故事
 2. **锁定主题**：大纲/整理结果中的一句话主题 = 全篇锚点，不准自换
 3. **判断素材类型**：对照 `ACTIVE_STYLE_FILE` 内的素材适配规则；该文件没有专用表时，按 Step 1 的 Layer A/B 证据类型记录，不另外加载 style.md
-4. **黄金开局钩子**：锁定痛点场景+渴望结果+核心冲突
+4. **确认大纲**：Episode必须读取Jeffrey签署且SHA有效的`大纲确认.json`
 5. **（教程型专用）可操作步骤清单**：模式 A 时从素材中提取观众能跟着做的步骤
 
 ## Step 3：规划（不写稿，不可跳过）
