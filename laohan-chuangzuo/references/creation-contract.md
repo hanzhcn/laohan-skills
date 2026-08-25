@@ -25,11 +25,23 @@ schema 3 必须先证明它执行了创作规划，而不是落稿后补一个ha
 - `argument_plan.opening_contract`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations` 均非空，`reasoning_path` 是非空步骤数组；
 - `original_contributions` 至少1项，每项必须同时写非空 `judgement` 与 `viewer_value`。只有1项时必须有非空 `single_contribution_rationale`，说明为什么这一题不该硬凑第二项；schema 2 的字符串数组不能冒充 schema 3 原创增量。
 - `visual_anchors` 至少1项，每项包含存在于 `content_units` 的 `content_unit_id`、非空 `audience_understanding` 与 `visual_expression`。它证明稿件给导演留下了可视化抓手，不规定具体动画技术。
+- `01-口播稿.md`正文只允许Jeffrey实际口播文本，不得包含`[B-Roll]`、`[字幕]`、`[画面]`、镜头提示、转场提示、特效提示、Remotion执行提示或其他导演指令。`visual_anchors`只能存在于决策记录，不能通过Markdown标注提前替导演选卡片、PPT、具体技术、时长或位置。
 - `publish_copy_contract` 必须在Step 3登记3个标题候选、唯一主推标题、选择理由、至少两条可回到正文的标题证据、视频介绍证据及其结构；落稿后再绑定主推标题原文和视频介绍SHA。
 
 Episode模式由编排器先核对①的主题、假设、内容形式和受众，再把其余 schema 3 机械检查统一交给本validator；不得在编排器内另写一套互相冲突的schema 3字段规则。
 
 Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同见 `multi-platform-publish-contract.md`。该文件绑定当前口播稿 SHA，但不是正文附录，不进入TTS或段落审计。四个平台文案必须分别创作，视频号短标题不超过16字，不能把抖音文案或口播段落复制到其他平台。
+
+## 观众可复制资源
+
+每个Episode都必须在`创作决策.json.audience_resource_contract`明确登记：
+
+- `status=NOT_APPLICABLE`：正文没有承诺模板、清单、提示词、命令或其他可复制资源，`resources=[]`；
+- `status=BOUND`：正文承诺了观众资源，至少一份资源独立存放在`12-发布/观众资源/`，不得附在`01-口播稿.md`末尾。
+
+`BOUND`的每份资源至少包含唯一`resource_id`、非空`title`、episode内相对`path`、文件`sha256`、`editable_defaults=true`、文件中真实出现的`edit_notice`，以及抖音、视频号、小红书、哔哩哔哩四个平台的交付方式。资源正文必须全部使用完整、可直接复制的推荐值；允许与观众实际项目不同，但必须明确提醒观众判断修改。禁止`[填写]`、`[粘贴]`、`[替换]`、TODO、TBD、待填写、待补充、空字段或伪造的空白链接。
+
+四个平台的允许交付方式为`DESCRIPTION_APPENDIX`、`BODY_APPENDIX`、`MANUAL_PINNED_COMMENT`或`ATTACHED_RESOURCE_CARD`。`12-发布/多平台发布内容.md`必须在每个平台块内以`### 观众资源交付`登记同一资源标题与方式。MANUAL涉及置顶评论时只准备完整文本交Jeffrey；FULL不得自动回复评论或私信，平台字段无法完整承载时必须停止，不能只交付半份。
 
 `opening_contract.mode` 只能是 `DEFAULT_SIGNATURE` 或 `TOPIC_SPECIFIC_HOOK`。前者要求 `required_prefix` 为“嘿，你有没有这种感觉，”并位于第一段开头；后者要求 `required_prefix` 为 `null`、`exception_reason` 非空，且第一段直接使用题目专属的具体结果、数字、动作、冲突或直问。两种模式的 `anchor_text` 都必须是第一段真实原文；validator用本机TTS测量从开头到该锚点的时长，超过5秒即BLOCKED。
 
@@ -113,6 +125,8 @@ Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同
 
 ## 自然时长与TTS
 
+TTS是可重建的内部机械试读证据，只检查5秒内容锚点、拗口句和自然时长。它不是Jeffrey的正式口播音轨，不进入视频、导演或Remotion，也不能替代真人试拍后按脸部安全区和真实语速进行的节奏对齐；`actual_tts_seconds`只能表述为TTS机械试读时长，不能表述为真人口播实测。
+
 `duration_contract` 固定为：
 
 ```json
@@ -158,4 +172,4 @@ node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mj
   --base "$PWD"
 ```
 
-Episode只有命令输出 `PASS chuangzuo script contract schema=4` 才完成；独立模式仍输出schema 3。validator检查采访四类完成证据与空缺口、大纲确认、钩子时序、默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。
+Episode只有命令输出 `PASS chuangzuo script contract schema=4` 才完成；独立模式仍输出schema 3。validator检查采访四类完成证据与空缺口、大纲确认、钩子时序、默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、正文没有导演提示、观众资源完整性与四平台交付绑定、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。

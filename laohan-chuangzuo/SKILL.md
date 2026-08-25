@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.2.0"
+version: "3.3.0"
 ---
 
 # 统一创作引擎
@@ -97,8 +97,9 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - 至少一项 `original_contributions`，每项写清新增判断及其观众价值；只有一项时必须登记 `single_contribution_rationale`，证明没有为了数量硬凑第二个观点；
 - `opening_contract` 登记 `mode: DEFAULT_SIGNATURE|TOPIC_SPECIFIC_HOOK`。默认使用“嘿，你有没有这种感觉，”，只有题目存在明显更强的具体结果、数字、动作、冲突或直问时才允许题目专属开场，并记录 `exception_reason`；两种模式的 `anchor_text` 都必须绑定第一段5秒内真实锚点；
 - `visual_anchors` 至少一项，每项绑定一个内容单位，写清观众理解任务与可视化表达；它只给后续导演可拍依据，不规定动画技术；同时保留 `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
+- `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
 - `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
-- `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS音频、SHA和 `ffprobe` 实测时长；
+- `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
@@ -243,6 +244,7 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 3. **结构合同**：确有多个并列层级时，规划连续的 `1、2、3……`；没有真实层级时保持自然叙述，不为了形式拆段。
 4. **发布文案策略**：从正文核心冲突中生成3个标题候选，登记标题公式和至少两条正文证据，再按明确理由只选1个主推标题。观点型/产品回归介绍按“观众问题 → 可信证据 → 核心内容 → 下一步 → 互动”规划；教程型按“观众问题 → 核心内容 → 实测或步骤证据 → 下一步 → 互动”规划，不能临时拼接与正文无关的卖点。
 5. **可视化锚点**：至少选择1个最需要画面帮助理解的内容单位，写清观众要看懂什么，以及适合用对比、过程、因果、证据、真实场景或产品画面中的哪种表达；不在②指定Remotion技术。
+6. **观众资源规划**：正文若承诺模板、清单、提示词、命令或其他可复制资源，规划一份独立完整资源。所有字段用可直接复制的推荐值填满，允许观众按自己的项目修改，但不得留下`[填写]`、`[粘贴]`、TODO、TBD或空字段；同时规划四平台实际交付位置。
 
 ## Step 4：写口播稿
 
@@ -251,6 +253,8 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 - **开场默认与例外**：默认以“嘿，你有没有这种感觉，”开头。只有题目专属的具体结果、数字、动作、冲突或直问明显更强、更自然时，才可直接使用该钩子，并在 `opening_contract.exception_reason` 说明为什么；两种模式都必须在5秒内给真实锚点，不能用例外制造空泛标题党
 - **停更/回归/产品开发题**：第一段强制使用 `ACTIVE_STYLE_FILE` 的“问题先行四问开场”，依次回答观众问题、停更动机、可信行动、产物定义；“做了一个”却不说明产品类别、目标用户和使用结果，Step 4 不通过
 - 第一行 `# 标题`（≤30字，模式A「动词+工具/场景+结果」，模式B「主题句+情绪句」）
+- 正文只写Jeffrey真正要说的话。禁止插入`[B-Roll]`、`[字幕]`、`[画面]`、镜头、转场、特效、Remotion包名、时长、位置或其他导演/实现提示；这些只能在`创作决策.json.visual_anchors`中保留抽象理解任务，并由后续导演阶段决定表达。
+- 正文承诺观众资源时，只口播资源用途和取得位置；资源本体独立写入`12-发布/观众资源/<资源名>.md`，不能附在口播稿末尾。资源必须完整填写推荐值并提示“这是推荐起点，请按自己的项目判断并修改”。
 - **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，并且每次必须包含抖音活动标签 `#AI新星计划`；这一区域不进入口播、TTS、内容单位或段落审计
 - 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
 
@@ -275,7 +279,7 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 - 至少1个核心生活场景，并有代入式互动或动作链
 - 全文至少有一句离开本期经历、判断或边界就不能成立的具体表达；纯中性说明书不通过
 - 至少有一个内容单位被转成明确可视化锚点，说明画面承担的理解任务；只有“放大文字、变颜色”而没有内容关系的不算
-- 字数与时长没有默认下限或为凑时长设置的目标；完稿后以本机TTS实测记录自然时长
+- 字数与时长没有默认下限或为凑时长设置的目标；完稿后仅用本机TTS机械试读估算自然时长，不把它称为真人实测或正式音轨
 - 两遍内容重复审计都必须通过：第一遍逐段检查新增内容单位，第二遍排除人味设备后检查同义判断；未解决的重复一律不通过
 
 **E2. 教程型专用（模式 A 时执行）：**
@@ -329,11 +333,11 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 
 ## Step 7：输出口播初稿
 
-1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
+1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。Episode正文承诺观众资源时，资源独立写入`episodes/<slug>/12-发布/观众资源/`，不得塞回口播稿。
 2. 普通独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；系列资料包草稿不得伪造TTS或正式完成证据，使用`series-draft-v1`并绑定packet SHA；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
-3. 用本机 `say` 完整试读并用 `ffprobe` 记录真实时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA。
+3. 用本机 `say` 完整机械试读并用 `ffprobe` 记录TTS音频时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA，但该时长只能作为口播时长估算，不能称为真人实测。
 4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
-5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#laohanAI`，B站标签必须带 `laohanAI`。
+5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#laohanAI`，B站标签必须带 `laohanAI`。存在观众资源时，四个平台还必须绑定同一资源并登记实际交付位置。
 6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。系列资料包草稿使用`--series-draft <packet.json>`；没有对应机械PASS不得交付，即使PASS也只算草稿，不算②完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。
@@ -383,7 +387,8 @@ Episode 模式的完整中间产物固定为：
 episodes/<slug>/
 ├── 01-口播稿.md
 ├── 12-发布/
-│   └── 多平台发布内容.md
+│   ├── 多平台发布内容.md
+│   └── 观众资源/             ← 仅正文承诺资源时生成；完整推荐值，无空白占位
 └── 02-创作工作稿/
 　  ├── 创作决策.json
 　  ├── 创作决策.md       ← 可选人类摘要

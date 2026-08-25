@@ -110,6 +110,8 @@ const titleLineEnd = script.indexOf('\n');
 const shootingNotesIndex = script.search(/^##\s+拍摄备注\s*$/m);
 const bodyEnd = Math.min(publishHeading.index, shootingNotesIndex >= 0 ? shootingNotesIndex : publishHeading.index);
 const body = script.slice(titleLineEnd + 1, bodyEnd);
+const forbiddenDirectorCue = body.split('\n').find((line) => /^\s*>?\s*(?:\[?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示)[：:])/iu.test(line));
+if (forbiddenDirectorCue) fail('口播正文不得混入导演或Remotion提示: ' + forbiddenDirectorCue.trim());
 const paragraphs = body
   .split(/\n\s*\n/)
   .map((block) => block.split('\n').filter((line) => !/^\s*(?:---|>|##\s)/.test(line)).join('\n').trim())
@@ -256,6 +258,34 @@ if (episodeArg) {
   if (!biliTags.length || biliTags.length > 6) fail('哔哩哔哩标签必须为1至6个');
   if (biliTags.some((line) => Array.from(line.replace(/^\s*-\s+/, '').trim()).length > 20)) fail('哔哩哔哩单个标签最多20个字符');
   if (!biliTags.map((line) => line.replace(/^\s*-\s+/, '').trim()).includes('laohanAI')) fail('哔哩哔哩标签必须包含laohanAI');
+
+  const resourceContract = decision.audience_resource_contract || {};
+  const resources = Array.isArray(resourceContract.resources) ? resourceContract.resources : [];
+  const resourcePromise = /(?:模板|清单|提示词|命令|资料|资源).{0,24}(?:放在|准备好|提供|复制|领取|置顶评论|视频介绍)/u.test(paragraphs.join('\n'));
+  if (!['NOT_APPLICABLE', 'BOUND'].includes(resourceContract.status)) fail('audience_resource_contract必须明确BOUND或NOT_APPLICABLE');
+  if (resourceContract.status === 'NOT_APPLICABLE') {
+    if (resources.length || resourcePromise) fail('口播承诺了观众资源但audience_resource_contract未绑定完整资源');
+  } else {
+    const resourceIds = resources.map((item) => item?.resource_id);
+    const resourceTitles = resources.map((item) => item?.title);
+    if (!uniqueNonEmpty(resourceIds) || !uniqueNonEmpty(resourceTitles)) fail('观众资源必须至少一份且resource_id、title唯一非空');
+    const platformKeys = {douyin: '抖音', weixin_channels: '视频号', xiaohongshu: '小红书', bilibili: '哔哩哔哩'};
+    const allowedDeliveryModes = new Set(['DESCRIPTION_APPENDIX', 'BODY_APPENDIX', 'MANUAL_PINNED_COMMENT', 'ATTACHED_RESOURCE_CARD']);
+    const placeholderPattern = /\[(?:填写|粘贴|替换|补充|待定|URL|路径|MM:SS|内容|你的)[^\]]*\]|<(?:填写|粘贴|替换|补充|待定|URL|路径|MM:SS|内容|你的)[^>\n]*>|\]\(\s*\)|\b(?:TODO|TBD)\b|待填写|待补充|_{3,}/iu;
+    for (const item of resources) {
+      if (!nonEmpty(item.path) || !/^[a-f0-9]{64}$/.test(item.sha256 || '') || item.editable_defaults !== true || !nonEmpty(item.edit_notice) || !item.delivery || Object.keys(platformKeys).some((key) => !allowedDeliveryModes.has(item.delivery[key]))) fail('观众资源缺路径、SHA、完整推荐值声明或四平台交付方式');
+      const resourcePath = resolve(base, item.path);
+      const resourceReal = requireFile(resourcePath, '观众资源');
+      const audienceRoot = join(baseReal, '12-发布/观众资源') + '/';
+      if (!resourceReal.startsWith(audienceRoot) || item.sha256 !== shaFile(resourcePath)) fail('观众资源必须位于12-发布/观众资源并绑定当前SHA');
+      const resourceText = readFileSync(resourcePath, 'utf8').replace(/\r\n/g, '\n');
+      if (!resourceText.includes(item.edit_notice) || placeholderPattern.test(resourceText)) fail('观众资源必须完整填写推荐值，不得保留占位符或空白模板');
+      for (const [key, platform] of Object.entries(platformKeys)) {
+        const delivery = subsection(platform, '观众资源交付');
+        if (!delivery.split('\n').some((line) => line.trim() === `- ${item.title}｜${item.delivery[key]}`)) fail(`${platform}未绑定观众资源${item.title}及交付方式`);
+      }
+    }
+  }
 }
 
 const requiredPlanningFields = ['topic_thesis', 'hypothesis_id', 'content_form', 'audience', 'expected_audience_effect', 'input_mode', 'structure_tool', 'structure_rationale'];
