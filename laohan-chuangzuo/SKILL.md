@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.1.0"
+version: "3.2.0"
 ---
 
 # 统一创作引擎
@@ -74,7 +74,7 @@ ACTIVE_STYLE_FILE = 通用风格时为 STYLE_FILE；教程型/其他风格时为
 
 ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink 到 OpenClaw）
 
-OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 episodes/<slug>/02-创作工作稿/
+OUTPUT_DIR = 普通独立写作时 <当前工作目录>/output/；已验证系列单期资料包的独立草稿写入 <项目>/script-pool/<series-id>/；Episode 模式时 episodes/<slug>/02-创作工作稿/
 ```
 
 ## Episode 模式
@@ -84,8 +84,9 @@ OUTPUT_DIR = 独立写作时 <当前工作目录>/output/；Episode 模式时 ep
 Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 - `topic_sha256`、`interview_sha256`、`outline_sha256`、`outline_approval_sha256`；
+- 方向研究型选题必须读取`02-创作工作稿/系列研究摘录.json`，并在`research_source_contract`把全部内容单位映射到资料包claim或Jeffrey原创依据；
 - `hook_contract.designed_after_outline_acceptance=true`并绑定确认时间；
-- `contract_version=content-units-v2`。独立模式仍使用schema 3 / `content-units-v1`。
+- `contract_version=content-units-v2`。普通独立模式仍使用schema 3 / `content-units-v1`；已验证系列单期资料包使用`series-draft-v1`草稿合同，只能标记`DRAFT / NOT_STAGE_2_COMPLETE`。
 
 原内容合同继续包含：
 
@@ -226,6 +227,7 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 3. **教程型操作步骤规划**：步骤骨架，标注每步使用的真实素材或来源
 4. **核心主题贯穿规划**：标题关键词和核心概念在正文中的落点
 5. **精华筛选**：必须包含、选择性包含、跳过的内容与理由
+   - 方向研究型选题先按单期资料包的claim和事实边界筛选；来源只提供事实与公共需求，不复制竞品标题、结构或整段表达
 6. **场景规划**：至少1个核心生活场景、动作链和代入式互动点
 7. **改写策略**：comprehensive（默认）/ angle / structure / depth
 8. **目标读者、预期效果与待验证假设**：与①及 `创作决策.json` 一致
@@ -327,12 +329,12 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 
 ## Step 7：输出口播初稿
 
-1. 独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
-2. 独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
+1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。
+2. 普通独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；系列资料包草稿不得伪造TTS或正式完成证据，使用`series-draft-v1`并绑定packet SHA；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整试读并用 `ffprobe` 记录真实时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA。
 4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
 5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#laohanAI`，B站标签必须带 `laohanAI`。
-6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。没有机械PASS，写稿只算草稿，不算②或独立写作完成。
+6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。系列资料包草稿使用`--series-draft <packet.json>`；没有对应机械PASS不得交付，即使PASS也只算草稿，不算②完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。
 

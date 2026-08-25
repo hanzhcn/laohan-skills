@@ -1,6 +1,6 @@
 ---
 name: laohan-redian
-version: 3.1.0
+version: 3.2.0
 description: 真人口播①选题决策主写者；从 AIHOT 与已安装 OpenCLI 的当前信号生成观点/教程候选，核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源后，只选一个可生产且可复盘的主题。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -29,9 +29,13 @@ Episode 模式必须读取：
 
 标准 Episode 固定为 `REVIEW_GATED`：AI自主完成发现与候选，但不得替Jeffrey选中。Jeffrey 明确给题时走 `USER_SEED`，仍须给出至少一个真实替代候选、抖音取证、PRIMARY 证据和测量合同；最终同样经过情绪与表达欲筛选。
 
+Jeffrey给出的是软件、方法或系列方向时，先走`USER_DIRECTION_RESEARCH`：读取项目`docs/系列选题研究与分期规格.md`，完成四平台定向搜索、内容级拆解、需求判断、系列分期和单期资料包。它不运行与方向无关的9账号泛扫描来凑热度。只有`DEMAND_VALIDATED`可进入三期以上系列，`EXPERIMENTAL_ONE_OFF`只进入单期，`DIRECTION_REJECTED`停止。正式episode仍须提供替代候选并经过Jeffrey情绪筛选。
+
 ## 工作流
 
 ### 1. 采集当前信号
+
+先写`00-选题-signals.json.discovery_mode`：无方向为`AUTONOMOUS_SCAN`；Jeffrey已给方向为`USER_DIRECTION_RESEARCH`。后者把已通过`node scripts/check-series-research.mjs`的`series_research_path`与SHA写入`direction_research`，并把哔哩哔哩、小红书、抖音、知乎四路结果分别登记为signals来源。`DEMAND_VALIDATED`至少两个平台有真实需求信号；`EXPERIMENTAL_ONE_OFF`只按研究包内已验证的官方新事件、Jeffrey亲历或小众任务依据进入单期，不强制伪造两个平台热度。
 
 Episode 模式执行唯一确定性入口：
 
@@ -40,7 +44,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > BROAD_HOTSPOT(2) > PERSONAL_EXPRESSION(3)`；这是找题效率顺序，不是自动入选分数，个人题仍可在获得公共兴趣证据后胜出。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
+`AUTONOMOUS_SCAN`候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > BROAD_HOTSPOT(2) > PERSONAL_EXPRESSION(3)`；这是找题效率顺序，不是自动入选分数，个人题仍可在获得公共兴趣证据后胜出。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
 
 脚本只写：
 

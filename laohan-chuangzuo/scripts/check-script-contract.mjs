@@ -2,7 +2,7 @@
 import {createHash} from 'node:crypto';
 import {existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join, resolve} from 'node:path';
+import {basename, dirname, join, relative, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 
 const args = process.argv.slice(2);
@@ -14,6 +14,7 @@ const episodeArg = option('--episode');
 const scriptArg = option('--script');
 const decisionArg = option('--decision');
 const baseArg = option('--base');
+const seriesDraftArg = option('--series-draft');
 
 const fail = (message) => {
   console.error('BLOCKED chuangzuo script contract: ' + message);
@@ -40,7 +41,7 @@ if (episodeArg) {
   scriptPath = resolve(scriptArg);
   decisionPath = resolve(decisionArg);
 } else {
-  console.error('用法: check-script-contract.mjs --episode episodes/<slug> | --script <script.md> --decision <decision.json> [--base <root>]');
+  console.error('用法: check-script-contract.mjs --episode episodes/<slug> | --script <script.md> --decision <decision.json> [--base <root>] [--series-draft <episode-packet.json>]');
   process.exit(2);
 }
 
@@ -56,6 +57,52 @@ try {
 const script = readFileSync(scriptPath, 'utf8').replace(/\r\n/g, '\n');
 const title = script.match(/^#\s+(.+)$/m)?.[1]?.trim();
 if (!title) fail('稿件第一行必须是非空一级标题');
+
+if (seriesDraftArg) {
+  if (episodeArg) fail('series-draft只能用于独立script-pool草稿');
+  const scriptReal = realpathSync(scriptPath);
+  const decisionReal = realpathSync(decisionPath);
+  const poolRoot = join(baseReal, 'script-pool');
+  const researchRoot = join(poolRoot, 'series-research');
+  if (!scriptReal.startsWith(poolRoot + '/') || scriptReal.startsWith(researchRoot + '/') || dirname(scriptReal) !== dirname(decisionReal)) fail('series-draft稿件与决策必须同目录位于script-pool，且不得写入series-research');
+  const packetReal = requireFile(resolve(seriesDraftArg), '单期资料包');
+  if (!packetReal.startsWith(researchRoot + '/')) fail('series-draft单期资料包必须位于script-pool/series-research');
+  const seriesDir = dirname(dirname(packetReal));
+  if (basename(dirname(packetReal)) !== 'episode-packets') fail('series-draft必须使用canonical episode-packets中的资料包');
+  const researchPath = requireFile(join(seriesDir, 'series-research.json'), 'series-research.json');
+  const seriesValidator = resolve(process.env.LAOHAN_SERIES_RESEARCH_VALIDATOR || join(baseReal, 'scripts/check-series-research.mjs'));
+  if (!existsSync(seriesValidator)) fail('缺系列研究validator');
+  const seriesValidation = spawnSync('node', [seriesValidator, '--series', seriesDir], {encoding: 'utf8'});
+  if (seriesValidation.status !== 0) fail((seriesValidation.stderr || seriesValidation.stdout || '系列研究包验证失败').trim());
+  let research;
+  let packet;
+  try {
+    research = JSON.parse(readFileSync(researchPath, 'utf8'));
+    packet = JSON.parse(readFileSync(packetReal, 'utf8'));
+  } catch {
+    fail('系列研究或单期资料包不是合法JSON');
+  }
+  const researchEpisode = research.episodes?.find((item) => item?.id === packet.episode_id);
+  if (research.series_id !== packet.series_id || packet.series_research_sha256 !== shaFile(researchPath) || !researchEpisode?.packet_path || realpathSync(join(seriesDir, researchEpisode.packet_path)) !== packetReal) fail('series-draft packet必须绑定当前已验证series-research.json及canonical原始packet');
+  const relativePacket = relative(baseReal, packetReal);
+  if (packet.schema_version !== 1 || !nonEmpty(packet.series_id) || !nonEmpty(packet.episode_id) || !/^[a-f0-9]{64}$/.test(packet.series_research_sha256 || '') || !Array.isArray(packet.claims) || !packet.claims.length || !Array.isArray(packet.source_snapshots) || !packet.source_snapshots.length) fail('series-draft必须使用已绑定研究SHA、claims和来源快照的单期资料包');
+  const packetClaimIds = new Set(packet.claims.map((claim) => claim?.claim_id));
+  if (decision.schema_version !== 1 || decision.contract_version !== 'series-draft-v1' || decision.status !== 'DRAFT' || decision.stage_status !== 'NOT_STAGE_2_COMPLETE' || decision.series_id !== packet.series_id || decision.episode_id !== packet.episode_id || decision.packet_path !== relativePacket || decision.packet_sha256 !== shaFile(packetReal) || decision.series_research_sha256 !== packet.series_research_sha256 || decision.script_title !== title || decision.script_hash !== shaFile(scriptReal) || !uniqueNonEmpty(decision.used_claim_ids) || decision.used_claim_ids.some((id) => !packetClaimIds.has(id))) fail('series-draft决策必须绑定稿件、packet SHA、series_research_sha256和实际使用claims，并标记DRAFT/NOT_STAGE_2_COMPLETE');
+  const sourceHeading = /^##\s+来源与时间点\s*$/m.exec(script);
+  const spokenBody = sourceHeading ? script.slice(script.indexOf('\n') + 1, sourceHeading.index).replace(/^##.*$/gm, '').trim() : '';
+  if (!spokenBody) fail('series-draft必须包含非空口播正文');
+  const citations = Array.isArray(decision.source_citations) ? decision.source_citations : [];
+  const formatTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  if (!sourceHeading || citations.length !== packet.source_snapshots.length || packet.source_snapshots.some((source) => {
+    const citation = citations.find((item) => item?.source_id === source.id);
+    if (!citation || citation.url !== source.url || !script.includes(source.url)) return true;
+    if (source.source_type !== 'VIDEO') return !Array.isArray(citation.segments);
+    if (!Array.isArray(citation.segments) || !citation.segments.length) return true;
+    return citation.segments.some((segment) => !source.key_segments.some((item) => item.start_seconds === segment.start_seconds && item.end_seconds === segment.end_seconds) || !script.includes(formatTime(segment.start_seconds)) || !script.includes(formatTime(segment.end_seconds)));
+  })) fail('series-draft稿件与决策必须逐来源列出URL，并为每个视频引用资料包中的真实关键时间段');
+  console.log(`PASS chuangzuo series draft contract series=${packet.series_id} episode=${packet.episode_id}`);
+  process.exit(0);
+}
 
 const publishHeading = /^##\s+抖音发布信息\s*$/m.exec(script);
 if (!publishHeading) fail('稿件必须包含“## 抖音发布信息”');
@@ -138,6 +185,11 @@ if (episodeArg) {
   if (approval.schema_version !== 1 || approval.status !== 'ACCEPTED' || approval.accepted_by !== 'Jeffrey' || Number.isNaN(Date.parse(approval.accepted_at)) || approval.interview_sha256 !== shaFile(interviewPath) || approval.outline_sha256 !== shaFile(outlinePath) || !nonEmpty(approval.authorization_note)) fail('大纲确认必须由Jeffrey明确接受并绑定当前采访与大纲SHA');
   const hook = decision.hook_contract || {};
   if (decision.topic_sha256 !== shaFile(topicPath) || decision.interview_sha256 !== shaFile(interviewPath) || decision.outline_sha256 !== shaFile(outlinePath) || decision.outline_approval_sha256 !== shaFile(approvalPath) || hook.designed_after_outline_acceptance !== true || hook.outline_accepted_at !== approval.accepted_at) fail('schema 4必须绑定选题、采访、大纲、确认，并证明钩子在大纲确认后设计');
+  if (topic.direction_research?.mode === 'USER_DIRECTION_RESEARCH') {
+    const researchValidator = resolve(import.meta.dirname, 'check-research-source-contract.mjs');
+    const researchResult = spawnSync('node', [researchValidator, '--episode', base, '--decision', decisionPath], {encoding: 'utf8'});
+    if (researchResult.status !== 0) fail((researchResult.stderr || researchResult.stdout || '系列研究来源绑定失败').trim());
+  }
 } else if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') {
   fail('独立模式创作决策必须使用 schema 3 / content-units-v1');
 }

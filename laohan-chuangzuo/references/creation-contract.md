@@ -8,6 +8,14 @@
 
 独立模式继续兼容schema 3 / `content-units-v1`，不伪造Episode人工记录。
 
+## 系列研究来源绑定
+
+当`00-选题.json.direction_research.mode=USER_DIRECTION_RESEARCH`时，当前episode必须存在`02-创作工作稿/系列研究摘录.json`，且选题中的`series_id`、`episode_id`、相对路径和SHA与该文件一致。
+
+`创作决策.json.research_source_contract`必须登记`status=BOUND`、同一资料包路径与SHA、实际使用的`claim_id`，并以`content_unit_claim_map`逐项覆盖全部正文内容单位。来源单位使用`origin=SOURCE_PACKET`并绑定资料包claim；Jeffrey自己的新增判断使用`origin=JEFFREY_ORIGINAL`、空claim数组和非空`original_basis`。不得把`EDITORIAL_INFERENCE`改写成平台事实，也不得让没有来源或个人依据的内容单位进入正文。
+
+独立写作使用已验证单期资料包时可以只生成`script-pool/<series-id>/`草稿；稿件必须带非口播的“来源与时间点”附录，决策使用`series-draft-v1`并标记`DRAFT / NOT_STAGE_2_COMPLETE`，绑定packet SHA与series research SHA。它不伪造Episode人工记录，也不能宣称②完成。
+
 ## 规划与原创增量
 
 schema 3 必须先证明它执行了创作规划，而不是落稿后补一个hash：
@@ -137,6 +145,16 @@ node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mj
 node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mjs \
   --script output/script-YYYY-MM-DD.md \
   --decision output/script-YYYY-MM-DD.decision.json \
+  --base "$PWD"
+```
+
+已验证系列资料包草稿执行：
+
+```bash
+node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mjs \
+  --script script-pool/<series-id>/E01-口播稿草稿.md \
+  --decision script-pool/<series-id>/E01-口播稿草稿.decision.json \
+  --series-draft script-pool/series-research/<series-id>/episode-packets/E01.json \
   --base "$PWD"
 ```
 
