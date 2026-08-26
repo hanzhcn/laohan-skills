@@ -322,7 +322,7 @@ opencli douyin stats <aweme_id> -f json
 
 ## 关键词搜索
 
-统一使用 `opencli douyin search`（视频流搜索，OpenCLI 内部维护 adapter 和签名）。不再安装或维护另一套浏览器爬虫。
+第1选 `opencli douyin search`（零额外安装，借 Bridge 登录态，但互动字段仅 likes 真实）；需要完整互动数据（播放/评论/分享/发布时间）时用第2选 `dy-cli`（statistics 字段全，需自行扫码登录）。不再安装或维护另一套浏览器爬虫。
 
 ### 第1选：opencli douyin search
 
@@ -335,7 +335,22 @@ opencli douyin search "关键词" --limit 30 -f json
 - 需 Browser Bridge（`opencli doctor` 查状态）
 - 这是视频搜索，区别于 `hashtag search`（只搜话题标签）
 
-失败时按现有 OpenCLI 能力降级：同一命令加 `--trace retain-on-failure` 并运行 autofix；最多三次仍失败且 `opencli doctor` 正常时，用 `opencli browser` 绑定当前已登录抖音标签页做只读取证。全部失败就报告 `BLOCKED`，不安装 DrissionPage、Playwright、另一套浏览器或自制 adapter。
+失败时按现有 OpenCLI 能力降级：同一命令加 `--trace retain-on-failure` 并运行 autofix；最多三次仍失败且 `opencli doctor` 正常时，用 `opencli browser` 绑定当前已登录抖音标签页做只读取证。全部失败就报告 `BLOCKED`，不安装 DrissionPage、Playwright、另一套浏览器或自制 adapter（dy-cli 除外，它是第2选）。
+
+### 第2选：dy-cli（statistics 字段全，需自行登录）
+
+GitHub [Youhai020616/douyin]，`pip install dy-cli`。PyPI 0.2.2（2026-03-15）为最新版；仓库 52★ 低频维护（2026-08-02 仍在修 bug，修复未发 PyPI）。laohanAI 生产环境实战验证：2026-08-15 记录"363KB/16s + statistics 字段全"，2026-08-26 安装版关键词返回 18 条真实结果。
+
+```bash
+pip install dy-cli
+dy login          # 扫码；Chrome 已登录 douyin.com 时自动复制 cookie，零摩擦
+dy search "关键词" --sort 最多点赞 --time 一周内 --count 20 --json-output -o out.json
+```
+
+- `--sort`：综合 / 最多点赞 / 最新发布；`--time`：不限 / 一天内 / 一周内…；另有 `--type` 视频 / 图集 / 用户
+- 返回 statistics 全字段（点赞/发布时间/播放/评论），可导出 json/csv/yaml；搜索走 API 引擎，发布/互动走 Playwright
+- 多账号：`--account u-xxx` + cookie 文件 `~/.dy/cookies/<account>.json`（storage_state JSON）
+- ⚠️ Linux 容器内 chromium 指纹会被风控 `verify_check` 打回空结果（laohanAI BATCH34 实测，Mac/Windows 宿主正常）
 
 已知限制：互动字段缺失或为 `0` 只能记为不可用，不能当作真实零；空数组也不能直接证明平台没有相关内容。
 
@@ -343,7 +358,8 @@ opencli douyin search "关键词" --limit 30 -f json
 
 | 方案 | 返回 | 适用 |
 |------|------|------|
-| `opencli douyin search` | 视频流（rank/desc/author/url/plays/likes/comments/shares） | **首选**，日常关键词搜索 |
+| `opencli douyin search` | 视频流（rank/desc/author/url/plays/likes/comments/shares，仅 likes 真实） | **第1选**，日常关键词搜索 |
+| `dy-cli` | statistics 全字段（点赞/发布时间/播放/评论）+ 排序/时间过滤 | **第2选**，需完整互动数据时（pip 装 + 扫码） |
 | `opencli douyin hashtag search` | 话题标签（name/id/view_count） | 选题调研，不返回视频 |
 | OpenCLI trace/autofix | 修复当前 adapter | 主命令异常时，最多三次 |
 | `opencli browser` 绑定当前标签页 | 当前登录页只读取证 | adapter 持续失败时 |

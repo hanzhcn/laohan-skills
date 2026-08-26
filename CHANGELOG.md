@@ -2,6 +2,10 @@
 
 所有重要变更都会记录在此文件中。
 
+## [2026-08-27] - 抖音搜索补充 dy-cli
+
+- **laohan-xiazai** v1.3.1 — 关键词搜索新增第2选 dy-cli（GitHub Youhai020616/douyin，`pip install dy-cli` + 扫码登录，`--sort/--time` 过滤，statistics 字段全；laohanAI 生产实战验证），记录 Linux 容器指纹坑与版本状态（PyPI 0.2.2 最新，2026-08-02 仍在修）；opencli 保持零安装第1选（仅 likes 真实）。
+
 ## [2026-08-26] - 抖音单视频下载方法更替
 
 - **laohan-xiazai** v1.3.0 — 抖音 2026-08 反爬升级：iesdouyin SSR（`_ROUTER_DATA` + `playwm→play`）与 douyin_tiktok_scraper 均失效，旧方法标记失效并附原因；新方法为短链解析（curl 重定向仍有效）+ Playwright 抓 aweme/detail 响应；补全死路清单与源头项目（Evil0ctal/Douyin_TikTok_Download_API、Johnserf-Seed/f2）调研，f2 记为轻量备选（需 Cookie，未实测）。
