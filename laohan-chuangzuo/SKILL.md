@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.3.0"
+version: "3.4.0"
 ---
 
 # 统一创作引擎
@@ -100,8 +100,8 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
 - `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
-- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
-- `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
+- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
+- `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`humanizer_zh`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
 - Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#laohanAI`，哔哩哔哩标签固定包含 `laohanAI`。
@@ -121,6 +121,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
 - [ ] Step 5: 质量检查（6关）
+- [ ] Step 5.5: humanizer-zh最终语言定稿与主张零增删改审计
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
 - [ ] Post-A: [可选] NotebookLM 幻灯片
@@ -326,6 +327,20 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 - 视频介绍按当前内容类型完成五段信息结构，数字、功能和结果不超出正文事实边界
 - 视频介绍只保留1个互动问题，并且标签原样包含 `#AI新星计划`
 
+## Step 5.5：humanizer-zh 最终语言定稿
+
+内容、事实、结构、资源承诺和Step 5全部成立后，才执行本步骤。必须完整读取本机`~/.agents/skills/humanizer-zh/SKILL.md`，并先把尚未humanize的完整稿件保存为输入快照：Episode固定为`02-创作工作稿/humanizer-input.md`；普通独立正式稿使用同basename的`.humanizer-input.md`。系列资料包`series-draft-v1`仍是草稿，不执行本门。
+
+本步骤只允许删除AI腔、调整口语、停顿、句长和节奏。禁止新增、删除或改变事实主张、个人经历、数字、日期、来源边界、产品能力、资源承诺、Jeffrey固定表达和内容单位。处理后必须：
+
+1. 逐项对照全部`content_units[].id`，记录`audited_content_unit_ids`；
+2. 确认`added_claims=[]`、`removed_claims=[]`、`changed_claims=[]`，任何非空都回Step 3处理，不能由humanizer直接决定；
+3. 按`humanizer-zh`的直接性、节奏、信任度、真实感、精简度五项各10分评分，总分至少45；
+4. 在`humanizer_contract`绑定Skill路径/SHA、输入快照路径/SHA、最终有效口播SHA、主张审计、评分和执行时间；
+5. 从头朗读最终正文。后续任何实质改稿都必须重新保存输入快照、重跑本步骤，并重新生成TTS、稿件SHA、决策JSON和发布文案绑定。
+
+`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`是Jeffrey已确认并已录制的输入，不自动执行改写；只走其独立的recorded-input guard。
+
 ## Step 6：通过/重试
 
 - ✅ 全部通过 → Step 7
@@ -333,7 +348,7 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
 
 ## Step 7：输出口播初稿
 
-1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`；Episode 模式写入 `episodes/<slug>/01-口播稿.md`。Episode正文承诺观众资源时，资源独立写入`episodes/<slug>/12-发布/观众资源/`，不得塞回口播稿。
+1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`，并保留同basename`.humanizer-input.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`，不伪造humanizer正式门；Episode 模式写入 `episodes/<slug>/01-口播稿.md`并保留`02-创作工作稿/humanizer-input.md`。Episode正文承诺观众资源时，资源独立写入`episodes/<slug>/12-发布/观众资源/`，不得塞回口播稿。
 2. 普通独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；系列资料包草稿不得伪造TTS或正式完成证据，使用`series-draft-v1`并绑定packet SHA；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整机械试读并用 `ffprobe` 记录TTS音频时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA，但该时长只能作为口播时长估算，不能称为真人实测。
 4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
@@ -390,9 +405,10 @@ episodes/<slug>/
 │   ├── 多平台发布内容.md
 │   └── 观众资源/             ← 仅正文承诺资源时生成；完整推荐值，无空白占位
 └── 02-创作工作稿/
-　  ├── 创作决策.json
-　  ├── 创作决策.md       ← 可选人类摘要
-　  ├── tts-read-aloud.aiff ← 本机实际试读证据
+　 ├── 创作决策.json
+　 ├── 创作决策.md       ← 可选人类摘要
+　 ├── humanizer-input.md ← 最终语言定稿前的完整稿件快照
+　 ├── tts-read-aloud.aiff ← 本机实际试读证据
     ├── transcript.md
     ├── content.md
     ├── organize.md

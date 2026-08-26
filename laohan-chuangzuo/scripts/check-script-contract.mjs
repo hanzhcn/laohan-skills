@@ -363,6 +363,38 @@ for (const device of voiceDevices) {
   if (!nonEmpty(device.type) || index === -1 || !nonEmpty(device.text) || !paragraphs[index].includes(device.text)) fail('人味设备没有绑定类型和真实段落原文');
 }
 
+const humanizer = decision.humanizer_contract || {};
+const humanizerSkillPath = resolve(process.env.HUMANIZER_ZH_SKILL_PATH || join(process.env.HOME || '', '.agents/skills/humanizer-zh/SKILL.md'));
+const expectedSnapshotPath = episodeArg
+  ? '02-创作工作稿/humanizer-input.md'
+  : relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + '.humanizer-input.md'));
+const snapshotPath = resolve(base, humanizer.input_snapshot_path || '');
+const snapshotReal = requireFile(snapshotPath, 'humanizer输入快照');
+const claimAudit = humanizer.claim_audit || {};
+const scores = humanizer.quality_scores || {};
+const scoreKeys = ['directness', 'rhythm', 'trust', 'authenticity', 'conciseness'];
+const scoreTotal = scoreKeys.reduce((sum, key) => sum + Number(scores[key]), 0);
+if (humanizer.status !== 'PASS'
+  || humanizer.skill !== 'humanizer-zh'
+  || humanizer.skill_path !== 'agents-skills/humanizer-zh/SKILL.md'
+  || !existsSync(humanizerSkillPath)
+  || humanizer.skill_sha256 !== shaFile(humanizerSkillPath)
+  || humanizer.input_snapshot_path !== expectedSnapshotPath
+  || !snapshotReal.startsWith(baseReal + '/')
+  || humanizer.input_snapshot_sha256 !== shaFile(snapshotPath)
+  || humanizer.output_spoken_text_sha256 !== shaText(paragraphs.join('\n'))
+  || claimAudit.status !== 'PASS'
+  || JSON.stringify(claimAudit.audited_content_unit_ids) !== JSON.stringify(unitIds)
+  || !Array.isArray(claimAudit.added_claims) || claimAudit.added_claims.length
+  || !Array.isArray(claimAudit.removed_claims) || claimAudit.removed_claims.length
+  || !Array.isArray(claimAudit.changed_claims) || claimAudit.changed_claims.length
+  || !nonEmpty(claimAudit.reviewer)
+  || !nonEmpty(claimAudit.review_note)
+  || scoreKeys.some((key) => !Number.isInteger(scores[key]) || scores[key] < 1 || scores[key] > 10)
+  || scores.total !== scoreTotal
+  || scores.total < 45
+  || Number.isNaN(Date.parse(humanizer.applied_at))) fail('humanizer-zh必须绑定当前Skill、输入快照、最终口播、全部内容单位的零主张增删改审计和至少45分质量评分');
+
 const structure = decision.structure_contract || {};
 if (structure.status !== 'PASS' || typeof structure.layered !== 'boolean') fail('缺结构清晰度合同');
 if (structure.layered) {
@@ -389,14 +421,15 @@ const metrics = decision.script_metrics || {};
 if (metrics.effective_spoken_chars !== effectiveSpokenChars || metrics.sentence_count !== sentenceLengths.length || metrics.short_sentence_threshold_chars !== shortThreshold || metrics.short_sentence_ratio !== shortRatio || JSON.stringify(metrics.sentence_lengths) !== JSON.stringify(sentenceLengths)) fail('script_metrics 未绑定实际有效口播量与句长分布 expected=' + JSON.stringify({effective_spoken_chars: effectiveSpokenChars, sentence_count: sentenceLengths.length, short_sentence_threshold_chars: shortThreshold, short_sentence_ratio: shortRatio, sentence_lengths: sentenceLengths}));
 
 const steps = decision.execution_steps || {};
-const completed = ['step_minus_1', 'step_0', 'step_2', 'step_3', 'step_4', 'step_5', 'step_6', 'step_7'];
+const completed = ['step_minus_1', 'step_0', 'step_2', 'step_3', 'step_4', 'step_5', 'step_5_5', 'step_6', 'step_7'];
 const optional = ['pre_a_b', 'step_1', 'step_1_5'];
 if (!completed.every((key) => steps[key]?.status === 'COMPLETED' && nonEmpty(steps[key]?.reason)) || !optional.every((key) => ['COMPLETED', 'SKIPPED'].includes(steps[key]?.status) && nonEmpty(steps[key]?.reason))) fail('Step -1至7没有逐项执行并记录理由');
 
 const checks = decision.quality_checks || {};
-const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', 'dynamic_duration', 'structure_clarity', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
+const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', 'humanizer_zh', 'dynamic_duration', 'structure_clarity', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
 if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.read_aloud_note)) fail('质量检查没有覆盖内容、人味、时长、结构与原有六关');
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
+if (Date.parse(humanizer.applied_at) > Date.parse(decision.completed_at)) fail('humanizer-zh执行时间不得晚于最终决策完成时间');
 if (episodeArg && Date.parse(decision.completed_at) <= Date.parse(decision.hook_contract.outline_accepted_at)) fail('全文与钩子完成时间必须晚于Jeffrey大纲确认');
 
 console.log(`PASS chuangzuo script contract schema=${decision.schema_version} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);

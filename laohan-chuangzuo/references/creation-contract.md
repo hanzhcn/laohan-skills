@@ -123,6 +123,44 @@ Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同
 
 有分层讲解时设置 `structure_contract.layered=true`，正文使用连续的 `1、2、3……`；每层绑定不同内容单位。无真实层级时设置 `layered=false`，不强行编号。
 
+## humanizer-zh 最终语言定稿
+
+正式Episode和普通独立正式稿在内容事实成立后、TTS与hash绑定前，必须保存humanizer输入快照并执行本机冻结的`humanizer-zh`。`series-draft-v1`仅是独立草稿，豁免本门；`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`由Jeffrey确认且已经录制，不自动改写。
+
+Episode输入快照固定为`02-创作工作稿/humanizer-input.md`；独立正式稿使用同basename`.humanizer-input.md`。`创作决策.json.humanizer_contract`固定为：
+
+```json
+{
+  "status": "PASS",
+  "skill": "humanizer-zh",
+  "skill_path": "agents-skills/humanizer-zh/SKILL.md",
+  "skill_sha256": "<sha256>",
+  "input_snapshot_path": "02-创作工作稿/humanizer-input.md",
+  "input_snapshot_sha256": "<sha256>",
+  "output_spoken_text_sha256": "<最终有效口播文本sha256>",
+  "claim_audit": {
+    "status": "PASS",
+    "audited_content_unit_ids": ["U01"],
+    "added_claims": [],
+    "removed_claims": [],
+    "changed_claims": [],
+    "reviewer": "Codex",
+    "review_note": "逐项对照内容单位，语言改写未改变主张。"
+  },
+  "quality_scores": {
+    "directness": 9,
+    "rhythm": 9,
+    "trust": 9,
+    "authenticity": 9,
+    "conciseness": 9,
+    "total": 45
+  },
+  "applied_at": "<ISO-8601>"
+}
+```
+
+五项分数均为1—10整数，`total`必须等于五项之和且至少45。主张审计必须逐项覆盖全部`content_units`，三个变更数组必须为空；发现任何主张变化就回到规划与事实步骤，不得把变化伪装成语言润色。机械validator校验路径/SHA、Skill SHA、最终口播SHA、覆盖范围和空变更数组；语义是否真的保持仍由创作者/终审负责。
+
 ## 自然时长与TTS
 
 TTS是可重建的内部机械试读证据，只检查5秒内容锚点、拗口句和自然时长。它不是Jeffrey的正式口播音轨，不进入视频、导演或Remotion，也不能替代真人试拍后按脸部安全区和真实语速进行的节奏对齐；`actual_tts_seconds`只能表述为TTS机械试读时长，不能表述为真人口播实测。
