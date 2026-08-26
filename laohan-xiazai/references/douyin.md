@@ -1,18 +1,40 @@
 # 抖音下载方法
 
-抖音反爬极强，yt-dlp/Jina/web_fetch 全部无效。日常用 opencli（`opencli douyin --help` 看全部子命令）；下方移动端 UA + iesdouyin 是底层原理与降级方案——opencli 内部走的就是这套 API，手动方法仅在 opencli 失效时备用。
+抖音反爬极强，yt-dlp/Jina/web_fetch/纯 HTTP 全部无效。2026-08 反爬升级后格局：短链→video_id 的重定向仍有效（curl 即可），但 video_id→播放地址的所有纯 HTTP 通道全部关闭（死路清单见文末踩坑记录）。单视频下载当前首选：**Playwright 渲染 + 抓 aweme/detail API 响应**。opencli 仍可用（search/user-videos，内部维护签名），但没有单视频 resolve 命令。
 
 ## 下载视频
 
-1. 移动端 UA 请求短链接 → 获取 video_id
-2. `iesdouyin.com/share/video/{id}` → 提取 `window._ROUTER_DATA` JSON
-3. JSON 路径：`loaderData` → `video_(id)/page` 或 `note_(id)/page` → `videoInfoRes` → `item_list[0]`
-4. `video.play_addr.url_list[0]` 中替换 `playwm` → `play` → 下载视频
+### 第 1 步：短链解析拿 video_id（仍有效，curl 即可）
 
-移动端 UA（必须，iesdouyin.com 只对移动端返回完整数据）：
+从分享口令正则提取短链（`https?://v\.douyin\.com/[\w]+/`），带移动端 UA 请求，302 落地 URL 路径里的数字即 video_id：
+
+```bash
+curl -sL -o /dev/null -w '%{url_effective}' \
+  -H "User-Agent: {移动端UA}" "https://v.douyin.com/5Rv_b7nF6EE/"
+# → https://www.iesdouyin.com/share/video/7657727877504437538/?region=CN&...
+# video_id = 7657727877504437538
+```
+
+移动端 UA（必须）：
 ```
 Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1
 ```
+
+### 第 2 步：Playwright 抓包拿播放地址（当前首选）
+
+1. Playwright（ECC Playwright MCP `browser_navigate`）打开 `https://www.iesdouyin.com/share/video/{video_id}/`，页面自动跳转到 `www.douyin.com/video/{video_id}` 并渲染
+2. 页面自己调用 `https://www.douyin.com/aweme/v1/web/aweme/detail/?aweme_id={video_id}`——签名（a_bogus/msToken）由浏览器自动计算，无需关心
+3. 从 network 抓该请求的响应体（`browser_network_requests` 过滤 `aweme/detail` → `browser_network_request` 取 `response-body`）
+4. JSON 路径：`aweme_detail.video.play_addr.url_list[0]` → 单文件 1080p mp4 CDN 直链；`bit_rate` 数组含多码率备选
+5. curl 带 `Referer: https://www.douyin.com/` 下载，**拿到立即下载**——CDN 直链带签名时效（约几小时）
+
+备选取法：页面 network 里 douyinvod.com 的 `media-video-avc1` + `media-audio-und-mp4a` 是分离流（206 请求），下载两段后 `ffmpeg -i video.mp4 -i audio.mp4 -c copy out.mp4` 合并。
+
+### ~~旧方法：移动端 UA + iesdouyin SSR~~（已失效，2026-08-26 验证）
+
+原四步：`iesdouyin.com/share/video/{id}` 提取 `window._ROUTER_DATA` → `loaderData` → `videoInfoRes` → `item_list[0]` → `video.play_addr.url_list[0]` 替换 `playwm` → `play`。
+
+失效原因：SSR 页面的 `_ROUTER_DATA` 里只剩 query/abParams，`play_addr` 出现 0 次——抖音把视频数据从服务端渲染抽走，改为前端 JS 调带签名的 API。此路不可修，别再试。
 
 ## 提取音频 + 转录
 
@@ -145,9 +167,12 @@ opencli douyin user-videos {sec_uid} --limit 20 --with_comments false -f json
 
 ## 代码层抓取（agent 内嵌）
 
+> **douyin_tiktok_scraper 1.2.9 已失效**（2026-08-26 验证）：`hybrid_parsing` 内部走 `douyin.com/aweme/v1/web/aweme/detail/`（X-Bogus 签名），当前签名算不过校验，重试 4 次全返回空。另 API 已变：1.2.9 的 `Scraper()` 不支持 `async with`，须直接实例化调用。库若更新签名算法可能复活，复活前代码内嵌场景改用上方 Playwright 抓包法。
+
 ```python
+# 历史用法存档（当前失效，勿用）
 from douyin_tiktok_scraper.scraper import Scraper
-async with Scraper() as s:
+async with Scraper() as s:  # 1.2.9 已不支持 async with
     data = await s.hybrid_parsing("https://v.douyin.com/xxx")
 ```
 
@@ -178,6 +203,31 @@ asyncio.run(main())
 - `.auth/` 目录存持久化 Cookie（需扫码登录一次），Chrome 异常退出后需清理 `SingletonLock/SingletonCookie/SingletonSocket`
 - 获取用户视频列表：`opencli douyin user-videos {sec_uid} --limit 20 -f json`（⚠️ `--limit` 上限 20 无翻页；旧 sec_uid 会 Cookie 覆盖返回自己账号的视频，需用短链接解析获取最新 sec_uid）
 - 抖音主页 Scrapling stealthy_fetch 可获取公开视频页面（点赞+评论），但无法滚动加载全部评论
+
+## 踩坑记录（2026-08-26 反爬升级全链路验证）
+
+背景：单视频下载（`v.douyin.com` 短链）失败，触发降级链全链路实测。
+
+**仍然有效的**：
+- 短链 302 重定向（curl + 移动端 UA → video_id）
+- opencli（search/user-videos 等，内部维护签名）
+- Playwright 渲染 + 抓 aweme/detail 响应（新首选，实测下载成功 86MB/533s/1080p）
+
+**死路清单（别浪费时间重试）**：
+
+| 方法 | 现象 |
+|------|------|
+| iesdouyin SSR `_ROUTER_DATA` + `playwm→play` | JSON 里只剩 query/abParams，`play_addr` 出现 0 次 |
+| `iesdouyin.com/web/api/v2/aweme/iteminfo` 老 API | 返回空 |
+| douyin_tiktok_scraper 1.2.9 | web detail API 签名失效，重试 4 次空响应 |
+| tikwm API 喂抖音链接 | "Url parsing is failed"（本就不支持抖音，见 tiktok.md） |
+| api.douyin.wtf 公共实例 | 无响应（源头项目自顾不暇） |
+| www.douyin.com 直抓（ttwid + RENDER_DATA） | ttwid 注册接口返回空，页面是 72KB 风控页 |
+
+**源头项目调研**（2026-08-26）：
+- Evil0ctal/Douyin_TikTok_Download_API（14.7k★，douyin.wtf 背后）：官方文档承认多端点 400 / 返回 200 但空响应体 / 评论端点崩溃，社区转向 TikHub（商业付费）或自部署 + 实时 Cookie
+- Johnserf-Seed/f2（原 TikTokDownload）：仍活跃，`f2 dy -M one -u <链接>` 单视频模式，纯 HTTP 比浏览器轻，但必须配登录 Cookie 且依赖其 a_bogus 签名持续跟进——**轻量备选，未实测**
+- 业界格局：免签名轻量通道已绝，只剩"自算签名 + Cookie"（军备竞赛）与"浏览器层"（重但稳）两条路。a_bogus = SM3 国密哈希 + RC4 + 浏览器指纹，纯逆向实现的开源库不少但随抖音更新频繁失效
 
 ## 方法论：如何发现工具的真实能力
 

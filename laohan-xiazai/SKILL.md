@@ -1,7 +1,7 @@
 ---
 name: laohan-xiazai
 description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""搜一下""搜索""查一下""帮我查""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access。
-version: "1.2.0"
+version: "1.3.0"
 ---
 
 # 从互联网拿内容
@@ -105,7 +105,7 @@ opencli doctor
 
 | 平台 | 第1选 | 第2选 | 第3选 | 最终兜底 |
 |------|-------|-------|-------|---------|
-| 抖音 | 移动端 UA + iesdouyin | `opencli douyin` | `douyin_tiktok_scraper`（Python）+ douyin-session（评论） | Scrapling stealthy |
+| 抖音 | 短链解析 + Playwright 抓 aweme/detail | `opencli douyin` | douyin-session（评论） | Scrapling stealthy |
 | TikTok | tikwm API | `yt-dlp` | `opencli tiktok`（需 Browser Bridge） | — |
 | YouTube | `yt-dlp`（需 `--cookies-from-browser chrome`） | `opencli youtube transcript`（字幕） | — | — |
 | B站 | `opencli bilibili download`（需 Browser Bridge） | Jina Reader | — | — |
@@ -117,6 +117,7 @@ opencli doctor
 
 降级时注意：
 - 抖音不存在 yt-dlp 降级路径（已验证无效），不要浪费时间尝试
+- 抖音纯 HTTP 通道 2026-08 起全部关闭（iesdouyin SSR / douyin_tiktok_scraper 均失效），单视频下载走短链解析 + Playwright 抓包（见 `references/douyin.md`）
 - B站 yt-dlp 已被 HTTP 412 全面拦截（2026-04-28 验证），不要尝试 yt-dlp 下载B站视频
 - YouTube 无 cookies 会被 bot 检测拦截，必须加 `--cookies-from-browser chrome`
 - 每步失败后简要告诉用户换了个方法，不要静默切换
@@ -239,7 +240,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知
 
 ## 关键注意事项
 
-- 抖音反爬极强，yt-dlp/Jina 全部无效，只能用移动端 UA 方法（见 `references/douyin.md`）
+- 抖音反爬极强，yt-dlp/Jina/纯 HTTP 全部无效（2026-08 升级后 iesdouyin SSR 与 douyin_tiktok_scraper 也失效），单视频下载走短链解析 + Playwright 抓包（见 `references/douyin.md`）
 - TikTok 用 tikwm API，CDN URL 临时，获取后立即下载
 - YouTube 字幕首选 `opencli youtube transcript`（返回干净文本免清洗），备选 yt-dlp 的 VTT 需 `clean_vtt.py` 清洗（见 `references/youtube.md`）
 - opencli Cookie 命令需要 Browser Bridge 运行（排障：`opencli doctor`）

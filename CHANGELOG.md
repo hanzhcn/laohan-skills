@@ -2,6 +2,10 @@
 
 所有重要变更都会记录在此文件中。
 
+## [2026-08-26] - 抖音单视频下载方法更替
+
+- **laohan-xiazai** v1.3.0 — 抖音 2026-08 反爬升级：iesdouyin SSR（`_ROUTER_DATA` + `playwm→play`）与 douyin_tiktok_scraper 均失效，旧方法标记失效并附原因；新方法为短链解析（curl 重定向仍有效）+ Playwright 抓 aweme/detail 响应；补全死路清单与源头项目（Evil0ctal/Douyin_TikTok_Download_API、Johnserf-Seed/f2）调研，f2 记为轻量备选（需 Cookie，未实测）。
+
 ## [2026-08-26] - 口播、导演与观众资源分层
 
 - **laohan-chuangzuo** v3.3.0 — 阶段②只输出纯口播正文与抽象`visual_anchors`，禁止在`01-口播稿.md`插入B-Roll、字幕或Remotion导演提示；正文承诺给观众的模板、清单、提示词或命令必须独立生成完整填写版资源，绑定SHA及四平台交付方式。validator新增导演提示、资源占位符和交付缺失负例。
