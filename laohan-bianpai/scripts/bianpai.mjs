@@ -466,7 +466,7 @@ const topicState = () => safely(() => {
     if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || '选题机械合同失败').trim()};
   }
   const experiment = topic.experiment;
-  const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec']);
+  const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec', 'digg_count', 'comment_count', 'share_count']);
   if (![1, 2, 3, 4].includes(topic.schema_version) || typeof topic.audience !== 'string' || !topic.audience.trim() || typeof topic.thesis !== 'string' || !topic.thesis.trim() || !Array.isArray(topic.evidence) || topic.evidence.length === 0 || !topic.evidence.every((item) => item && typeof item.id === 'string' && item.id.trim() && typeof item.source === 'string' && item.source.trim()) || !experiment || typeof experiment.hypothesis_id !== 'string' || !experiment.hypothesis_id.trim() || typeof experiment.intervention !== 'string' || !experiment.intervention.trim() || typeof experiment.expected_metric !== 'string' || !experiment.expected_metric.trim() || !Array.isArray(experiment.metric_keys) || !experiment.metric_keys.length || new Set(experiment.metric_keys).size !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => typeof key === 'string' && allowedMetricKeys.has(key)) || typeof experiment.observation_window !== 'string' || !/^T\+\d+$/.test(experiment.observation_window) || typeof topic.not_do_reason !== 'string' || !topic.not_do_reason.trim()) return {done: false, reason: '00-选题.json 必须声明受众、论点、证据、实验假设/干预/指标键/T+N 窗口与不做理由'};
   const config = readJson('episode-config.json');
   if (config.schema_version === 2) {
