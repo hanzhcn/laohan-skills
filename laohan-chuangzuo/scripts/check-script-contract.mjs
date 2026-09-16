@@ -401,6 +401,7 @@ if (humanizer.status !== 'PASS'
   || !Array.isArray(claimAudit.removed_claims) || claimAudit.removed_claims.length
   || !Array.isArray(claimAudit.changed_claims) || claimAudit.changed_claims.length
   || !nonEmpty(claimAudit.reviewer)
+  || !humanizer.pattern_scan || typeof humanizer.pattern_scan.method !== 'string' || !humanizer.pattern_scan.method.trim() || !humanizer.pattern_scan.results || !Object.keys(humanizer.pattern_scan.results).length
   || !nonEmpty(claimAudit.review_note)
   || scoreKeys.some((key) => !Number.isInteger(scores[key]) || scores[key] < 1 || scores[key] > 10)
   || scores.total !== scoreTotal
