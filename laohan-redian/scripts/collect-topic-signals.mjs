@@ -82,7 +82,7 @@ function collectTrackedCreators() {
   const results = [];
   const accounts = [];
   for (const creator of creators) {
-    const args = ['douyin', 'user-videos', creator.sec_uid, '--limit', '20', '--with_comments', 'false', '-f', 'json'];
+    const args = ['douyin', 'user-videos', creator.sec_uid, '--limit', '20', '--with_comments', 'true', '-f', 'json'];
     let finalRun = null;
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       finalRun = spawnSync('opencli', args, {encoding: 'utf8', timeout: 90000, maxBuffer: 16 * 1024 * 1024});
@@ -101,9 +101,13 @@ function collectTrackedCreators() {
         const normalized = normalizeItem('tracked-douyin-creators', item, index);
         const diggCount = Number(item?.statistics?.digg_count ?? item?.digg_count ?? 0);
         const performanceRatio = median > 0 ? Number((diggCount / median).toFixed(2)) : null;
+        const topComments = Array.isArray(item?.top_comments)
+          ? item.top_comments.slice(0, 3).map((comment) => ({text: String(comment?.text ?? comment?.content ?? '').slice(0, 120), digg_count: Number(comment?.digg_count ?? comment?.like_count ?? 0)})).filter((comment) => comment.text)
+          : [];
         return {
           ...normalized,
           url: normalized.url || (item?.aweme_id ? `https://www.douyin.com/video/${item.aweme_id}` : ''),
+          top_comments: topComments,
           creator_name: creator.nickname,
           creator_sec_uid: creator.sec_uid,
           creator_pool_status: creator.status,

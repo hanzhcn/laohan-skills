@@ -44,7 +44,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-`AUTONOMOUS_SCAN`按五步法第1步扫爆款：`数据层/tracked-creators.json`全池逐账号扫描（ACTIVE必扫且失败阻断；PENDING一并扫描供交叉印证，失败如实记录不阻断）、`数据层/self-channel.json`自频道异常倍数（自己异常倍数高的方向优先深挖）、全面热点（辅助输入）与`script-pool/Jeffrey个人表达池.md`（素材来源）。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > SELF_CHANNEL(2) > BROAD_HOTSPOT(3) > PERSONAL_EXPRESSION(4)`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续。需要缩小热点route时才传 `--sources`，不能借此跳过达人库和自频道。
+`AUTONOMOUS_SCAN`按五步法第1步扫爆款：`数据层/tracked-creators.json`全池逐账号扫描（ACTIVE必扫且失败阻断；PENDING一并扫描供交叉印证，失败如实记录不阻断）、`数据层/self-channel.json`自频道异常倍数（自己异常倍数高的方向优先深挖）、全面热点（辅助输入）与`script-pool/Jeffrey个人表达池.md`（素材来源）。扫描同时执行**时间分层**（近30天异常=当下需求优先做；3个月前异常=常青题，需再验证当下热度）与**异常分级**（3倍=值得注意，10倍以上=大机会优先深挖），并消费每条异常的`top_comments`高赞评论——高赞评论是观众没被满足的问题，直接作为候选线索。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > SELF_CHANNEL(2) > BROAD_HOTSPOT(3) > PERSONAL_EXPRESSION(4)`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续。需要缩小热点route时才传 `--sources`，不能借此跳过达人库和自频道。
 
 脚本只写：
 
@@ -63,6 +63,8 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 同一事件的观点/教程变体在受众任务、标题承诺和内容路径不同时可分别计数。每项必须有：
 
+定角度前置动作：**先读原视频**——必须读过原爆款的转录或完整内容才允许写tension（反驳/补深/亲历替代都建立在实际内容上，没读过就是猜）。对标视频转录复用项目既有转录工具链（large-v3），产物放`数据层/scans/<日期>/`或episode临时目录。想不出差异时用兴趣市场工具：两个高兴趣题材组合=受众叠加，并评估母题受众池大小（工具教程类通常大于纯观点类，同质量优先池大的）。
+
 形成候选前恢复原版分析：以“AI/GPT/Claude/大模型/机器人/自动化/编程/副业”等直接词和“教育/职业/消费/创业/职场”等间接词标注相关度，但保留可能产生新角度的边缘信号；统计安装教程/进阶技巧/方法论/对比评测/实战/资源推荐等内容类型；标出多平台共振、单平台独有、已拥挤角度和竞品未覆盖机会。它们用于扩大候选，不替代后面的 PRIMARY 与抖音关键词核验。
 
 - 唯一 `id`、稳定非空 `event_cluster_id`、非空 `why_now`、`title`、`content_form: opinion-video|tutorial-video`、`audience_level: BEGINNER|INTERMEDIATE|ADVANCED`、`audience_problem`、`audience_promise`、`thesis`。
@@ -77,7 +79,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 - `scorecard` 七维整数 1—5：`audience_fit`、`evidence_strength`、`platform_relevance`、`differentiation`、`creator_fit`、`production_feasibility`、`learning_value`。
 - 非空 `rationale`。未定题时候选为 `disposition: SHORTLISTED`或`REJECTED`；五步法全部通过的最优候选由AI标记`AUTO_SELECTED`（同时其余候选给`REJECTED`加具体理由）。
 - `false_positive_filter`（第2步剔假爆款）：`status: PASSED|REJECTED`、`checks`四项布尔（`celebrity_event`/`controversy`/`off_niche`/`pure_news`）、非空`rationale`。四类假信号命中的候选保持REJECTED，不得入选。
-- `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个以上不同账号的同母题异常信号。
+- `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个不同账号的同母题异常即可成系列，三个以上账号=强信号降风险。系列优先采用可追更形式（"挑战30天XX""10天教会XX"式进度感系列，直接吃到复访率权重），形式写入`topic_corroboration.series_format_hint`（可空）。
 - `packaging_assessment`（第5步验收藏）：非空`title_direction`与`cover_concept`（一句话，不做图）、三问布尔`worth_collecting`/`evergreen_half_year`/`title_clickable`、非空`rationale`。AUTO_SELECTED候选三问必须全true；不达标回第4步换角度或换题。
 
 分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
