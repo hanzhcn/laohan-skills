@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.4.0"
+version: "3.5.0"
 ---
 
 # 统一创作引擎
@@ -27,7 +27,7 @@ version: "3.4.0"
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
-- **创作机械合同**：`references/creation-contract.md`（Episode schema 4的采访/大纲确认、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3）
+- **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -79,7 +79,7 @@ OUTPUT_DIR = 普通独立写作时 <当前工作目录>/output/；已验证系�
 
 ## Episode 模式
 
-当参数含 `--episode episodes/<slug>` 时，先读取 schema 3 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。先围绕当前题目反向采访Jeffrey，写`02-创作工作稿/反向采访.json`；6—12轮只是常用范围，完成条件是四类材料均有可追溯回答，未齐就继续追问，已齐且继续追问不再改变观点或结构即可停止。采访完成后只写`02-创作工作稿/大纲.md`。Jeffrey明确接受并写入`大纲确认.json`前，不得生成全文或锁定钩子。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
+当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。2026-09-17起按五步法合同执行：直接从选题、`script-pool/Jeffrey个人表达池.md`（真实场景、亲历细节、固定表达素材）和系列研究摘录取材，写`02-创作工作稿/大纲.md`后直接写全文；不产生反向采访或大纲确认（历史episode的schema 3选题继续按其原采访合同验证）。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`（绑定选题SHA、`expression_pool_usage`取材记录，钩子兑现①packaging_assessment承诺）。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
 Episode schema 4 在原schema 3全部内容之外，至少增加：
 
@@ -116,7 +116,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Pre-A/B: 前置处理（如需；Pre-C 热点转译已移除，搜索归工作流①）
 - [ ] Step 0: 判断输入模式（大纲/素材/自由）
 - [ ] Step 1: [素材模式] Layer A/B 整理
-- [ ] Step 1.5: [Episode] 反向采访→只生成大纲→Jeffrey确认；[独立自由模式] 生成大纲→用户确认
+- [ ] Step 1.5: [Episode] 从选题+表达池取材生成大纲；[独立自由模式] 生成大纲→用户确认
 - [ ] Step 2: 选题确认（模式A/B选择+主题锁定）
 - [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
@@ -181,9 +181,9 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 独立写作时整理结果输出到 `output/organize-YYYY-MM-DD.md`；Episode 模式输出到 `episodes/<slug>/02-创作工作稿/organize.md`，进入 Step 2。
 
-## Step 1.5：反向采访与大纲确认
+## Step 1.5：取材与大纲
 
-Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题必须由上一回答推进。6—12轮是常用范围，不是凑数或封顶：四类材料未齐时即使到第12轮也继续；四类材料已齐，且继续追问不再改变观点或结构时即可停止。`反向采访.json`必须为真实场景、情绪转折、独特判断和观众行动逐项写`completion_evidence`，绑定回答序号与提取摘要，并写空的`remaining_gaps`和具体`completion_reason`。之后只生成`大纲.md`。Jeffrey确认前进入`WAITING_FOR_JEFFREY_OUTLINE_APPROVAL`，不写全文，不设计标题和前三秒钩子。
+Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis、tension、audience、packaging_assessment）；②`script-pool/Jeffrey个人表达池.md`中与题目相关的真实场景、亲历细节和固定表达（在决策JSON的`expression_pool_usage[]`登记`used/where`）；③`USER_DIRECTION_RESEARCH`时的系列研究摘录。大纲成立后直接写全文，前三秒钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（决策JSON `hook_contract.fulfills_packaging_promise=true`）。反向采访与大纲确认门槛已于2026-09-17砍除；Jeffrey的修改意见在④—⑤或成稿反馈时吸收。
 
 独立自由模式无素材时生成大纲：
 
@@ -217,7 +217,7 @@ Episode模式先像了解Jeffrey的采访者一样一次问一个问题，问题
    - 选 B 信号：行业观点/新闻/深度思考/人物故事
 2. **锁定主题**：大纲/整理结果中的一句话主题 = 全篇锚点，不准自换
 3. **判断素材类型**：对照 `ACTIVE_STYLE_FILE` 内的素材适配规则；该文件没有专用表时，按 Step 1 的 Layer A/B 证据类型记录，不另外加载 style.md
-4. **确认大纲**：Episode必须读取Jeffrey签署且SHA有效的`大纲确认.json`
+4. **大纲自检**：Episode模式确认大纲覆盖选题thesis与tension，且钩子设计兑现packaging承诺
 5. **（教程型专用）可操作步骤清单**：模式 A 时从素材中提取观众能跟着做的步骤
 
 ## Step 3：规划（不写稿，不可跳过）

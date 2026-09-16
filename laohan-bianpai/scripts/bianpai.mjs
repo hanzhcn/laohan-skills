@@ -448,22 +448,22 @@ const materialState = () => {
 const topicState = () => safely(() => {
   if (exists('00-选题-candidates.json')) {
     const candidatesPreview = readJson('00-选题-candidates.json');
-    if (candidatesPreview.schema_version === 3) {
-      if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian schema 3 validator'};
+    if ([3, 4].includes(candidatesPreview.schema_version)) {
+      if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian topic validator'};
       const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
       const contractMessage = (contract.stderr || contract.stdout || '').trim();
       if (contract.status !== 0) {
-        if (contractMessage.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION') || contractMessage.includes('TOPIC_RESCAN_REQUIRED')) return {done: false, reason: contractMessage};
-        return {done: false, reason: `TOPIC_CONTRACT_BLOCKED：${contractMessage || 'schema 3选题机械合同失败'}`};
+        if (contractMessage.includes('TOPIC_RESCAN_REQUIRED')) return {done: false, reason: contractMessage};
+        return {done: false, reason: `TOPIC_CONTRACT_BLOCKED：${contractMessage || '选题机械合同失败'}`};
       }
     }
   }
   if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
   const topic = readJson('00-选题.json');
-  if (topic.schema_version === 3) {
-    if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian schema 3 validator'};
+  if ([3, 4].includes(topic.schema_version)) {
+    if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian topic validator'};
     const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
-    if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || 'schema 3选题机械合同失败').trim()};
+    if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || '选题机械合同失败').trim()};
   }
   const experiment = topic.experiment;
   const allowedMetricKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec']);
@@ -571,7 +571,7 @@ const topicState = () => safely(() => {
     const directions = new Set(['INCREASE', 'DECREASE', 'MAINTAIN']);
     if (Number(experiment.observation_window.slice(2)) <= 0 || experiment.observation_window_unit !== 'DAY' || !uniqueNonEmpty(targetKeys) || targetKeys.length !== experiment.metric_keys.length || !experiment.metric_keys.every((key) => targetKeys.includes(key)) || !experiment.metric_targets.every((item) => allowedMetricKeys.has(item.key) && directions.has(item.direction) && typeof item.baseline_ref === 'string' && item.baseline_ref.trim() && item.measurement_source === 'douyin_creator_center')) return {done: false, reason: 'schema 2 experiment 必须用正整数 T+N/DAY，并为每个 metric key 预注册方向、基线和抖音创作者中心来源'};
   }
-  return {done: true, reason: topic.schema_version >= 2 ? '选题决策已绑定唯一内容 lane、小白合同、PRIMARY/平台语义对齐、Jeffrey门槛与可测实验' : '历史选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
+  return {done: true, reason: topic.schema_version >= 4 ? '五步法选题已绑定数据层信号、假阳性过滤、单期/系列判定、冲突角度、收藏价值与AI自主定题理由' : topic.schema_version >= 2 ? '选题决策已绑定唯一内容 lane、小白合同、PRIMARY/平台语义对齐、Jeffrey门槛与可测实验' : '历史选题决策已绑定候选、PRIMARY/平台证据、抖音搜索与可测实验'};
 }, '00-选题.json 无法读取');
 const scriptState = () => safely(() => {
   const executorLock = readJson('00-编排/executor-lock.json');
@@ -580,6 +580,9 @@ const scriptState = () => safely(() => {
   if (!versionMatch) return {done: false, reason: 'executor lock 中 laohan-chuangzuo 版本无效'};
   const [, majorText, minorText] = versionMatch;
   if (!nonEmptyFile('01-口播稿.md') || !exists('02-创作工作稿/创作决策.json')) {
+    const topicPreview = safely(() => readJson('00-选题.json'), null);
+    const fiveStepContract = topicPreview?.schema_version === 4;
+    if (fiveStepContract) return {done: false, reason: '②必须同时有非空 01-口播稿.md 与 02-创作工作稿/创作决策.json（五步法合同：从选题+表达池取材直接写稿，无采访/大纲确认门槛）'};
     if (!exists('02-创作工作稿/反向采访.json')) return {done: false, reason: 'WAITING_FOR_JEFFREY_INTERVIEW：选题已确认，等待AI围绕真实场景、情绪、独特判断和观众行动完成反向采访'};
     const interview = readJson('02-创作工作稿/反向采访.json');
     const exchanges = Array.isArray(interview.exchanges) ? interview.exchanges : [];
@@ -1037,10 +1040,10 @@ if (command === 'next') {
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
   else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log(`# 当前阶段：TOPIC_RESCAN_REQUIRED\n\nplanned_iteration: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- 保留Jeffrey的否决原因和下一轮扫描方向，在同一01任务重新执行三路扫描并生成新候选；不得进入②。`);
-  else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_EMOTION_SELECTION\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- AI只展示候选与证据，Jeffrey选中后在同一01任务继续。`);
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log(`# 当前阶段：TOPIC_RESCAN_REQUIRED\n\nplanned_manual_gate: false\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- 五步法信号不足或Jeffrey否决：按原因扩大扫描后重新定题。`);
   else if (next.id === '①' && topicState().reason.includes('TOPIC_CONTRACT_BLOCKED')) console.log(`# 当前阶段：TOPIC_CONTRACT_BLOCKED\n\nblocked: true\n${fields}\n\n- ${topicState().reason}\n- 修正候选、筛选回执或最终选题的非法状态后重跑；不得进入②。`);
-  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_INTERVIEW\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 一次只问一个能改变观点或结构的问题；采访完成后先交大纲。`);
-  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_OUTLINE_APPROVAL\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 未确认前不得写全文或锁定前三秒钩子。`);
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_INTERVIEW（历史合同）\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 历史episode的采访合同；新期schema 4选题无此门槛。`);
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_OUTLINE_APPROVAL（历史合同）\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${scriptState().reason}\n- 历史episode的大纲确认合同；新期schema 4选题无此门槛。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_REQUIRED\nworkflow_mode: AUTONOMOUS_RUN\nstop_condition: ⑦\n${fields}\n\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留；三个计划内Jeffrey门槛除外，其余成功后重跑 bianpai 并自动继续。`);
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log(`# 下一步：⑦拍摄\n\nWAITING_FOR_JEFFREY_SHOOTING\nworkflow_mode: AUTONOMOUS_RUN\nplanned_manual_handoff: true\n\n- 需要落盘：${next.output}\n- 说明：到达计划内唯一拍摄交接；等 Jeffrey 拍摄，这不是 BLOCKED。`);
   else console.log(`# 下一步：${next.id}${next.name}\n\n${fields}\n- 路由：${next.skill}\n- 需要落盘：${next.output}\n- 前置：前一已完成步骤的产物必须保留。`);
@@ -1063,10 +1066,10 @@ if (next) {
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log('TOPIC_RESCAN_REQUIRED planned_iteration=true blocked=false');
-  else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log('WAITING_FOR_JEFFREY_EMOTION_SELECTION planned_manual_gate=true blocked=false');
+  else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log('TOPIC_RESCAN_REQUIRED planned_manual_gate=false blocked=false');
   else if (next.id === '①' && topicState().reason.includes('TOPIC_CONTRACT_BLOCKED')) console.log('TOPIC_CONTRACT_BLOCKED blocked=true');
-  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log('WAITING_FOR_JEFFREY_INTERVIEW planned_manual_gate=true blocked=false');
-  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL planned_manual_gate=true blocked=false');
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_INTERVIEW')) console.log('WAITING_FOR_JEFFREY_INTERVIEW planned_manual_gate=true blocked=false legacy=true');
+  else if (next.id === '②' && scriptState().reason.includes('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL')) console.log('WAITING_FOR_JEFFREY_OUTLINE_APPROVAL planned_manual_gate=true blocked=false legacy=true');
   else if (workflowMode === 'AUTONOMOUS_RUN' && ['①', '②', '③', '④', '⑤', '⑥'].includes(next.id)) console.log('AUTO_CONTINUE_REQUIRED workflow_mode=AUTONOMOUS_RUN stop_condition=⑦');
   else if (workflowMode === 'AUTONOMOUS_RUN' && next.id === '⑦') console.log('WAITING_FOR_JEFFREY_SHOOTING planned_manual_handoff=true blocked=false');
 }

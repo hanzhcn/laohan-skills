@@ -1,7 +1,7 @@
 ---
 name: laohan-redian
-version: 3.2.0
-description: 真人口播①选题决策主写者；从 AIHOT 与已安装 OpenCLI 的当前信号生成观点/教程候选，核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源后，只选一个可生产且可复盘的主题。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
+version: 3.3.0
+description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
 ---
@@ -27,9 +27,9 @@ Episode 模式必须读取：
 2. 本期已显式登记的反馈快照；没有就记录 `NOT_AVAILABLE`，不得扫描旧 episode 猜经验。
 3. 本轮真实 signals 与抖音搜索证据。
 
-标准 Episode 固定为 `REVIEW_GATED`：AI自主完成发现与候选，但不得替Jeffrey选中。Jeffrey 明确给题时走 `USER_SEED`，仍须给出至少一个真实替代候选、抖音取证、PRIMARY 证据和测量合同；最终同样经过情绪与表达欲筛选。
+标准 Episode 为 `AUTO_SELECT`：AI按五步法完成发现、过滤与定题， Jeffrey 保留事后否决权（`00-选题-Jeffrey否决.json`，否决原因必填，否决后按原因重新扫描）。Jeffrey 明确给题时走 `USER_SEED`，仍须给出至少一个真实替代候选、抖音取证、PRIMARY 证据和测量合同。
 
-Jeffrey给出的是软件、方法或系列方向时，先走`USER_DIRECTION_RESEARCH`：读取项目`docs/系列选题研究与分期规格.md`，完成四平台定向搜索、内容级拆解、需求判断、系列分期和单期资料包。它不运行与方向无关的9账号泛扫描来凑热度。只有`DEMAND_VALIDATED`可进入三期以上系列，`EXPERIMENTAL_ONE_OFF`只进入单期，`DIRECTION_REJECTED`停止。正式episode仍须提供替代候选并经过Jeffrey情绪筛选。
+Jeffrey给出的是软件、方法或系列方向时，先走`USER_DIRECTION_RESEARCH`：读取项目`docs/系列选题研究与分期规格.md`，完成四平台定向搜索、内容级拆解、需求判断、系列分期和单期资料包。它不运行与方向无关的9账号泛扫描来凑热度。只有`DEMAND_VALIDATED`可进入三期以上系列，`EXPERIMENTAL_ONE_OFF`只进入单期，`DIRECTION_REJECTED`停止。正式episode仍须提供替代候选。
 
 ## 工作流
 
@@ -44,7 +44,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-`AUTONOMOUS_SCAN`候选源固定为三条线：9个登记抖音对标账号逐账号近期扫描、全面热点扫描、`script-pool/Jeffrey个人表达池.md`。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > BROAD_HOTSPOT(2) > PERSONAL_EXPRESSION(3)`；这是找题效率顺序，不是自动入选分数，个人题仍可在获得公共兴趣证据后胜出。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续，但9个对标账号任一失败都停止候选生成，正常空结果记`EMPTY`且算完成。需要缩小热点route时才传 `--sources`，不能借此跳过对标账号和个人池。
+`AUTONOMOUS_SCAN`按五步法第1步扫爆款：`数据层/tracked-creators.json`全池逐账号扫描（ACTIVE必扫且失败阻断；PENDING一并扫描供交叉印证，失败如实记录不阻断）、`数据层/self-channel.json`自频道异常倍数（自己异常倍数高的方向优先深挖）、全面热点（辅助输入）与`script-pool/Jeffrey个人表达池.md`（素材来源）。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > SELF_CHANNEL(2) > BROAD_HOTSPOT(3) > PERSONAL_EXPRESSION(4)`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续。需要缩小热点route时才传 `--sources`，不能借此跳过达人库和自频道。
 
 脚本只写：
 
@@ -55,7 +55,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 ### 2. 标准化、去重、形成候选
 
-读取 signals，按稳定 signal id 聚类同一事实事件；排除同 URL/同承诺/同路径的重复表达。对标账号只提炼母题、公众需求和异常信号，不复制标题、文案、案例或结论。同一事件只有在“帮观众作判断”和“带观众完成任务”分别成立时才生成两个形态。写 schema 3 `00-选题-candidates.json`，先用顶层 `screening_summary` 留下筛选链路，再写至少两个真正不同的短名单候选。`screening_summary` 只包含：
+读取 signals，按稳定 signal id 聚类同一事实事件；排除同 URL/同承诺/同路径的重复表达。对标账号只提炼母题、公众需求和异常信号，不复制标题、文案、案例或结论。同一事件只有在“帮观众作判断”和“带观众完成任务”分别成立时才生成两个形态。写 schema 4 `00-选题-candidates.json`，先用顶层 `screening_summary` 留下筛选链路，再写至少两个真正不同的短名单候选。`screening_summary` 只包含：
 
 - `raw_signal_count`：signals 中实际结果总数；`event_cluster_count`：去重后的事件簇总数。
 - `longlist`：有效事件足够时记8—12条，不足8条时全部记录。每条含唯一 `event_cluster_id`、`working_title`、非空 `signal_ids`、正整数 `source_count`、`disposition: SHORTLISTED|REJECTED` 和具体 `reason`。
@@ -75,7 +75,10 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 - `content_gap` 含 `status: CONFIRMED|NOT_CONFIRMED|UNAVAILABLE`、非空 `rationale` 和 `evidence_ids`。只有平台直接提供搜索量、供给或缺口证据时才能写前两种；搜索结果条数、互动字段缺失或模型判断一律不能冒充内容缺口。`UNAVAILABLE` 合法且不参与机械淘汰。
 - 非空 `claim_evidence_map`；每条含唯一 `claim_id`、非空 `claim`、`evidence_ids`。它要把技术事实绑定 PRIMARY；平台证据可用时，把“平台有人关心什么”绑定 PLATFORM_SIGNAL，不能让相邻关键词替另一个论点背书。平台 `UNAVAILABLE` 时不虚构 PLATFORM_SIGNAL claim。
 - `scorecard` 七维整数 1—5：`audience_fit`、`evidence_strength`、`platform_relevance`、`differentiation`、`creator_fit`、`production_feasibility`、`learning_value`。
-- 非空 `rationale`。Jeffrey筛选前全部使用 `disposition: AWAITING_JEFFREY`；AI只展示候选、证据与风险，不得直接SELECTED。
+- 非空 `rationale`。未定题时候选为 `disposition: SHORTLISTED`或`REJECTED`；五步法全部通过的最优候选由AI标记`AUTO_SELECTED`（同时其余候选给`REJECTED`加具体理由）。
+- `false_positive_filter`（第2步剔假爆款）：`status: PASSED|REJECTED`、`checks`四项布尔（`celebrity_event`/`controversy`/`off_niche`/`pure_news`）、非空`rationale`。四类假信号命中的候选保持REJECTED，不得入选。
+- `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个以上不同账号的同母题异常信号。
+- `packaging_assessment`（第5步验收藏）：非空`title_direction`与`cover_concept`（一句话，不做图）、三问布尔`worth_collecting`/`evergreen_half_year`/`title_clickable`、非空`rationale`。AUTO_SELECTED候选三问必须全true；不达标回第4步换角度或换题。
 
 分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
 
@@ -93,14 +96,14 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 把 PRIMARY 与 PLATFORM_SIGNAL evidence 写入候选文件；每条有稳定 `id`、`source`、`source_type`、`url`、`retrieved_at`。缺 PRIMARY 时缩窄论点为可证范围；仍无法成立就换候选或 BLOCKED。
 
-### 5. Jeffrey情绪与表达欲筛选
+### 5. AI自主定题（Jeffrey保留否决权）
 
-候选完成后进入`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。一次展示3—5个候选，要求Jeffrey基于真实第一反应选择一个，或明确选择“全部无感”。
+五步法全部通过后直接定题，不等待Jeffrey：
 
-- 选中一个：记录`first_reaction`、`challenge_or_addition`、`firsthand_detail`、`would_say_without_heat=true`。先把唯一候选改为`SELECTED`、其余改为`REJECTED`，再写schema 1 `00-选题-Jeffrey筛选.json`绑定当前候选SHA和唯一候选ID。
-- 全部无感：写`status=REJECTED_ALL`，绑定当前候选SHA，并记录`rejection_reason`、`strongest_near_miss`和`rescan_direction`。进入`TOPIC_RESCAN_REQUIRED`，在同一01任务回到三路扫描；不得勉强SELECTED、生成最终选题或进入②。新一轮候选替换旧候选前，必须把这四项与旧候选SHA原样写入新`00-选题-candidates.json.screening_summary.rejection_history[]`；validator据此从`TOPIC_RESCAN_REQUIRED`切回`WAITING_FOR_JEFFREY_EMOTION_SELECTION`。最终接受记录可以覆盖筛选文件，但否决历史继续保留在候选文件中。
-
-没有SHA闭合的Jeffrey记录，不得生成最终选题。
+- 按`异常倍数 > 收藏价值 > 定位重合度`排序，取最优候选标记`AUTO_SELECTED`，其余改`REJECTED`并写具体理由；并列时优先`SELF_CHANNEL`异常方向（自己已被验证的赛道）。
+- 写 schema 4 `00-选题.json`（含`auto_selection_rationale`）与`00-选题.md`后直接进入②。
+- Jeffrey否决：任何时候可写 schema 1 `00-选题-Jeffrey否决.json`（`vetoed_by/vetoed_at/candidates_sha256/selected_candidate_id/veto_reason`必填）。否决后进入`TOPIC_RESCAN_REQUIRED`：按否决原因重新扫描，删除AUTO_SELECTED与最终选题；新候选必须把否决记录（四项+旧候选SHA）原样写入`screening_summary.rejection_history[]`，不得重复推被否决的候选。
+- 信号不足以支撑任何候选通过五步法时进入`TOPIC_RESCAN_REQUIRED`扩大扫描（新登记达人候选、补抖音搜索），不勉强定题。
 
 ### 6. 写最终决策与 source health
 
@@ -113,15 +116,15 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/collect-topic-signals.mjs \
 
 状态必须一致：OK 条数大于 0，EMPTY/FAILED/SKIPPED 条数为 0。至少一条 DISCOVERY 为 OK、一条 DOUYIN_SEARCH 有真实尝试记录、一条 PRIMARY_PROOF 为 OK；DOUYIN_SEARCH 可以 FAILED，但必须绑定本期抖音证据文件与原始错误。
 
-写 schema 3 `00-选题.json`，保留原schema 2字段并绑定Jeffrey选中的候选。最后执行：
+写 schema 4 `00-选题.json`，绑定AUTO_SELECTED候选与`auto_selection_rationale`。最后执行：
 
 ```bash
 node ~/Documents/laohan-skills/laohan-redian/scripts/check-topic-contract.mjs --episode episodes/<slug>
 ```
 
-只有输出`PASS redian topic contract schema=3`才算①完成。
+只有输出`PASS redian topic contract schema=4`才算①完成。
 
-- `schema_version: 2`、`selected_candidate_id`、非空 `rejected_candidate_ids`。
+- `schema_version: 4`、`selected_candidate_id`、非空 `rejected_candidate_ids`、非空 `auto_selection_rationale`。
 - 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap` 和 `claim_evidence_map`。
 - `audience`、`thesis`、`evidence`、`selection_rationale`、`not_do_reason`。
 - evidence 全部属于选中候选，且至少一条 PRIMARY；平台可用时至少一条 PLATFORM_SIGNAL，`platform_alignment.status=UNAVAILABLE` 时可没有。
@@ -149,7 +152,7 @@ node ~/Documents/laohan-skills/laohan-redian/scripts/check-topic-contract.mjs --
 | 抖音返回合法空数组 | 记录 EMPTY；不得推断没有竞争 |
 | OpenCLI 登录/adapter 全路径失败 | 平台证据记 `UNAVAILABLE` 并继续；不安装替代爬虫，不推断蓝海 |
 | 最终候选无 PRIMARY | 缩窄论点或换候选；仍无则 BLOCKED |
-| Jeffrey对全部候选无感 | 写`REJECTED_ALL`并进入`TOPIC_RESCAN_REQUIRED`；按否决原因重新扫描，不进入② |
+| Jeffrey否决当前选题 | 进入`TOPIC_RESCAN_REQUIRED`；按否决原因重新扫描，否决历史带入新候选，不进入② |
 | 平台结果只支持相邻话题 | 标 `ADJACENT`，补充查询；仍相邻时如实说明差异化与风险，可参加最终比较，不得冒充直接对齐 |
 | 教程候选没有本机真实执行证据 | 保持 REJECTED；可保留为待验证候选，不能写成教程已可交付 |
 | 候选不可在既有⑬指标测量 | 换 intervention/metric 或换候选 |

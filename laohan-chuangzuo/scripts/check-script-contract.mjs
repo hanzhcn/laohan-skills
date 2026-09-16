@@ -140,53 +140,49 @@ if ((videoDescription.match(/[？?]/g) || []).length !== 1) fail('抖音视频�
 if (episodeArg) {
   if (decision.schema_version !== 4 || decision.contract_version !== 'content-units-v2') fail('Episode创作决策必须使用 schema 4 / content-units-v2');
   const topicPath = join(base, '00-选题.json');
-  const interviewPath = join(base, '02-创作工作稿/反向采访.json');
   const outlinePath = join(base, '02-创作工作稿/大纲.md');
-  const approvalPath = join(base, '02-创作工作稿/大纲确认.json');
-  for (const [path, label] of [[topicPath, '00-选题.json'], [interviewPath, '反向采访.json'], [outlinePath, '大纲.md'], [approvalPath, '大纲确认.json']]) {
-    if (!requireFile(path, label).startsWith(baseReal + '/')) fail(label + '必须位于当前episode');
-  }
+  if (!requireFile(topicPath, '00-选题.json').startsWith(baseReal + '/')) fail('00-选题.json必须位于当前episode');
+  if (!requireFile(outlinePath, '大纲.md').startsWith(baseReal + '/')) fail('大纲.md必须位于当前episode');
   let topic;
-  let interview;
-  let approval;
   try {
     topic = JSON.parse(readFileSync(topicPath, 'utf8'));
-    interview = JSON.parse(readFileSync(interviewPath, 'utf8'));
-    approval = JSON.parse(readFileSync(approvalPath, 'utf8'));
   } catch {
-    fail('选题、反向采访或大纲确认不是合法JSON');
+    fail('选题不是合法JSON');
   }
-  const exchanges = Array.isArray(interview.exchanges) ? interview.exchanges : [];
-  const coverage = new Set(Array.isArray(interview.coverage) ? interview.coverage : []);
-  const requiredCoverage = ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'];
-  let adaptiveInterviewContract = true;
-  const executorLockPath = join(base, '00-编排/executor-lock.json');
-  if (existsSync(executorLockPath)) {
-    let executorLock;
-    try {
-      executorLock = JSON.parse(readFileSync(executorLockPath, 'utf8'));
-    } catch {
-      fail('executor lock 不是合法JSON');
+  if (topic.schema_version === 4) {
+    // 2026-09-17五步法合同：AI自主定题，无采访/大纲确认门槛
+    if (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale)) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
+    const hook = decision.hook_contract || {};
+    if (decision.topic_sha256 !== shaFile(topicPath) || !Array.isArray(decision.expression_pool_usage) || !decision.expression_pool_usage.length || decision.expression_pool_usage.some((item) => !nonEmpty(item?.used) || !nonEmpty(item?.where)) || hook.fulfills_packaging_promise !== true || !nonEmpty(hook.packaging_title_direction)) fail('schema 4必须绑定当前选题SHA、个人表达池取材记录，并证明钩子兑现①packaging_assessment的标题承诺');
+  } else {
+    // 历史合同（schema 3选题+反向采访+大纲确认）：继续按原合同验证
+    const interviewPath = join(base, '02-创作工作稿/反向采访.json');
+    const approvalPath = join(base, '02-创作工作稿/大纲确认.json');
+    for (const [path, label] of [[interviewPath, '反向采访.json'], [approvalPath, '大纲确认.json']]) {
+      if (!requireFile(path, label).startsWith(baseReal + '/')) fail(label + '必须位于当前episode');
     }
-    const lockedVersion = executorLock.selected_executors?.find((item) => String(item?.node) === '2' && item?.id === 'laohan-chuangzuo')?.version;
-    const match = String(lockedVersion || '').match(/^(\d+)\.(\d+)\.(\d+)$/);
-    if (!match) fail('executor lock 中 laohan-chuangzuo 版本无效');
-    adaptiveInterviewContract = Number(match[1]) > 3 || (Number(match[1]) === 3 && Number(match[2]) >= 1);
-  }
-  if (topic.schema_version !== 3 || !nonEmpty(topic.selected_candidate_id) || interview.schema_version !== 1 || interview.status !== 'COMPLETED' || interview.selected_candidate_id !== topic.selected_candidate_id || interview.topic_sha256 !== shaFile(topicPath) || exchanges.some((item) => !nonEmpty(item?.question) || !nonEmpty(item?.answer) || !nonEmpty(item?.follow_up_basis)) || requiredCoverage.some((item) => !coverage.has(item)) || Number.isNaN(Date.parse(interview.completed_at))) fail('反向采访必须绑定当前选题，并覆盖场景、情绪、独特判断和观众行动');
-  if (adaptiveInterviewContract) {
+    let interview;
+    let approval;
+    try {
+      interview = JSON.parse(readFileSync(interviewPath, 'utf8'));
+      approval = JSON.parse(readFileSync(approvalPath, 'utf8'));
+    } catch {
+      fail('反向采访或大纲确认不是合法JSON');
+    }
+    const exchanges = Array.isArray(interview.exchanges) ? interview.exchanges : [];
+    const coverage = new Set(Array.isArray(interview.coverage) ? interview.coverage : []);
+    const requiredCoverage = ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'];
+    if (topic.schema_version !== 3 || !nonEmpty(topic.selected_candidate_id) || interview.schema_version !== 1 || interview.status !== 'COMPLETED' || interview.selected_candidate_id !== topic.selected_candidate_id || interview.topic_sha256 !== shaFile(topicPath) || exchanges.some((item) => !nonEmpty(item?.question) || !nonEmpty(item?.answer) || !nonEmpty(item?.follow_up_basis)) || requiredCoverage.some((item) => !coverage.has(item)) || Number.isNaN(Date.parse(interview.completed_at))) fail('反向采访必须绑定当前选题，并覆盖场景、情绪、独特判断和观众行动');
     const completionEvidence = interview.completion_evidence || {};
     const validCompletionEvidence = requiredCoverage.every((key) => {
       const evidence = completionEvidence[key];
       return nonEmpty(evidence?.summary) && Array.isArray(evidence?.exchange_indexes) && evidence.exchange_indexes.length > 0 && evidence.exchange_indexes.every((index) => Number.isInteger(index) && index >= 1 && index <= exchanges.length);
     });
-    if (exchanges.length < 4 || !validCompletionEvidence || !Array.isArray(interview.remaining_gaps) || interview.remaining_gaps.length !== 0 || !nonEmpty(interview.completion_reason)) fail('采访完成证据必须逐项绑定真实场景、情绪转折、独特判断和观众行动；6—12轮仅为常用范围，材料未齐不能完成，超过12轮补齐后可以完成');
-  } else if (exchanges.length < 6 || exchanges.length > 12) {
-    fail('反向采访必须完成6—12轮有效追问并覆盖场景、情绪、独特判断和观众行动');
+    if (exchanges.length < 4 || !validCompletionEvidence || !Array.isArray(interview.remaining_gaps) || interview.remaining_gaps.length !== 0 || !nonEmpty(interview.completion_reason)) fail('采访完成证据必须逐项绑定真实场景、情绪转折、独特判断和观众行动');
+    if (approval.schema_version !== 1 || approval.status !== 'ACCEPTED' || approval.accepted_by !== 'Jeffrey' || Number.isNaN(Date.parse(approval.accepted_at)) || approval.interview_sha256 !== shaFile(interviewPath) || approval.outline_sha256 !== shaFile(outlinePath) || !nonEmpty(approval.authorization_note)) fail('大纲确认必须由Jeffrey明确接受并绑定当前采访与大纲SHA');
+    const hook = decision.hook_contract || {};
+    if (decision.topic_sha256 !== shaFile(topicPath) || decision.interview_sha256 !== shaFile(interviewPath) || decision.outline_sha256 !== shaFile(outlinePath) || decision.outline_approval_sha256 !== shaFile(approvalPath) || hook.designed_after_outline_acceptance !== true || hook.outline_accepted_at !== approval.accepted_at) fail('历史schema 4必须绑定选题、采访、大纲、确认，并证明钩子在大纲确认后设计');
   }
-  if (approval.schema_version !== 1 || approval.status !== 'ACCEPTED' || approval.accepted_by !== 'Jeffrey' || Number.isNaN(Date.parse(approval.accepted_at)) || approval.interview_sha256 !== shaFile(interviewPath) || approval.outline_sha256 !== shaFile(outlinePath) || !nonEmpty(approval.authorization_note)) fail('大纲确认必须由Jeffrey明确接受并绑定当前采访与大纲SHA');
-  const hook = decision.hook_contract || {};
-  if (decision.topic_sha256 !== shaFile(topicPath) || decision.interview_sha256 !== shaFile(interviewPath) || decision.outline_sha256 !== shaFile(outlinePath) || decision.outline_approval_sha256 !== shaFile(approvalPath) || hook.designed_after_outline_acceptance !== true || hook.outline_accepted_at !== approval.accepted_at) fail('schema 4必须绑定选题、采访、大纲、确认，并证明钩子在大纲确认后设计');
   if (topic.direction_research?.mode === 'USER_DIRECTION_RESEARCH') {
     const researchValidator = resolve(import.meta.dirname, 'check-research-source-contract.mjs');
     const researchResult = spawnSync('node', [researchValidator, '--episode', base, '--decision', decisionPath], {encoding: 'utf8'});
@@ -430,6 +426,5 @@ const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', '
 if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.read_aloud_note)) fail('质量检查没有覆盖内容、人味、时长、结构与原有六关');
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
 if (Date.parse(humanizer.applied_at) > Date.parse(decision.completed_at)) fail('humanizer-zh执行时间不得晚于最终决策完成时间');
-if (episodeArg && Date.parse(decision.completed_at) <= Date.parse(decision.hook_contract.outline_accepted_at)) fail('全文与钩子完成时间必须晚于Jeffrey大纲确认');
 
 console.log(`PASS chuangzuo script contract schema=${decision.schema_version} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);

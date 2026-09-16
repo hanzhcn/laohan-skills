@@ -57,7 +57,10 @@ const normalizeItem = (sourceId, item, index) => {
 };
 
 const skillRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
-const trackedCreatorsPath = resolve(process.env.LAOHAN_TRACKED_DOUYIN_CREATORS || join(skillRoot, 'references/tracked-douyin-creators.json'));
+const projectRoot = resolve(process.cwd());
+const dataLayerPath = join(projectRoot, '数据层');
+const trackedCreatorsPath = resolve(process.env.LAOHAN_TRACKED_DOUYIN_CREATORS || join(dataLayerPath, 'tracked-creators.json'));
+const selfChannelPath = join(dataLayerPath, 'self-channel.json');
 const localExpressionPoolPath = join(process.cwd(), 'script-pool/Jeffrey个人表达池.md');
 const expressionPoolPath = resolve(process.env.LAOHAN_PERSONAL_EXPRESSION_POOL || (existsSync(localExpressionPoolPath) ? localExpressionPoolPath : join(process.cwd(), 'templates/Jeffrey个人表达池.md')));
 
@@ -66,13 +69,14 @@ function collectTrackedCreators() {
   let creators;
   try {
     const payload = JSON.parse(readFileSync(trackedCreatorsPath, 'utf8'));
-    creators = Array.isArray(payload?.creators) ? payload.creators : [];
+    creators = Array.isArray(payload?.creators) ? payload.creators.filter((item) => ['ACTIVE', 'PENDING'].includes(item?.status)) : [];
   } catch (error) {
-    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `对标账号清单不可读: ${error.message}`, results: [], coverage: {expected: 9, attempted: 0, completed: 0, failed: 9, accounts: []}};
+    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `数据层达人库不可读: ${error.message}`, results: [], coverage: {expected: 0, attempted: 0, completed: 0, failed: 0, accounts: []}};
   }
+  const expected = creators.length;
   const uniqueIds = new Set(creators.map((item) => item?.sec_uid));
-  if (creators.length !== 9 || uniqueIds.size !== 9 || creators.some((item) => !String(item?.name || '').trim() || !String(item?.sec_uid || '').trim())) {
-    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: '对标账号清单必须恰好包含9个唯一且完整的name/sec_uid', results: [], coverage: {expected: 9, attempted: 0, completed: 0, failed: 9, accounts: []}};
+  if (!expected || uniqueIds.size !== expected || creators.some((item) => !String(item?.nickname || '').trim() || !String(item?.sec_uid || '').trim())) {
+    return {source_id: 'tracked-douyin-creators', command_or_url: trackedCreatorsPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: '数据层达人库必须包含至少一个唯一且完整的nickname/sec_uid（ACTIVE+PENDING）', results: [], coverage: {expected, attempted: 0, completed: 0, failed: expected, accounts: []}};
   }
 
   const results = [];
@@ -85,7 +89,7 @@ function collectTrackedCreators() {
       if (!finalRun.error && [0, 66].includes(finalRun.status)) break;
     }
     if (finalRun.error || ![0, 66].includes(finalRun.status)) {
-      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: 'FAILED', result_count: 0, error: String(finalRun.error?.message || finalRun.stderr || `exit ${finalRun.status}`).trim()});
+      accounts.push({name: creator.nickname, sec_uid: creator.sec_uid, pool_status: creator.status, status: 'FAILED', result_count: 0, error: String(finalRun.error?.message || finalRun.stderr || `exit ${finalRun.status}`).trim()});
       continue;
     }
     try {
@@ -100,25 +104,27 @@ function collectTrackedCreators() {
         return {
           ...normalized,
           url: normalized.url || (item?.aweme_id ? `https://www.douyin.com/video/${item.aweme_id}` : ''),
-          creator_name: creator.name,
+          creator_name: creator.nickname,
           creator_sec_uid: creator.sec_uid,
+          creator_pool_status: creator.status,
+          lane_tags: Array.isArray(creator.lane_tags) ? creator.lane_tags : [],
           digg_count: diggCount,
           recent_digg_median: median,
           performance_ratio: performanceRatio,
-          anomaly_status: performanceRatio !== null && performanceRatio >= 2 ? 'ANOMALY' : 'NORMAL'
+          anomaly_status: performanceRatio !== null && performanceRatio >= 3 ? 'ANOMALY' : 'NORMAL'
         };
       });
       results.push(...creatorResults);
-      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: creatorResults.length ? 'OK' : 'EMPTY', result_count: creatorResults.length});
+      accounts.push({name: creator.nickname, sec_uid: creator.sec_uid, pool_status: creator.status, status: creatorResults.length ? 'OK' : 'EMPTY', result_count: creatorResults.length});
     } catch (error) {
-      accounts.push({name: creator.name, sec_uid: creator.sec_uid, status: 'FAILED', result_count: 0, error: `JSON 解析失败: ${error.message}`});
+      accounts.push({name: creator.nickname, sec_uid: creator.sec_uid, pool_status: creator.status, status: 'FAILED', result_count: 0, error: `JSON 解析失败: ${error.message}`});
     }
   }
   const failed = accounts.filter((item) => item.status === 'FAILED').length;
-  const coverage = {expected: 9, attempted: accounts.length, completed: accounts.length - failed, failed, accounts};
+  const coverage = {expected, attempted: accounts.length, completed: accounts.length - failed, failed, accounts};
   return {
     source_id: 'tracked-douyin-creators',
-    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 20 --with_comments false -f json',
+    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 20 --with_comments false -f json (数据层全池)',
     attempted_at: attemptedAt,
     status: failed ? 'FAILED' : results.length ? 'OK' : 'EMPTY',
     result_count: failed ? 0 : results.length,
@@ -126,6 +132,38 @@ function collectTrackedCreators() {
     results: failed ? [] : results,
     coverage
   };
+}
+
+function collectSelfChannel() {
+  const attemptedAt = nowIso();
+  try {
+    const payload = JSON.parse(readFileSync(selfChannelPath, 'utf8'));
+    const baseline = Number(payload?.baseline?.median_digg) || 0;
+    const videos = Array.isArray(payload?.videos) ? payload.videos : [];
+    const results = videos.filter((video) => video?.aweme_id).map((video, index) => {
+      const digg = Number(video?.metrics?.latest?.digg) || 0;
+      const play = Number(video?.metrics?.latest?.play) || 0;
+      const collect = Number(video?.metrics?.latest?.collect) || 0;
+      const ratio = baseline > 0 ? Number((digg / baseline).toFixed(2)) : null;
+      return {
+        id: stableId('self-channel', String(video.aweme_id)),
+        rank: index + 1,
+        title: String(video?.title || ''),
+        url: `https://www.douyin.com/video/${video.aweme_id}`,
+        published_at: video?.published_at || null,
+        digg_count: digg,
+        collect_count: collect,
+        play_count: play,
+        collect_rate: play > 0 ? Number((collect / play).toFixed(4)) : null,
+        recent_digg_median: baseline,
+        performance_ratio: ratio,
+        anomaly_status: ratio !== null && ratio >= 3 ? 'ANOMALY' : 'NORMAL'
+      };
+    });
+    return {source_id: 'self-channel', command_or_url: selfChannelPath, attempted_at: attemptedAt, status: results.length ? 'OK' : 'EMPTY', result_count: results.length, results};
+  } catch (error) {
+    return {source_id: 'self-channel', command_or_url: selfChannelPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `自频道数据层不可读: ${error.message}`, results: []};
+  }
 }
 
 function collectPersonalExpressionPool() {
@@ -178,14 +216,15 @@ for (const sourceId of selectedSources) {
   records.push(definition.type === 'http' ? await collectAihot() : collectOpencli(sourceId, definition.args));
 }
 records.push(collectTrackedCreators());
+records.push(collectSelfChannel());
 records.push(collectPersonalExpressionPool());
 
 const collectedAt = nowIso();
 const signals = {
-  schema_version: 2,
+  schema_version: 3,
   episode: basename(episode),
   collected_at: collectedAt,
-  source_plan: [...selectedSources, 'tracked-douyin-creators', 'personal-expression-pool'],
+  source_plan: [...selectedSources, 'tracked-douyin-creators', 'self-channel', 'personal-expression-pool'],
   sources: records.map((record) => ({...record, record_sha256: sha(JSON.stringify(record.results))}))
 };
 const signalsBody = JSON.stringify(signals, null, 2) + '\n';
@@ -200,7 +239,7 @@ const health = {
   collected_at: collectedAt,
   sources: records.map((record) => ({
     source_id: record.source_id,
-    source_role: record.source_id === 'tracked-douyin-creators' ? 'BENCHMARK_CREATOR' : record.source_id === 'personal-expression-pool' ? 'PERSONAL_EXPRESSION' : 'DISCOVERY',
+    source_role: record.source_id === 'tracked-douyin-creators' ? 'BENCHMARK_CREATOR' : record.source_id === 'self-channel' ? 'SELF_CHANNEL' : record.source_id === 'personal-expression-pool' ? 'PERSONAL_EXPRESSION' : 'DISCOVERY',
     command_or_url: record.command_or_url,
     attempted_at: record.attempted_at,
     status: record.status,
