@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.5.0"
+version: "3.6.0"
 ---
 
 # 统一创作引擎
@@ -28,6 +28,7 @@ version: "3.5.0"
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
+- **方法论真源**：项目`docs/老韩写稿六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -183,7 +184,14 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 ## Step 1.5：取材与大纲
 
-Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis、tension、audience、packaging_assessment）；②`script-pool/Jeffrey个人表达池.md`中与题目相关的真实场景、亲历细节和固定表达（在决策JSON的`expression_pool_usage[]`登记`used/where`）；③`USER_DIRECTION_RESEARCH`时的系列研究摘录。大纲成立后直接写全文，前三秒钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（决策JSON `hook_contract.fulfills_packaging_promise=true`）。反向采访与大纲确认门槛已于2026-09-17砍除；Jeffrey的修改意见在④—⑤或成稿反馈时吸收。
+Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis、tension、audience、packaging_assessment）；②`script-pool/Jeffrey个人表达池.md`中与题目相关的真实场景、亲历细节和固定表达（在决策JSON的`expression_pool_usage[]`登记`used/where`）；③`USER_DIRECTION_RESEARCH`时的系列研究摘录。反向采访与大纲确认门槛已于2026-09-17砍除；Jeffrey的修改意见在④—⑤或成稿反馈时吸收。
+
+大纲成立后按`docs/老韩写稿六步法.md`写全文，机械要求：
+1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY`（教程=问题-方案-演示-总结；科普=现象-原理-案例-升华；故事=问题-低谷-转折-结果-方法，留存最高的格式，亲历题优先）。
+2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`）。
+3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（预计时长等分格子每格至少一个点的检查结论）、`rhythm_anchors[]`（每15—30秒一个正文级锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文）、`emotion_arc`（开头痛点焦虑→中段认知释放→收尾踏实感三节点）。
+4. **造记忆点**：登记`quote_anchor`（一句可被观众二创引用的金句，必须承载本期判断非鸡汤，放情绪高点或收尾前）与`comment_hook`（开头可埋问题悬念、真引导放情绪最高点、预期观众最想说什么；有上期评论素材时引用被问最多的问题做跨期钩子）。
+5. **HKRR自检**：登记`hkrr_check`（快乐/知识/共鸣至少一项为true，rhythm必须true，附rationale）；不达标重排再写。
 
 独立自由模式无素材时生成大纲：
 

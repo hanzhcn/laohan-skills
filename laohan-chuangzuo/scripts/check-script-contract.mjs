@@ -154,6 +154,22 @@ if (episodeArg) {
     if (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale)) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
     const hook = decision.hook_contract || {};
     if (decision.topic_sha256 !== shaFile(topicPath) || !Array.isArray(decision.expression_pool_usage) || !decision.expression_pool_usage.length || decision.expression_pool_usage.some((item) => !nonEmpty(item?.used) || !nonEmpty(item?.where)) || hook.fulfills_packaging_promise !== true || !nonEmpty(hook.packaging_title_direction)) fail('schema 4必须绑定当前选题SHA、个人表达池取材记录，并证明钩子兑现①packaging_assessment的标题承诺');
+    // 写稿六步法（3.6.0）：8个新字段机械校验
+    if (!['TUTORIAL', 'EXPOSITION', 'STORY'].includes(decision.structure_type)) fail('写稿六步法第1步：structure_type必须为TUTORIAL/EXPOSITION/STORY之一');
+    const variants = Array.isArray(decision.hook_variants) ? decision.hook_variants : [];
+    if (variants.length < 3 || variants.some((item) => !nonEmpty(item?.text) || !nonEmpty(item?.direction)) || !Number.isInteger(decision.selected_hook_index) || decision.selected_hook_index < 0 || decision.selected_hook_index >= variants.length || decision.tts_selected !== true) fail('写稿六步法第2步：hook_variants必须至少3个不同方向并经TTS读选登记selected_hook_index/tts_selected');
+    const beat = decision.beat_distribution || {};
+    if (beat.passed !== true || !nonEmpty(beat.rationale)) fail('写稿六步法第3步：beat_distribution必须通过等分格子无空白检查并说明');
+    const anchors = Array.isArray(decision.rhythm_anchors) ? decision.rhythm_anchors : [];
+    if (!anchors.length || anchors.some((item) => !nonEmpty(item?.type) || !nonEmpty(item?.position))) fail('写稿六步法第3步：rhythm_anchors必须按15—30秒密度登记正文级锚点');
+    const arc = decision.emotion_arc || {};
+    if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('写稿六步法第3步：emotion_arc必须登记开头痛点/中段释放/收尾踏实三节点');
+    const quote = decision.quote_anchor || {};
+    if (!nonEmpty(quote.text) || !nonEmpty(quote.placement) || quote.carries_judgment !== true) fail('写稿六步法第4步：quote_anchor必须登记承载本期判断的金句与位置（鸡汤空话不合法）');
+    const commentHook = decision.comment_hook || {};
+    if (!nonEmpty(commentHook.expected_comments) || commentHook.guide_at_peak !== true) fail('写稿六步法第4步：comment_hook必须登记预期评论方向并把真引导放在情绪最高点');
+    const hkrr = decision.hkrr_check || {};
+    if (hkrr.rhythm !== true || ![hkrr.happiness, hkrr.knowledge, hkrr.resonance].some(Boolean) || !nonEmpty(hkrr.rationale)) fail('写稿六步法第5步：HKRR自检必须节奏为true且快乐/知识/共鸣至少一项为true');
   } else {
     // 历史合同（schema 3选题+反向采访+大纲确认）：继续按原合同验证
     const interviewPath = join(base, '02-创作工作稿/反向采访.json');

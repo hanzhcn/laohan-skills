@@ -4,7 +4,7 @@
 
 ## Episode采访与大纲确认
 
-标准Episode必须使用schema 4 / `content-units-v2`。2026-09-17五步法合同：选题为schema 4（AUTO_SELECTED）时，`创作决策.json`绑定当前选题SHA与`expression_pool_usage[]`个人表达池取材记录（每项`used/where`非空），且`hook_contract.fulfills_packaging_promise=true`并登记`packaging_title_direction`，证明前三秒钩子兑现①`packaging_assessment`的标题承诺；无采访、无大纲确认门槛。历史episode的schema 3选题继续按原采访/大纲确认合同验证（`反向采访.json`+`大纲确认.json`+四份上游SHA绑定）。
+标准Episode必须使用schema 4 / `content-units-v2`。2026-09-17五步法合同：选题为schema 4（AUTO_SELECTED）时，`创作决策.json`绑定当前选题SHA与`expression_pool_usage[]`个人表达池取材记录（每项`used/where`非空），且`hook_contract.fulfills_packaging_promise=true`并登记`packaging_title_direction`，证明前三秒钩子兑现①`packaging_assessment`的标题承诺；无采访、无大纲确认门槛。2026-09-17写稿六步法（3.6.0）新增8字段：`structure_type`（TUTORIAL/EXPOSITION/STORY三选一）、`hook_variants[]`（≥3个不同方向+`selected_hook_index`+`tts_selected`读选证据）、`beat_distribution`（等分无空白检查）、`rhythm_anchors[]`（15—30秒密度）、`emotion_arc`（焦虑→释放→踏实三节点）、`quote_anchor`（承载判断的金句）、`comment_hook`（预期评论+高潮处引导）、`hkrr_check`（节奏必须+K/R≥1）。历史episode的schema 3选题继续按原采访/大纲确认合同验证（`反向采访.json`+`大纲确认.json`+四份上游SHA绑定），且不要求8字段。
 
 独立模式继续兼容schema 3 / `content-units-v1`，不伪造Episode人工记录。
 
