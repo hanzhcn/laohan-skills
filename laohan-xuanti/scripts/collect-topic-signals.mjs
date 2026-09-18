@@ -187,7 +187,7 @@ async function collectAihot() {
   const url = `https://aihot.virxact.com/api/public/items?mode=selected&since=${encodeURIComponent(since)}&take=100`;
   const attemptedAt = nowIso();
   try {
-    const response = await fetch(url, {headers: {'User-Agent': 'laohan-redian/2.0'}, signal: AbortSignal.timeout(20000)});
+    const response = await fetch(url, {headers: {'User-Agent': 'laohan-xuanti/2.0'}, signal: AbortSignal.timeout(20000)});
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     const results = normalizeArray(payload).map((item, index) => normalizeItem('aihot', item, index));

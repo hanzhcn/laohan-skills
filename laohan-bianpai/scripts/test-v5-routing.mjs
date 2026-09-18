@@ -103,7 +103,7 @@ echo "PASS $2"
   const contentGateEpisode = join(testRoot, 'episodes/standard-content-gates');
   const contentGateNow = new Date().toISOString();
   json(join(contentGateEpisode, 'episode-config.json'), {schema_version: 1, workflow_mode: 'AUTONOMOUS_RUN', renderer_mode: 'CODEX_DIRECT'});
-  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-xuanti', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
   write(join(contentGateEpisode, '00-编排/vendor-preflight.json'), '{}\n');
   const accounts = Array.from({length: 9}, (_, index) => ({name: `creator-${index + 1}`, sec_uid: `sec-${index + 1}`, pool_status: 'ACTIVE', status: 'OK', result_count: 1}));
   const creatorSignals = accounts.map((item, index) => ({id: `creator-signal-${index + 1}`, title: `post-${index + 1}`, creator_name: item.name, creator_sec_uid: item.sec_uid, digg_count: 100, recent_digg_median: 100, performance_ratio: 1, anomaly_status: 'NORMAL'}));
@@ -178,14 +178,14 @@ echo "PASS $2"
   json(join(contentGateEpisode, '00-选题-candidates.json'), legacyCandidates);
   json(join(contentGateEpisode, '00-选题-Jeffrey筛选.json'), {schema_version: 1, status: 'ACCEPTED', authorized_by: 'Jeffrey', accepted_at: contentGateNow, candidates_sha256: sha(join(contentGateEpisode, '00-选题-candidates.json')), selected_candidate_id: 'C01', first_reaction: '想反驳收藏工具的人', challenge_or_addition: '真正问题是没有闭环', firsthand_detail: '我亲自收敛过多个AI工具', would_say_without_heat: true});
   const legacyInterview = {schema_version: 1, status: 'COMPLETED', selected_candidate_id: 'C01', topic_sha256: sha(join(contentGateEpisode, '00-选题.json')), coverage: ['TRUE_SCENE', 'EMOTION_TURN', 'DISTINCTIVE_JUDGMENT', 'VIEWER_ACTION'], exchanges: Array.from({length: 6}, (_, index) => ({question: `问题${index + 1}`, answer: `回答${index + 1}`, follow_up_basis: `基于回答${index + 1}`})), completed_at: contentGateNow};
-  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.0.0'}]});
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-xuanti', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.0.0'}]});
   json(join(contentGateEpisode, '02-创作工作稿/反向采访.json'), legacyInterview);
   const legacyContinue = runEpisode(contentGateEpisode, 'next');
   assert.equal(legacyContinue.status, 0, legacyContinue.stderr || legacyContinue.stdout);
   assert.match(legacyContinue.stdout, /AUTO_CONTINUE_REQUIRED/);
   assert.doesNotMatch(legacyContinue.stdout, /WAITING_FOR_JEFFREY_INTERVIEW/);
 
-  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-redian', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
+  json(join(contentGateEpisode, '00-编排/executor-lock.json'), {selected_executors: [{node: '1', id: 'laohan-xuanti', version: '3.1.0'}, {node: '2', id: 'laohan-chuangzuo', version: '3.1.0'}]});
   json(join(contentGateEpisode, '02-创作工作稿/反向采访.json'), {schema_version: 1, status: 'IN_PROGRESS', selected_candidate_id: 'C01', topic_sha256: sha(join(contentGateEpisode, '00-选题.json')), coverage: ['TRUE_SCENE'], exchanges: [{question: '第一次遇到是什么时候？', answer: '收藏很多工具却没完成工作。', follow_up_basis: '继续追问情绪转折'}]});
   const interviewWaiting = runEpisode(contentGateEpisode, 'next');
   assert.equal(interviewWaiting.status, 0, interviewWaiting.stderr || interviewWaiting.stdout);

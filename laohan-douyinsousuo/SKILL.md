@@ -63,7 +63,7 @@ opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 
 - 互动字段缺失写 `null` 并在 `field_availability` 标记 `false`；实际返回数字 `0` 则保留 0 并标记 `true`，不得混为一谈。
 - 返回空数组时写 `EMPTY_OR_FIELD_UNAVAILABLE`；不能据此断言抖音上没有相关内容。
-- 当前已安装 OpenCLI 1.8.6 的 `douyin search` 只提供搜索结果样本，卡片通常只有点赞字段；`douyin hashtag hot` 可提供全站热点，已由 laohan-redian 的 discovery route 使用。`douyin hashtag search` 当前接口实测失败，`hashtag hot --keyword` 也不能可靠按关键词过滤。因此搜索量、供给总量、增长速度和官方内容缺口默认均为 `UNAVAILABLE`；以后只有 OpenCLI 实际返回这些字段时才使用，不从结果条数或点赞反推。
+- 当前已安装 OpenCLI 1.8.6 的 `douyin search` 只提供搜索结果样本，卡片通常只有点赞字段；`douyin hashtag hot` 可提供全站热点，已由 laohan-xuanti 的 discovery route 使用。`douyin hashtag search` 当前接口实测失败，`hashtag hot --keyword` 也不能可靠按关键词过滤。因此搜索量、供给总量、增长速度和官方内容缺口默认均为 `UNAVAILABLE`；以后只有 OpenCLI 实际返回这些字段时才使用，不从结果条数或点赞反推。
 - 事实性结论必须回到原视频或权威来源核验；搜索结果只能作为发现证据。
 - 用户单独要求搜索分析时，可总结结果中可见的内容类型和重复角度；不得决定工作流最终选题，不得补造搜索结果未提供的事实。
 - 指定 `episode` 时必须使用 runtime-locked 包装器，先写机器真源 `00-抖音搜索证据.json`，再从它生成 `.md`；Markdown 不得新增 JSON 没有的结论。

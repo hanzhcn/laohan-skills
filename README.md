@@ -46,7 +46,7 @@ npx skills add hanzhcn/laohan-skills -g -y --agent codex --skill laohan-chushico
 
 **内容创作（10 个）**
 ```bash
-npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 AI 热点三路并行抓取
+npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 AI 热点三路并行抓取
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
 npx skills add hanzhcn/laohan-skills --skill laohan-cheat            # 📊 内容校准打分+预测

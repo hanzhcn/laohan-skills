@@ -42,7 +42,7 @@ const runtimeChecker = join(root, 'scripts/check-workflow-runtime.mjs');
 const runtimeLock = join(root, 'workflow-runtime-lock.json');
 const skillsRoot = resolve(process.env.LAOHAN_SKILLS_ROOT || join(process.env.HOME, 'Documents/laohan-skills'));
 const scriptContractChecker = join(skillsRoot, 'laohan-chuangzuo/scripts/check-script-contract.mjs');
-const topicContractChecker = join(skillsRoot, 'laohan-redian/scripts/check-topic-contract.mjs');
+const topicContractChecker = join(skillsRoot, 'laohan-xuanti/scripts/check-topic-contract.mjs');
 if (!existsSync(checker)) {
   console.error('未找到工作流契约检查器: ' + checker);
   process.exit(2);
@@ -449,7 +449,7 @@ const topicState = () => safely(() => {
   if (exists('00-选题-candidates.json')) {
     const candidatesPreview = readJson('00-选题-candidates.json');
     if ([3, 4].includes(candidatesPreview.schema_version)) {
-      if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian topic validator'};
+      if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-xuanti topic validator'};
       const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
       const contractMessage = (contract.stderr || contract.stdout || '').trim();
       if (contract.status !== 0) {
@@ -461,7 +461,7 @@ const topicState = () => safely(() => {
   if (!nonEmptyFile('00-选题.md') || !exists('00-选题.json')) return {done: false, reason: '①必须同时有非空 00-选题.md 与 00-选题.json'};
   const topic = readJson('00-选题.json');
   if ([3, 4].includes(topic.schema_version)) {
-    if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-redian topic validator'};
+    if (!existsSync(topicContractChecker)) return {done: false, reason: '缺 laohan-xuanti topic validator'};
     const contract = spawnSync('node', [topicContractChecker, '--episode', episodeDir], {encoding: 'utf8'});
     if (contract.status !== 0) return {done: false, reason: (contract.stderr || contract.stdout || '选题机械合同失败').trim()};
   }
@@ -847,7 +847,7 @@ const commentState = () => safely(() => {
 let directProduction = false;
 try { directProduction = readJson('episode-config.json').renderer_mode === 'CODEX_DIRECT'; } catch {}
 const steps = [
-  {id: '①', name: '选题决策', skill: 'laohan-redian（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
+  {id: '①', name: '选题决策', skill: 'laohan-xuanti（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
   {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '反向采访 + Jeffrey大纲确认 + 01-口播稿.md + 当前executor合同创作决策 + 本机TTS + validator PASS'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},

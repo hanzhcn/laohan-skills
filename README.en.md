@@ -42,7 +42,7 @@ No need to install all. Pick what you need and copy the command (requires [Claud
 
 **Content Creation (10)**
 ```bash
-npx skills add hanzhcn/laohan-skills --skill laohan-redian           # 🔥 3-source AI trend aggregation
+npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 3-source AI trend aggregation
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (6 inputs → script)
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
 npx skills add hanzhcn/laohan-skills --skill laohan-cheat            # 📊 Content calibration scoring

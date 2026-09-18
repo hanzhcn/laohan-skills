@@ -1,6 +1,6 @@
 ---
 name: laohan-chuangzuo
-description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-redian/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
+description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
 version: "3.6.0"
 ---
 
@@ -25,10 +25,10 @@ version: "3.6.0"
 - **写作规则**：`references/style.md`（恢复 2026-07-11 前实战版本）。其中开场、转场、修辞、标题公式、场景密度、节奏、口头禅和模板均为已验证的默认方法；允许按本题增删或扩充，但不得以“防模板化”为由整体降级成可有可无的抽象建议
 - **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
-- **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-redian/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
+- **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-xuanti/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
-- **方法论真源**：项目`docs/老韩写稿六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
+- **方法论真源**：项目`docs/老韩创作六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -184,7 +184,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 ### Step 1 改写分支（对标爆款素材专用，2026-09-17生效）
 
-素材是对标爆款视频的转录全文时（①已产出），Layer A/B 整理之后按改写管线执行，方法真源为项目`docs/老韩写稿六步法.md`改写模式节（原创题不走改写分支，直接走标准六步法）：
+素材是对标爆款视频的转录全文时（①已产出），Layer A/B 整理之后按改写管线执行，方法真源为项目`docs/老韩创作六步法.md`改写模式节（原创题不走改写分支，直接走标准六步法）：
 
 1. **organize 是唯一内容来源**：Layer A 模块覆盖≥80%，信息密集型素材（经验指南/盘点/路径讲解）允许按源顺序展开；
 2. **亲历内化**（Jeffrey 2026-09-17授权）：正文、介绍、四平台文案零第三方指代——不提原作者名/账号，不出现"博主/作者/视频里说/up主/那条视频"；对标素材全部内化为老韩第一人称亲历（晒单是自己的单、群是自己的群、学费是自己掏的），细节落地要很像；机械检查第三方指代词表零命中；
@@ -197,7 +197,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis、tension、audience、packaging_assessment）；②`script-pool/Jeffrey个人表达池.md`中与题目相关的真实场景、亲历细节和固定表达（在决策JSON的`expression_pool_usage[]`登记`used/where`）；③`USER_DIRECTION_RESEARCH`时的系列研究摘录。反向采访与大纲确认门槛已于2026-09-17砍除；Jeffrey的修改意见在④—⑤或成稿反馈时吸收。
 
-大纲成立后按`docs/老韩写稿六步法.md`写全文，机械要求：
+大纲成立后按`docs/老韩创作六步法.md`写全文，机械要求：
 1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY`（教程=问题-方案-演示-总结；科普=现象-原理-案例-升华；故事=问题-低谷-转折-结果-方法，留存最高的格式，亲历题优先）。
 2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`）。
 3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（预计时长等分格子每格至少一个点的检查结论）、`rhythm_anchors[]`（每15—30秒一个正文级锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文）、`emotion_arc`（开头痛点焦虑→中段认知释放→收尾踏实感三节点）。
@@ -484,5 +484,5 @@ Pre-A/B 按需依赖，不使用对应模式时无需安装。
 - 转译选题法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）。本 skill 不自带热点搜索；该文件供工作流①前置阶段复用
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
 - 二创脱敏规则（style.md 第十节）：素材来自他人内容时执行；自由模式（原创主题）跳过
-- 本 skill 不负责选题搜索（那是工作流①阶段的职责，用 laohan-redian + laohan-douyinsousuo 出大纲后喂入）
+- 本 skill 不负责选题搜索（那是工作流①阶段的职责，用 laohan-xuanti + laohan-douyinsousuo 出大纲后喂入）
 - 本 skill 不负责平台特定下载（那是 laohan-xiazai 的职责）
