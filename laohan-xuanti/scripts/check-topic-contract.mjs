@@ -81,6 +81,27 @@ const candidates = readJson('00-选题-candidates.json');
 const items = Array.isArray(candidates.candidates) ? candidates.candidates : [];
 if (![3, 4].includes(candidates.schema_version) || items.length < 2 || new Set(items.map((item) => item?.id)).size !== items.length) block('candidates必须是schema 3（历史合同）或schema 4（五步法合同）且至少两个唯一候选');
 
+const validateDirectionPackets = () => {
+  const topic = existsSync(target('00-选题.json')) ? readJson('00-选题.json') : null;
+  const direction = topic?.direction_research || {};
+  if (topic && (direction.mode !== 'USER_DIRECTION_RESEARCH' || direction.series_id !== signals.direction_research.series_id || !nonEmpty(direction.episode_id) || !nonEmpty(direction.packet_path) || !/^[a-f0-9]{64}$/.test(direction.packet_sha256 || ''))) block('最终选题必须绑定当前系列和单期资料包');
+  if (topic) {
+    const packetPath = target(direction.packet_path);
+    if (!existsSync(packetPath) || !statSync(packetPath).isFile() || direction.packet_sha256 !== shaFile(packetPath)) block('direction_research.packet_sha256未绑定当前系列研究摘录');
+    let packet;
+    try {
+      packet = JSON.parse(readFileSync(packetPath, 'utf8'));
+    } catch {
+      block('系列研究摘录不是合法JSON');
+    }
+    if (packet.schema_version !== 1 || packet.series_id !== direction.series_id || packet.episode_id !== direction.episode_id || packet.series_research_sha256 !== signals.direction_research.series_research_sha256 || !Array.isArray(packet.claims) || !packet.claims.length) block('系列研究摘录未绑定当前series、episode、series_research_sha256和可用claims');
+    const sourceEpisode = validatedDirectionResearch?.episodes?.find((item) => item?.id === direction.episode_id);
+    if (!sourceEpisode?.packet_path) block('系列研究真源中不存在当前episode资料包');
+    const canonicalPacketPath = realpathSync(join(dirname(realpathSync(resolve(dirname(dirname(root)), signals.direction_research.series_research_path))), sourceEpisode.packet_path));
+    if (!canonicalPacketPath.startsWith(realpathSync(join(dirname(dirname(root)), 'script-pool/series-research')) + '/') || shaFile(packetPath) !== shaFile(canonicalPacketPath)) block('episode系列研究摘录必须与已验证原始packet逐字节一致');
+  }
+};
+
 if (candidates.schema_version === 3) {
   // ===== 历史合同（2026-09-17前episode）：Jeffrey情绪筛选路径，继续按原合同验证 =====
   if (!existsSync(target('00-选题-Jeffrey筛选.json'))) {
@@ -107,7 +128,31 @@ if (candidates.schema_version === 3) {
   if (!existsSync(target('00-选题.json')) || !existsSync(target('00-选题.md')) || statSync(target('00-选题.md')).size === 0) block('Jeffrey筛选通过后必须生成最终选题JSON与Markdown');
   const legacyTopic = readJson('00-选题.json');
   if (legacyTopic.schema_version !== 3 || legacyTopic.selected_candidate_id !== selection.selected_candidate_id || !nonEmpty(legacyTopic.audience) || !nonEmpty(legacyTopic.thesis)) block('最终选题必须是schema 3并绑定Jeffrey选中的候选');
-  console.log(`PASS redian topic contract schema=3 legacy selected=${selection.selected_candidate_id}`);
+  if (discoveryMode === 'USER_DIRECTION_RESEARCH') validateDirectionPackets();
+  const legacyLockPath = target('00-编排/executor-lock.json');
+  const legacyLocked = existsSync(legacyLockPath) && (() => { try { return (JSON.parse(readFileSync(legacyLockPath, 'utf8')).selected_executors || []).some((entry) => ['laohan-xuanti', 'laohan-redian'].includes(entry?.id)); } catch { return false; } })();
+  const legacyExperimental = validatedDirectionResearch?.status === 'EXPERIMENTAL_ONE_OFF';
+  const legacyExperimentalValid = legacyExperimental && items.every((item) => {
+    const exp = item?.experimental_basis;
+    const expectedExp = validatedDirectionResearch?.experimental_basis;
+    return exp?.type && expectedExp?.type && exp.type === expectedExp.type && Array.isArray(exp.source_ids) && exp.source_ids.length && nonEmpty(exp.rationale);
+  });
+  if (!legacyLocked && !(legacyExperimental && legacyExperimentalValid)) {
+    if (items.some((item) => !nonEmpty(item?.tension?.type) || !nonEmpty(item?.tension?.common_assumption) || !nonEmpty(item?.tension?.jeffrey_position) || !nonEmpty(item?.tension?.conflict_statement))) block('每个候选必须包含冲突性判断（tension：类型/常见假设/Jeffrey立场/冲突表述）');
+    const legacyLanePriority = new Map([['BENCHMARK_CREATOR', 1], ['SELF_CHANNEL', 2], ['BROAD_HOTSPOT', 3], ['PERSONAL_EXPRESSION', 4]]);
+    const legacyLaneOf = (sourceId) => sourceId === 'tracked-douyin-creators' ? 'BENCHMARK_CREATOR' : sourceId === 'self-channel' ? 'SELF_CHANNEL' : sourceId === 'personal-expression-pool' ? 'PERSONAL_EXPRESSION' : 'BROAD_HOTSPOT';
+    const legacySignalLane = new Map();
+    for (const src of sources) for (const r of (Array.isArray(src?.results) ? src.results : [])) if (r?.id) legacySignalLane.set(r.id, legacyLaneOf(src.source_id));
+    for (const item of items) {
+      const origin = item?.candidate_origin;
+      const ids = Array.isArray(item?.signal_ids) ? item.signal_ids : [];
+      const originIds = Array.isArray(origin?.origin_signal_ids) ? origin.origin_signal_ids : [];
+      const corrob = Array.isArray(origin?.corroborating_lanes) ? origin.corroborating_lanes : [];
+      if (!origin || !legacyLanePriority.has(origin.primary_lane) || origin.priority_rank !== legacyLanePriority.get(origin.primary_lane) || !originIds.length || originIds.some((id) => !ids.includes(id) || legacySignalLane.get(id) !== origin.primary_lane) || new Set(corrob).size !== corrob.length || corrob.some((lane) => !legacyLanePriority.has(lane) || lane === origin.primary_lane || !ids.some((id) => legacySignalLane.get(id) === lane))) block('每个候选必须登记可追溯的来源优先级：对标账号=1、自频道=2、全面热点=3、个人表达=4；交叉印证不能伪造');
+    }
+    if (validatedDirectionResearch?.status !== 'EXPERIMENTAL_ONE_OFF' && items.some((item, index) => index > 0 && item?.candidate_origin?.priority_rank < items[index - 1]?.candidate_origin?.priority_rank)) block('候选展示顺序必须遵循来源优先级：对标账号在前、自频道其次、全面热点再次、个人表达最后');
+  }
+  console.log(`PASS xuanti topic contract schema=3 legacy selected=${selection.selected_candidate_id}`);
   process.exit(0);
 }
 
@@ -179,25 +224,6 @@ if (autoSelected.length === 1) {
 }
 if (validatedDirectionResearch?.status !== 'EXPERIMENTAL_ONE_OFF' && items.some((item, index) => index > 0 && item.candidate_origin.priority_rank < items[index - 1].candidate_origin.priority_rank)) block('候选展示顺序必须遵循来源优先级：对标账号在前、自频道其次、全面热点再次、个人表达最后');
 
-if (discoveryMode === 'USER_DIRECTION_RESEARCH') {
-  const topic = existsSync(target('00-选题.json')) ? readJson('00-选题.json') : null;
-  const direction = topic?.direction_research || {};
-  if (topic && (direction.mode !== 'USER_DIRECTION_RESEARCH' || direction.series_id !== signals.direction_research.series_id || !nonEmpty(direction.episode_id) || !nonEmpty(direction.packet_path) || !/^[a-f0-9]{64}$/.test(direction.packet_sha256 || ''))) block('最终选题必须绑定当前系列和单期资料包');
-  if (topic) {
-    const packetPath = target(direction.packet_path);
-    if (!existsSync(packetPath) || !statSync(packetPath).isFile() || direction.packet_sha256 !== shaFile(packetPath)) block('direction_research.packet_sha256未绑定当前系列研究摘录');
-    let packet;
-    try {
-      packet = JSON.parse(readFileSync(packetPath, 'utf8'));
-    } catch {
-      block('系列研究摘录不是合法JSON');
-    }
-    if (packet.schema_version !== 1 || packet.series_id !== direction.series_id || packet.episode_id !== direction.episode_id || packet.series_research_sha256 !== signals.direction_research.series_research_sha256 || !Array.isArray(packet.claims) || !packet.claims.length) block('系列研究摘录未绑定当前series、episode、series_research_sha256和可用claims');
-    const sourceEpisode = validatedDirectionResearch?.episodes?.find((item) => item?.id === direction.episode_id);
-    if (!sourceEpisode?.packet_path) block('系列研究真源中不存在当前episode资料包');
-    const canonicalPacketPath = realpathSync(join(dirname(realpathSync(resolve(dirname(dirname(root)), signals.direction_research.series_research_path))), sourceEpisode.packet_path));
-    if (!canonicalPacketPath.startsWith(realpathSync(join(dirname(dirname(root)), 'script-pool/series-research')) + '/') || shaFile(packetPath) !== shaFile(canonicalPacketPath)) block('episode系列研究摘录必须与已验证原始packet逐字节一致');
-  }
-}
+if (discoveryMode === 'USER_DIRECTION_RESEARCH') validateDirectionPackets();
 
 console.log(`PASS redian topic contract schema=4 selected=${autoSelected.length ? autoSelected[0].id : 'none'} mode=${discoveryMode}`);
