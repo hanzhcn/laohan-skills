@@ -8,17 +8,23 @@
     "eyebrow": "EARLY WIN IS BAIT",
     "eyebrow_size": 38,
     "lead": "AI手搓的早期成功",
-    "lead_size": 96,
+    "lead_size": 106,
     "lead_y": 1150,
     "kicker": "是个诱饵",
-    "kicker_size": 230,
+    "kicker_size": 252,
     "kicker_color": "red",
-    "kicker_y": 1268,
+    "kicker_y": 1272,
     "bar": "该撞的墙我都撞了",
     "bar_size": 58,
-    "bar_y": 1590,
+    "bar_y": 1596,
     "footer": "LAOHAN AI · CASE FILES NO.01",
-    "footer_size": 30
+    "footer_size": 30,
+    "align": "left",
+    "left_x": 72,
+    "chip_cn": "老韩AI",
+    "chip_en": "LAOHAN.AI · CASE 01",
+    "chip_size": 46,
+    "chip_size2": 24
   },
   "person_mode": "integrated",
   "person_block": [
@@ -41,48 +47,92 @@
   "atmosphere": {
     "behind_person": [
       {
-        "n": 26,
+        "n": 30,
         "box": [
-          520,
-          140,
-          1080,
-          820
+          80,
+          200,
+          620,
+          1100
         ],
         "color": [
           255,
-          178,
-          94
+          190,
+          110
         ],
         "seed": 7
+      },
+      {
+        "n": 14,
+        "box": [
+          600,
+          500,
+          1050,
+          1200
+        ],
+        "color": [
+          170,
+          200,
+          235
+        ],
+        "seed": 9
       }
     ],
     "front_person": [
       {
         "n": 10,
         "box": [
-          260,
+          150,
           1350,
-          1040,
+          1000,
           1800
         ],
         "color": [
           255,
-          190,
-          120
+          200,
+          130
         ],
         "seed": 11
       }
     ]
   },
-  "integrated_height": 0.505,
-  "integrated_face_x": 0.582,
-  "integrated_face_target_x": 0.77,
-  "integrated_face_top": 0.22,
-  "integrated_face_top_frac": 0.01,
-  "integrated_brightness": 0.84,
-  "integrated_tint_alpha": 0.22,
-  "integrated_bottom_fade": 130,
-  "integrated_rim_alpha": 0.4,
-  "integrated_darken_from": 0.5,
-  "integrated_darken_min": 0.4
+  "integrated_height": 0.7,
+  "integrated_face_x": 0.4393939393939394,
+  "integrated_face_target_x": 0.74,
+  "integrated_face_top": 0.13,
+  "integrated_face_top_frac": 0.075,
+  "integrated_brightness": 0.82,
+  "integrated_tint_alpha": 0.3,
+  "integrated_bottom_fade": 200,
+  "integrated_rim_alpha": 0.3,
+  "integrated_darken_from": 0.52,
+  "integrated_darken_min": 0.07,
+  "_cutout_origin": [
+    556,
+    142
+  ],
+  "integrated_crop": [
+    1060,
+    0,
+    660,
+    1080
+  ],
+  "integrated_face_boost": 1.22,
+  "integrated_rim_color": [
+    140,
+    170,
+    205
+  ],
+  "final_grade": {
+    "brightness": 0.95,
+    "contrast": 1.07,
+    "color": 0.9,
+    "tint": [
+      30,
+      48,
+      74
+    ],
+    "tint_alpha": 0.16,
+    "vignette_alpha": 0.5
+  },
+  "integrated_darken_full": 0.88
 }
