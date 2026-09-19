@@ -2,7 +2,7 @@
   "bg_prompt": "Dark moody cinematic scene: a grey concrete wall with a large fresh impact crack radiating spider-web fractures and a small crater, in front of it a simple wooden desk holding a small charming handmade DIY electronic gadget built from wires, bare circuit boards, tape and a tiny screen, the gadget glowing warm amber light that illuminates the crack edges, dramatic rim lighting, deep blue-grey palette with warm amber accent, photorealistic 3D render, large empty negative space on the right side and upper area, NO text, NO words, NO letters, NO typography, NO people, NO faces, NO hands",
   "person_frame": "/Users/hanzhmacbookair/Documents/laohanAI视频创作/episodes/shoucuogongju/05-封面/v4/person_frame.jpg",
   "person_height": 0.6,
-  "person_right_margin": 0.03,
+  "person_right_margin": 0,
   "person_bottom_margin": 0.09,
   "title_group": {
     "eyebrow": "EARLY WIN IS BAIT",
@@ -20,7 +20,7 @@
     "footer": "LAOHAN AI · CASE FILES NO.01",
     "footer_size": 30
   },
-  "person_mode": "block_tr",
+  "person_mode": "integrated",
   "person_block": [
     560,
     30,
@@ -28,5 +28,61 @@
     1050
   ],
   "person_block_width": 0.62,
-  "person_top": 0.105
+  "person_top": 0.105,
+  "person_column": [
+    480,
+    0,
+    1440,
+    1080
+  ],
+  "column_height": 0.72,
+  "column_top": 0.15,
+  "column_feather": 90,
+  "atmosphere": {
+    "behind_person": [
+      {
+        "n": 26,
+        "box": [
+          520,
+          140,
+          1080,
+          820
+        ],
+        "color": [
+          255,
+          178,
+          94
+        ],
+        "seed": 7
+      }
+    ],
+    "front_person": [
+      {
+        "n": 10,
+        "box": [
+          260,
+          1350,
+          1040,
+          1800
+        ],
+        "color": [
+          255,
+          190,
+          120
+        ],
+        "seed": 11
+      }
+    ]
+  },
+  "integrated_height": 0.505,
+  "integrated_face_x": 0.582,
+  "integrated_face_target_x": 0.77,
+  "integrated_face_top": 0.22,
+  "integrated_face_top_frac": 0.01,
+  "integrated_brightness": 0.84,
+  "integrated_tint_alpha": 0.22,
+  "integrated_bottom_fade": 130,
+  "integrated_rim_alpha": 0.4,
+  "integrated_darken_from": 0.5,
+  "integrated_darken_min": 0.4
 }

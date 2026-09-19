@@ -76,14 +76,126 @@ def draw_tracked_rgba(layer, xy, text, font, fill, tracking=0, center_x=None):
 def text_width(d, text, font, tracking=0):
     return sum(d.textlength(c, font=font) + tracking for c in text) - (tracking if text else 0)
 
+def particles(layer, n, box, color, seed=7, glow=True):
+    """暖色氛围粒子：box=(x0,y0,x1,y1)区域内随机光斑"""
+    import random
+    from PIL import Image, ImageDraw, ImageFilter
+    rnd = random.Random(seed)
+    dot = Image.new("RGBA", layer.size, (0,0,0,0))
+    dd = ImageDraw.Draw(dot)
+    for _ in range(n):
+        x = rnd.randint(box[0], box[2]); y = rnd.randint(box[1], box[3])
+        r = rnd.randint(2, 7); a = rnd.randint(50, 160)
+        dd.ellipse([x-r, y-r, x+r, y+r], fill=color+(a,))
+    if glow:
+        dot = dot.filter(ImageFilter.GaussianBlur(6))
+    layer.alpha_composite(dot)
+    core = Image.new("RGBA", layer.size, (0,0,0,0))
+    dd2 = ImageDraw.Draw(core)
+    rnd2 = random.Random(seed)
+    for _ in range(n):
+        x = rnd2.randint(box[0], box[2]); y = rnd2.randint(box[1], box[3])
+        r = max(1, rnd2.randint(2, 7)//2); a = rnd2.randint(70, 190)
+        dd2.ellipse([x-r, y-r, x+r, y+r], fill=color+(a,))
+    layer.alpha_composite(core)
+
 def build(brief: dict, bg_path: str, cut_path: str, out_path: str):
     from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
     # 画布 = 背景板
     bg = Image.open(bg_path).convert("RGB").resize((W, H), Image.LANCZOS)
     canvas = bg.convert("RGBA")
+    atmo = brief.get("atmosphere", {})
+    if atmo:
+        # 背景层粒子（人物后面）
+        for grp in atmo.get("behind_person", []):
+            particles(canvas, grp["n"], grp["box"], tuple(grp["color"]), seed=grp.get("seed",7))
 
     # 层2 真人（两种模式）
-    if brief.get("person_mode") == "block_tr":
+    if brief.get("person_mode") == "integrated":
+        # 融入模式（亮背景素材解法）：抠像+压暗调色+暖光勾边+底部溶隐+投影落地
+        # 人物右位移脸让场景呼吸，文字压下身形成深度三明治——不依赖环境暗场
+        person = Image.open(cut_path).convert("RGBA")
+        ph = int(H * brief.get("integrated_height", 0.535))
+        s = ph / person.height
+        pw = int(person.width * s)
+        person = person.resize((pw, ph), Image.LANCZOS)
+        # 调色：压暗+降饱和+冷色罩，让真人进入场景色温
+        rgb = person.convert("RGB")
+        rgb = ImageEnhance.Brightness(rgb).enhance(brief.get("integrated_brightness", 0.84))
+        rgb = ImageEnhance.Color(rgb).enhance(brief.get("integrated_saturation", 0.86))
+        tint = Image.new("RGB", rgb.size, tuple(brief.get("integrated_tint", [40,54,78])))
+        rgb = Image.composite(tint, rgb, Image.new("L", rgb.size, int(255*brief.get("integrated_tint_alpha", 0.22))))
+        # 下半身渐变压暗：躯干坐进场景黑暗（脸保持最亮主体）
+        dk_from = brief.get("integrated_darken_from", 0.55)
+        dk_to = brief.get("integrated_darken_min", 0.45)
+        dark = Image.new("L", rgb.size, 255)
+        dd = ImageDraw.Draw(dark)
+        for i in range(int(ph*dk_from), ph):
+            f = (i - ph*dk_from) / (ph*(1-dk_from))
+            dd.line([(0,i),(pw,i)], fill=int(255*(1 - f*(1-dk_to))))
+        dark = dark.filter(ImageFilter.GaussianBlur(40))
+        rgb = Image.composite(Image.new("RGB", rgb.size, (8,12,20)), rgb, dark.point(lambda v: 255-v))
+        person = Image.merge("RGBA", (*rgb.split(), person.getchannel("A")))
+        a = person.getchannel("A")
+        # 底部溶隐（ torso 底边溶进黑暗，避免"切断漂浮"感）
+        fade = brief.get("integrated_bottom_fade", 130)
+        if fade > 0:
+            fa = a.copy(); fd = ImageDraw.Draw(fa)
+            for i in range(fade):
+                fd.line([(0, ph-1-i), (pw, ph-1-i)], fill=int(255*(1-i/fade)**1.5))
+            person.putalpha(fa)
+        # 定位：脸部中心锚点（integration_face_x=脸中心目标x，face_top=脸顶目标y）
+        fx = brief.get("integrated_face_x", 0.77)   # 脸中心在抠像宽度中的占比
+        px = int(W * brief.get("integrated_face_target_x", 0.77) - fx * pw)
+        fty = brief.get("integrated_face_top_frac", 0.01)
+        py = int(H * brief.get("integrated_face_top", 0.22) - fty * ph)
+        # 身后投影（剪影模糊右下偏移=落地感）
+        sh = Image.new("RGBA", (W, H), (0,0,0,0))
+        sil = Image.new("RGBA", (pw, ph), (0,0,0,0))
+        sil.paste((0,0,0,170), (0,0), a)
+        sh.paste(sil, (px+26, py+30), sil)
+        sh = sh.filter(ImageFilter.GaussianBlur(30))
+        canvas.alpha_composite(sh)
+        # 暖光勾边：alpha内缘染暖色（裂纹光在左→光从左来）
+        from PIL import ImageChops
+        er = a.filter(ImageFilter.MinFilter(11))
+        band = ImageChops.subtract(a, er)
+        rim = Image.new("RGBA", (pw, ph), (255,178,94,0))
+        rim.putalpha(band.point(lambda v: int(v*brief.get("integrated_rim_alpha", 0.55))))
+        person = Image.alpha_composite(person, rim)
+        canvas.alpha_composite(person, (max(px,-pw), max(py,-ph)))
+    elif brief.get("person_mode") == "column":
+        # 柱式人物区（后期统一风格主模式，融入度最高）：带真实环境的整柱照片，
+        # 边缘渐变羽化溶进海报底，统一压暗调色——柱子哥#76/#78式，无硬矩形边
+        frame = Image.open(brief["person_frame"]).convert("RGB")
+        cx, cy, cw, ch = brief["person_column"]  # 源帧裁区
+        crop = frame.crop((cx, cy, cx+cw, cy+ch))
+        ph = int(H * brief.get("column_height", 0.75))
+        s = ph / ch
+        pw = int(cw * s)
+        crop = crop.resize((pw, ph), Image.LANCZOS)
+        crop = ImageEnhance.Brightness(crop).enhance(brief.get("column_brightness", 0.80))
+        crop = ImageEnhance.Color(crop).enhance(brief.get("column_saturation", 0.86))
+        tint = Image.new("RGB", crop.size, tuple(brief.get("column_tint", [40,54,78])))
+        crop = Image.composite(tint, crop, Image.new("L", crop.size, int(255*brief.get("column_tint_alpha", 0.26))))
+        px = W - pw - int(W * brief.get("person_right_margin", 0.0))
+        py = int(H * brief.get("column_top", 0.10))
+        # 边缘羽化：只羽化真正落在画布内的边（被裁掉的边不用管）
+        mask = Image.new("L", (pw, ph), 255)
+        md = ImageDraw.Draw(mask)
+        F = int(brief.get("column_feather", 90))
+        for edge, visible in (("l", px > 0), ("r", px+pw < W), ("t", py > 0), ("b", py+ph < H)):
+            if not visible: continue
+            for i in range(F):
+                a = int(255 * i / F)
+                if edge=="l": md.line([(i,0),(i,ph)], fill=a)
+                elif edge=="r": md.line([(pw-1-i,0),(pw-1-i,ph)], fill=a)
+                elif edge=="t": md.line([(0,i),(pw,i)], fill=a)
+                else: md.line([(0,ph-1-i),(pw,ph-1-i)], fill=a)
+        mask = mask.filter(ImageFilter.GaussianBlur(10))
+        pl = crop.convert("RGBA"); pl.putalpha(mask)
+        canvas.alpha_composite(pl, (max(px,-pw), max(py,-ph)))
+    elif brief.get("person_mode") == "block_tr":
         # 右上角矩形照片块（柱子哥#81式）：从原帧裁块，圆角+投影
         from PIL import ImageDraw as _ID
         frame = Image.open(brief["person_frame"]).convert("RGB")
@@ -123,6 +235,11 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str):
         canvas = canvas.convert("RGBA")
         canvas.alpha_composite(person, (max(0, px), max(0, py)))
 
+    # 前景粒子（人物前面，深度三明治）
+    if atmo:
+        for grp in atmo.get("front_person", []):
+            particles(canvas, grp["n"], grp["box"], tuple(grp["color"]), seed=grp.get("seed",11))
+
     # 文字区压暗渐变（下半屏 scrim，保证字可读）
     scrim = Image.new("RGBA", (W, H), (0,0,0,0))
     dsc = ImageDraw.Draw(scrim)
@@ -151,15 +268,17 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str):
     lw = text_width(dt, t["lead"], f_lead)
     lead_y = t.get("lead_y", 1150)
     dts.text((W/2-lw/2+6, lead_y+6), t["lead"], font=f_lead, fill=(0,0,0,230))
-    dt.text((W/2-lw/2, lead_y), t["lead"], font=f_lead, fill=(255,255,255,255))
+    dt.text((W/2-lw/2, lead_y), t["lead"], font=f_lead, fill=(255,255,255,255),
+            stroke_width=t.get("lead_stroke", 3), stroke_fill=(18,26,40,255))
 
-    # kicker（特大语义色）
+    # kicker（特大语义色+描边）
     f_kick = _font(t.get("kicker_size", 225))
     kw = text_width(dt, t["kicker"], f_kick)
     kick_y = t.get("kicker_y", 1275)
     col = COLORS.get(t.get("kicker_color","gold"), GOLD)
     dts.text((W/2-kw/2+10, kick_y+10), t["kicker"], font=f_kick, fill=(0,0,0,235))
-    dt.text((W/2-kw/2, kick_y), t["kicker"], font=f_kick, fill=col)
+    dt.text((W/2-kw/2, kick_y), t["kicker"], font=f_kick, fill=col,
+            stroke_width=t.get("kicker_stroke", 8), stroke_fill=(24,12,12,255))
 
     # 高亮条（黄底黑字）
     if t.get("bar"):
