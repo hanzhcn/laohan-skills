@@ -51,7 +51,7 @@ description: 完全对标柱子哥TzFilm封面体系的封面生成（基于96�
 ## 生图执行层（2026-09-19实测：火山方舟直连）
 
 - 端点：`POST https://ark.cn-beijing.volces.com/api/v3/images/generations`，key=`ARK_API_KEY`（本机~/.zshrc）。
-- 模型：`doubao-seedream-5-0-260128`（Seedream 5.0标准版；**"5.0-lite"这个名在方舟不存在**，账号实测可用还有4-0-250828/4-0-20260415/5-0-pro-260628）。
+- 模型：`doubao-seedream-5-0-lite-260128`（Jeffrey指定"Seedream 5.0-lite"的完整API id，**必须带日期后缀**，不带后缀的裸名会404；响应model字段回显为doubao-seedream-5-0-260128属正常路由归一化）。账号另可用：4-0-250828/4-0-20260415/5-0-260128/5-0-pro-260628。
 - 尺寸红线：5.0要求**≥3686400像素**——9:16用`1440x2560`（4.0只要求≥921600）。出图后`sips -Z 1920`缩到1080x1920交付。
 - 身份一致：`image: ["data:image/jpeg;base64,..."]`传身份参考图（先`sips -Z 1024`压到~160KB）。
 - 中文渲染纪律：Seedream中文偶发错字（实测"诱饵"错成"诱间"）——**每张必须视觉复核标题文字，错字换seed（如42→77）并在prompt里强调"EXACTLY these characters...rendered perfectly"重roll**。
