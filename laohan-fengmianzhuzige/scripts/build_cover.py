@@ -192,6 +192,91 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str):
         x0, y0 = max(px, 0), max(py, 0)
         x1, y1 = min(px + pw, W), min(py + ph, H)
         canvas.alpha_composite(person.crop((x0 - px, y0 - py, x1 - px, y1 - py)), (x0, y0))
+    elif brief.get("person_mode") == "env_photo":
+        # 环境照片柱（Jeffrey定案的正解）：不抠像！裁"人+周围真实环境"整块矩形，
+        # 重压暗+冷调让亮办公室变暗场工作间（显示器发光=AI主题），
+        # 可见边缘羽化溶进海报底——人物保持真实光影，这就是"不假"的来源
+        frame = Image.open(brief["person_frame"]).convert("RGB")
+        cx, cy, cw, ch = brief["env_crop"]  # 源帧裁区（含环境）
+        crop = frame.crop((cx, cy, cx+cw, cy+ch))
+        ph = int(H * brief.get("env_height", 0.72))
+        s = ph / ch
+        pw = int(cw * s)
+        crop = crop.resize((pw, ph), Image.LANCZOS)
+        crop = ImageEnhance.Brightness(crop).enhance(brief.get("env_brightness", 0.62))
+        crop = ImageEnhance.Color(crop).enhance(brief.get("env_saturation", 0.78))
+        tint = Image.new("RGB", crop.size, tuple(brief.get("env_tint", [36,52,76])))
+        crop = Image.composite(tint, crop, Image.new("L", crop.size, int(255*brief.get("env_tint_alpha", 0.30))))
+        # 脸部径向提亮：重压暗后脸仍是人物区最亮焦点（#78式）
+        fb = brief.get("env_face_boost", 1.5)
+        if fb and fb != 1.0:
+            fcx = int(pw * brief.get("env_face_x", 0.441))
+            fcy = int(ph * brief.get("env_face_y", 0.37))
+            fr = int(pw * 0.26)
+            fmask = Image.new("L", crop.size, 0)
+            ImageDraw.Draw(fmask).ellipse([fcx-fr, fcy-fr, fcx+fr, fcy+fr], fill=255)
+            fmask = fmask.filter(ImageFilter.GaussianBlur(int(fr*0.5)))
+            crop = Image.composite(ImageEnhance.Brightness(crop).enhance(fb), crop, fmask)
+        # 定位：脸中心x锚点，右缘出血
+        px = int(W * brief.get("env_face_target_x", 0.70) - brief.get("env_face_x", 0.554) * pw)
+        py = int(H * brief.get("env_top", 0.12))
+        # 径向alpha罩：只人物区不透明，四周超长距溶入黑暗——没有矩形边界
+        mask = Image.new("L", (pw, ph), 0)
+        md = ImageDraw.Draw(mask)
+        mcx = int(pw * brief.get("env_face_x", 0.554))
+        mcy = int(ph * brief.get("env_face_y", 0.42))
+        rx = pw * brief.get("env_rad_x", 0.60)
+        ry = ph * brief.get("env_rad_y", 0.88)
+        steps = 44
+        for i in range(steps):
+            t = (i + 1) / steps                      # 0外圈→1中心
+            k = brief.get("env_rad_spread", 1.65) - (brief.get("env_rad_spread", 1.65) - 1.0) * t
+            av = int(255 * min(1.0, (t ** 1.5) * 1.35))
+            md.ellipse([mcx-rx*k, mcy-ry*k, mcx+rx*k, mcy+ry*k], fill=av)
+        mask = mask.filter(ImageFilter.GaussianBlur(55))
+        layer = crop.convert("RGBA"); layer.putalpha(mask)
+        # 四边暗场溶接：照片边缘区压向黑，与海报底"黑对黑"无缝（可见边才处理）
+        scrim = Image.new("RGBA", (pw, ph), (0,0,0,0))
+        sd = ImageDraw.Draw(scrim)
+        SA = brief.get("env_scrim_alpha", 200)
+        def hscrim(width_frac, edge):
+            Wd = int(pw * width_frac)
+            for i in range(Wd):
+                av = int(SA * (1 - i / Wd))
+                if edge == "l": sd.line([(i,0),(i,ph)], fill=(6,10,18,av))
+                else: sd.line([(pw-1-i,0),(pw-1-i,ph)], fill=(6,10,18,av))
+        def vscrim(width_frac, edge):
+            Hd = int(ph * width_frac)
+            for i in range(Hd):
+                av = int(SA * (1 - i / Hd))
+                if edge == "t": sd.line([(0,i),(pw,i)], fill=(6,10,18,av))
+                else: sd.line([(0,ph-1-i),(pw,ph-1-i)], fill=(6,10,18,av))
+        if px > 0: hscrim(brief.get("env_left_scrim", 0.32), "l")
+        if px + pw < W: hscrim(brief.get("env_right_scrim", 0.0), "r")
+        if py > 0: vscrim(brief.get("env_top_scrim", 0.30), "t")
+        if py + ph < H: vscrim(brief.get("env_bottom_scrim", 0.30), "b")
+        layer = Image.alpha_composite(layer, scrim)
+        # 接缝压黑：海报侧沿块可见边打暗带（顶带全宽+左带渐变），与env层内scrim两侧同暗
+        ss = brief.get("env_seam_shadow", 300)
+        if ss:
+            band = Image.new("RGBA", (W, H), (0,0,0,0))
+            bd = ImageDraw.Draw(band)
+            if py > 0:  # 顶边可见→海报侧全宽纵向渐变压黑（无下边缘）
+                TH = int(ss * 1.2)
+                for i in range(min(TH, H)):
+                    bd.line([(0, i), (W, i)], fill=(5, 9, 16, int(205 * (1 - i / TH) ** 1.4)))
+            if px > 0:  # 左边可见→竖向渐变带
+                peak = px + int(ss * 0.3)
+                half = ss // 2
+                for i in range(-half, half):
+                    x = peak + i
+                    if 0 <= x < W:
+                        bd.line([(x, 0), (x, H)], fill=(5, 9, 16, int(170 * (1 - abs(i) / half))))
+            band = band.filter(ImageFilter.GaussianBlur(55))
+            canvas = Image.alpha_composite(canvas, band)
+        x0, y0 = max(px, 0), max(py, 0)
+        x1, y1 = min(px + pw, W), min(py + ph, H)
+        canvas.alpha_composite(layer.crop((x0 - px, y0 - py, x1 - px, y1 - py)), (x0, y0))
     elif brief.get("person_mode") == "column":
         # 柱式人物区（后期统一风格主模式，融入度最高）：带真实环境的整柱照片，
         # 边缘渐变羽化溶进海报底，统一压暗调色——柱子哥#76/#78式，无硬矩形边
@@ -270,6 +355,9 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str):
         rgb = ImageEnhance.Brightness(rgb).enhance(fg.get("brightness", 0.96))
         rgb = ImageEnhance.Contrast(rgb).enhance(fg.get("contrast", 1.06))
         rgb = ImageEnhance.Color(rgb).enhance(fg.get("color", 0.92))
+        if fg.get("black_point"):
+            bp = fg["black_point"]
+            rgb = rgb.point(lambda v: max(0, int((v - bp) * 255 / (255 - bp))))
         if fg.get("tint"):
             ti = Image.new("RGB", rgb.size, tuple(fg["tint"]))
             rgb = Image.composite(ti, rgb, Image.new("L", rgb.size, int(255*fg.get("tint_alpha", 0.16))))

@@ -9,14 +9,14 @@
     "eyebrow_size": 38,
     "lead": "AI手搓的早期成功",
     "lead_size": 106,
-    "lead_y": 1150,
+    "lead_y": 880,
     "kicker": "是个诱饵",
     "kicker_size": 252,
     "kicker_color": "red",
-    "kicker_y": 1272,
+    "kicker_y": 1000,
     "bar": "该撞的墙我都撞了",
     "bar_size": 58,
-    "bar_y": 1596,
+    "bar_y": 1300,
     "footer": "LAOHAN AI · CASE FILES NO.01",
     "footer_size": 30,
     "align": "left",
@@ -26,7 +26,7 @@
     "chip_size": 46,
     "chip_size2": 24
   },
-  "person_mode": "integrated",
+  "person_mode": "env_photo",
   "person_block": [
     560,
     30,
@@ -123,8 +123,8 @@
     205
   ],
   "final_grade": {
-    "brightness": 0.95,
-    "contrast": 1.07,
+    "brightness": 0.9,
+    "contrast": 1.28,
     "color": 0.9,
     "tint": [
       30,
@@ -132,7 +132,33 @@
       74
     ],
     "tint_alpha": 0.16,
-    "vignette_alpha": 0.5
+    "vignette_alpha": 0.5,
+    "black_point": 22
   },
-  "integrated_darken_full": 0.88
+  "integrated_darken_full": 0.88,
+  "env_crop": [
+    560,
+    0,
+    1360,
+    1080
+  ],
+  "env_height": 0.366,
+  "env_face_x": 0.581,
+  "env_face_target_x": 0.648,
+  "env_top": 0.02,
+  "env_brightness": 0.44,
+  "env_saturation": 0.72,
+  "env_tint_alpha": 0.38,
+  "env_feather": 170,
+  "env_left_scrim": 0.0,
+  "env_face_boost": 1.95,
+  "env_scrim_alpha": 225,
+  "env_top_scrim": 0.0,
+  "env_seam_shadow": 0,
+  "env_face_y": 0.42,
+  "env_bottom_scrim": 0.0,
+  "env_seam_frame": 0,
+  "env_right_scrim": 0.0,
+  "env_rad_x": 0.34,
+  "env_rad_y": 0.34
 }
