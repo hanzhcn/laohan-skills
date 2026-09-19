@@ -149,6 +149,29 @@ PYEOF
 - `play_url` 是 CDN 临时链接，有时效（约几分钟），获取后必须立即下载
 - 不是手动走 iesdouyin 方法——opencli 内部已经做了同样的 API 调用，直接返回 play_url
 - 音频用 `pcm_s16le`（WAV）格式，whisper 兼容性最好
+- ⚠️ **返回条数 ≠ 博主作品总数**（2026-09-19 实测坑）：柱子哥TzFilm 接口只回 17 条（<20 上限，看似"第一页到头"），主页"作品 95"——漏了 78 条。返回数 < limit 不能当全部，全量以主页"作品 N"计数为准，用下一节方法补齐
+
+## 批量采集博主封面（2026-09-19 实测 95 条采到 89 张）
+
+封面不在 user-videos 输出里（opencli 不返回 cover 字段），也不用登录态 hook——**逐条渲染视频分享页**即可：
+
+1. 对每个 aweme_id：`Chrome --headless=new --dump-dom --virtual-time-budget=9000 --timeout=15000 https://www.douyin.com/video/{id}`（每条带独立 `--user-data-dir=/tmp/chrome-prof-cover-{id[-4:]}`，外层 `timeout 30`）
+2. 从 DOM 正则取 `https://p\d-pc-sign.douyinpic.com/tos-cn-p-0015/[^"' ]*` 且含 `pcweb_cover` 的 URL（`&amp;` 还原为 `&`）
+3. 下载必须带 `Referer: https://www.douyin.com/` + 普通 UA，否则 403
+4. 脚本：`laohanAI视频创作/对标视频库/柱子哥TzFilm/tools/fetch_covers.py`（python3 直跑，subprocess 调 Chrome，支持断点续传；约 27s/条，95 条≈45 分钟）
+5. 已知缺口：约 15% 视频分享页渲染后无 pcweb_cover img（NOURL），重试同样失败——疑为抖音侧未生成 PC 封面，这部分只能登录态 App/网页查看
+
+实测：柱子哥95条→成功89张+6 NOURL（重试后仍NOURL）。注意响应 model 字段与封面无关；数字水印等元素不在 origin 封面层（封面就是视频帧直出）。
+
+## 主页全量采集（登录态 hook 翻页法，2026-09-19 实测 95 条全覆盖）
+
+opencli user-videos 只能拿最新一批。要全量：
+
+1. **必须登录态浏览器**（opencli browser 绑定日常 Chrome）。未登录 Playwright 开主页有登录墙：`body overflow:hidden`、scrollHeight 锁死一屏、无关闭按钮，window 滚动全部无效
+2. **滚动容器不是 window**：主页真正滚动发生在 `.parent-route-container` div 上。对它 `scrollTop/scrollBy` 且 `dispatchEvent(new Event("scroll", {bubbles:true}))`；懒加载需要"滚回顶部→再滚到底"才触发，直接置底不加载下一页
+3. **播放地址在列表分页响应里，不在单视频 detail**：主页点击视频弹窗播放器不发 `/aweme/detail/`（点击 95 个卡片实测 0 请求），地址就在 `/aweme/post/` 每页响应的 `aweme_list[].video.play_addr.url_list[0]`（备选 `bit_rate[0].play_addr`）
+4. **opencli browser network 缓冲不可靠**：捕获窗口会丢历史响应（抓到 7 页 post 响应没立刻 `--detail` 就没了）；`--follow` 若起在 reload 前也会漏 reload 后的请求。可靠做法是**页面内注入 fetch+XHR hook**：包装 `window.fetch` 和 `XMLHttpRequest.prototype.open`，命中 `/aweme/post/` 就解析响应、只留精简字段（id/desc/dur/ct/digg/play_addr）存 `window.__x`；然后切"喜欢→作品"tab 重触发全部分页；滚动至 `has_more=0`；分批 eval 取回后立即 curl 下载（CDN 时效几分钟）。下载校验：>500KB 且文件头 `ftyp`，ffprobe 时长与元数据差 >5s 算失败
+5. 收尾：`git rm --cached` 才能让后补的 .gitignore 规则对已追踪文件生效
 
 ## 查博主更新
 
@@ -342,13 +365,18 @@ opencli douyin search "关键词" --limit 30 -f json
 GitHub [Youhai020616/douyin]，`pip install dy-cli`。PyPI 0.2.2（2026-03-15）为最新版；仓库 52★ 低频维护（2026-08-02 仍在修 bug，修复未发 PyPI）。laohanAI 生产环境实战验证：2026-08-15 记录"363KB/16s + statistics 字段全"，2026-08-26 安装版关键词返回 18 条真实结果。
 
 ```bash
-pip install dy-cli
-dy login          # 扫码；Chrome 已登录 douyin.com 时自动复制 cookie，零摩擦
-dy search "关键词" --sort 最多点赞 --time 一周内 --count 20 --json-output -o out.json
+# 本机系统 Python 3.14 受 PEP 668 管控，直接 pip install 会被拒；用专用 venv（2026-09-19 实测）
+python3 -m venv ~/.venvs/dy-cli && ~/.venvs/dy-cli/bin/pip install dy-cli
+ln -sf ~/.venvs/dy-cli/bin/dy ~/.local/bin/dy          # PATH 需含 ~/.local/bin
+~/.venvs/dy-cli/bin/playwright install chromium        # 首次必装，否则 login 报 Executable doesn't exist
+dy login          # 扫码登录。⚠️ --browser"从浏览器提取"在本机读不到主 Chrome cookie，会自动降级扫码（2026-09-19 实测，扫码一次成功存 65 cookie）
+dy search "关键词" --time 一周内 --count 20 --json-output -o out.json
 ```
 
 - `--sort`：综合 / 最多点赞 / 最新发布；`--time`：不限 / 一天内 / 一周内…；另有 `--type` 视频 / 图集 / 用户
-- 返回 statistics 全字段（点赞/发布时间/播放/评论），可导出 json/csv/yaml；搜索走 API 引擎，发布/互动走 Playwright
+  - ⚠️ `--sort 最多点赞` 2026-09-19 实测返回空数组（2 字节），默认排序与 `--time` 正常；偶发 `maokai_extra` 风控空响应，重试即恢复
+- 返回 statistics 字段（点赞/发布时间/评论真实；`play_count` 常为 0，见下方已知限制），可导出 json/csv/yaml；搜索走 API 引擎，发布/互动走 Playwright
+  - `-o` 输出文件为纯 item 数组（与 stdout 的 `{ok,data}` 包裹结构不同），解析时注意
 - 多账号：`--account u-xxx` + cookie 文件 `~/.dy/cookies/<account>.json`（storage_state JSON）
 - ⚠️ Linux 容器内 chromium 指纹会被风控 `verify_check` 打回空结果（laohanAI BATCH34 实测，Mac/Windows 宿主正常）
 
