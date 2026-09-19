@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianzhuzige
-version: "1.0.0"
+version: "1.1.0"
 description: 完全对标柱子哥TzFilm封面体系的封面生成（基于96视频全量逐帧分析建立，独立于秋芝套）。电影海报式视觉母版+五元素brief+语义色token+版式族。Use when 工作流⑥明确选用zhuzige套、用户说"柱子哥封面""zhuzige封面"，或与 laohan-fengmianqiuzhi（秋芝套）按期切换时使用本skill。
 ---
 
@@ -47,6 +47,15 @@ description: 完全对标柱子哥TzFilm封面体系的封面生成（基于96�
 ### 4. 与开场首帧双轨
 
 ⑥平台封面图（本skill产物）与⑪成片开场首帧钩子（0秒双语字幕常驻+1秒内hook大字，见导演Prompt04/05）是两件事，都要做；封面帧与封面图可以同源（从成片hook段取帧重制），但独立生成质量更稳。封面帧永远取自clean后成片，禁止raw首帧。
+
+## 生图执行层（2026-09-19实测：火山方舟直连）
+
+- 端点：`POST https://ark.cn-beijing.volces.com/api/v3/images/generations`，key=`ARK_API_KEY`（本机~/.zshrc）。
+- 模型：`doubao-seedream-5-0-260128`（Seedream 5.0标准版；**"5.0-lite"这个名在方舟不存在**，账号实测可用还有4-0-250828/4-0-20260415/5-0-pro-260628）。
+- 尺寸红线：5.0要求**≥3686400像素**——9:16用`1440x2560`（4.0只要求≥921600）。出图后`sips -Z 1920`缩到1080x1920交付。
+- 身份一致：`image: ["data:image/jpeg;base64,..."]`传身份参考图（先`sips -Z 1024`压到~160KB）。
+- 中文渲染纪律：Seedream中文偶发错字（实测"诱饵"错成"诱间"）——**每张必须视觉复核标题文字，错字换seed（如42→77）并在prompt里强调"EXACTLY these characters...rendered perfectly"重roll**。
+- 参数：`response_format:"url"`、`watermark:false`、固定`seed`保确定性；单张约30-40s。
 
 ## 每条提示词必须一次性描述
 
