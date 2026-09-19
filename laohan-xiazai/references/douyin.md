@@ -158,7 +158,7 @@ PYEOF
 1. 对每个 aweme_id：`Chrome --headless=new --dump-dom --virtual-time-budget=9000 --timeout=15000 https://www.douyin.com/video/{id}`（每条带独立 `--user-data-dir=/tmp/chrome-prof-cover-{id[-4:]}`，外层 `timeout 30`）
 2. 从 DOM 正则取 `https://p\d-pc-sign.douyinpic.com/tos-cn-p-0015/[^"' ]*` 且含 `pcweb_cover` 的 URL（`&amp;` 还原为 `&`）
 3. 下载必须带 `Referer: https://www.douyin.com/` + 普通 UA，否则 403
-4. 脚本：`laohanAI视频创作/对标视频库/柱子哥TzFilm/tools/fetch_covers.py`（python3 直跑，subprocess 调 Chrome，支持断点续传；约 27s/条，95 条≈45 分钟）
+4. 脚本：`laohanAI视频创作/scripts/fetch_douyin_covers.py`（python3 直跑，subprocess 调 Chrome，支持断点续传；约 27s/条，95 条≈45 分钟）
 5. 已知缺口：约 15% 视频分享页渲染后无 pcweb_cover img（NOURL），重试同样失败——疑为抖音侧未生成 PC 封面，这部分只能登录态 App/网页查看
 
 实测：柱子哥95条→成功89张+6 NOURL（重试后仍NOURL）。注意响应 model 字段与封面无关；数字水印等元素不在 origin 封面层（封面就是视频帧直出）。
