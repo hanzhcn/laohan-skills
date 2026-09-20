@@ -6,6 +6,8 @@ version: "1.2.0"
 
 # 录屏自动化：口播稿 → 录屏脚本 → MP4
 
+> **边界（2026-09-20治理P2-20）**：本工具不进入episode生产合同。episode内的录屏只响应⑨冻结的`LOCAL_CAPTURE`请求（Prompt 08 / local-capture-mvp），无请求时为`NOT_NEEDED`；勿在episode上下文用本工具发起录屏。独立研究、demo或Jeffrey明确要求的自由录屏不受此限。
+
 输入一篇口播稿（或录屏指示），自动生成 bash 录屏脚本。脚本编排 CLI 操作（tmux+Claude Code）和浏览器操作（Playwright headed），ffmpeg 录物理屏幕，输出 1080p MP4。
 
 ## 核心理念
