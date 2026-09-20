@@ -1,29 +1,24 @@
 {
   "bg_image": "/Users/hanzhmacbookair/Documents/laohanAI视频创作/episodes/shoucuogongju/05-封面/v4/bg_plate.png",
-  "person_frame": "/tmp/fm-analysis/person_new.jpg",
+  "person_frame": "/Users/hanzhmacbookair/Desktop/1参考.jpg",
   "person_mode": "env_photo",
-  "env_crop": [
-    320,
-    140,
-    678,
-    1140
-  ],
-  "env_height": 0.758,
-  "env_face_x": 0.472,
-  "env_face_y": 0.169,
+  "env_crop": [768, 205, 1690, 2867],
+  "env_height": 0.697,
+  "env_face_x": 0.454,
+  "env_face_y": 0.30,
   "env_face_target_x": 0.68,
-  "env_top": 0.1,
-  "env_brightness": 0.9,
-  "env_saturation": 0.85,
-  "env_tint_alpha": 0.18,
-  "env_face_boost": 1.25,
-  "env_rad_x": 0.6,
+  "env_top": 0.10,
+  "env_brightness": 0.66,
+  "env_saturation": 0.78,
+  "env_tint_alpha": 0.26,
+  "env_face_boost": 1.7,
+  "env_rad_x": 0.60,
   "env_rad_y": 0.88,
-  "env_scrim_alpha": 140,
-  "env_left_scrim": 0.18,
-  "env_top_scrim": 0.15,
-  "env_bottom_scrim": 0.15,
-  "env_seam_shadow": 200,
+  "env_scrim_alpha": 160,
+  "env_left_scrim": 0.26,
+  "env_top_scrim": 0.24,
+  "env_bottom_scrim": 0.22,
+  "env_seam_shadow": 300,
   "title_group": {
     "eyebrow": "EARLY WIN IS BAIT",
     "lead": "AI手搓的早期成功",
@@ -42,95 +37,25 @@
     "kicker_tone": "red",
     "kicker_size": 236,
     "lead_size": 82,
-    "stamp": {
-      "text": "亲身踩坑",
-      "sub": "2个月实测",
-      "tone": "red"
-    },
-    "text_top": 748,
-    "evidence": {
-      "title": "AI帮不了的深水区",
-      "rows": [
-        {
-          "label": "支付",
-          "value": "安全验证",
-          "tone": "neg"
-        },
-        {
-          "label": "激活码",
-          "value": "防重复薅",
-          "tone": "neg"
-        },
-        {
-          "label": "积分",
-          "value": "防重复扣",
-          "tone": "neg"
-        }
-      ]
-    }
+    "stamp": {"text": "亲身踩坑", "sub": "2个月实测", "tone": "red"},
+    "evidence": {"title": "AI帮不了的深水区", "rows": [
+      {"label": "支付", "value": "安全验证", "tone": "neg"},
+      {"label": "激活码", "value": "防重复薅", "tone": "neg"},
+      {"label": "积分", "value": "防重复扣", "tone": "neg"}]},
+    "text_top": 748
   },
   "atmosphere": {
     "behind_person": [
-      {
-        "n": 30,
-        "box": [
-          80,
-          150,
-          620,
-          830
-        ],
-        "color": [
-          255,
-          190,
-          110
-        ],
-        "seed": 7
-      },
-      {
-        "n": 14,
-        "box": [
-          600,
-          380,
-          1050,
-          900
-        ],
-        "color": [
-          170,
-          200,
-          235
-        ],
-        "seed": 9
-      }
+      {"n": 30, "box": [80, 150, 620, 830], "color": [255, 190, 110], "seed": 7},
+      {"n": 14, "box": [600, 380, 1050, 900], "color": [170, 200, 235], "seed": 9}
     ],
     "front_person": [
-      {
-        "n": 10,
-        "box": [
-          150,
-          1000,
-          1000,
-          1350
-        ],
-        "color": [
-          255,
-          200,
-          130
-        ],
-        "seed": 11
-      }
+      {"n": 10, "box": [150, 1000, 1000, 1350], "color": [255, 200, 130], "seed": 11}
     ]
   },
   "final_grade": {
-    "brightness": 0.94,
-    "contrast": 1.22,
-    "color": 0.9,
-    "tint": [
-      30,
-      48,
-      74
-    ],
-    "tint_alpha": 0.13,
-    "vignette_alpha": 0.4,
-    "black_point": 14
+    "brightness": 0.94, "contrast": 1.22, "color": 0.9,
+    "tint": [30, 48, 74], "tint_alpha": 0.13,
+    "vignette_alpha": 0.40, "black_point": 14
   }
 }
