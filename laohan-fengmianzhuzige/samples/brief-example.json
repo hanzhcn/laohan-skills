@@ -1,164 +1,57 @@
 {
-  "bg_prompt": "Dark moody cinematic scene: a grey concrete wall with a large fresh impact crack radiating spider-web fractures and a small crater, in front of it a simple wooden desk holding a small charming handmade DIY electronic gadget built from wires, bare circuit boards, tape and a tiny screen, the gadget glowing warm amber light that illuminates the crack edges, dramatic rim lighting, deep blue-grey palette with warm amber accent, photorealistic 3D render, large empty negative space on the right side and upper area, NO text, NO words, NO letters, NO typography, NO people, NO faces, NO hands",
-  "person_frame": "/Users/hanzhmacbookair/Documents/laohanAI视频创作/episodes/shoucuogongju/05-封面/v4/person_frame.jpg",
-  "person_height": 0.6,
-  "person_right_margin": 0,
-  "person_bottom_margin": 0.09,
+  "bg_image": "/Users/hanzhmacbookair/Documents/laohanAI视频创作/episodes/shoucuogongju/05-封面/v4/bg_plate.png",
+  "person_frame": "/Users/hanzhmacbookair/Desktop/1参考.jpg",
+  "person_mode": "env_photo",
+  "env_crop": [768, 205, 1690, 2867],
+  "env_height": 0.697,
+  "env_face_x": 0.454,
+  "env_face_y": 0.30,
+  "env_face_target_x": 0.68,
+  "env_top": 0.10,
+  "env_brightness": 0.50,
+  "env_saturation": 0.72,
+  "env_tint_alpha": 0.32,
+  "env_face_boost": 1.8,
+  "env_rad_x": 0.60,
+  "env_rad_y": 0.88,
+  "env_scrim_alpha": 200,
+  "env_left_scrim": 0.32,
+  "env_top_scrim": 0.30,
+  "env_bottom_scrim": 0.30,
+  "env_seam_shadow": 300,
   "title_group": {
     "eyebrow": "EARLY WIN IS BAIT",
-    "eyebrow_size": 38,
     "lead": "AI手搓的早期成功",
-    "lead_size": 106,
-    "lead_y": 880,
     "kicker": "是个诱饵",
-    "kicker_size": 252,
     "kicker_color": "red",
-    "kicker_y": 1000,
     "bar": "该撞的墙我都撞了",
-    "bar_size": 58,
-    "bar_y": 1300,
     "footer": "LAOHAN AI · CASE FILES NO.01",
-    "footer_size": 30,
     "align": "left",
-    "left_x": 72,
+    "left_x": 64,
     "chip_cn": "老韩AI",
-    "chip_en": "LAOHAN.AI · CASE 01",
-    "chip_size": 46,
-    "chip_size2": 24
+    "chip_en": "LAOHAN.AI · CASE 01"
   },
-  "person_mode": "env_photo",
-  "person_block": [
-    560,
-    30,
-    1360,
-    1050
-  ],
-  "person_block_width": 0.62,
-  "person_top": 0.105,
-  "person_column": [
-    480,
-    0,
-    1440,
-    1080
-  ],
-  "column_height": 0.72,
-  "column_top": 0.15,
-  "column_feather": 90,
+  "remotion": {
+    "eyebrow_en": "EARLY WIN IS BAIT",
+    "eyebrow_cn": "AI幻觉",
+    "kicker_tone": "red",
+    "kicker_size": 236,
+    "lead_size": 82,
+    "stamp": {"text": "亲身踩坑", "sub": "2个月实测", "tone": "red"},
+    "text_top": 812
+  },
   "atmosphere": {
     "behind_person": [
-      {
-        "n": 30,
-        "box": [
-          80,
-          200,
-          620,
-          1100
-        ],
-        "color": [
-          255,
-          190,
-          110
-        ],
-        "seed": 7
-      },
-      {
-        "n": 14,
-        "box": [
-          600,
-          500,
-          1050,
-          1200
-        ],
-        "color": [
-          170,
-          200,
-          235
-        ],
-        "seed": 9
-      }
+      {"n": 30, "box": [80, 150, 620, 830], "color": [255, 190, 110], "seed": 7},
+      {"n": 14, "box": [600, 380, 1050, 900], "color": [170, 200, 235], "seed": 9}
     ],
     "front_person": [
-      {
-        "n": 10,
-        "box": [
-          150,
-          1350,
-          1000,
-          1800
-        ],
-        "color": [
-          255,
-          200,
-          130
-        ],
-        "seed": 11
-      }
+      {"n": 10, "box": [150, 1000, 1000, 1350], "color": [255, 200, 130], "seed": 11}
     ]
   },
-  "integrated_height": 0.7,
-  "integrated_face_x": 0.4393939393939394,
-  "integrated_face_target_x": 0.74,
-  "integrated_face_top": 0.13,
-  "integrated_face_top_frac": 0.075,
-  "integrated_brightness": 0.82,
-  "integrated_tint_alpha": 0.3,
-  "integrated_bottom_fade": 200,
-  "integrated_rim_alpha": 0.3,
-  "integrated_darken_from": 0.52,
-  "integrated_darken_min": 0.07,
-  "_cutout_origin": [
-    556,
-    142
-  ],
-  "integrated_crop": [
-    1060,
-    0,
-    660,
-    1080
-  ],
-  "integrated_face_boost": 1.22,
-  "integrated_rim_color": [
-    140,
-    170,
-    205
-  ],
   "final_grade": {
-    "brightness": 0.9,
-    "contrast": 1.28,
-    "color": 0.9,
-    "tint": [
-      30,
-      48,
-      74
-    ],
-    "tint_alpha": 0.16,
-    "vignette_alpha": 0.5,
-    "black_point": 22
-  },
-  "integrated_darken_full": 0.88,
-  "env_crop": [
-    560,
-    0,
-    1360,
-    1080
-  ],
-  "env_height": 0.366,
-  "env_face_x": 0.581,
-  "env_face_target_x": 0.648,
-  "env_top": 0.02,
-  "env_brightness": 0.44,
-  "env_saturation": 0.72,
-  "env_tint_alpha": 0.38,
-  "env_feather": 170,
-  "env_left_scrim": 0.0,
-  "env_face_boost": 1.95,
-  "env_scrim_alpha": 225,
-  "env_top_scrim": 0.0,
-  "env_seam_shadow": 0,
-  "env_face_y": 0.42,
-  "env_bottom_scrim": 0.0,
-  "env_seam_frame": 0,
-  "env_right_scrim": 0.0,
-  "env_rad_x": 0.34,
-  "env_rad_y": 0.34
+    "brightness": 0.9, "contrast": 1.28, "color": 0.9,
+    "tint": [30, 48, 74], "tint_alpha": 0.16,
+    "vignette_alpha": 0.5, "black_point": 22
+  }
 }
