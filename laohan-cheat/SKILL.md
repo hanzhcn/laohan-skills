@@ -6,6 +6,10 @@ description: 内容校准工作流适配器。为 episode 选择正确的 cheat-
 
 # 内容校准适配器
 
+## 合同地位（2026-09-20治理裁定）
+
+本skill是**校准适配器辅助工具**，未登记executor-registry——④节点合同入口是上游`cheat-on-content`（registry node 4），⑤深扫合同入口是`dbs-content-review`+`laohan-shencha-content-claims`（node 5）。宿主按registry/whois执行④⑤，不因本skill目录可见而路由到它；本skill的lane路由、防污染与登记流程作为操作手册参考。
+
 这里不是第二套 Cheat。`cheat-on-content` 是唯一校准引擎；本 skill 只把 episode 和它的校准 lane 接起来，避免本地 fork 公式、预测规则或迁移规则漂移。
 
 ## 不可跨越的边界
