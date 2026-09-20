@@ -469,7 +469,7 @@ def render_text_remotion(brief: dict, pre_text_png: str, out_path: str):
         "kicker": {"text": t.get("kicker", ""), "tone": r.get("kicker_tone", t.get("kicker_color", "gold")),
                    "size": r.get("kicker_size", 246)},
         "bar": t.get("bar"), "footer": t.get("footer", ""),
-        "stamp": r.get("stamp"), "text_top": r.get("text_top", 812),
+        "stamp": r.get("stamp"), "evidence": r.get("evidence"), "text_top": r.get("text_top", 748),
     }
     props_json = json.dumps(props, ensure_ascii=False)
     cli = os.path.join(RUNTIME, "node_modules", ".bin", "remotion")
