@@ -64,6 +64,12 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，生成3张排�
 - **版式不固定**：由所选模板指定近景广角、低机位、强透视或主物件前伸；不固定"人物下半部+顶部横排"。
 - **冷暖对比**：至少形成冷暖或明暗两种强对比主题色，人物和主物件有明确轮廓分离；禁止整张单一蓝色、拼贴分区、孤立证件照、多个Jeffrey。
 - **广告KV三件套（2026-09-20实拍对比得出，缺则只到秋芝的75%）**：①真人头边缘加暖金色glow镶边（把真脸"焊"进3D场景的接缝隐藏术）；②人物周围环绕3-4个小发光3D挂件（主题元素，填满人物周围空间）；③整体高饱和亮泽finish（写明HIGH-SATURATION punchy colors, bright glossy finish），禁电影暗调。
+- **光照与镜头通用合同（2026-09-20 S5验收遗漏审计补入，每张必带、与模板族无关——未写死的维度=AI随机）**：
+  1. **人物三光系统**：a)主题物件发光染脸（写明光从哪个方向染在脸上，如"lure glow lighting his face from below-left"）；b)冷色rim light勾人物轮廓（"strong cool rim light outlining his silhouette"）；c)体积光god rays入画。三光缺一，人物就"平"。
+  2. **前伸动作视角**：人物必须有一手/主物件**朝镜头前伸**（"toward the viewer/lifting toward the camera"），制造自拍式透视动感；禁止静态对称正面站桩构图。
+  3. **挂件弧形布局**：环绕元素写明"in a loose arc around him, filling the space around him"；禁上下对称呆板分布。
+  4. **氛围粒子**：dust particles/bubbles/light beams 至少其一。
+  5. **饱和度普适**：任何题材（含noir/悬疑/危机暗色系）都保持HIGH-SATURATION与明度基准，只换色相，不降明度。
 
 ## 2.7 质量门禁（v1.17，字段化逐张复核）
 
