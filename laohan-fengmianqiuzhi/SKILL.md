@@ -54,6 +54,7 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，生成3张排�
 固定身份约束句已废弃。生成前必须先用视觉模型分析本期 `jeffrey-reference.jpg`，**动态提取**真实可见特征写进每条提示词：脸型、发型、眼镜款式、胡须形态、痣位置、肤色、当前着装、神态。禁止再写"参考照片中的同一位真人"作为唯一身份描述。身份分析特征随参考图更换而更新，不得跨期复用旧描述。
 
 **面部保真红线（Jeffrey 2026-09-20）**：头部必须photoreal原样保留reference照片的真实皮肤纹理、毛孔与五官结构，禁止Q版化、3D风格化、磨皮或任何变脸；提示词须显式写明"face rendered photorealistic exactly as the reference photo, real skin texture, no beautification, no stylization"。可变项仅有：服装、表情、动作、场景、道具、头身配比。
+**大头感的唯一合法来源=身体缩小**：头部保持自然真实比例与形状（禁面部变宽、变大、五官放大、漫画化），Q版反差全部由3D身体的缩小实现。
 
 ## 2.6 单张画面合同（v1.17，源自DH Cover v4）
 
