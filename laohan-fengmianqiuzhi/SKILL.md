@@ -91,6 +91,8 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，生成3张排�
 - `samples/baseline-cover-03-kv.png`＝Jeffrey认可的官方基线（"03KV版不错"），`samples/baseline-cover-03-kv-prompt.txt`为其完整生成提示词（Seedream 5.0 lite，seed=33，identity reference）。
 - **标准提示词模板结构**（新期只替换主题变量，骨架不动）：`KV定调(HIGH-SATURATION punchy glossy)` → `HEADLINE标题合同(两行错落/白+语义色3D挤出/宽88-94%/英文眉题)` → `CENTER人物合同(photoreal头硬保真+身份分析动态特征+脸16-26%人物48-72%+表情张力+动作短语+主物件=标题视觉翻译)` → `环绕发光挂件×4(主题元素弧形)` → `SCENE主题世界观(冷暖对比/体积光/轮廓分离)` → `文字精确渲染约束+负面清单`。
 - 生成后必须走2.7质量门禁（exactTitle逐字符放大比对为第一关）。
+- **三光系统句式（组装时逐字复制进prompt，2026-09-21 S20实测：漏写即丢光效）**：
+  `LIGHTING ON CHARACTER (mandatory three-light system): 1) strong cool rim light outlining his entire silhouette and catching the edges of his hair, separating him from the background; 2) the {主题光} glow lighting his face from the {方向} (dual-side color wash if split scene); 3) a soft top light keeping his face the brightest area of the whole cover.` 并在SCENE段保留 `volumetric god rays` 与 `floating dust particles catching the light`。
 
 - **已否决路线（Jeffrey 2026-09-20，勿再试）**："生成无头身体+贴真人照片头"的合成式被否决——贴片感强、头身衔接假、表情只能沿用素材照。本skill维持单pass生图路线（Seedream+identity reference），质量靠2.5-2.8节合同与门禁保证（03KV样张已验证可用）。
 
