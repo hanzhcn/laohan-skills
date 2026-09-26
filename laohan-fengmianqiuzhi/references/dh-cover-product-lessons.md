@@ -1,4 +1,4 @@
-# laohanAI产品 DH Cover 全系列经验归档（v2→v4，2026-09-04~09-06）
+# 老韩AI产品 DH Cover 全系列经验归档（v2→v4，2026-09-04~09-06）
 
 来源：`laohanAI/docs/DH_COVER_V2_BLOGGER_COMPOSITE_SLICE_20260904.md`、`DH_COVER_V2.1`（同文件§10）、`DH_COVER_V3 秋芝式整图叙事`（同文件§11）、`DH_COVER_V4_QIUZHI_QUALITY_SLICE_20260905.md`、`DH_COVER_TITLE_CONTRACT_FIX_20260904.md`。本文件为完整归档，SKILL.md只留条款。
 

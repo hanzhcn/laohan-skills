@@ -263,13 +263,13 @@ if (episodeArg) {
   const douyinTopics = topics('抖音');
   if (!douyinTopics.includes('#AI新星计划')) fail('抖音话题必须包含#AI新星计划');
   for (const platform of ['抖音', '视频号', '小红书']) {
-    if (!topics(platform).includes('#laohanAI')) fail(`${platform}话题必须包含#laohanAI`);
+    if (!topics(platform).includes('#老韩AI')) fail(`${platform}话题必须包含#老韩AI`);
   }
   if (subsection('哔哩哔哩', '投稿类型') !== '自制') fail('哔哩哔哩投稿类型必须为自制');
   const biliTags = subsection('哔哩哔哩', '标签').split('\n').filter((line) => /^\s*-\s+/.test(line));
   if (!biliTags.length || biliTags.length > 6) fail('哔哩哔哩标签必须为1至6个');
   if (biliTags.some((line) => Array.from(line.replace(/^\s*-\s+/, '').trim()).length > 20)) fail('哔哩哔哩单个标签最多20个字符');
-  if (!biliTags.map((line) => line.replace(/^\s*-\s+/, '').trim()).includes('laohanAI')) fail('哔哩哔哩标签必须包含laohanAI');
+  if (!biliTags.map((line) => line.replace(/^\s*-\s+/, '').trim()).includes('老韩AI')) fail('哔哩哔哩标签必须包含老韩AI');
 
   const resourceContract = decision.audience_resource_contract || {};
   const resources = Array.isArray(resourceContract.resources) ? resourceContract.resources : [];

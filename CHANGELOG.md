@@ -4,7 +4,7 @@
 
 ## [2026-08-27] - 抖音搜索补充 dy-cli
 
-- **laohan-xiazai** v1.3.1 — 关键词搜索新增第2选 dy-cli（GitHub Youhai020616/douyin，`pip install dy-cli` + 扫码登录，`--sort/--time` 过滤，statistics 字段全；laohanAI 生产实战验证），记录 Linux 容器指纹坑与版本状态（PyPI 0.2.2 最新，2026-08-02 仍在修）；opencli 保持零安装第1选（仅 likes 真实）。
+- **laohan-xiazai** v1.3.1 — 关键词搜索新增第2选 dy-cli（GitHub Youhai020616/douyin，`pip install dy-cli` + 扫码登录，`--sort/--time` 过滤，statistics 字段全；老韩AI 生产实战验证），记录 Linux 容器指纹坑与版本状态（PyPI 0.2.2 最新，2026-08-02 仍在修）；opencli 保持零安装第1选（仅 likes 真实）。
 
 ## [2026-08-26] - 抖音单视频下载方法更替
 

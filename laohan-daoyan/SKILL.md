@@ -1,7 +1,7 @@
 ---
 name: laohan-daoyan
 version: "2.1.2"
-description: laohanAI真人口播新episode的V5.1导演预制入口。分为导演初稿与一次最终复审，共用director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
+description: 老韩AI真人口播新episode的V5.1导演预制入口。分为导演初稿与一次最终复审，共用director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
 ---
 
 # 老韩V5.1导演预制

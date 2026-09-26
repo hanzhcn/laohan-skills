@@ -105,7 +105,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`humanizer_zh`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
-- Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#laohanAI`，哔哩哔哩标签固定包含 `laohanAI`。
+- Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#老韩AI`，哔哩哔哩标签固定包含 `老韩AI`。
 
 字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；Episode未出现 `PASS chuangzuo script contract schema=4` 时不得声称②完成。
 
@@ -374,7 +374,7 @@ humanizer-zh 十类模式扫描后，执行**直读测试**（所有稿通用，
 2. 普通独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；系列资料包草稿不得伪造TTS或正式完成证据，使用`series-draft-v1`并绑定packet SHA；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整机械试读并用 `ffprobe` 记录TTS音频时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA，但该时长只能作为口播时长估算，不能称为真人实测。
 4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
-5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#laohanAI`，B站标签必须带 `laohanAI`。存在观众资源时，四个平台还必须绑定同一资源并登记实际交付位置。
+5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#老韩AI`，B站标签必须带 `老韩AI`。存在观众资源时，四个平台还必须绑定同一资源并登记实际交付位置。
 6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。系列资料包草稿使用`--series-draft <packet.json>`；没有对应机械PASS不得交付，即使PASS也只算草稿，不算②完成。
 
 ❌ 差：用户否掉旧稿后直接重写 `01-口播稿.md`，沿用旧决策和旧质量结论。

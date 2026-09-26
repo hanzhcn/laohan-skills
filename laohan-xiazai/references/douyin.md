@@ -362,7 +362,7 @@ opencli douyin search "关键词" --limit 30 -f json
 
 ### 第2选：dy-cli（statistics 字段全，需自行登录）
 
-GitHub [Youhai020616/douyin]，`pip install dy-cli`。PyPI 0.2.2（2026-03-15）为最新版；仓库 52★ 低频维护（2026-08-02 仍在修 bug，修复未发 PyPI）。laohanAI 生产环境实战验证：2026-08-15 记录"363KB/16s + statistics 字段全"，2026-08-26 安装版关键词返回 18 条真实结果。
+GitHub [Youhai020616/douyin]，`pip install dy-cli`。PyPI 0.2.2（2026-03-15）为最新版；仓库 52★ 低频维护（2026-08-02 仍在修 bug，修复未发 PyPI）。老韩AI 生产环境实战验证：2026-08-15 记录"363KB/16s + statistics 字段全"，2026-08-26 安装版关键词返回 18 条真实结果。
 
 ```bash
 # 本机系统 Python 3.14 受 PEP 668 管控，直接 pip install 会被拒；用专用 venv（2026-09-19 实测）
@@ -378,7 +378,7 @@ dy search "关键词" --time 一周内 --count 20 --json-output -o out.json
 - 返回 statistics 字段（点赞/发布时间/评论真实；`play_count` 常为 0，见下方已知限制），可导出 json/csv/yaml；搜索走 API 引擎，发布/互动走 Playwright
   - `-o` 输出文件为纯 item 数组（与 stdout 的 `{ok,data}` 包裹结构不同），解析时注意
 - 多账号：`--account u-xxx` + cookie 文件 `~/.dy/cookies/<account>.json`（storage_state JSON）
-- ⚠️ Linux 容器内 chromium 指纹会被风控 `verify_check` 打回空结果（laohanAI BATCH34 实测，Mac/Windows 宿主正常）
+- ⚠️ Linux 容器内 chromium 指纹会被风控 `verify_check` 打回空结果（老韩AI BATCH34 实测，Mac/Windows 宿主正常）
 
 已知限制：互动字段缺失或为 `0` 只能记为不可用，不能当作真实零；空数组也不能直接证明平台没有相关内容。
 
