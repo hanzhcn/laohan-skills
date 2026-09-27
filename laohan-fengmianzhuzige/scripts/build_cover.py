@@ -122,6 +122,7 @@ def particles(layer, n, box, color, seed=7, glow=True):
     layer.alpha_composite(core)
 
 def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: str):
+    S = H / 1440.0  # 2026-09-27：PIL 文字层纵向等比因子（3:4 时 S=1，行为完全不变）
     from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
     # 画布 = 背景板
     bg = Image.open(bg_path).convert("RGB").resize((W, H), Image.LANCZOS)
@@ -397,15 +398,15 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: 
     txt = Image.new("RGBA", (W, H), (0,0,0,0))
     dt = ImageDraw.Draw(txt)
 
-    f_eb = _font(t.get("eyebrow_size", 36))
+    f_eb = _font(t.get("eyebrow_size", int(36*S)))
     _eb = t.get("eyebrow", "")  # 2026-09-27：eyebrow 属可选（Remotion 路径本就用 .get），PIL 路径改用 .get 保持一致
     if _eb:
-        draw_tracked_rgba(txt_shadow, (66, 84), _eb, f_eb, (0,0,0,200), tracking=12)
-        draw_tracked_rgba(txt, (62, 80), _eb, f_eb, (255,255,255,215), tracking=12)
-    dt.rectangle([42, 84, 50, 84+f_eb.size+8], fill=(255,255,255,215))
+        draw_tracked_rgba(txt_shadow, (62, int(84*S)), _eb, f_eb, (0,0,0,200), tracking=12)
+        draw_tracked_rgba(txt, (62, int(80*S)), _eb, f_eb, (255,255,255,215), tracking=12)
+    dt.rectangle([42, int(84*S), 50, int(84*S)+f_eb.size+8], fill=(255,255,255,215))
     if t.get("chip_cn"):
-        f_c1 = _font(t.get("chip_size", 40))
-        f_c2 = _font(t.get("chip_size2", 22))
+        f_c1 = _font(t.get("chip_size", int(40*S)))
+        f_c2 = _font(t.get("chip_size2", int(22*S)))
         cw = max(text_width(dt, t["chip_cn"], f_c1), text_width(dt, t["chip_en"], f_c2)) + 52
         ch = f_c1.size + f_c2.size + 40
         cx0, cy0 = 42, 84 + f_eb.size + 26
@@ -415,19 +416,19 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: 
         dt.text((cx0+26, cy0+14+f_c1.size+4), t["chip_en"], font=f_c2,
                 fill=(255,255,255,170))
 
-    f_lead = _font(t.get("lead_size", 84))
+    f_lead = _font(t.get("lead_size", int(84*S)))
     align = t.get("align", "left")
     LX = t.get("left_x", 64) if align == "left" else None
     def ax(w_): return (W - w_) // 2 if align == "center" else LX
     lw = text_width(dt, t["lead"], f_lead)
-    lead_y = t.get("lead_y", 812)
+    lead_y = t.get("lead_y", int(812*S))
     dts.text((ax(lw)+6, lead_y+6), t["lead"], font=f_lead, fill=(0,0,0,230))
     dt.text((ax(lw), lead_y), t["lead"], font=f_lead, fill=(255,255,255,255),
             stroke_width=t.get("lead_stroke", 3), stroke_fill=(18,26,40,255))
 
-    f_kick = _font(t.get("kicker_size", 240))
+    f_kick = _font(t.get("kicker_size", int(240*S)))
     kw = text_width(dt, t["kicker"], f_kick)
-    kick_y = t.get("kicker_y", 930)
+    kick_y = t.get("kicker_y", int(930*S))
     col = COLORS.get(t.get("kicker_color","gold"), GOLD)
     dts.text((ax(kw)+10, kick_y+10), t["kicker"], font=f_kick, fill=(0,0,0,235))
     dt.text((ax(kw), kick_y), t["kicker"], font=f_kick, fill=col,
