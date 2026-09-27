@@ -435,17 +435,17 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: 
             stroke_width=t.get("kicker_stroke", 8), stroke_fill=(24,12,12,255))
 
     if t.get("bar"):
-        f_bar = _font(t.get("bar_size", 52))
+        f_bar = _font(t.get("bar_size", int(52*S)))
         bw = text_width(dt, t["bar"], f_bar)
         pad_x, pad_y = 32, 14
-        bar_y = t.get("bar_y", 1268)
+        bar_y = t.get("bar_y", int(1268*S))
         dt.rounded_rectangle([ax(bw)-pad_x, bar_y, ax(bw)+bw+pad_x, bar_y+f_bar.size+pad_y*2],
                              radius=10, fill=(245,197,24,255))
         dt.text((ax(bw), bar_y+pad_y-2), t["bar"], font=f_bar, fill=(20,16,4,255))
 
-    f_ft = _font(t.get("footer_size", 26))
-    draw_tracked_rgba(txt_shadow, (0, 1392), t["footer"], f_ft, (0,0,0,160), tracking=9, center_x=W/2)
-    draw_tracked_rgba(txt, (0, 1388), t["footer"], f_ft, (255,255,255,135), tracking=9, center_x=W/2)
+    f_ft = _font(t.get("footer_size", int(26*S)))
+    draw_tracked_rgba(txt_shadow, (0, int(1392*S)), t["footer"], f_ft, (0,0,0,160), tracking=9, center_x=W/2)
+    draw_tracked_rgba(txt, (0, int(1388*S)), t["footer"], f_ft, (255,255,255,135), tracking=9, center_x=W/2)
 
     txt_shadow = txt_shadow.filter(ImageFilter.GaussianBlur(6))
     canvas = Image.alpha_composite(canvas, txt_shadow)
