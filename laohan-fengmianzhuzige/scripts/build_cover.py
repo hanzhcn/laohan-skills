@@ -122,7 +122,10 @@ def particles(layer, n, box, color, seed=7, glow=True):
     layer.alpha_composite(core)
 
 def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: str):
-    S = H / 1440.0  # 2026-09-27：PIL 文字层纵向等比因子（3:4 时 S=1，行为完全不变）
+    # 2026-09-27：PIL 文字层等比因子。取 min(宽比, 高比)——
+    # 只看高比会让竖图画幅(9:16)字号横向溢出被截断；只看宽比会让横图画幅纵向溢出。
+    # 原生 1080x1440 时 min(1.0, 1.0)=1.0，行为完全不变。
+    S = min(W / 1080.0, H / 1440.0)
     from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
     # 画布 = 背景板
     bg = Image.open(bg_path).convert("RGB").resize((W, H), Image.LANCZOS)
