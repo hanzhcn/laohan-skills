@@ -11,7 +11,9 @@ SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # skill
 FONT = os.path.join(SKILL_DIR, "assets", "fonts", "SourceHanSansCN-Heavy.otf")
 RUNTIME = os.environ.get("LAOHAN_REMOTION_RUNTIME",
     "/Users/hanzhmacbookair/Documents/laohanAI视频创作/animation-method/runtime")
-W, H = 1080, 1440  # 3:4 原生画幅（covers_real 实证）
+W, H = 1080, 1440  # 3:4 原生画幅（covers_real 实证）——默认值；可被 main() 的 --size 覆盖（2026-09-27 附加式扩展）
+NATIVE_W, NATIVE_H = 1080, 1440  # LaohanCover(Remotion 文字层) 仅支持该画幅
+
 GOLD, RED, BLUE, GREEN = "#F5C518", "#E04545", "#3B82F6", "#22C55E"
 COLORS = {"gold": GOLD, "red": RED, "blue": BLUE, "green": GREEN, "white": "#FFFFFF"}
 
@@ -396,8 +398,10 @@ def build(brief: dict, bg_path: str, cut_path: str, out_path: str, text_engine: 
     dt = ImageDraw.Draw(txt)
 
     f_eb = _font(t.get("eyebrow_size", 36))
-    draw_tracked_rgba(txt_shadow, (66, 84), t["eyebrow"], f_eb, (0,0,0,200), tracking=12)
-    draw_tracked_rgba(txt, (62, 80), t["eyebrow"], f_eb, (255,255,255,215), tracking=12)
+    _eb = t.get("eyebrow", "")  # 2026-09-27：eyebrow 属可选（Remotion 路径本就用 .get），PIL 路径改用 .get 保持一致
+    if _eb:
+        draw_tracked_rgba(txt_shadow, (66, 84), _eb, f_eb, (0,0,0,200), tracking=12)
+        draw_tracked_rgba(txt, (62, 80), _eb, f_eb, (255,255,255,215), tracking=12)
     dt.rectangle([42, 84, 50, 84+f_eb.size+8], fill=(255,255,255,215))
     if t.get("chip_cn"):
         f_c1 = _font(t.get("chip_size", 40))
@@ -491,7 +495,20 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--workdir", default=None)
     ap.add_argument("--text-engine", default="auto", choices=["auto", "remotion", "pil"])
+    ap.add_argument("--size", default="1080x1440",
+                    help="输出画幅 WxH（默认 1080x1440）。非该画幅时 Remotion 文字层不可用，自动回落 PIL。")
     a = ap.parse_args()
+    # ---- 画幅（2026-09-27 附加式扩展）：默认行为完全不变 ----
+    global W, H
+    try:
+        _w, _h = (int(x) for x in str(a.size).lower().split("x"))
+        if _w < 64 or _h < 64: raise ValueError("too small")
+    except Exception:
+        sys.exit(f"--size 需形如 1080x1440，收到：{a.size!r}")
+    W, H = _w, _h
+    if (W, H) != (NATIVE_W, NATIVE_H):
+        log(f"canvas {W}x{H} != native {NATIVE_W}x{NATIVE_H} -> text engine forced to pil (LaohanCover is 3:4 only)")
+        a.text_engine = "pil"
     brief = json.load(open(a.brief))
     wd = a.workdir or os.path.dirname(os.path.abspath(a.out))
     os.makedirs(wd, exist_ok=True)
