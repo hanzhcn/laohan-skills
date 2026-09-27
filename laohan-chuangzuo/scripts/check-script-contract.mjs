@@ -153,7 +153,20 @@ if (episodeArg) {
     // 2026-09-17五步法合同：AI自主定题，无采访/大纲确认门槛
     if (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale)) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
     const hook = decision.hook_contract || {};
-    if (decision.topic_sha256 !== shaFile(topicPath) || !Array.isArray(decision.expression_pool_usage) || !decision.expression_pool_usage.length || decision.expression_pool_usage.some((item) => !nonEmpty(item?.used) || !nonEmpty(item?.where)) || hook.fulfills_packaging_promise !== true || !nonEmpty(hook.packaging_title_direction)) fail('schema 4必须绑定当前选题SHA、个人表达池取材记录，并证明钩子兑现①packaging_assessment的标题承诺');
+    // 2026-09-27 改（Jeffrey 选择「允许空池显式登记」）：
+    // 原判据要求 expression_pool_usage **非空**，导致 `script-pool/Jeffrey个人表达池.md` 为空时
+    // ②**无法合法通过**——唯一"出路"是写一条字段合法但语义为假的记录（"本期为空未取材"），
+    // 等于用形式合规冒充取材事实，违反项目"禁止伪造产物骗过检查器"。
+    // 改法：**空池必须显式声明 + 给出理由**才可通过（不是静默放行）：
+    //   expression_pool_status: 'EMPTY' 且 expression_pool_empty_reason 非空。
+    // 非空时仍逐项校验 used/where（原语义不变）。有声明但同时给了非空 usage 视为矛盾，仍按非空路径校验。
+    const poolUsage = Array.isArray(decision.expression_pool_usage) ? decision.expression_pool_usage : null;
+    const poolUsageOk = poolUsage !== null && (
+      poolUsage.length
+        ? poolUsage.every((item) => nonEmpty(item?.used) && nonEmpty(item?.where))
+        : decision.expression_pool_status === 'EMPTY' && nonEmpty(decision.expression_pool_empty_reason)
+    );
+    if (decision.topic_sha256 !== shaFile(topicPath) || !poolUsageOk || hook.fulfills_packaging_promise !== true || !nonEmpty(hook.packaging_title_direction)) fail('schema 4必须绑定当前选题SHA、个人表达池取材记录，并证明钩子兑现①packaging_assessment的标题承诺');
     // 创作六步法（3.6.0）：8个新字段机械校验
     if (!['TUTORIAL', 'EXPOSITION', 'STORY'].includes(decision.structure_type)) fail('创作六步法第1步：structure_type必须为TUTORIAL/EXPOSITION/STORY之一');
     const variants = Array.isArray(decision.hook_variants) ? decision.hook_variants : [];
