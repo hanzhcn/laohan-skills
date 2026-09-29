@@ -35,6 +35,14 @@ const now = () => new Date().toISOString();
 const safeName = (value) => String(value).replace(/[^a-zA-Z0-9_-]+/g, '_');
 const mkdir = (path) => mkdirSync(path, {recursive: true});
 const sha256 = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+/* 本地候选的"视频类"媒体类型集合（2026-09-30 修）。
+ * 缺口实证：此处原为单值判定 `asset.media_type === 'video'`，而 catalog 的真实词表是 5 类
+ * （docs/素材库license形态审计.md:16：stock_photo 36 ／ stock_video 17 ／ ppt_slide 11 ／ image 1 ／ video 1）：
+ * `video` 只由 scripts/material-library.mjs:198 在"收录本机视频"时写入，而**下载进来的 Pexels/Pixabay 视频写的是
+ * `stock_video`**（scripts/stock-material.mjs:392）⇒ 单值判定把 17 条正牌 BROLL 库存视频**全部静默排除**，
+ * 本地池从 18 条塌成 1 条，"本地 Top-K"在物理上不成立（⑩ 素材线的真实断点之一）。
+ * 项目侧同族查询早已用集合判定（scripts/material-library.mjs:125 的 `mediaTypes.has(asset.media_type)`）⇒ 此处对齐。 */
+const VIDEO_MEDIA_TYPES = new Set(['video', 'stock_video']);
 
 const providers = {
   pexels: {
@@ -183,7 +191,7 @@ const searchLocal = async (query, perPage, library) => {
   if (existsSync(catalogPath)) {
     const catalog = readJson(catalogPath);
     if (catalog.schema_version !== 1 || !Array.isArray(catalog.assets)) throw new Error('本地素材catalog格式非法');
-    const candidates = catalog.assets.filter((asset) => asset.status === 'VERIFIED' && asset.reusable === true && asset.media_type === 'video').map((asset) => {
+    const candidates = catalog.assets.filter((asset) => asset.status === 'VERIFIED' && asset.reusable === true && VIDEO_MEDIA_TYPES.has(asset.media_type)).map((asset) => {
       const searchable = [asset.title, asset.summary, asset.search_text, ...(asset.keywords || [])].join(' ').toLowerCase();
       const exact = searchable.includes(query.toLowerCase()) ? 12 : 0;
       const score = exact + terms.reduce((total, term) => total + (searchable.includes(term) ? (term.length >= 4 ? 4 : 2) : 0), 0);
