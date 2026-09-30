@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.6.0"
+version: "3.6.1"
 ---
 
 # 统一创作引擎
@@ -200,7 +200,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 大纲成立后按`docs/老韩创作六步法.md`写全文，机械要求：
 1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY`（教程=问题-方案-演示-总结；科普=现象-原理-案例-升华；故事=问题-低谷-转折-结果-方法，留存最高的格式，亲历题优先）。
 2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`）。
-3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（预计时长等分格子每格至少一个点的检查结论）、`rhythm_anchors[]`（每15—30秒一个正文级锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文）、`emotion_arc`（开头痛点焦虑→中段认知释放→收尾踏实感三节点）。
+3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（预计时长等分格子每格至少一个点的检查结论）、`rhythm_anchors[]`（每15—30秒一个正文级锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文；`position`必须用「第N段」指到正文真实段落——段号越界或只写模糊位置会被合同判红，见 3.6.1 内容层交叉判据）、`emotion_arc`（开头痛点焦虑→中段认知释放→收尾踏实感三节点）。
 4. **造记忆点**：登记`quote_anchor`（一句可被观众二创引用的金句，必须承载本期判断非鸡汤，放情绪高点或收尾前；**且必须是正文里真实出现的原句**——字幕/剪辑要按它取原文，validator 自 2026-09-30 起机械核对"逐字出现在口播段落里"，忽略标点与空白）与`comment_hook`（开头可埋问题悬念、真引导放情绪最高点、预期观众最想说什么；有上期评论素材时引用被问最多的问题做跨期钩子）。
 5. **HKRR自检**：登记`hkrr_check`（快乐/知识/共鸣至少一项为true，rhythm必须true，附rationale）；不达标重排再写。
 

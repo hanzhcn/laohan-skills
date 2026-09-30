@@ -179,6 +179,17 @@ if (episodeArg) {
     if (beat.passed !== true || !nonEmpty(beat.rationale)) fail('创作六步法第3步：beat_distribution必须通过等分格子无空白检查并说明');
     const anchors = Array.isArray(decision.rhythm_anchors) ? decision.rhythm_anchors : [];
     if (!anchors.length || anchors.some((item) => !nonEmpty(item?.type) || !nonEmpty(item?.position))) fail('创作六步法第3步：rhythm_anchors必须按15—30秒密度登记正文级锚点');
+    // 2026-09-30 加内容层交叉判据（治理交接 T10）：rhythm_anchors 自称「正文级锚点」，
+    // position 必须真的指到正文段落——「第N段」的 N 必须落在 1..paragraphs.length。
+    // 负测：position 写「第99段 末」（段号越界）或「开场处」（无段号）都必须红。
+    // 边界（诚实声明）：只查段号可解析且不越界，**不**反向要求每段都被锚点覆盖——
+    // 实测本期正文 17 个 markdown 段、锚点按 6 个逻辑格子（开场钩子→…→收尾）编号，
+    // 逻辑格子与物理段落不是 1:1，反向覆盖会把合法稿件打红。
+    for (const item of anchors) {
+      const refs = [...String(item.position).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
+      if (!refs.length) fail('创作六步法第3步：rhythm_anchors.position 必须指到正文段落编号（如「第2段 末」），不能只写模糊位置：' + item.type + ' → ' + item.position);
+      for (const n of refs) if (n < 1 || n > paragraphs.length) fail('创作六步法第3步：rhythm_anchors 指向不存在的正文段落：' + item.type + ' → 第' + n + '段（正文共 ' + paragraphs.length + ' 段）');
+    }
     const arc = decision.emotion_arc || {};
     if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('创作六步法第3步：emotion_arc必须登记开头痛点/中段释放/收尾踏实三节点');
     const quote = decision.quote_anchor || {};
