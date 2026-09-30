@@ -51,7 +51,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Stor
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 Slide images
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 Screen recording automation
 npx skills add hanzhcn/laohan-skills --skill laohan-donghua          # 🎞️ B-roll overlay video
-npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 Multi-platform rewrite (Douyin/Xiaohongshu/WeChat)
+npx skills add hanzhcn/laohan-skills --skill laohan-duopingtai              # 🔄 Multi-platform rewrite (Douyin/Xiaohongshu/WeChat)
 ```
 
 **Content Acquisition (2)**
@@ -167,7 +167,7 @@ Script + real-person video → B-roll overlay final video. Built on Hyperframes:
 | 🎬 **fenjing** | Storyboard prompts (FLUX / SDXL / Gemini, quality-validated) | "拆分镜" |
 | 📑 **notebooklm** | Script → slide images (NotebookLM, ready for video editors) | "做 PPT" |
 | 🎥 **luping** | Screen recording automation (ffmpeg physical screen + Playwright browser → 1080p MP4) | "录屏" |
-| 🔄 **duopingtai** | Multi-platform rewrite (script → Douyin / Xiaohongshu / WeChat 3 versions) | "多平台改写" |
+| 🔄 **laohan-duopingtai** | Multi-platform rewrite (script → Douyin / Xiaohongshu / WeChat 3 versions) | "多平台改写" |
 
 ---
 

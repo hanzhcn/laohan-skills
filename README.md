@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-21-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-22-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenClaw-green.svg)](https://agentskills.io/)
 
 **Agent Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -78,7 +78,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying          # 📈 发�
 
 **多平台改写（1 个）**
 ```bash
-npx skills add hanzhcn/laohan-skills --skill duopingtai              # 🔄 抖音/小红书/公众号改写
+npx skills add hanzhcn/laohan-skills --skill laohan-duopingtai              # 🔄 抖音/小红书/公众号改写
 ```
 
 > 一键全装：`npx skills add hanzhcn/laohan-skills -g -y`
@@ -180,7 +180,7 @@ redian → chuangzuo → weigui → cheat → fengmian / fenjing → notebooklm 
 | 🎬 **fenjing** | 分镜提示词（FLUX / SDXL / Gemini，质量校验后拆分） | "拆分镜" |
 | 📑 **notebooklm** | 口播稿 → 幻灯片图片（NotebookLM，剪映直接用） | "做 PPT" |
 | 🎥 **luping** | 录屏自动化（ffmpeg 物理屏 + Playwright 浏览器 → 1080p MP4） | "录屏" |
-| 🔄 **duopingtai** | 多平台改写（口播稿 → 抖音 / 小红书 / 公众号三版本） | "多平台改写" |
+| 🔄 **laohan-duopingtai** | 多平台改写（口播稿 → 抖音 / 小红书 / 公众号三版本） | "多平台改写" |
 
 ---
 

@@ -116,3 +116,4 @@
 ## 2026-09-30
 
 - **`laohan-cheat` → `laohan-jiaozhun`**：命名规范统一（laohan-前缀+通俗拼音）；上游 cheat-on-content 体系名保留在 description 与正文，功能与触发词不变。
+- **`duopingtai` → `laohan-duopingtai`**：补 laohan- 前缀（命名规范）；徽章 21→22（此前漏计）。
