@@ -47,6 +47,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Un
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 Content calibration scoring
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 Cover image prompts
+npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ TzFilm-style cover system (3-layer, default)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Storyboard prompts
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 Slide images
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 Screen recording automation

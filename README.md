@@ -51,6 +51,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ �
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 内容校准打分+预测
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封面提示词
+npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ 柱子哥封面体系(三层合成,默认套)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 幻灯片图片
 npx skills add hanzhcn/laohan-skills --skill laohan-luping           # 🎥 录屏自动化
