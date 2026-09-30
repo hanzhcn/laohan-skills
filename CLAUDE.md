@@ -14,7 +14,7 @@
 - `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanAI视频创作` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
 - V5旧期已有pending candidate再接入V5.1时，只能使用workflow受控迁移冻结原candidate与director-state SHA；bianpai视该期D1/D2为历史兼容完成并停在`JEFFREY_REVIEW`，不得倒退覆盖已生成样片。
 - episode 存在且通过 workflow `verify-episode-supersession.mjs` 的 `supersession-record.json` 时，bianpai 必须优先返回 `SUPERSEDED` 并拒绝 vendors/status/next/check；不得覆盖旧 executor lock 或把作废期迁移到新 runtime。
-- `laohan-cheat/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
+- `laohan-jiaozhun/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
 - `laohan-yunying/SKILL.md`：⑫—⑭的抖音运营编排器。发布准备要求 `bianpai check --require final`；真实发布仍必须 Jeffrey 确认。它保存 publish-record、数据快照和评论洞察，随后交给 upstream cheat-publish/retro；不自动发布、回复或改预测。
 - ①的 experiment 必须预先声明合法 `metric_keys` 和 T+N 窗口；⑬只有匹配该窗口、播放与全部预注册指标非空的 `measurement_role: TARGET` 快照可完成，其他观测只能标 `CONTEXT`，不得被 retro 当作假设结论。
 - `bianpai vendors` 写 schema 3 的 `FROZEN_ON_RESUME` vendor preflight，冻结 `UP_TO_DATE|READY_LOCAL_AHEAD` 状态和 Cheat/dbskill 完整 HEAD SHA。`status/next` 只做本地 HEAD 对照；任一 HEAD 漂移或旧 schema 2 均 BLOCKED，不能猜填或静默迁移。新 episode 必须走 `sync-content-vendors.sh --new-episode` 并创建 `00-编排/executor-lock.json`；registry/runtime 漂移时进行中 schema 2 episode BLOCKED，不得刷新 preflight 静默换执行器。
