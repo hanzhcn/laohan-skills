@@ -26,7 +26,7 @@
 
 ```bash
 # 一键全装（21 个技能，需要 Claude Code、Codex 或 OpenClaw）
-npx skills add hanzhcn/laohan-skills -g -y
+npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名
 
 # 单装一个（推荐：按需挑）
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
@@ -35,7 +35,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
 
 # Codex 专用初始化 skill（只安装到 Codex）
-npx skills add hanzhcn/laohan-skills -g -y --agent codex --skill laohan-chushicodex
+npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名 --agent codex --skill laohan-chushicodex
 ```
 
 ---
@@ -82,7 +82,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying          # 📈 发�
 npx skills add hanzhcn/laohan-skills --skill laohan-duopingtai              # 🔄 抖音/小红书/公众号改写
 ```
 
-> 一键全装：`npx skills add hanzhcn/laohan-skills -g -y`
+> 一键全装：`npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名`
 
 ---
 

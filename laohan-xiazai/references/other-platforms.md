@@ -2,7 +2,7 @@
 
 > 2026-07-08 实测 `opencli list`（175 个适配器，版本 1.8.6）。本文件只收录与内容/社交/资讯相关的平台，剔除 12306/booking/binance 等非内容站。
 > ⚠️ opencli 不止"下载/搜索"，大量平台带 `[write]` 能力（发评论/关注/点赞/发布/回复）。MediaCrawler 只抓不写，opencli 在评论能力上是它超集（详见文末对照）。
-> 升级方法（nvm node 22 绝对路径，不用 brew node）：`/Users/hanzhmacbookair/.nvm/versions/node/v22.22.0/bin/npm install -g @jackwener/opencli@latest`。本地已是 1.8.6 = npm 最新时无需升级。
+> 升级方法（nvm node 22 绝对路径，不用 brew node）：`$NVM_BIN/npm install -g @jackwener/opencli@latest`。本地已是 1.8.6 = npm 最新时无需升级。
 
 ## Cookie/登录态要求
 

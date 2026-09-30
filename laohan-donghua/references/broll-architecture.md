@@ -198,7 +198,7 @@ Composition 文件必须用 `<template>` 包装：
 
 ## 官方源码仓库
 
-路径：`/Users/hanzhmacbookair/Documents/hyperframes/hyperframes-repo/docs/`
+路径：`<你的 hyperframes 仓库路径>/docs/`
 
 权威文档（skill 文件未覆盖的内容以这里为准）：
 - `reference/html-schema.mdx` — clip 类型、属性表的权威定义

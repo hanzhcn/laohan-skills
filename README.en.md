@@ -25,7 +25,7 @@ Built by [老韩AI](https://github.com/hanzhcn) · Search **老韩AI** on Douyin
 
 ```bash
 # Install all 16 skills (requires Claude Code or OpenClaw)
-npx skills add hanzhcn/laohan-skills -g -y
+npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名
 
 # Install one (recommended: pick what you need)
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
@@ -74,7 +74,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying    # 📊 Douyin dat
 npx skills add hanzhcn/laohan-skills --skill laohan-chushicodex # ⚙️ Codex environment initializer
 ```
 
-> Install all: `npx skills add hanzhcn/laohan-skills -g -y`
+> Install all: `npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名`
 
 ---
 
