@@ -112,3 +112,7 @@
 ## 2026-09-19
 - `laohan-redian` 更名 `laohan-xuanti`（Jeffrey指令：skill名与"选题五步法"语义对齐；历史条目中的旧名保留原样）。功能引用（bianpai路由/douyinsousuo/chuangzuo/README）已同步。
 - `laohan-chuangzuo` 与项目文档同步：`老韩写稿六步法` 更名 `老韩创作六步法`（三大方法论统一命名：选题五步法/创作六步法/动画五步法）。
+
+## 2026-09-30
+
+- **`laohan-cheat` → `laohan-jiaozhun`**：命名规范统一（laohan-前缀+通俗拼音）；上游 cheat-on-content 体系名保留在 description 与正文，功能与触发词不变。

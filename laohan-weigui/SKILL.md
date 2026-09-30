@@ -140,7 +140,7 @@ platform_guarantee: false
 ## 与其他 skill 的关系
 
 - **写完口播稿后、发布前**跑一次 laohan-weigui
-- 可在 laohan-cheat 流程中加一步"违规检测"（publish前检查）
+- 可在 laohan-jiaozhun 流程中加一步"违规检测"（publish前检查）
 - 与 laohan-chuangzuo 独立，可在创作流程的任何节点单独调用
 
 ## 词库维护

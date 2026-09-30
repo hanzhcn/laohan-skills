@@ -49,7 +49,7 @@ npx skills add hanzhcn/laohan-skills -g -y --agent codex --skill laohan-chushico
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 AI 热点三路并行抓取
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
-npx skills add hanzhcn/laohan-skills --skill laohan-cheat            # 📊 内容校准打分+预测
+npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 内容校准打分+预测
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封面提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-notebooklm       # 📑 幻灯片图片

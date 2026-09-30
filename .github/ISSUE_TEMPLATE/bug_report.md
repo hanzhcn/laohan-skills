@@ -7,7 +7,7 @@ labels: bug
 
 ## 哪个 Skill 出了问题
 
-<!-- 如：laohan-xiazai、laohan-cheat 等 -->
+<!-- 如：laohan-xiazai、laohan-jiaozhun 等 -->
 
 ## 触发方式
 

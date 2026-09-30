@@ -382,7 +382,7 @@ const calibrationState = () => safely(() => {
   const predictionScriptHash = field('prediction_script_hash');
   const predictionRevision = field('prediction_revision');
   const reportScriptHash = field('script_hash');
-  if (engine !== 'cheat-on-content') return {done: false, reason: '校准必须由 cheat-on-content 记录，不能使用旧 laohan-cheat 公式'};
+  if (engine !== 'cheat-on-content') return {done: false, reason: '校准必须由 cheat-on-content 记录，不能使用旧 laohan-jiaozhun 公式'};
   if (!['opinion-video', 'tutorial-video'].includes(contentForm)) return {done: false, reason: 'content_form 必须为 opinion-video 或 tutorial-video'};
   const topic = readJson('00-选题.json');
   if (topic.schema_version === 2 && topic.content_form !== contentForm) return {done: false, reason: '④ content_form 必须与①选中候选 lane 一致'};
@@ -850,7 +850,7 @@ const steps = [
   {id: '①', name: '选题决策', skill: 'laohan-xuanti（决策主写）+ laohan-douyinsousuo（平台取证）', done: () => topicState().done, output: '00-选题-signals/source-health/candidates + 00-抖音搜索证据.{json,md} + 00-选题.{json,md}'},
   {id: '②', name: '写稿', skill: 'laohan-chuangzuo', done: () => scriptState().done, output: '反向采访 + Jeffrey大纲确认 + 01-口播稿.md + 当前executor合同创作决策 + 本机TTS + validator PASS'},
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
-  {id: '④', name: '校准与盲预测', skill: 'laohan-cheat → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
+  {id: '④', name: '校准与盲预测', skill: 'laohan-jiaozhun → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
   {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 01/02/03三张9:16候选 + 默认01三张共享真实尺寸封面（映射7个发布入口）'},
   {id: 'D1', name: 'V5.1导演初稿', skill: 'laohan-daoyan', done: () => directorDraftState().done, output: '09-导演/director-state.md（director_draft=COMPLETED，director_review=PENDING）'},
@@ -1007,7 +1007,7 @@ let next = states.find(routeIncomplete);
 const contentPrefixDone = importedContentPrefix || states.slice(0, 3).every((step) => step.done);
 if (!importedContentPrefix && contentPrefixDone && calibration.scoreDone && !deepScan.done) next = states[4];
 if (!importedContentPrefix && contentPrefixDone && calibration.scoreDone && deepScan.done && calibration.predictionStatus !== 'RECORDED') {
-  next = {...states[3], name: '最终盲预测', skill: 'laohan-cheat → cheat-on-content cheat-predict', output: '03-校准报告.md（prediction_status=RECORDED）'};
+  next = {...states[3], name: '最终盲预测', skill: 'laohan-jiaozhun → cheat-on-content cheat-predict', output: '03-校准报告.md（prediction_status=RECORDED）'};
 }
 if (!importedContentPrefix && contentPrefixDone && calibration.done && deepScan.done && calibration.predictionStatus === 'RECORDED') {
   next = states.slice(5).find(routeIncomplete);
@@ -1031,7 +1031,7 @@ const promptContractDrift = () => {
 if (command === 'next') {
   if (!promptRoute.done) promptContractDrift();
   const fields = promptRoute.fields;
-  if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-cheat 的复盘与方法更新 gate。');
+  if (!next) console.log('# 下一步\n\n所有 ①—⑭ 标准产物已存在；进入 laohan-jiaozhun 的复盘与方法更新 gate。');
   else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一窗口：09-candidate 代理验收\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\n${fields}\n\n- 只在09窗口完成candidate的完整观看QA，并用AGENT_PROXY记录接受或定向返工。
 - 本窗口到candidate验收为止；封面、finalize与发布由后续独立Prompt路由。`);
   else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n${fields}\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
