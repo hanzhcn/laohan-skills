@@ -67,6 +67,11 @@ npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 Tech
 npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 Tool version checker
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 Config tutorial router
 npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ Create/modify skills
+npx skills add hanzhcn/laohan-skills --skill laohan-bianpai    # 🧭 Workflow state router (tells the single next step)
+npx skills add hanzhcn/laohan-skills --skill laohan-daoyan     # 🎬 Director pre-production (two-pass review)
+npx skills add hanzhcn/laohan-skills --skill laohan-sucai      # 🎞️ B-roll stock footage supplier (visual-reviewed)
+npx skills add hanzhcn/laohan-skills --skill laohan-yunying    # 📊 Douyin data & comment insights after publish
+npx skills add hanzhcn/laohan-skills --skill laohan-chushicodex # ⚙️ Codex environment initializer
 ```
 
 > Install all: `npx skills add hanzhcn/laohan-skills -g -y`
