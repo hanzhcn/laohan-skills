@@ -27,6 +27,10 @@ const requireFile = (path, label) => {
 const shaFile = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
 const shaText = (value) => createHash('sha256').update(value).digest('hex');
 const nonEmpty = (value) => typeof value === 'string' && value.trim().length > 0;
+// 2026-09-30：内容层交叉判定用的归一化——只留字词，去空白/中英标点/引号/括号/破折号/省略号并小写。
+// 与下方 content_units 的 claim 去重（normalizedClaims）同源思路，但多覆盖引号、括号、破折号、省略号，
+// 用来判断"这句话是否真实出现在正文里"（金句判定）。
+const normalizeProse = (value) => String(value ?? '').replace(/[\s，。！？、,.!?；;：:“”「」『』（）()《》【】\[\]\-—–…·]/g, '').toLowerCase();
 const uniqueNonEmpty = (items) => Array.isArray(items) && items.length > 0 && items.every(nonEmpty) && new Set(items).size === items.length;
 
 let base;
@@ -179,6 +183,11 @@ if (episodeArg) {
     if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('创作六步法第3步：emotion_arc必须登记开头痛点/中段释放/收尾踏实三节点');
     const quote = decision.quote_anchor || {};
     if (!nonEmpty(quote.text) || !nonEmpty(quote.placement) || quote.carries_judgment !== true) fail('创作六步法第4步：quote_anchor必须登记承载本期判断的金句与位置（鸡汤空话不合法）');
+    // 2026-09-30 加内容层交叉判据：外部审计用负测证明——把 quote_anchor.text 换成正文里
+    // 不存在的句子（如"人生就像一场旅行"）仍能过门，因为六步法 8 个字段此前全是
+    // nonEmpty + ===true 的自陈布尔、零处与正文交叉。金句是其中唯一能被机械核对的字段
+    // （剪辑/字幕要按它取原文），故要求它逐字出现在口播段落里（忽略标点与空白）。
+    if (!normalizeProse(paragraphs.join('\n')).includes(normalizeProse(quote.text))) fail('创作六步法第4步：quote_anchor.text 必须是正文里真实存在的句子（金句不能是正文没说过的句子）：' + quote.text);
     const commentHook = decision.comment_hook || {};
     if (!nonEmpty(commentHook.expected_comments) || commentHook.guide_at_peak !== true) fail('创作六步法第4步：comment_hook必须登记预期评论方向并把真引导放在情绪最高点');
     const hkrr = decision.hkrr_check || {};
