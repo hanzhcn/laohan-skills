@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-22-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-23-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
