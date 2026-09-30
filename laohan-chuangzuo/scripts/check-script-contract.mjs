@@ -177,6 +177,27 @@ if (episodeArg) {
     if (variants.length < 3 || variants.some((item) => !nonEmpty(item?.text) || !nonEmpty(item?.direction)) || !Number.isInteger(decision.selected_hook_index) || decision.selected_hook_index < 0 || decision.selected_hook_index >= variants.length || decision.tts_selected !== true) fail('创作六步法第2步：hook_variants必须至少3个不同方向并经TTS读选登记selected_hook_index/tts_selected');
     const beat = decision.beat_distribution || {};
     if (beat.passed !== true || !nonEmpty(beat.rationale)) fail('创作六步法第3步：beat_distribution必须通过等分格子无空白检查并说明');
+    // 2026-10-01 加（治理交接 R4）：六步法自陈字段的最低限度语义交叉。三类判据：
+    //  (a) 占位禁令——rationale/expected_comments 写「占位/随便写一句/placeholder/待补」直接红
+    //      （外部审计实测：beat 理由写「随便写一句话占位」、emotion_arc/comment_hook/hkrr 全写「占位」
+    //        曾全部 PASS——字段齐全但语义假）。
+    //  (b) beat.rationale 必须引用可核对的对象：正文段号（须在范围）或格子/秒数词汇。
+    //  (c) emotion_arc 的 opening/ending 必须与正文首/尾各有 ≥4 字归一化重叠窗口
+    //      （中段允许概述式表达，只吃占位禁令——诚实边界，勿擅自加严）。
+    const PLACEHOLDER_RE = /(占位|随便写|随便一句|placeholder|TODO|待补|待填|模板生成)/;
+    const windowIn = (text, corpus) => {
+      const needle = normalizeProse(text);
+      const hay = normalizeProse(corpus);
+      for (let i = 0; i + 4 <= needle.length; i++) if (needle.slice(i, i + 4) && hay.includes(needle.slice(i, i + 4))) return true;
+      return false;
+    };
+    if (PLACEHOLDER_RE.test(String(beat.rationale))) fail('创作六步法第3步：beat_distribution.rationale 是占位文案——自陈理由必须写真话（R4：字段齐全但语义假 = 不通过）');
+    {
+      const refs = [...String(beat.rationale).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
+      const citesRange = refs.length && refs.every((n) => n >= 1 && n <= paragraphs.length);
+      const citesCells = /\d+\s*秒|逐格|全篇|等分/.test(String(beat.rationale));
+      if (!citesRange && !citesCells) fail('创作六步法第3步：beat_distribution.rationale 必须引用可核对对象（正文段号须在 1..' + paragraphs.length + '，或等分格子/秒数词汇），不能只写一句无法核对的空话');
+    }
     const anchors = Array.isArray(decision.rhythm_anchors) ? decision.rhythm_anchors : [];
     if (!anchors.length || anchors.some((item) => !nonEmpty(item?.type) || !nonEmpty(item?.position))) fail('创作六步法第3步：rhythm_anchors必须按15—30秒密度登记正文级锚点');
     // 2026-09-30 加内容层交叉判据（治理交接 T10）：rhythm_anchors 自称「正文级锚点」，
@@ -189,9 +210,33 @@ if (episodeArg) {
       const refs = [...String(item.position).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
       if (!refs.length) fail('创作六步法第3步：rhythm_anchors.position 必须指到正文段落编号（如「第2段 末」），不能只写模糊位置：' + item.type + ' → ' + item.position);
       for (const n of refs) if (n < 1 || n > paragraphs.length) fail('创作六步法第3步：rhythm_anchors 指向不存在的正文段落：' + item.type + ' → 第' + n + '段（正文共 ' + paragraphs.length + ' 段）');
+      // 2026-10-01 加（治理交接 R4）：position 里显式宣称修辞特征时，被指段落必须真含该特征。
+      // 只认「排比」与「提问/反问/设问/疑问」两类可机械核对的宣称（诚实边界：数字/情绪词不核）。
+      const firstRef = refs[0];
+      const claimed = String(item.position) + String(item.type ?? '');
+      if (/排比/.test(claimed) && firstRef) {
+        const clauses = paragraphs[firstRef - 1].split(/[，,、；;\n]/).map((c) => c.trim()).filter((c) => c.length >= 2);
+        const prefixes = new Map();
+        for (const clause of clauses) for (const size of [2, 3]) {
+          const prefix = clause.slice(0, size);
+          if (prefix.length === size) prefixes.set(prefix, (prefixes.get(prefix) || 0) + 1);
+        }
+        const parallel = [...prefixes.values()].some((count) => count >= 3);
+        if (!parallel) fail('创作六步法第3步：rhythm_anchors 宣称第' + firstRef + '段有排比，但该段没有排比特征（≥3 个同前缀分句）——段号在范围不等于内容为真：' + item.type + ' → ' + item.position);
+      }
+      if (/(提问|反问|设问|疑问)/.test(claimed) && firstRef && !/[？?]|吗[^，。]|呢[^，。]/.test(paragraphs[firstRef - 1])) {
+        fail('创作六步法第3步：rhythm_anchors 宣称第' + firstRef + '段有提问/反问，但该段没有问句特征——段号在范围不等于内容为真：' + item.type + ' → ' + item.position);
+      }
     }
     const arc = decision.emotion_arc || {};
     if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('创作六步法第3步：emotion_arc必须登记开头痛点/中段释放/收尾踏实三节点');
+    // opening 对开头三段、ending 对全篇正文做 ≥4 字归一化重叠（诚实边界：ending 允许概述式收束，
+    // 只要求锚在正文真实文字上——本期实测收尾「落在可执行的自信上」类合法概述在末三段无窗口）。
+    for (const [node, corpusSlice] of [['opening', paragraphs.slice(0, 3).join('\n')], ['ending', paragraphs.join('\n')]]) {
+      if (PLACEHOLDER_RE.test(String(arc[node]))) fail('创作六步法第3步：emotion_arc.' + node + ' 是占位文案——情绪节点必须写真话（R4）');
+      if (!windowIn(arc[node], corpusSlice)) fail('创作六步法第3步：emotion_arc.' + node + ' 与正文' + (node === 'opening' ? '开头三段' : '正文') + '没有任何 ≥4 字重叠——情绪弧必须锚在正文真实文字上，不能是套话');
+    }
+    if (PLACEHOLDER_RE.test(String(arc.middle))) fail('创作六步法第3步：emotion_arc.middle 是占位文案——情绪节点必须写真话（R4）');
     const quote = decision.quote_anchor || {};
     if (!nonEmpty(quote.text) || !nonEmpty(quote.placement) || quote.carries_judgment !== true) fail('创作六步法第4步：quote_anchor必须登记承载本期判断的金句与位置（鸡汤空话不合法）');
     // 2026-09-30 加内容层交叉判据：外部审计用负测证明——把 quote_anchor.text 换成正文里
@@ -201,8 +246,15 @@ if (episodeArg) {
     if (!normalizeProse(paragraphs.join('\n')).includes(normalizeProse(quote.text))) fail('创作六步法第4步：quote_anchor.text 必须是正文里真实存在的句子（金句不能是正文没说过的句子）：' + quote.text);
     const commentHook = decision.comment_hook || {};
     if (!nonEmpty(commentHook.expected_comments) || commentHook.guide_at_peak !== true) fail('创作六步法第4步：comment_hook必须登记预期评论方向并把真引导放在情绪最高点');
+    if (PLACEHOLDER_RE.test(String(commentHook.expected_comments))) fail('创作六步法第4步：comment_hook.expected_comments 是占位文案——预期评论必须写真实方向（R4）');
+    if (commentHook.guide_placement) {
+      const guideRefs = [...String(commentHook.guide_placement).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
+      if (guideRefs.some((n) => n < 1 || n > paragraphs.length)) fail('创作六步法第4步：comment_hook.guide_placement 指向不存在的正文段落（正文共 ' + paragraphs.length + ' 段）');
+    }
     const hkrr = decision.hkrr_check || {};
     if (hkrr.rhythm !== true || ![hkrr.happiness, hkrr.knowledge, hkrr.resonance].some(Boolean) || !nonEmpty(hkrr.rationale)) fail('创作六步法第5步：HKRR自检必须节奏为true且快乐/知识/共鸣至少一项为true');
+    if (PLACEHOLDER_RE.test(String(hkrr.rationale))) fail('创作六步法第5步：hkrr_check.rationale 是占位文案——HKRR 自检理由必须写真话（R4）');
+    if (!/节奏|快乐|知识|共鸣/.test(String(hkrr.rationale))) fail('创作六步法第5步：hkrr_check.rationale 必须点名它核过的 HKRR 维度（节奏/快乐/知识/共鸣），不能是一句与维度无关的空话');
   } else {
     // 历史合同（schema 3选题+反向采访+大纲确认）：继续按原合同验证
     const interviewPath = join(base, '02-创作工作稿/反向采访.json');
