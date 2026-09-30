@@ -50,6 +50,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 AI �
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 内容校准打分+预测
+npx skills add hanzhcn/laohan-skills --skill laohan-chushihua  # 🚀 项目初始化(新建+接入)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封面提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ 柱子哥封面体系(三层合成,默认套)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词

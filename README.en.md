@@ -46,6 +46,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 3-so
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (6 inputs → script)
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 Content calibration scoring
+npx skills add hanzhcn/laohan-skills --skill laohan-chushihua  # 🚀 Project init (create + adopt)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 Cover image prompts
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ TzFilm-style cover system (3-layer, default)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Storyboard prompts
