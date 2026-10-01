@@ -39,7 +39,7 @@ fi
 # 治理层指针(存在时增强)
 GOV_PTR=""
 if [ "$HAS_GOV" -eq 1 ]; then
-  GOV_PTR="\n> **全局层(跨项目)**:工作准则 = \`~/.agents/AGENTS.md\`;开发规则体系 = \`~/.agents/DEV_RULES.md\`(§3.7 文档集/§3.8 checklist)。与本文冲突时,**项目合同优先**。"
+  GOV_PTR=$'\n> **全局层(跨项目)**:工作准则 = `~/.agents/AGENTS.md`;开发规则体系 = `~/.agents/DEV_RULES.md`(§3.7 文档集/§3.8 checklist)。与本文冲突时,**项目合同优先**。'
 fi
 
 cat > README.md <<EOF
