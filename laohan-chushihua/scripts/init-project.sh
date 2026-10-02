@@ -40,6 +40,7 @@ fi
 GOV_PTR=""
 if [ "$HAS_GOV" -eq 1 ]; then
   GOV_PTR=$'\n> **全局层(跨项目)**:工作准则 = `~/.agents/AGENTS.md`;开发规则体系 = `~/.agents/DEV_RULES.md`(§3.7 文档集/§3.8 checklist)。与本文冲突时,**项目合同优先**。'
+  GOV_TRIGGERS='2. 流程触发词按全局层 skill 路由:审查(review)/收尾(shouwei)/交接·接手(jiaojie)/「按这个修」(caijue)/排查(paicha)/文档体检(doccheck)/技术查证·上网搜·搜教程(sousuo——凭记忆断言外部 API/版本/配置前先查,输出带来源标注)。'
 fi
 
 cat > README.md <<EOF
@@ -68,6 +69,7 @@ $GOV_PTR
 ## 接手顺序
 
 1. 先读 STATUS.md 首条,再读本文「项目特有合同」。
+$GOV_TRIGGERS
 
 ## 项目特有合同(占位——首个开发会话填写后删除本行 TODO)
 
