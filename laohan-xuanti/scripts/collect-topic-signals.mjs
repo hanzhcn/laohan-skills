@@ -82,7 +82,7 @@ function collectTrackedCreators() {
   const results = [];
   const accounts = [];
   for (const creator of creators) {
-    const args = ['douyin', 'user-videos', creator.sec_uid, '--limit', '20', '--with_comments', 'true', '-f', 'json'];
+    const args = ['douyin', 'user-videos', creator.sec_uid, '--limit', '30', '--with_comments', 'true', '-f', 'json']; // 窗口30对齐 laohanAI 数据层规格（2026-10-02 Jeffrey 授权 D90）
     let finalRun = null;
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       finalRun = spawnSync('opencli', args, {encoding: 'utf8', timeout: 90000, maxBuffer: 16 * 1024 * 1024});
@@ -128,7 +128,7 @@ function collectTrackedCreators() {
   const coverage = {expected, attempted: accounts.length, completed: accounts.length - failed, failed, accounts};
   return {
     source_id: 'tracked-douyin-creators',
-    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 20 --with_comments false -f json (数据层全池)',
+    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 30 --with_comments false -f json (数据层全池)',
     attempted_at: attemptedAt,
     status: failed ? 'FAILED' : results.length ? 'OK' : 'EMPTY',
     result_count: failed ? 0 : results.length,
