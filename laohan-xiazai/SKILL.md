@@ -95,7 +95,7 @@ opencli doctor
 | TikTok | opencli tiktok（需 Browser Bridge） | agent-reach | Scrapling stealthy | — |
 | 任意平台 | agent-reach（13平台搜索/阅读，含 GitHub/RSS/V2EX/Twitter/Reddit/小宇宙/Exa 等 opencli 不覆盖的） | web-content-fetcher | Jina Reader | Scrapling stealthy |
 
-**agent-reach 触发场景**：用户说"搜一下""读一下这个链接""这个公众号文章""帮我查"，或给出非视频的社交平台链接。
+**agent-reach 触发场景**：用户说"读一下这个链接""这个公众号文章"，或给出非视频的社交平台链接。纯技术查证类搜索不进本 skill（让位 laohan-sousuo）。
 
 ## 降级链
 
