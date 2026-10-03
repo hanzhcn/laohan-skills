@@ -46,7 +46,7 @@ Jeffrey 观察（2026-10-02 钉死）：开发中经常不主动查教程、凭�
    ```
 
    端点无关（本地 CLI 调 api.anysearch.com），不占智谱搜索额度；huo 端点 WebSearch 403 时唯一可用通用搜索（2026-10-02 实测）。已加载 anysearch skill 时优先用其 runtime.conf 配置的命令。
-2. **WebSearch 原生**：anysearch 失败/限额时降级。注意：cc 端点=智谱 web_search_prime 后端（占智谱额度）；huo 端点 403 不可用。
+2. **WebSearch 原生**：anysearch 失败/限额时降级。注意：cc 端点=智谱 web_search_prime 后端（占智谱额度，常 429 code 1310）；huo 端点 403 不可用。2026-10-03 起 `pre:websearch-to-anysearch` hook（10 目录）拦截 WebSearch 并在 deny reason 里注入 anysearch 命令——被拦即按 reason 里的命令跑 anysearch，不要重试 WebSearch（见 `~/.claude/rules/custom-hooks.md`）。
 3. **gh**：GitHub 相关问题直接用，不经过搜索引擎。
 4. **WebFetch / anysearch extract**：已知 URL 读正文。
 
