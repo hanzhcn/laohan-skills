@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-23-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-24-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Codex%20%7C%20OpenClaw-green.svg)](https://agentskills.io/)
 
 **Agent Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -235,20 +235,54 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 
 ---
 
-## 开发者与工作流工具（8 个 · 自用/进阶）
+## 开发者与工作流工具（10 个 · 自用/进阶）
 
 > ⚠️ 以下为开发者维护、配置、审查用，**内容创作者可跳过此板块**。
+> 每个 skill 都有**自然语言触发词**——对 AI 助手说出来就会自动启用，不需要记命令。
 
-| 技能 | 一句话 | 说 |
-|------|--------|-----|
-| 🔎 **shencha** | 技术文档联网审查 — 验证地址/版本/参数准确性 | "深度审查" |
-| 🔄 **gengxin** | 工具版本检查更新 — npm/brew/pip/GitHub/plugins | "检查更新" |
-| 📖 **jiaocheng** | 教程路由器 — claude-mem/GLM/ECC/Gemini 等 5 个教程 | "教程" |
-| 🛠️ **skillcreator** | 元技能 — 创建/修改/优化 Claude Code Skill | "创建 skill" |
-| ⚙️ **chushicodex** | 新装或待整顿 Codex 的安全最小配置与验证闭环 | "初始化 Codex" |
-| 🧭 **bianpai** | 视频 workflow 的状态路由与机械 gate | "进入哪步" |
-| 📦 **sucai** | 按 source manifest 供应并核验 B-roll 素材 | "配素材" |
-| 📈 **yunying** | 发布登记、数据、评论与复盘交接 | "运营" |
+### 🔍 联网查证（强烈推荐所有开发者安装）
+
+| 技能 | 作用 | 你说 | 注意事项 |
+|------|------|------|---------|
+| 🌐 **sousuo** | 技术断言先查证再下结论——API 用法/版本行为/配置语义/报错归因，三路检索（官方文档/GitHub issue/社区心得），结论带来源链接 | "上网搜""查证""先查再说""别人怎么解决" | 防止 AI 凭训练记忆瞎编 API 行为；结论带 `(verified: URL)` 标注，查不到会明说"未查到，以下是推断" |
+| 🔎 **shencha** | 技术文档联网审查——验证地址/版本/参数准确性；默认只读，明确授权才修复 | "深度审查""核验事实" | 普通审查只查可验证事实，不会删你的模板和表达 |
+
+### 🛠️ 开发工具
+
+| 技能 | 作用 | 你说 | 注意事项 |
+|------|------|------|---------|
+| 🛠️ **skillcreator** | 元技能——创建/修改/优化/审计 Agent Skill 的标准流程 | "创建 skill""改 skill""skill 体检" | 修改已长期使用的 skill 时，原有模板/方法默认视为有效基线，只增不删（防把实战验证过的内容优化掉） |
+| 🔄 **gengxin** | 工具版本检查更新——npm/brew/pip/GitHub/plugins | "检查更新" | — |
+| 📖 **jiaocheng** | 教程路由器——按关键词加载对应教程（claude-mem/GLM/ECC/Gemini 等） | "教程""怎么配置" | — |
+| ⚙️ **chushicodex** | 新装或待整顿 Codex 的安全最小配置与验证闭环 | "初始化 Codex" | 只读审计优先，不自动升级/装依赖 |
+
+### 🎬 视频创作工作流（配套内容创作板块）
+
+| 技能 | 作用 | 你说 | 注意事项 |
+|------|------|------|---------|
+| 🧭 **bianpai** | 视频 workflow 的状态路由与机械 gate——按落盘产物判断下一步 | "恢复 episode""判断下一步""编排路由" | 只路由不执行——不会自动调其他 skill 或发布 |
+| 📦 **sucai** | 按 source manifest 搜索下载+视觉核验 B-roll 素材 | "配素材""找 B-roll" | 第一目标是观感和节奏，不是给每句话取证 |
+| 📈 **yunying** | ⑫发布登记+⑬数据+⑭评论+复盘交接 | "运营""数据""评论""复盘" | — |
+
+### 🏛️ 治理体系技能（11 个 · 不在本仓，自用）
+
+> 以下 skill 属于私有治理仓（`~/.agents`），**不在本公开仓的安装范围**，此处列出仅供了解完整体系：
+
+| 技能 | 作用 | 你说 | 什么时候用 |
+|------|------|------|-----------|
+| 📚 **devrules** | 会话开工前加载开发规则体系+复述验证 | "学习规则""接上规则" | 新窗口/新模型接手重要任务时 |
+| 🏗️ **chushihua** | 新项目一键初始化（文档骨架+git 门禁+审查台账） | "初始化""开新项目""装门禁" | 每开一个新项目 |
+| 🔌 **harness** | 新 AI 客户端接进规则体系（五步接线+六家判例） | "新 harness""接入新 harness" | 每换一个新 AI 工具（一次性） |
+| ✅ **review** | 两级审查：自审四法→跨模型对抗→逐条裁决 | "审查""审一下""对抗审查" | 每次改完代码 |
+| 🔍 **paicha** | 异常排查取证——判红归属→只读归因→修复留证 | "排查""为什么红""为什么失败" | 东西坏了时（需带现象描述） |
+| ⚖️ **caijue** | 别的 AI 给的修改建议，先逐条验真假再修 | 粘贴建议+"裁决""按这个修" | 接手别窗口的审查结论时（需先粘贴材料） |
+| 🤝 **jiaojie** | 窗口接力——交接写状态包/接手读+核验 | "交接"（写）/"接手"（读） | 多窗口并行换手时 |
+| 🚀 **fabu** | 跨项目发布手册——多面依序/四同步/门禁核对 | "发布""直接发布""发预发" | 要上线时 |
+| 🧹 **shouwei** | 关窗前收尾审计——worktree/未 push/部署一致性/裸条文收账 | "收尾""检查收尾" | 每次关窗口前 |
+| 📋 **doccheck** | 文档六项机械体检（指针/条数/超长/孤儿/断链） | "文档体检""检查文档" | 文档多起来后定期 |
+| 🎫 **edu-guard** | GLM 额度守卫——定时查额度自动用重置卡 | "开守卫""还剩几张卡" | 额度管理（与"收尾"无关，纯撞名已改名） |
+
+**治理体系一句话总结**：学习规则(devrules)→初始化(chushihua)→接线(harness)→审查(review)→排查(paicha)→裁决(caijue)→交接(jiaojie)→发布(fabu)→收尾(shouwei)→文档(doccheck)——开发全流程每一步都有手册。
 
 ---
 
