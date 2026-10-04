@@ -39,6 +39,11 @@ bash "$(dirname "$SKILL_PATH")/scripts/init-project.sh" <路径> ["项目名"]
 4. **.githooks/pre-commit**:不存在→从 skill 自带的 scripts/pre-commit.template 复制+启用 `core.hooksPath`;已存在→跳过(提示检查是否含 secret 扫描)
 5. **docs/**:不存在→建 DECISIONS.md+ARCHITECTURE.md 骨架;已存在→只补缺失文件
 6. **STATUS.md**:不存在→创建含首条初始化记录;已存在→在顶部插入初始化条目
+7. **门禁标准件套装**(2026-10-04 立,DEV_RULES §一·五「新项目第一天就有 L3」):除第 4 项 pre-commit 外,逐项补缺——
+   a. **docs/REVIEW_LEDGER.md** 审查台账(表头含六值状态枚举:两级闭环/发布后补审闭环/闭环-落地/chore/一级自审/未审);
+   b. **发布检查脚本骨架**(有发布流程的项目):参照 laohanAI `scripts/release/check-review-ledger.mjs` 模式——解析台账、未闭环批次在发布范围⇒exit 1,挂进发布脚本的门禁段(台账缺失 fail-closed);
+   c. **规模/测试门禁提示**:项目有 lint/test 命令→接入 AGENTS.md 验证入口段(机械件存在的写明命令,不存在的登记 TODO)。
+   均只补缺失不覆盖;完成后报告「本项目机械件清单」,让 owner 知道哪些规则已 L3、哪些仍 L0。
 
 接入完成后同样引导填合同 TODO。
 
