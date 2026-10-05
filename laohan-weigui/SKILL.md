@@ -1,6 +1,6 @@
 ---
 name: laohan-weigui
-version: 1.3
+version: 1.4
 description: 抖音文案违规检测。扫描口播稿中的引流词、极限词、医疗/金融承诺、低质标记、低俗色情、引战谩骂等9类违规风险，输出结构化报告+替换建议。Use when 用户说"检测违规""检查文案""看看有没有违规词""会不会被限流""发之前帮我看看"或给出任何要发布到抖音的文案要求检查。
 ---
 
@@ -55,7 +55,7 @@ description: 抖音文案违规检测。扫描口播稿中的引流词、极限�
 script_hash: <sha256>
 risk_status: CLEAR # CLEAR | REVISE_REQUIRED | BLOCKED
 unresolved_high_risk_count: 0
-ruleset_version: douyin-text-risk-2026-07-11
+ruleset_version: douyin-text-risk-2026-10-05
 ruleset_reviewed_at: <复制 references/ruleset.json reviewed_at>
 ruleset_expires_at: <复制 references/ruleset.json expires_at>
 scan_completed_at: <ISO-8601>
