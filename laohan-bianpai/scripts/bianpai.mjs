@@ -166,7 +166,8 @@ const userProvidedInputsState = () => safely(() => {
     || record.raw.sha256 !== shaPath(file('06-拍摄素材/raw.mp4'))) return {done: false, reason: '用户定稿+原片登记未绑定当前文件'};
   return {done: true, reason: 'USER_PROVIDED_FINAL_SCRIPT_AND_RAW已绑定；①—⑤为用户输入替代态，不伪造审核产物'};
 }, '用户定稿+原片入口无法读取');
-const FULL_AUTOMATION_SCOPES = ['DEFAULT_COVER_RANK_01', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO'];
+const FULL_AUTOMATION_SCOPES = ['USE_DEFAULT_QIUZHI_COVER_SET', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO'];
+const LEGACY_FULL_AUTOMATION_SCOPES = ['DEFAULT_COVER_RANK_01', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO'];
 const fullAutomationState = () => safely(() => {
   const inputs = userProvidedInputsState();
   if (!inputs.done) return {done: false, reason: '完整自动化缺当前用户定稿+原片入口'};
@@ -175,11 +176,11 @@ const fullAutomationState = () => safely(() => {
   const record = readJson(entry.record_path || '');
   const automation = config.automation_contract || {};
   const selection = config.final_selection_contract || {};
-  const sameScopes = (value) => JSON.stringify(value) === JSON.stringify(FULL_AUTOMATION_SCOPES);
   const sameAuthorization = selection.mode === 'AGENT_PROXY'
     && selection.authorized_by === automation.authorized_by
     && selection.authorized_at === automation.authorized_at
     && selection.authorization_note === automation.authorization_note;
+  const scopesValid = [FULL_AUTOMATION_SCOPES, LEGACY_FULL_AUTOMATION_SCOPES].some((scopes) => JSON.stringify(automation.scopes) === JSON.stringify(scopes));
   if (config.workflow_mode !== 'AUTONOMOUS_RUN'
     || automation.mode !== 'FULL_PIPELINE_TO_PUBLISH'
     || automation.authorized_by !== 'Jeffrey'
@@ -191,8 +192,8 @@ const fullAutomationState = () => safely(() => {
     || automation.input_record_sha256 !== entry.record_sha256
     || automation.input_record_sha256 !== shaPath(file(entry.record_path))
     || record.automation?.mode !== automation.mode
-    || !sameScopes(record.automation?.scopes)
-    || !sameScopes(automation.scopes)) return {done: false, reason: '完整自动化授权未同时绑定当前输入记录、AGENT_PROXY和四平台范围'};
+    || JSON.stringify(record.automation?.scopes) !== JSON.stringify(automation.scopes)
+    || !scopesValid) return {done: false, reason: '完整自动化授权未同时绑定当前输入记录、AGENT_PROXY、默认秋芝封面组和四平台范围'};
   return {done: true, reason: 'FULL_PIPELINE_TO_PUBLISH已绑定当前稿件、原片、AGENT_PROXY与四平台发布'};
 }, '完整自动化授权无法读取');
 const mediaWindowState = () => safely(() => {
@@ -289,15 +290,15 @@ const directorReviewState = () => safely(() => {
 }, '最终导演复审状态无法读取');
 const coverDeferralState = () => safely(() => {
   const schedule = readJson('episode-config.json').cover_schedule || {mode: 'REQUIRED_BEFORE_SHOOTING'};
-  if (schedule.mode === 'AUTO_DEFAULT_RANK_01_AFTER_CANDIDATE') {
+  if (['AUTO_DEFAULT_QIUZHI_AFTER_CANDIDATE', 'AUTO_DEFAULT_RANK_01_AFTER_CANDIDATE'].includes(schedule.mode)) {
     const automation = fullAutomationState();
     const contract = readJson('episode-config.json').automation_contract || {};
-    if (!automation.done || schedule.authorized_by !== contract.authorized_by || schedule.authorized_at !== contract.authorized_at || schedule.authorization_note !== contract.authorization_note) return {done: false, reason: '自动选择封面rank 01未绑定同一份完整自动化授权'};
-    return {done: true, reason: '完整自动化已授权候选完成后默认选择rank 01；生成3张共享尺寸成品前⑥仍未PASS'};
+    if (!automation.done || schedule.authorized_by !== contract.authorized_by || schedule.authorized_at !== contract.authorized_at || schedule.authorization_note !== contract.authorization_note) return {done: false, reason: '自动使用默认秋芝封面组未绑定同一份完整自动化授权'};
+    return {done: true, reason: '完整自动化已授权候选完成后生成秋芝03KV单方案三尺寸；3张成品生成前⑥仍未PASS'};
   }
   if (schedule.mode !== 'DEFERRED_UNTIL_CANDIDATE_SELECTION') return {done: false, reason: '封面未获本期延后授权'};
   if (schedule.authorized_by !== 'Jeffrey' || Number.isNaN(Date.parse(schedule.authorized_at)) || typeof schedule.authorization_note !== 'string' || !schedule.authorization_note.trim()) return {done: false, reason: '封面延后授权缺 Jeffrey、ISO时间或原话'};
-  return {done: true, reason: 'Jeffrey 已授权本期封面延后；提示词和01—03三张排序候选尚未齐全时⑥仍未PASS'};
+  return {done: true, reason: 'Jeffrey 已授权本期封面延后；秋芝03KV单方案三尺寸尚未齐全时⑥仍未PASS'};
 }, 'cover_schedule 无法读取');
 const coverState = () => safely(() => {
   if (!nonEmptyFile('05-封面/cover-prompts.md')) return {done: false, reason: '缺非空 05-封面/cover-prompts.md'};
@@ -320,33 +321,29 @@ const coverState = () => safely(() => {
   if (field('script_hash') !== scriptHash() || field('prompt_executor') !== 'cover-prompt-strategy' || !field('image_provider') || field('reference_mode') !== 'REQUIRED' || !['reference/jeffrey-reference.jpg', identity.episode_asset].includes(field('reference_asset')) || field('reference_sha256') !== identity.reference_sha256) {
     return {done: false, reason: 'cover-prompts.md 必须绑定当前稿、cover-prompt-strategy、image_provider 与本期 REQUIRED reference 路径/SHA'};
   }
-  const publishPriority = field('publish_priority')?.replace(/^['"]|['"]$/g, '');
   const templateFamilies = [...prompt.matchAll(/^- 模板族：\s*(.+?)\s*$/gm)].map((match) => match[1].trim());
-  if (field('strategy') !== 'QIUZHI_THREE_RANKED_DIRECT_COVERS' || field('required_generated_candidate_count') !== '3' || field('required_physical_cover_count') !== '3' || field('required_logical_cover_usage_count') !== '7' || publishPriority !== '01>02>03' || field('default_publish_candidate') !== 'cover-01-qiuzhi-9x16') {
-    return {done: false, reason: 'cover-prompts.md 必须声明秋芝三张排序策略、默认01的3张共享真实尺寸封面、7个逻辑用途与01>02>03发布优先级'};
-  }
-  if (templateFamilies.length !== 3 || new Set(templateFamilies).size !== 3) return {done: false, reason: 'cover-prompts.md 必须为01、02、03记录3个不同模板族'};
-  const candidateImages = readdirSync(coverRoot, {withFileTypes: true})
-    .filter((entry) => entry.isFile() && /^cover-(01|02|03)-qiuzhi-9x16\.(png|jpe?g|webp)$/i.test(entry.name))
-    .map((entry) => ({name: entry.name, rank: entry.name.match(/^cover-(01|02|03)-/i)?.[1], path: join(coverRoot, entry.name)}))
-    .filter((candidate) => statSync(candidate.path).size > 0 && realpathSync(candidate.path).startsWith(assetRoot));
-  const ranked = new Map();
-  for (const candidate of candidateImages) {
-    if (ranked.has(candidate.rank)) return {done: false, reason: `封面推荐序号${candidate.rank}存在多个文件，必须只保留一个明确候选`};
-    try {
-      const dimensions = imageDimensions(candidate.path);
-      if (Math.abs(dimensions.width / dimensions.height - 9 / 16) > 0.002) return {done: false, reason: `${candidate.name}必须是9:16`};
-      ranked.set(candidate.rank, candidate);
-    } catch {
-      return {done: false, reason: `${candidate.name}必须是真实可解码PNG、JPEG或WebP`};
+  const strategy = field('strategy');
+  const singleStyle = strategy === 'QIUZHI_SINGLE_STYLE_THREE_SIZES';
+  const legacyRanked = strategy === 'QIUZHI_THREE_RANKED_DIRECT_COVERS';
+  if (!singleStyle && !legacyRanked) return {done: false, reason: 'cover-prompts.md 必须声明当前单方案三尺寸策略；旧期只兼容已存在的三候选策略'};
+  if (singleStyle) {
+    if (field('visual_system') !== 'QIUZHI_03KV' || field('primary_aspect_ratio')?.replace(/^['"]|['"]$/g, '') !== '3:4' || field('required_generated_candidate_count') !== '1' || field('required_physical_cover_count') !== '3' || field('required_logical_cover_usage_count') !== '7' || field('default_publish_candidate') !== 'cover-qiuzhi-3x4') return {done: false, reason: 'cover-prompts.md 必须声明秋芝03KV单方案、3:4主比例、3张真实尺寸和7个逻辑用途'};
+    if (templateFamilies.length !== 1) return {done: false, reason: 'cover-prompts.md 必须只记录1个已选模板族'};
+  } else {
+    const publishPriority = field('publish_priority')?.replace(/^['"]|['"]$/g, '');
+    if (field('required_generated_candidate_count') !== '3' || field('required_physical_cover_count') !== '3' || field('required_logical_cover_usage_count') !== '7' || publishPriority !== '01>02>03' || field('default_publish_candidate') !== 'cover-01-qiuzhi-9x16') return {done: false, reason: '旧期三候选封面声明不完整'};
+    if (templateFamilies.length !== 3 || new Set(templateFamilies).size !== 3) return {done: false, reason: '旧期cover-prompts.md必须记录3个不同模板族'};
+    for (const rank of ['01', '02', '03']) {
+      const matches = readdirSync(coverRoot, {withFileTypes: true}).filter((entry) => entry.isFile() && new RegExp(`^cover-${rank}-qiuzhi-9x16\\.(png|jpe?g|webp)$`, 'i').test(entry.name));
+      if (matches.length !== 1) return {done: false, reason: `05-封面/ 缺旧期秋芝9:16候选：${rank}`};
+      try { const d=imageDimensions(join(coverRoot,matches[0].name)); if(Math.abs(d.width/d.height-9/16)>.002) throw new Error(); } catch { return {done:false,reason:`${matches[0].name}必须是真实可解码9:16图片`}; }
     }
   }
-  const missingRanks = ['01', '02', '03'].filter((rank) => !ranked.has(rank));
-  if (missingRanks.length) return {done: false, reason: `05-封面/ 缺秋芝9:16排序候选：${missingRanks.join('、')}`};
+  const prefix = singleStyle ? 'cover-qiuzhi' : 'cover-01-qiuzhi';
   const platformCovers = [
-    ['cover-01-qiuzhi-3x4', 1080, 1440],
-    ['cover-01-qiuzhi-4x3', 1440, 1080],
-    ['cover-01-qiuzhi-16x9', 1920, 1080],
+    [`${prefix}-3x4`, 1080, 1440],
+    [`${prefix}-4x3`, 1440, 1080],
+    [`${prefix}-16x9`, 1920, 1080],
   ];
   const missingPlatformCovers = [];
   for (const [base, width, height] of platformCovers) {
@@ -363,8 +360,8 @@ const coverState = () => safely(() => {
       return {done: false, reason: `${matches[0].name}必须是真实可解码且比例正确的平台封面`};
     }
   }
-  if (missingPlatformCovers.length) return {done: false, reason: `缺默认01共享真实封面：${missingPlatformCovers.join('、')}`};
-  return {done: true, reason: `封面合同已完成：3张秋芝9:16候选与默认01的3张共享真实封面齐全，映射7个平台用途`};
+  if (missingPlatformCovers.length) return {done: false, reason: `缺秋芝同方案真实尺寸封面：${missingPlatformCovers.join('、')}`};
+  return {done: true, reason: singleStyle ? '封面合同已完成：秋芝03KV同一方案的3张真实尺寸封面齐全，映射7个平台用途' : '旧期封面合同已完成：三候选与默认01的3张共享真实封面齐全'};
 }, '封面合同无法读取');
 const calibrationState = () => safely(() => {
   if (!exists('03-校准报告.md')) return {done: false, reason: '缺 03-校准报告.md'};
@@ -852,7 +849,7 @@ const steps = [
   {id: '③', name: '违规', skill: 'laohan-weigui', done: () => complianceState().done, output: '02-违规报告.md（当前稿 hash + CLEAR 风险结论）'},
   {id: '④', name: '校准与盲预测', skill: 'laohan-jiaozhun → cheat-on-content', done: () => calibrationState().done, output: '03-校准报告.md（score、script_hash、lane、盲预测状态）'},
   {id: '⑤', name: '深扫与事实核验', skill: 'dbs-script-flow + dbs-resonate + 条件 dbs-hook/dbs-ai-check + laohan-shencha', done: () => deepScanState().done, output: '04-深扫报告.md + 04-事实核验.md（均含 script_hash）'},
-  {id: '⑥', name: '封面候选', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 01/02/03三张9:16候选 + 默认01三张共享真实尺寸封面（映射7个发布入口）'},
+  {id: '⑥', name: '封面成品', skill: 'laohan-fengmianqiuzhi（prompt）+ registered image provider', done: () => coverState().done, output: '05-封面/cover-prompts.md + 秋芝03KV同一方案的3:4/4:3/16:9三张真实尺寸封面（映射7个发布入口）'},
   {id: 'D1', name: 'V5.1导演初稿', skill: 'laohan-daoyan', done: () => directorDraftState().done, output: '09-导演/director-state.md（director_draft=COMPLETED，director_review=PENDING）'},
   {id: 'D2', name: 'V5.1最终导演复审', skill: 'laohan-daoyan', done: () => directorReviewState().done, output: '同一director-state.md（director_review=COMPLETED）'},
   {id: '⑦', name: '拍摄', skill: '人工拍摄', done: () => shootingState().done, output: 'raw.mp4 + shooting-record.json'},
@@ -1035,9 +1032,9 @@ if (command === 'next') {
   else if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log(`# 下一窗口：09-candidate 代理验收\n\nAUTO_CONTINUE_FULL_PIPELINE\nselection_mode: AGENT_PROXY\n${fields}\n\n- 只在09窗口完成candidate的完整观看QA，并用AGENT_PROXY记录接受或定向返工。
 - 本窗口到candidate验收为止；封面、finalize与发布由后续独立Prompt路由。`);
   else if (next.id === '⑪' && candidateReviewState().done) console.log(`# 当前阶段：JEFFREY_REVIEW\n\n${fields}\n- ${candidateReviewState().reason}\n- 接受：使用V5.1验收完结提示词。\n- 不接受：直接说时间点或肉眼问题，执行端定向修改并输出下一版candidate；不需要另存修改模板。`);
-  else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥默认rank 01三尺寸共享封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: DEFAULT_COVER_RANK_01\n${fields}\n\n- 使用排序第一的同一视觉提案，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后独立路由10-finalize，不等待Jeffrey确认。`);
-  else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 8发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
-  else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认rank 01与四平台发布；不得增加Jeffrey确认卡点。`);
+  else if (fullAutomation.done && next.id === '⑥') console.log(`# 下一步：⑥秋芝03KV单方案三尺寸封面\n\nAUTO_CONTINUE_FULL_PIPELINE\ncover_scope: USE_DEFAULT_QIUZHI_COVER_SET\n${fields}\n\n- 执行者选择唯一语义模板，分别重构3:4、4:3、16:9三张真实成品；不得裁切或补边冒充。\n- 完成后独立路由10-finalize，不等待Jeffrey确认。`);
+  else if (fullAutomation.done && next.id === '⑫') console.log(`# 下一步：⑫四平台自动发布\n\nAUTO_CONTINUE_FULL_PIPELINE\npublish_scope: FOUR_PLATFORM_AUTO_PUBLISH\n${fields}\n\n- 创建绑定当前final、输入记录SHA和本期授权的schema 9发布包。\n- 依次启动四个平台的 --auto-publish；热点尝试失败不阻断抖音。\n- 以12-发布四份 *-publish-results.jsonl 的PUBLISHED回执作为完成证据。`);
+  else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nAUTO_CONTINUE_FULL_PIPELINE\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 当前episode已授权AGENT_PROXY、默认秋芝封面组与四平台发布；不得增加Jeffrey确认卡点。`);
   else if (next.skill === 'codex-direct-production') console.log(`# 下一步：${next.id}${next.name}\n\nHANDOFF_TO_CODEX\nepisode: ${basename(episodeDir)}\nexecutor: codex-direct-production\n${fields}\n\n- 需要落盘：${next.output}\n- 前置：⑦真实拍摄及当前稿件合同必须保留；Claude Code不得代写⑧—⑪产物。`);
   else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log(`# 当前阶段：TOPIC_RESCAN_REQUIRED\n\nplanned_iteration: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- 保留Jeffrey的否决原因和下一轮扫描方向，在同一01任务重新执行三路扫描并生成新候选；不得进入②。`);
   else if (next.id === '①' && topicState().reason.includes('WAITING_FOR_JEFFREY_EMOTION_SELECTION')) console.log(`# 当前阶段：WAITING_FOR_JEFFREY_EMOTION_SELECTION（历史合同）\n\nplanned_manual_gate: true\nblocked: false\n${fields}\n\n- ${topicState().reason}\n- 历史episode情绪筛选合同；新期五步法合同无此门槛。`);
@@ -1062,7 +1059,7 @@ if (next) {
   if (promptRoute.fields) console.log(promptRoute.fields);
   if (next.id === '⑪' && candidateReviewState().done && fullAutomation.done) console.log('AUTO_CONTINUE_FULL_PIPELINE selection_mode=AGENT_PROXY');
   else if (next.id === '⑪' && candidateReviewState().done) console.log('JEFFREY_REVIEW：接受则完结；不接受只需指出时间点或明显问题，不需要固定修改提示词。');
-  else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=DEFAULT_COVER_RANK_01 publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
+  else if (fullAutomation.done && ['⑥', '⑫'].includes(next.id)) console.log('AUTO_CONTINUE_FULL_PIPELINE cover_scope=USE_DEFAULT_QIUZHI_COVER_SET publish_scope=FOUR_PLATFORM_AUTO_PUBLISH');
   else if (fullAutomation.done && next.skill === 'codex-direct-production') console.log(`AUTO_CONTINUE_FULL_PIPELINE HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.skill === 'codex-direct-production') console.log(`HANDOFF_TO_CODEX episode=${basename(episodeDir)} executor=codex-direct-production`);
   else if (next.id === '①' && topicState().reason.includes('TOPIC_RESCAN_REQUIRED')) console.log('TOPIC_RESCAN_REQUIRED planned_iteration=true blocked=false');

@@ -254,33 +254,25 @@ echo "PASS $2"
   coverConfig.cover_schedule = {mode: 'REQUIRED_BEFORE_SHOOTING', authorized_by: null, authorized_at: null, authorization_note: null};
   coverConfig.cover_identity_contract = {reference_mode: 'REQUIRED', project_asset: 'assets/identity/jeffrey-cover-reference.jpg', episode_asset: '05-封面/reference/jeffrey-reference.jpg', reference_sha256: sha(projectReference)};
   json(join(episode, 'episode-config.json'), coverConfig);
-  write(join(episode, '05-封面/cover-prompts.md'), `---\nscript_hash: ${sha(join(episode, '01-口播稿.md'))}\nprompt_executor: cover-prompt-strategy\nimage_provider: fixture\nreference_mode: REQUIRED\nreference_asset: reference/jeffrey-reference.jpg\nreference_sha256: ${sha(projectReference)}\nstrategy: QIUZHI_THREE_RANKED_DIRECT_COVERS\nrequired_generated_candidate_count: 3\nrequired_physical_cover_count: 3\nrequired_logical_cover_usage_count: 7\npublish_priority: "01>02>03"\ndefault_publish_candidate: cover-01-qiuzhi-9x16\n---\n\n## 01｜秋芝方向｜最推荐\n- 模板族：角色戏剧\n\n## 02｜秋芝方向｜第二推荐\n- 模板族：现实动作\n\n## 03｜秋芝方向｜第三推荐\n- 模板族：符号隐喻\n`);
-  const cover01 = join(episode, '05-封面/cover-01-qiuzhi-9x16.png');
-  const cover02 = join(episode, '05-封面/cover-02-qiuzhi-9x16.png');
-  const cover03 = join(episode, '05-封面/cover-03-qiuzhi-9x16.png');
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=purple:s=180x320', '-frames:v', '1', cover01]);
-  const oneCover = run('status');
-  if (oneCover.status !== 0 || !oneCover.stdout.includes('缺秋芝9:16排序候选：02、03') || oneCover.stdout.includes('- [x] ⑥')) throw new Error(oneCover.stderr || oneCover.stdout || '只有01时⑥必须保持未完成');
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=green:s=180x320', '-frames:v', '1', cover02]);
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=orange:s=180x320', '-frames:v', '1', cover03]);
+  write(join(episode, '05-封面/cover-prompts.md'), `---\nscript_hash: ${sha(join(episode, '01-口播稿.md'))}\nprompt_executor: cover-prompt-strategy\nimage_provider: fixture\nreference_mode: REQUIRED\nreference_asset: reference/jeffrey-reference.jpg\nreference_sha256: ${sha(projectReference)}\nstrategy: QIUZHI_SINGLE_STYLE_THREE_SIZES\nvisual_system: QIUZHI_03KV\nprimary_aspect_ratio: "3:4"\nrequired_generated_candidate_count: 1\nrequired_physical_cover_count: 3\nrequired_logical_cover_usage_count: 7\ndefault_publish_candidate: cover-qiuzhi-3x4\n---\n\n## 唯一方案｜秋芝03KV\n- 模板族：教学操作\n- 模板：S40 法师与魔法书\n`);
   const missingPlatformCovers = run('status');
-  if (missingPlatformCovers.status !== 0 || !missingPlatformCovers.stdout.includes('缺默认01共享真实封面') || missingPlatformCovers.stdout.includes('- [x] ⑥')) throw new Error(missingPlatformCovers.stderr || missingPlatformCovers.stdout || '只有3张9:16候选时⑥必须等待3张共享真实尺寸封面');
+  if (missingPlatformCovers.status !== 0 || !missingPlatformCovers.stdout.includes('缺秋芝同方案真实尺寸封面') || missingPlatformCovers.stdout.includes('- [x] ⑥')) throw new Error(missingPlatformCovers.stderr || missingPlatformCovers.stdout || '单方案声明后⑥必须等待3张真实尺寸封面');
   const platformCoverFixtures = [
-    ['cover-01-qiuzhi-3x4.png', '180x240'],
-    ['cover-01-qiuzhi-4x3.png', '240x180'],
-    ['cover-01-qiuzhi-16x9.png', '320x180'],
+    ['cover-qiuzhi-3x4.png', '180x240'],
+    ['cover-qiuzhi-4x3.png', '240x180'],
+    ['cover-qiuzhi-16x9.png', '320x180'],
   ];
   for (const [name, size] of platformCoverFixtures) execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', `color=c=blue:s=${size}`, '-frames:v', '1', join(episode, '05-封面', name)]);
   const undersizedPlatformCovers = run('status');
   if (undersizedPlatformCovers.status !== 0 || !undersizedPlatformCovers.stdout.includes('必须是1080×1440') || undersizedPlatformCovers.stdout.includes('- [x] ⑥')) throw new Error(undersizedPlatformCovers.stderr || undersizedPlatformCovers.stdout || '同宽高比低分辨率图片不能冒充平台真实尺寸封面');
   const exactPlatformCoverFixtures = [
-    ['cover-01-qiuzhi-3x4.png', '1080x1440'],
-    ['cover-01-qiuzhi-4x3.png', '1440x1080'],
-    ['cover-01-qiuzhi-16x9.png', '1920x1080'],
+    ['cover-qiuzhi-3x4.png', '1080x1440'],
+    ['cover-qiuzhi-4x3.png', '1440x1080'],
+    ['cover-qiuzhi-16x9.png', '1920x1080'],
   ];
   for (const [name, size] of exactPlatformCoverFixtures) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', `color=c=blue:s=${size}`, '-frames:v', '1', join(episode, '05-封面', name)]);
   const threeCovers = run('status');
-  if (threeCovers.status !== 0 || !threeCovers.stdout.includes('- [x] ⑥') || !threeCovers.stdout.includes('3张共享真实封面齐全')) throw new Error(threeCovers.stderr || threeCovers.stdout || '01—03候选和默认01三张共享尺寸封面齐全后⑥必须完成');
+  if (threeCovers.status !== 0 || !threeCovers.stdout.includes('- [x] ⑥') || !threeCovers.stdout.includes('3张真实尺寸封面齐全')) throw new Error(threeCovers.stderr || threeCovers.stdout || '同一方案三张真实尺寸封面齐全后⑥必须完成');
 
   write(join(episode, '09-导演/director-state.md'), '# V5\nmethod: V5\nworkflow_revision: V5.1\ndirector_draft: COMPLETED\ndirector_review: COMPLETED\nstatus: READY_FOR_IMPLEMENTATION\n\n## 最终导演复审\ndirector_review: COMPLETED\n');
   const sourceManifestPath = join(episode, '09-导演/source-manifest.json');
@@ -347,7 +339,7 @@ echo "PASS $2"
   if (migratedReview.status !== 0 || !migratedReview.stdout.includes('JEFFREY_REVIEW') || migratedReview.stdout.includes('HANDOFF_TO_CODEX')) throw new Error(migratedReview.stderr || migratedReview.stdout || '冻结的pending candidate必须停在Jeffrey验收，不得倒退到D1/D2或重新生产');
 
   const automatedInput = JSON.parse(readFileSync(inputRecordPath, 'utf8'));
-  automatedInput.automation = {mode: 'FULL_PIPELINE_TO_PUBLISH', scopes: ['DEFAULT_COVER_RANK_01', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO']};
+  automatedInput.automation = {mode: 'FULL_PIPELINE_TO_PUBLISH', scopes: ['USE_DEFAULT_QIUZHI_COVER_SET', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO']};
   json(inputRecordPath, automatedInput);
   const automatedConfig = JSON.parse(readFileSync(join(episode, 'episode-config.json'), 'utf8'));
   const automationNote = '本期从真人未剪辑视频开始全自动制作并发布四个平台';
@@ -359,15 +351,15 @@ echo "PASS $2"
     ...automationAuth,
     input_record_path: '00-编排/user-provided-inputs.json',
     input_record_sha256: sha(inputRecordPath),
-    scopes: ['DEFAULT_COVER_RANK_01', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO']
+    scopes: ['USE_DEFAULT_QIUZHI_COVER_SET', 'AGENT_PROXY_FINAL_SELECTION', 'FOUR_PLATFORM_AUTO_PUBLISH', 'SCHEDULE_T_PLUS_N_RETRO']
   };
   automatedConfig.final_selection_contract = {mode: 'AGENT_PROXY', ...automationAuth};
-  automatedConfig.cover_schedule = {mode: 'AUTO_DEFAULT_RANK_01_AFTER_CANDIDATE', ...automationAuth};
+  automatedConfig.cover_schedule = {mode: 'AUTO_DEFAULT_QIUZHI_AFTER_CANDIDATE', ...automationAuth};
   json(join(episode, 'episode-config.json'), automatedConfig);
   const automatedReview = run('next');
   if (automatedReview.status !== 0 || !automatedReview.stdout.includes('AUTO_CONTINUE_FULL_PIPELINE') || !automatedReview.stdout.includes('AGENT_PROXY') || automatedReview.stdout.includes('JEFFREY_REVIEW')) throw new Error(automatedReview.stderr || automatedReview.stdout || '完整自动化授权的pending candidate必须回到09完成代理验收，不得停在Jeffrey验收');
   assert.match(automatedReview.stdout, /prompt_id: 09-candidate/);
-  assert.doesNotMatch(automatedReview.stdout, /生成默认rank 01|创建schema 8发布包|--auto-publish/);
+  assert.doesNotMatch(automatedReview.stdout, /生成秋芝03KV单方案|创建schema 9发布包|--auto-publish/);
 
   write(join(testRoot, 'scripts/check-episode-contract.sh'), '#!/usr/bin/env bash\necho "PASS $2"\n');
   chmodSync(join(testRoot, 'scripts/check-episode-contract.sh'), 0o755);

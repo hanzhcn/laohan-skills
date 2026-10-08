@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.23.0"
+version: "1.24.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -67,7 +67,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 - 已存在pending candidate的V5.1兼容迁移是一次性历史例外：只承认迁移记录冻结的candidate与director-state，不允许借兼容字段跳过新episode的D1/D2。默认状态是`JEFFREY_REVIEW`；只有当前episode完整绑定`FULL_PIPELINE_TO_PUBLISH + AGENT_PROXY`时，Codex完成全片QA后才可代理选择并继续。Jeffrey无需掌握Remotion技术。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA。默认由 Jeffrey 看过并接受；仅当前 episode 预先记录 Jeffrey 本人、ISO时间和原话的 `final_selection_contract.mode=AGENT_PROXY` 时，Codex可在完整QA后代为选择，并写 `selection_mode=AGENT_PROXY` 的审阅记录。
-- ⑫默认不自动发布。只有当前episode用输入记录SHA绑定Jeffrey本人、ISO时间和原话的`FULL_PIPELINE_TO_PUBLISH`授权，并同时覆盖`DEFAULT_COVER_RANK_01`、`AGENT_PROXY_FINAL_SELECTION`、`FOUR_PLATFORM_AUTO_PUBLISH`和`SCHEDULE_T_PLUS_N_RETRO`四项scope时，才可从最终口播稿与真人原片继续到四平台发布回执；封面默认使用rank 01的3张共享尺寸成品，热点失败按非阻断策略继续。评论回复与方法论升级仍不自动执行。
+- ⑫默认不自动发布。只有当前episode用输入记录SHA绑定Jeffrey本人、ISO时间和原话的`FULL_PIPELINE_TO_PUBLISH`授权，并同时覆盖`USE_DEFAULT_QIUZHI_COVER_SET`、`AGENT_PROXY_FINAL_SELECTION`、`FOUR_PLATFORM_AUTO_PUBLISH`和`SCHEDULE_T_PLUS_N_RETRO`四项scope时，才可从最终口播稿与真人原片继续到四平台发布回执；封面默认使用秋芝03KV单方案的3张共享尺寸成品，热点失败按非阻断策略继续。评论回复与方法论升级仍不自动执行。
 - 有产物但未满足 gate 时，报告 BLOCKED，不算完成；JSON 损坏也必须报告 BLOCKED，不输出 stack trace。
 - 普通 `check` 只检查已有输入并明确输出 INCOMPLETE；只有 `--require production|final|full` 可作为阶段验收。
 - ⑫—⑭由 `laohan-yunying` 处理；默认发布、评论回复和数据纠正都必须有对应的人工确认或来源证据。当前episode具备完整`FULL_PIPELINE_TO_PUBLISH`授权时，四平台发布可由该本期授权替代逐次人工确认，但仍必须取得平台真实回执；不能把预留目录当完成。
