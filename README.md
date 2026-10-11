@@ -25,7 +25,7 @@
 > **不必全装**——挑你要的技能单独装，避免装一堆用不上的。完整单装命令见「[按需安装](#按需安装)」。
 
 ```bash
-# 一键全装（21 个技能，需要 Claude Code、Codex 或 OpenClaw）
+# 一键全装（22 个技能，需要 Claude Code、Codex 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名
 
 # 单装一个（推荐：按需挑）
@@ -71,7 +71,6 @@ npx skills add hanzhcn/laohan-skills --skill laohan-douyinsousuo     # 🔍 抖�
 npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 技术文档联网审查
 npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 工具版本检查
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 配置教程路由
-npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ 创建/修改 skill
 npx skills add hanzhcn/laohan-skills --skill laohan-chushicodex      # ⚙️ Codex 轻量初始化
 npx skills add hanzhcn/laohan-skills --skill laohan-bianpai          # 🧭 视频工作流状态路由
 npx skills add hanzhcn/laohan-skills --skill laohan-sucai            # 📦 B-roll 素材供应
@@ -251,7 +250,6 @@ Layer 6  精确控制     → Playwright / web-access CDP（代码级控制）
 
 | 技能 | 作用 | 你说 | 注意事项 |
 |------|------|------|---------|
-| 🛠️ **skillcreator** | 元技能——创建/修改/优化/审计 Agent Skill 的标准流程 | "创建 skill""改 skill""skill 体检" | 修改已长期使用的 skill 时，原有模板/方法默认视为有效基线，只增不删（防把实战验证过的内容优化掉） |
 | 🔄 **gengxin** | 工具版本检查更新——npm/brew/pip/GitHub/plugins | "检查更新" | — |
 | 📖 **jiaocheng** | 教程路由器——按关键词加载对应教程（claude-mem/GLM/ECC/Gemini 等） | "教程""怎么配置" | — |
 | ⚙️ **chushicodex** | 新装或待整顿 Codex 的安全最小配置与验证闭环 | "初始化 Codex" | 只读审计优先，不自动升级/装依赖 |
@@ -309,7 +307,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm（幻灯片生成） |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo（本地语音转录） |
 
-无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · laohan-chushicodex · fengmian · fenjing；douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
+无额外依赖的技能：redian · weigui · cheat · shencha · gengxin · jiaocheng · laohan-chushicodex · fengmian · fenjing；douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
 
 ---
 
