@@ -115,9 +115,9 @@ opencli wechat-channels whoami               # 登录态确认
 4. 视频流经代理时自动解密（WechatSphDecrypt）
 
 ### 启动方式
-**Mac（GUI）**：双击 DMG 里的「视频号下载.app」（首次引导装证书）
-**Mac（命令行）**：`~/.local/bin/视频号下载`（wrapper，内部处理 sudo + 自动下载 + 装证书）
-**Windows**：双击桌面「视频号下载」快捷方式
+**Mac（推荐，装了本 skill 即可用）**：`bash <本skill目录>/scripts/wx-video-download.sh`——自动查上游最新版 → 下载二进制到 `~/.local/bin/` → 装 SunnyNet 证书 → 启动代理，只需输入一次 sudo 密码。微信升级致失效时重跑一次即自动升级新版（版本号动态查询，无需手改）
+**Mac（GUI）**：双击 DMG 里的「视频号下载.app」（⚠️ v1.2.0 安装包内是旧版二进制，微信升级后可能失效，失效时改用上面的脚本路径）
+**Windows**：双击桌面「视频号下载」快捷方式（同样注意旧版问题；失效时从 [上游 release](https://github.com/ltaoo/wx_channels_download/releases) 下载最新 zip，管理员运行）
 
 ### 注意事项
 - **必须安装 CA 证书**（SunnyRoot.cer → 系统信任存储），否则代理无法解密 HTTPS。Mac 位置 `/Library/Keychains/System.keychain` 需 sudo；Windows `certutil -addstore Root SunnyRoot.cer` 需管理员
@@ -144,6 +144,7 @@ opencli wechat-channels whoami               # 登录态确认
 - Mac：`weixin-video-download-mac.dmg`
 - Windows：`weixin-video-download-windows.exe`（NSIS 安装器，自动生成桌面快捷方式）
 - 品牌：老韩AI
+- ⚠️ 安装包内二进制版本固定，微信升级后会失效；2026-10-12 判例 v260524 失效后靠升级 v260907 恢复。分发给小白用户时若反馈"没有下载按钮"，优先让他们跑 Mac 脚本路径（自动升级），安装包重打包待做
 
 ---
 
