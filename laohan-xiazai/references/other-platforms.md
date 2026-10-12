@@ -121,10 +121,23 @@ opencli wechat-channels whoami               # 登录态确认
 
 ### 注意事项
 - **必须安装 CA 证书**（SunnyRoot.cer → 系统信任存储），否则代理无法解密 HTTPS。Mac 位置 `/Library/Keychains/System.keychain` 需 sudo；Windows `certutil -addstore Root SunnyRoot.cer` 需管理员
-- **重启后需重新运行**——是代理进程，不是系统服务
+- **重启后需重新运行**——是代理进程，不是系统服务。系统代理设置是持久的：代理进程死掉而设置残留时，微信/Chrome 会断网，重跑一次「视频号下载」即恢复；彻底不用则在系统设置→Wi-Fi→代理里关掉网页代理
+- **停止命令**：`sudo pkill -f wx_video_download`（无 stop 按钮）
 - 打开微信→视频号→点任意视频，页面出现下载按钮
 - 代理只能抓微信 PC 客户端视频号，不能抓手机端
 - yt-dlp / Jina / Scrapling 全部无法获取视频号内容
+- 下载文件落在 `~/Downloads`
+
+### 微信升级导致失效 → 升级上游版本（2026-10-12 判例）
+
+微信客户端升级会使旧版二进制失效（症状：代理正常运行但播放页**不出现下载按钮**）。解法 = 升级到上游新版本：
+
+1. 查上游最新 release：`gh api repos/ltaoo/wx_channels_download/releases --jq '.[0].tag_name'`
+2. 下载对应平台包 + checksums 校验 SHA256
+3. 替换 `~/.local/bin/wx_video_download`（旧版备份 `.bak-<旧版本>`）
+4. `sudo pkill -f wx_video_download` 后重跑「视频号下载」（注意杀掉后 sleep 2-3s 再跑 wrapper，否则 pgrep 误判"已在运行"）
+
+判例：v260524（2026-05）在 2026-10 失效 → 升级 v260907（2026-09-07 release）恢复。上游持续适配微信新版本，真源是 [ltaoo/wx_channels_download](https://github.com/ltaoo/wx_channels_download)（hanzhcn fork 可能滞后，wrapper 下载 URL 已直连上游）。
 
 ### 安装包分发
 下载：https://github.com/hanzhcn/laohan-skills/releases/tag/v1.2.0
