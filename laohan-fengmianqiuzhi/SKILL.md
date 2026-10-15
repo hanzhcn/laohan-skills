@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianqiuzhi
-version: 1.20.0
+version: 1.21.0
 description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用秋芝03KV视觉系统，选择1个语义最匹配的场景模板，只生成同一方案的3:4、4:3、16:9三张真实尺寸封面。Use when 用户说“生成封面提示词”“做封面”“封面”“封面图”“封面词”或工作流进入⑥。
 ---
 
@@ -17,7 +17,7 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用�
 - 人物参考固定为本期`05-封面/reference/jeffrey-reference.jpg`，作为image reference传给生图模型。
 - 完整读取`references/douyin-cover-study.md`的秋芝部分、`references/qiuzhi-template-library.md`和`samples/baseline-cover-03-kv-prompt.txt`。
 - 不在prompt中写“模仿某博主风格”，只使用公开样本中可观察的版式规律。
-- 不拆成无字底图、贴头合成、排字脚本或评分器。整图生成失败时只修正原prompt和seed，每个尺寸最多重采2次。
+- 不拆成无字底图、贴头合成、排字脚本或评分器。整图生成失败或逐张复核不通过时只修正原prompt重新生成（image-use无seed控制，每次生成自然随机），每个尺寸最多重采2次。
 
 ## 1. 提炼唯一视觉主张
 
@@ -74,6 +74,23 @@ Render only the following Chinese cover text, exactly as written, with no missin
 
 `ext`只允许png、jpg、jpeg或webp。三个比例各自独立生成和构图，只产出这3个物理文件，对应四平台7个逻辑入口。默认发布源是3:4成图；平台需要其他比例时使用已生成的对应文件。
 
+### 生图执行器：image-use
+
+生图用本地CLI `image-use`（`~/.local/bin/image-use`，仓库 leeguooooo/image-use，走ChatGPT订阅的codex后端，服务端模型`gpt-image-2-codex`；无API key、无新增付费点）。每条prompt独立执行：
+
+```bash
+image-use "<该比例完整prompt>" \
+  -i 05-封面/reference/jeffrey-reference.jpg \
+  -o 05-封面/cover-qiuzhi-3x4.png \
+  --size 1080x1440 --backend codex --quiet
+```
+
+- CLI缺失时先按image-use自身SKILL.md的自愈流程拉取（单文件curl）或重跑其install.sh；仍失败如实报BLOCKED，不临时换其他生图工具。
+- 参考图每次显式传当期`reference/jeffrey-reference.jpg`，不pin成style资产——每期reference是合同真源，pin会用旧脸。
+- `--quality`/`--image-model`在codex后端会被服务端改写为auto，不传；以saved line打印的实际`model=`/`size=`/`quality=`/`tokens=`为准记入manifest。
+- 服务端按请求比例就近出档（实测3:4→1086×1448、4:3→1448×1086、16:9→1672×941），像素不达硬尺寸时用magick等比重采样到硬尺寸（不改比例、不裁切、不扩边），在manifest记录原始尺寸与重采样后尺寸，采样后复核锐度。
+- 429/额度类错误不循环重试，如实报错停下；stall/timeout按image-use错误表处理（调`--timeout`/`--stall-timeout`后重试一次）。
+
 ## 5. 逐张复核
 
 每张生成后都放大复核，任一为假即修改该尺寸原prompt并重生：
@@ -81,6 +98,8 @@ Render only the following Chinese cover text, exactly as written, with no missin
 `exactTitle`／`samePerson`／`singlePerson`／`faceProminent`／`expressiveAction`／`expressionContrast`／`heroObjectClear`／`compositionIntegrated`／`thumbnailLegible`／`safeAtTargetRatio`／`noExtraText`／`noWatermark`。
 
 `exactTitle`必须逐字符检查，英文逐字母检查。三张还必须并排确认属于同一方案，同时检查它们没有裁切掉脸、主物件或标题。机械尺寸通过不等于人物、错字和缩略图观感已通过。
+
+gpt-image对人物有放大倾向（实测头部占比可达33%—35%，高于prompt声明的22%）：`faceProminent`与`compositionIntegrated`必须从严核对头部16%—26%、人物48%—72%区间，超区间判该张失败走重采；面部必须为照片质感（毛孔、胡茬颗粒、真实发丝），出现磨皮或3D卡通脸即判失败。
 
 ## 6. 输出
 
@@ -126,6 +145,6 @@ default_publish_candidate: cover-qiuzhi-3x4
 <完整生成提示词>
 ```
 
-同时写`05-封面/cover-manifest.json`，`schema_version`为2，声明`skill_version`、`visual_system`、`selected_template`、reference/script SHA、三张`sizes`的文件名/尺寸/SHA/req/resp和`texts`。不得声明不存在的9:16母版或rank。
+同时写`05-封面/cover-manifest.json`，`schema_version`为2，声明`skill_version`、`visual_system`、`selected_template`、reference/script SHA、三张`sizes`的文件名/尺寸/SHA/req/resp和`texts`。不得声明不存在的9:16母版或rank。`req`记录完整生成命令与prompt哈希，`resp`记录image-use saved line实际`model`/`size`/`quality`/`tokens`及magick等比重采样记录（如有）。`image_provider`填`image-use/codex/gpt-image-2-codex`。
 
 不要宣称复制任何账号的CTR或独特风格。这里只借鉴公开封面中可观察的通用版式规律。
