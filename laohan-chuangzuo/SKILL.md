@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.6.1"
+version: "3.7.0"
 ---
 
 # 统一创作引擎
@@ -26,6 +26,7 @@ version: "3.6.1"
 - **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-xuanti/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
+- **镜头友好模式**（可选扩展，默认关闭）：`references/camera-friendly.md`（四句式偏好 + 镜头结构 sidecar 契约；只在 Step 4 句式层叠加，不覆盖既有方法）
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
 - **方法论真源**：项目`docs/老韩创作六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
@@ -125,6 +126,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Step 5.5: humanizer-zh最终语言定稿与主张零增删改审计
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
+- [ ] 镜头友好模式: [可选，默认关闭] 显式启用时句式叠加四偏好并产出镜头结构 sidecar（见下方专节与 references/camera-friendly.md）
 - [ ] Post-A: [可选] NotebookLM 幻灯片
 
 ---
@@ -382,6 +384,23 @@ humanizer-zh 十类模式扫描后，执行**直读测试**（所有稿通用，
 ✅ 好：实质改稿回到 Step 3，重新说明论证、取舍、可拍表达和原创增量，跑完六关与试读，再用新 hash 封口。
 
 > 封面提示词不在本 skill 范围。chuangzuo 的职责止于「确定来源 + 创作口播初稿」。封面由独立 skill `laohan-fengmianqiuzhi` 在后续流程（违规检查、校准评分通过、标题锁定后）单独产出。
+
+---
+
+## 镜头友好模式（可选，默认关闭）
+
+**显式启用才生效**（用户点名「镜头友好」或 Episode 决策 JSON 登记 `camera_friendly: true`）；不启用时一切照旧，默认产出与既有全部合同不受影响。完整规则见 `references/camera-friendly.md`。
+
+启用时在 **Step 4 写稿的句式层**叠加四个倾向性偏好（非硬规则、不覆盖六步法与任何质量门）：
+
+1. 短主张：关键节奏点尽量 ≤15 字独立短句（与既有默认叠加）
+2. 成对对比句式：对比内容写对仗双实体句
+3. 清单句：并列要点「第一个/第二个/第三个」引导、要点名前置
+4. 真实数字带单位：可量化处写具体数字+单位
+
+两条结构偏好：金句独立成段（与 quote_anchor 同句原句）；术语首现集中。
+
+产出：**正文照旧**（只含 Jeffrey 口播文字，零变化）+ 可选 sidecar `镜头结构.json`（Episode 模式 `02-创作工作稿/`；独立模式与口播稿同 basename）。sidecar 只含语义 role 提示（opening/point/contrast/list/quote/cta）与段落全文/SHA 绑定，**不含任何模板参数或视觉执行细节**（模板 props 归下游适配器产生并审阅）；不进正文、不进创作决策.json、不进 validator 校验范围。humanizer 或实质改稿后必须重出 sidecar（段落 SHA 会失配，下游按全文匹配、失配即拒绝）。
 
 ---
 
