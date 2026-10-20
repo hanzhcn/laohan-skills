@@ -1,3 +1,5 @@
+工程接续入口见 `AGENTS.md`；接手先读 `STATUS.md` 全部当前任务区与匹配流水。下文业务规则正文保留，不承担工程当前进度。
+
 # laohan-skills project rules
 
 ## Brand name
