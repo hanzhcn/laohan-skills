@@ -1,7 +1,7 @@
 ---
 name: laohan-xiazai
 description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access；浏览器操作（登录态页面/JS 渲染/多步交互/跨站搬运）优先 huashu-chrome MCP（2026-10-21 起，真登录态+效果证据，替代 chrome-devtools MCP）。纯技术查证/搜教程心得类搜索（不带平台名、不取内容）让位 laohan-sousuo（Jeffrey 2026-10-02 拍板）。
-version: "1.5.0"
+version: "1.6.0"
 ---
 
 # 从互联网拿内容
@@ -22,6 +22,7 @@ version: "1.5.0"
 | **平台封装**（30+ 平台主力） | opencli | `npm install -g @jackwener/opencli`（需 Node 18+） | `opencli list` |
 | **搜索/阅读**（13 平台统一入口） | agent-reach | `pipx install agent-reach`（无 pipx 先 `pip3 install pipx`） | `agent-reach --help` |
 | **AI 增强爬取**（免费开源，批量页面→结构化） | Crawl4AI | `pip3 install crawl4ai && crawl4ai-setup` | `python3 -c "import crawl4ai"` |
+| **图集下载**（Instagram/Twitter/Pixiv 等 100+ 站） | gallery-dl | `pip3 install gallery-dl` | `gallery-dl --version` |
 | **AI 自主浏览器**（未知页面探索） | browser-use | `pip3 install browser-use && playwright install chromium` | `python3 -c "import browser_use"` |
 | **精确控制**（确定性脚本） | Playwright | `pip3 install playwright && playwright install chromium` | `playwright --version` |
 
@@ -133,6 +134,10 @@ opencli doctor
 | 知乎 | `opencli zhihu` | Jina Reader | — | — |
 | 公众号 | `opencli weixin download`（导出 Markdown） | `fetch.py` | agent-reach | Jina Reader |
 | 视频号 | B 元宝凭证脚本 `scripts/shipinhao-yuanbao.py`（官方接口，免证书免代理，用前查时效） | A wx_video_download（MITM 代理） | — | — |
+| 快手 | KS-Downloader（[JoeanAmier/KS-Downloader](https://github.com/JoeanAmier/KS-Downloader) release 下载程序，贴分享链接） | 网页版 kuaishou.com + 浏览器 network 抓视频流（huashu-chrome/Playwright） | — | — |
+| Instagram | gallery-dl（`pip3 install gallery-dl`，需登录 cookie，Reels/图集全支持） | instaloader（`pip3 install instaloader`，元数据强） | — | — |
+| Twitter/X 图集视频 | gallery-dl（同上，配 cookie） | agent-reach（读推文） | — | — |
+| 直播流 m3u8/HLS | `ffmpeg -i "<m3u8地址>" -c copy out.mp4` | `yt-dlp "<m3u8地址>"` | — | — |
 | 未知平台 | `yt-dlp` | Scrapling MCP（get） | Scrapling stealthy | Jina Reader |
 
 降级时注意：
@@ -191,7 +196,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 | 雪球 | ✅ | ❌ | `opencli xueqiu comments <symbol>` |
 | 贴吧 | ✅（read 含回复） | ❌ | `opencli tieba read <id>` |
 | 抖音 | △（user-videos 含热门评论，无独立 comments） | ❌ | `opencli douyin user-videos`；深度评论用 douyin-session adapter |
-| **快手** | ❌ opencli 无此平台 | ❌ | **唯一真缺口**，需另调研（移动端 UA / web-access CDP） |
+| **快手** | ❌ opencli 无此平台 | ❌ | 下载有方案（KS-Downloader / 网页版抓流，见路由表）；**评论采集仍是缺口** |
 
 批量评论/批量主页采集属爬虫框架范畴，不在本 skill（见「不适用场景」）；按需取评论走 opencli。
 
@@ -203,7 +208,8 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 | Jina Reader | `curl -sL "https://r.jina.ai/<url>"` | 通用网页内容提取 |
 | web-content-fetcher | `/web-content-fetcher` skill | agent-reach 失败时的三级降级抓网页 |
 | Scrapling stealthy | MCP stealthy_fetch | 反爬场景 |
-| yt-dlp | `yt-dlp <url>` | 通用视频下载 |
+| yt-dlp | `yt-dlp <url>` | 通用视频下载（cookies 支持 `--cookies-from-browser chrome/chromium/firefox/edge/safari`，按用户实际浏览器选；被封时加 `--proxy socks5://...`） |
+| gallery-dl | `pip3 install gallery-dl` 后 `gallery-dl <url>` | 图集/媒体站批量下载（Instagram/Twitter/Pixiv 等 100+ 站，2026-10 验证活跃 v1.32；多数站需登录 cookie） |
 | browser-use | `/open-source` skill | AI 自主操作浏览器，全新/未知页面 |
 | web-access | `/web-access` skill | CDP 接管已登录日常 Chrome（localhost:3456），覆盖：登录态内容、复杂交互（点击/翻页/表单/上传）、视频帧采样、本地书签历史检索 |
 | Playwright 手动 | ECC Playwright MCP | 精确手动控制，最后兜底 |
