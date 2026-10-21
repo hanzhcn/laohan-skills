@@ -24,6 +24,7 @@ version: "1.6.0"
 | **AI 增强爬取**（免费开源，批量页面→结构化） | Crawl4AI | `pip3 install crawl4ai && crawl4ai-setup` | `python3 -c "import crawl4ai"` |
 | **图集下载**（Instagram/Twitter/Pixiv 等 100+ 站） | gallery-dl | `pip3 install gallery-dl` | `gallery-dl --version` |
 | **AI 自主浏览器**（未知页面探索） | browser-use | `pip3 install browser-use && playwright install chromium` | `python3 -c "import browser_use"` |
+| **反指纹浏览器**（可选，硬反爬站） | Camoufox | `pip3 install -U "camoufox[geoip]" && camoufox fetch` | `camoufox --help` |
 | **精确控制**（确定性脚本） | Playwright | `pip3 install playwright && playwright install chromium` | `playwright --version` |
 
 **零依赖兜底（什么都没装也能用）**：
@@ -180,6 +181,19 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 - 精确操作 → Playwright（人工级控制）
 
 **成本递增，能浅不深**：Scrapling get（HTTP 秒级）< huashu-chrome（自家 Chrome，秒级）< Scrapling stealthy（反检测）< Crawl4AI（本地 AI 提取，免 API 费）< browser-use（需调 LLM API）< web-access（需 CDP 连接）< Playwright（需写代码）
+
+### 人机验证（CAPTCHA/Cloudflare）应对层
+
+被 Turnstile/reCAPTCHA/hCaptcha/验证页拦截时的专门降级（2026-10-22 调研，来源标注见各条）：
+
+**免费开源层（优先）**：
+1. **Scrapling stealthy 的 `solve_cloudflare` 参数**（本 skill 已有，易被忽略）：`stealthy_fetch url=<url> solve_cloudflare=true`——自动过 Cloudflare Turnstile/Interstitial 质询，本机 MCP 直调零成本
+2. **Camoufox**（定制 Firefox 反指纹构建，2026-10 评测"硬指纹对抗最佳"，实测可过 Turnstile）：`pip3 install -U camoufox[geoip] && camoufox fetch`（Python API：`AsyncCamoufox(humanize=True)` 配 playwright）；带代理时自动匹配地理位置指纹
+3. **nodriver**（undetected-chromedriver 后继，Python 现代默认）：`pip3 install nodriver`；**SeleniumBase UC mode**（Cloudflare 场景评佳）：`pip3 install seleniumbase` 后 `with SB(uc=True)` 使用
+
+**付费 API 层（可选，按量计费）**：CapSolver（$0.80-1.20/千次，Turnstile/reCAPTCHA/hCaptcha/GeeTest 全支持，capsolver.com）/ 2Captcha（$1.45/千次 Turnstile，老牌 2captcha.com）。接入都是"提交站点参数→轮询取 token→回填表单"。**已知限制**（2026-04 争议）：部分观点认为 Turnstile 服务端指纹校验下纯 token 服务不可靠，此时用 Camoufox 类真实指纹浏览器更稳。
+
+**边界**：仅用于个人一次性内容获取场景；不得用于批量滥用、登录爆破或违反目标站服务条款的用途——付费服务账号与法律风险自负。
 
 ## 评论采集
 
