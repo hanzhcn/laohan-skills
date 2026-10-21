@@ -29,14 +29,23 @@ for v in d.get('data',{}).get('videos',[]):
 ### 下载视频（无水印）
 
 ```bash
-# 获取 CDN 地址
-CDN_URL=$(curl -s -X POST "https://www.tikwm.com/api/" \
+# 获取 CDN 地址（校验业务 code 与字段存在，避免拿空链接）
+CDN_URL=$(curl -sf -X POST "https://www.tikwm.com/api/" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "url=https://www.tiktok.com/@USER/video/VIDEO_ID&hd=1" | \
-  python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['hdplay'] or d['data']['play'])")
+  python3 -c "
+import sys,json
+try:
+    d=json.load(sys.stdin)
+    data=d.get('data') or {}
+    url=data.get('hdplay') or data.get('play')
+    assert d.get('code')==0 and url, d.get('msg','empty')
+    print(url)
+except Exception as e:
+    sys.exit(f'tikwm 解析失败: {e}')") || exit 1
 
-# 下载
-curl -L -o "output.mp4" "$CDN_URL"
+# 下载（URL 非空才下）
+[ -n "$CDN_URL" ] && curl -fL -o "output.mp4" "$CDN_URL"
 ```
 
 - `hdplay`=高清，`play`=标清，`wmplay`=带水印

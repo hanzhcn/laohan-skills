@@ -105,13 +105,15 @@ for i, v in enumerate(data):
     vdir = f'{out_dir}/video-{i+1:02d}'
     os.makedirs(vdir, exist_ok=True)
 
-    # 下载视频（CDN 链接有时效，获取后立即下载）
+    # 下载视频（CDN 链接有时效，获取后立即下载；每步检查返回码，失败记录不中断批次）
     mp4 = f'{vdir}/source.mp4'
     if not os.path.exists(mp4) or os.path.getsize(mp4) < 10000:
         print(f'[{i+1}] 下载: {title}...')
-        subprocess.run(['curl', '-sL', '-o', mp4, play_url], timeout=60, capture_output=True)
+        r = subprocess.run(['curl', '-sfL', '-o', mp4, play_url], timeout=60, capture_output=True)
+        if r.returncode != 0 or not os.path.exists(mp4) or os.path.getsize(mp4) < 10000:
+            failed.append(f'video-{i+1:02d}: 下载失败(rc={r.returncode})'); continue
     else:
-        print(f'[{i+1}] 已存在，跳过')
+        print(f'[{i+1}] 已存在，跳过'))
 
     # 提取音频
     wav = f'{vdir}/audio.wav'
@@ -120,27 +122,34 @@ for i, v in enumerate(data):
                        capture_output=True, timeout=30)
 
     # 转录（优先硅基流动 API，降级 whisper-cli；结果写入 transcript.md）
+    # ⚠️ 异常必须脱敏捕获：TimeoutExpired 的默认栈会带完整 argv（含 Bearer key），禁止裸抛
     transcript = f'{vdir}/transcript.md'
     if not os.path.exists(transcript) or os.path.getsize(transcript) < 10:
+        text = ''
         # 第1选：硅基流动 SenseVoiceSmall（免费，中文优化）
-        sf = subprocess.run(
-            ['curl', '-sS', '-X', 'POST',
-             'https://api.siliconflow.cn/v1/audio/transcriptions',
-             '-H', f'Authorization: Bearer {os.environ.get("SILICONFLOW_API_KEY","")}',
-             '-F', 'model=FunAudioLLM/SenseVoiceSmall',
-             '-F', f'file=@{wav}'],
-            capture_output=True, text=True, timeout=120)
         try:
+            sf = subprocess.run(
+                ['curl', '-sS', '-X', 'POST',
+                 'https://api.siliconflow.cn/v1/audio/transcriptions',
+                 '-H', f'Authorization: Bearer {os.environ.get("SILICONFLOW_API_KEY","")}',
+                 '-F', 'model=FunAudioLLM/SenseVoiceSmall',
+                 '-F', f'file=@{wav}'],
+                capture_output=True, text=True, timeout=120)
             text = json.loads(sf.stdout).get('text', '') if sf.stdout else ''
-        except Exception:
-            text = ''
+        except subprocess.TimeoutExpired:
+            print(f'[{i+1}] ASR API 超时(120s)，转 whisper-cli')
+        except Exception as e:
+            print(f'[{i+1}] ASR API 异常: {type(e).__name__}')  # 只打类型不打栈（防泄 key）
         if not text:
             # 第2选：whisper-cli（本地）
-            w = subprocess.run(
-                ['whisper-cli', '-m', '/opt/homebrew/share/whisper.cpp/ggml-small.bin',
-                 '-f', wav, '-l', 'zh', '--no-timestamps'],
-                capture_output=True, text=True, timeout=120)
-            text = w.stdout
+            try:
+                w = subprocess.run(
+                    ['whisper-cli', '-m', '/opt/homebrew/share/whisper.cpp/ggml-small.bin',
+                     '-f', wav, '-l', 'zh', '--no-timestamps'],
+                    capture_output=True, text=True, timeout=120)
+                text = w.stdout
+            except subprocess.TimeoutExpired:
+                print(f'[{i+1}] whisper-cli 超时'); text = ''
         open(transcript, 'w').write(text)
 PYEOF
 ```
@@ -180,7 +189,8 @@ opencli douyin user-videos {sec_uid} --limit 20 --with_comments false -f json
 ```
 
 - sec_uid 从 URL 的 `/user/` 后面提取，或通过短链接解析获取
-- **`--limit` 上限 20 条**：opencli 1.8.6 源码 `clis/douyin/user-videos.js` 中 `MAX_USER_VIDEOS_LIMIT = 20`，`normalizeUserVideosLimit` 用 `Math.min(20, …)` 硬截断，结果再 `.slice(0, limit)`——**没有翻页循环**。`public-api.js` 里的 `max_cursor: '0'` 只是单次请求参数，不是分页迭代。要取超过 20 条需多次调用或换思路
+- **`--limit` 上限 20 条且无翻页**：opencli 1.8.6 源码 `clis/douyin/user-videos.js` 中 `MAX_USER_VIDEOS_LIMIT = 20` 硬截断，`max_cursor` 只是单次请求参数非分页迭代——**重复调用只返回同样首批 20 条**，不要靠多次调用取更多；超 20 条需走 huashu-chrome/Playwright 抓网页端分页
+- 单条视频：**opencli ≥2.0 有 `douyin detail <短链/链接/ID>`**（单视频全解：文案/互动数据/作者/下载地址/图集），优先于抓包链路
 - 返回 aweme_id + play_url（CDN临时链接）→ 立即下载视频
 - ⚠️ sec_uid 必须是最新的：旧 sec_uid 会触发 Cookie 覆盖返回自己账号的数据
 - 获取最新 sec_uid：`curl -sL -o /dev/null -w '%{url_effective}' -H "User-Agent: {移动端UA}" "https://v.douyin.com/{短链接}/"`
@@ -266,9 +276,9 @@ asyncio.run(main())
 
 ## 获取视频发布时间（aweme_id 解码法）
 
-opencli `douyin user-videos` 不返回 `create_time` 字段，网页端需登录态才渲染视频列表。解决方案：**从 aweme_id 直接解码发布时间**，无需登录、无需额外 API。
+opencli `douyin user-videos` 不返回 `create_time` 字段，网页端需登录态才渲染视频列表。解决方案：**从 aweme_id 估算发布时间**，无需登录、无需额外 API。
 
-原理：aweme_id 是 64 位整数，**高 32 位是秒级时间戳**（+13s 校准偏移）。精度 ±13 秒，足够判断发布日期和时段。来源 [Evil0ctal/Douyin-TikTok-Video-ID-Decoder](https://github.com/Evil0ctal/Douyin-TikTok-Video-ID-Decoder)，73条真实数据验证。
+原理：aweme_id 是 64 位整数，高 32 位与生成时间相关（+13s 偏移）。**这是估算不是精确发布时间**（ID 生成与实际发布可能有偏差，官方未承诺精确性，见上游 FAQ；能用真实 `create_time` 时优先用真实值）。解码示例输出为 UTC 时间戳，换算北京时间显式指定时区。来源 [Evil0ctal/Douyin-TikTok-Video-ID-Decoder](https://github.com/Evil0ctal/Douyin-TikTok-Video-ID-Decoder)。
 
 ```python
 from datetime import datetime

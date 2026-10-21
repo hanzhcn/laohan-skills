@@ -16,7 +16,8 @@
 opencli xiaohongshu search "关键词" --limit 10 -f json      # 搜索笔记（返回含 xsec_token 的完整 URL）
 opencli xiaohongshu note <note-url-with-xsec-token> -f json  # 笔记正文+互动数据（需 search 拿签名 URL）
 opencli xiaohongshu download <note-url-or-xhslink> --output <目录>  # 下载图片/视频（需 Browser Bridge）
-opencli xiaohongshu comments <note-id> -f json               # [read] 评论（支持楼中楼子回复）
+opencli xiaohongshu comments <含xsec_token的完整笔记URL> -f json   # [read] 评论；推荐先 search 拿到签名 URL 再查评论
+opencli xiaohongshu comments <URL> --with-replies             # 楼中楼子回复（默认关闭，需显式开）
 opencli xiaohongshu user <id> -f json                        # 用户公开笔记
 opencli xiaohongshu creator-notes [options] -f json          # 创作者笔记列表+数据（原上限10，用 creator-notes-all 突破）
 opencli xiaohongshu creator-profile                          # 创作者账号信息（粉丝/获赞/等级）
@@ -159,7 +160,7 @@ python3 scripts/shipinhao-yuanbao.py "分享文本或链接"   # 文件落 ~/Dow
 **Windows**：双击桌面「视频号下载」快捷方式（同样注意旧版问题；失效时从 [上游 release](https://github.com/ltaoo/wx_channels_download/releases) 下载最新 zip，管理员运行）
 
 ### 注意事项
-- **必须安装 CA 证书**（SunnyRoot.cer → 系统信任存储），否则代理无法解密 HTTPS。Mac 位置 `/Library/Keychains/System.keychain` 需 sudo；Windows `certutil -addstore Root SunnyRoot.cer` 需管理员
+- **必须安装 CA 证书**（上游证书文件名为 **SunnyNet.cer**，2026-10-22 核实，旧文档写 SunnyRoot 有误 → 系统信任存储），否则代理无法解密 HTTPS。Mac 位置 `/Library/Keychains/System.keychain` 需 sudo；Windows `certutil -addstore Root SunnyNet.cer` 需管理员
 - **重启后需重新运行**——是代理进程，不是系统服务。系统代理设置是持久的：代理进程死掉而设置残留时，微信/Chrome 会断网，重跑一次「视频号下载」即恢复；彻底不用则在系统设置→Wi-Fi→代理里关掉网页代理
 - **停止命令**：`sudo pkill -f wx_video_download`（无 stop 按钮）
 - 打开微信→视频号→点任意视频，页面出现下载按钮
@@ -217,10 +218,10 @@ MediaCrawler（55k star，NON-COMMERCIAL LEARNING LICENSE，**禁止商业用途
 | 发布/关注/点赞 | ❌ 无 | 全平台普遍支持 | opencli 独有 |
 | 创作者数据 | ✅ | ✅（xhs creator-*/douyin stats） | 平 |
 | IP代理池/断点续爬 | ✅ | ❌ | MediaCrawler 独有（批量场景） |
-| 快手 | ✅ | ❌ | **唯一真缺口** |
+| 快手 | ✅ | ❌ | 下载已补（KS-Downloader 路由，见 SKILL.md）；**评论采集仍是唯一真缺口** |
 | License | 禁商业 | MIT 类 | opencli 无限制 |
 
 **结论**：MediaCrawler 评论采集能力 opencli 已覆盖且更强（多 write）。
 - ✅ 不装 MediaCrawler（license 禁商业 + 只抓不写 + opencli 更强）
-- ⚠️ 唯一真缺口 = **快手**（opencli 无，laohan-xiazai 无），需单独调研补丁
+- ⚠️ 快手**评论**仍是唯一真缺口（opencli 无；下载已有 KS-Downloader 路由，2026-10-22 补）
 - 批量评论/批量主页采集属"爬虫框架"范畴，laohan-xiazai 定位是按需获取，不在此 skill 内做（见 SKILL.md「不适用场景」）

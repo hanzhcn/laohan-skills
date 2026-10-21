@@ -15,16 +15,19 @@ version: "1.6.0"
 ## 外部环境自举（External Bootstrap）
 
 > 本 skill 在全新机器上：外部 AI 先按此清单装配依赖，再进入平台路由。装哪个取决于目标平台，不必全装。每项给安装命令 + 验证命令，装完跑验证确认可用。
+> **Python 环境提示**：Debian/Ubuntu 系统 Python 有 PEP 668 锁，`pip3 install` 会被拒——统一改用 `pipx install <包>`（先 `pip3 install --user pipx`），CLI 工具进 `~/.local/bin` 等价可用。ffmpeg：macOS `brew install ffmpeg`；Debian/Ubuntu `sudo apt install ffmpeg`；Win `winget install Gyan.FFmpeg`。
 
 | 层 | 工具 | 安装 | 验证 |
 |----|------|------|------|
-| **必装**（通用下载/转码） | yt-dlp + ffmpeg | `pip3 install -U yt-dlp` / `brew install ffmpeg`（Win: winget install Gyan.FFmpeg） | `yt-dlp --version && ffmpeg -version` |
-| **平台封装**（30+ 平台主力） | opencli | `npm install -g @jackwener/opencli`（需 Node 18+） | `opencli list` |
-| **搜索/阅读**（13 平台统一入口） | agent-reach | `pipx install agent-reach`（无 pipx 先 `pip3 install pipx`） | `agent-reach --help` |
-| **AI 增强爬取**（免费开源，批量页面→结构化） | Crawl4AI | `pip3 install crawl4ai && crawl4ai-setup` | `python3 -c "import crawl4ai"` |
+| **必装**（通用下载/转码） | yt-dlp + ffmpeg | `pip3 install -U "yt-dlp[default]"`（YouTube 完整支持需完整依赖+JS runtime，见 [官方 dependencies](https://github.com/yt-dlp/yt-dlp#dependencies)） | `yt-dlp --version && ffmpeg -version` |
+| **平台封装**（30+ 平台主力） | opencli | `npm install -g @jackwener/opencli`（需 **Node ≥20.18.1**；Cookie 命令另需 Chrome 装扩展，见 `opencli doctor` 引导） | `opencli list` |
+| **搜索/阅读**（13 平台统一入口） | agent-reach | `pipx install git+https://github.com/Panniantong/agent-reach.git`（⚠️ PyPI 同名包是别人的项目，必须从官方仓装） | `agent-reach doctor` |
+| **AI 增强爬取**（免费开源，批量页面→结构化） | Crawl4AI | `pip3 install crawl4ai && crawl4ai-setup`（LLM 结构化提取需另配模型——本地 Ollama 免费或云端 API 计费；纯 Markdown 提取不需模型） | `python3 -c "import crawl4ai"` |
 | **图集下载**（Instagram/Twitter/Pixiv 等 100+ 站） | gallery-dl | `pip3 install gallery-dl` | `gallery-dl --version` |
-| **AI 自主浏览器**（未知页面探索） | browser-use | `pip3 install browser-use && playwright install chromium` | `python3 -c "import browser_use"` |
-| **反指纹浏览器**（可选，硬反爬站） | Camoufox | `pip3 install -U "camoufox[geoip]" && camoufox fetch` | `camoufox --help` |
+| **AI 自主浏览器**（未知页面探索） | browser-use | `pip3 install browser-use`，浏览器与模型配置按[官方 quickstart](https://docs.browser-use.com/open-source/quickstart) | `python3 -c "import browser_use"` |
+| **反指纹浏览器**（可选，硬反爬站） | Camoufox | `pip3 install -U 'camoufox[geoip]' && python3 -m camoufox fetch`（注意 shell 引号；代理场景配 `geoip=True` 才自动匹配地理位置指纹） | `python3 -c "import camoufox"` |
+
+**本机专属工具说明**：huashu-chrome MCP、Scrapling MCP、anysearch、web-access、douyin-session、dy-cli 是老韩本机配置，外部机器没有——降级链中遇到这些层时直接跳到下一层（外部等效：Scrapling→Crawl4AI/Camoufox，huashu-chrome→browser-use/Playwright，anysearch→DuckDuckGo/SearXNG）。
 | **精确控制**（确定性脚本） | Playwright | `pip3 install playwright && playwright install chromium` | `playwright --version` |
 
 **零依赖兜底（什么都没装也能用）**：
@@ -32,7 +35,7 @@ version: "1.6.0"
 - 搜索：DuckDuckGo HTML（`curl -sL "https://html.duckduckgo.com/html/?q=<query>"` 后解析）或 SearXNG 公共实例（`curl -sL "https://searx.be/search?q=<query>&format=json"`，实例列表 searx.space）
 - 直链视频：`curl -L -o out.mp4 "<直链>"`
 
-**付费 API 可选增强**（有免费档，按需）：Exa 语义搜索（exa.ai，免费 100 次/天）适合"找相似内容/深度调研"；Tavily（tavily.com，免费 1000 次/月）适合 agent 检索管线。无 key 时用上面的零依赖兜底。
+**付费 API 可选增强**（有免费额度，按需）：Exa 语义搜索（exa.ai，赠送月度 credits，口径以[官方定价](https://exa.ai/pricing)为准）适合"找相似内容/深度调研"；Tavily（tavily.com，1000 credits/月，advanced search 每次 2 credits，见[文档](https://docs.tavily.com/documentation/api-credits)）适合 agent 检索管线。无 key 时用上面的零依赖兜底。
 
 ## 不适用场景
 
@@ -51,7 +54,7 @@ npm update -g @jackwener/opencli
 
 ### 第2步：更新 opencli skills（npx 管理）
 ```bash
-npx skills update -g -y
+npx skills update -g -y   # 注意：会更新锁文件里全部已装 skill，不止 opencli 的 4 个
 ```
 opencli 自带 4 个辅助 skill，随 opencli 仓库更新但独立于 npm 包。必须单独更新：
 - **opencli-usage**：查命令总览，不确定有什么命令时用
@@ -127,7 +130,7 @@ opencli doctor
 
 | 平台 | 第1选 | 第2选 | 第3选 | 最终兜底 |
 |------|-------|-------|-------|---------|
-| 抖音 | 短链解析 + Playwright 抓 aweme/detail | `opencli douyin` | douyin-session（评论） | Scrapling stealthy |
+| 抖音 | `opencli douyin detail <短链/ID>`（≥2.0 新命令，单视频全解含下载地址；旧版本先 `npm update -g @jackwener/opencli`） | 短链解析 + Playwright 抓 aweme/detail | douyin-session（评论） | Scrapling stealthy |
 | TikTok | tikwm API | `yt-dlp` | `opencli tiktok`（需 Browser Bridge） | — |
 | YouTube | `yt-dlp`（需 `--cookies-from-browser chrome`） | `opencli youtube transcript`（字幕） | — | — |
 | B站 | `opencli bilibili download`（需 Browser Bridge） | Jina Reader | — | — |
@@ -142,6 +145,7 @@ opencli doctor
 | 未知平台 | `yt-dlp` | Scrapling MCP（get） | Scrapling stealthy | Jina Reader |
 
 降级时注意：
+- **降级产物性质**：部分降级产出的是替代产物而非原目标（如 B站视频→Jina 只出正文、YouTube 视频→transcript 只出字幕、抖音→douyin-session 只出评论）——降级到这些层时要向用户说明拿到的是什么，不能当作原下载成功
 - 抖音不存在 yt-dlp 降级路径（已验证无效），不要浪费时间尝试
 - 抖音纯 HTTP 通道 2026-08 起全部关闭（iesdouyin SSR / douyin_tiktok_scraper 均失效），单视频下载走短链解析 + Playwright 抓包（见 `references/douyin.md`）
 - B站 yt-dlp 已被 HTTP 412 全面拦截（2026-04-28 验证），不要尝试 yt-dlp 下载B站视频
@@ -191,7 +195,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 2. **Camoufox**（定制 Firefox 反指纹构建，2026-10 评测"硬指纹对抗最佳"，实测可过 Turnstile）：`pip3 install -U camoufox[geoip] && camoufox fetch`（Python API：`AsyncCamoufox(humanize=True)` 配 playwright）；带代理时自动匹配地理位置指纹
 3. **nodriver**（undetected-chromedriver 后继，Python 现代默认）：`pip3 install nodriver`；**SeleniumBase UC mode**（Cloudflare 场景评佳）：`pip3 install seleniumbase` 后 `with SB(uc=True)` 使用
 
-**付费 API 层（可选，按量计费）**：CapSolver（$0.80-1.20/千次，Turnstile/reCAPTCHA/hCaptcha/GeeTest 全支持，capsolver.com）/ 2Captcha（$1.45/千次 Turnstile，老牌 2captcha.com）。接入都是"提交站点参数→轮询取 token→回填表单"。**已知限制**（2026-04 争议）：部分观点认为 Turnstile 服务端指纹校验下纯 token 服务不可靠，此时用 Camoufox 类真实指纹浏览器更稳。
+**付费 API 层（可选，按量计费）**：CapSolver（约 $0.8-1.2/千次，Turnstile/reCAPTCHA/hCaptcha/GeeTest，capsolver.com）/ 2Captcha（$1.45/千次 Turnstile，2captcha.com）。**接入复杂度提示**：独立 widget 场景是"提交参数→取 token→回填"；Cloudflare **整页 challenge** 还需捕获 action/cData/chlPageData 并配合 UA 回调——按[2Captcha 官方文档](https://2captcha.com/api-docs/cloudflare-turnstile)的完整流程做，不要只取 token。**已知限制**（2026-04 争议）：部分观点认为 Turnstile 服务端指纹校验下纯 token 服务不可靠，此时用 Camoufox 类真实指纹浏览器更稳。
 
 **边界**：仅用于个人一次性内容获取场景；不得用于批量滥用、登录爆破或违反目标站服务条款的用途——付费服务账号与法律风险自负。
 
@@ -228,9 +232,9 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 | web-access | `/web-access` skill | CDP 接管已登录日常 Chrome（localhost:3456），覆盖：登录态内容、复杂交互（点击/翻页/表单/上传）、视频帧采样、本地书签历史检索 |
 | Playwright 手动 | ECC Playwright MCP | 精确手动控制，最后兜底 |
 
-### web-access 调用要点（降级链中唯一连用户日常浏览器的工具）
+### web-access 调用要点（本机兜底：huashu-chrome 离线时的登录态方案）
 
-降级链其余工具（Scrapling / browser-use / Playwright MCP）都开**独立无状态浏览器**，唯独 web-access 直连用户日常 Chrome，天然带登录态、书签、历史。触发 `/web-access` 加载后按此调用：
+web-access 与 huashu-chrome 都连用户日常 Chrome（登录态共享）；huashu-chrome 在线时优先它（效果证据+站点经验），web-access 在其离线时兜底，另有独占能力：视频帧采样、本地书签历史检索。触发 `/web-access` 加载后按此调用：
 
 1. **启动 CDP proxy**：`node "${CLAUDE_SKILL_DIR}/scripts/check-deps.mjs"`（Node 22+ 必需，脚本自动启动并等待 proxy 就绪）
 2. **操作前必须向用户展示封禁须知**：部分站点对浏览器自动化检测严格，存在账号封禁风险，已内置防护但无法完全避免，继续操作即视为接受。
@@ -257,7 +261,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 | 语音合成（TTS） | `edge-tts --text "文本" --voice zh-CN-XiaoxiaoNeural --write-media output.mp3` |
 | 音视频转码 | `ffmpeg -i input.mp4 -vn -acodec libmp3lame output.mp3` |
 | OCR | `tesseract image.png stdout -l chi_sim+eng` |
-| PDF 提取文本 | `python3 -c "import fitz; doc=fitz.open('file.pdf'); [page.get_text() for page in doc]"` |
+| PDF 提取文本 | `python3 -c "import fitz; doc=fitz.open('file.pdf'); print('\n'.join(p.get_text() for p in doc))"`（必须 print 输出，只构造列表 stdout 为空） |
 | 图片处理 | `magick input.png -resize 800x600 output.png` |
 
 ### 搜索兜底
