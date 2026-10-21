@@ -96,7 +96,7 @@ opencli weixin drafts                        # 草稿箱列表
 
 ⚠️ 公众号文章**优先用 `opencli weixin download`**，fetch.py/agent-reach 是降级。必须短链接格式 `https://mp.weixin.qq.com/s/xxx`，长链接 poc_token 过期触发验证码。
 
-## 微信视频号（wechat-channels + wx_video_download 双路径）
+## 微信视频号（wechat-channels + 双下载路径）
 
 **发布**（opencli）：
 ```bash
@@ -104,7 +104,21 @@ opencli wechat-channels publish <video>      # [write] 发布视频到视频号
 opencli wechat-channels whoami               # 登录态确认
 ```
 
-**下载别人视频**（MITM 代理，opencli 不支持下载，只能 wx_video_download）：
+**下载别人视频**——本机两条已验证路径，按 A→B 降级：
+
+> **⚠️ 用前时效检查（Jeffrey 2026-10-21 要求）**：视频号没有稳定公开接口，两套方法都依赖逆向微信/元宝的行为，**随时可能失效**。每次使用前先确认所用方案仍工作（A 看播放页是否出现下载按钮；B 看 app 能否正常出下载结果），失效时按各自排障段处理并检查上游更新。网络上其他方法未经验证，不纳入降级链。
+
+### 方案 B：laohanAI.app 元宝登录（官方接口，优先试）
+
+自研产品 `laohanAI.app`（`/Applications/laohanAI.app`）内置的视频号下载模块（源码 `~/Documents/laohanagent/apps/desktop`，设计文档 `docs/SHIPINHAO_DOWNLOAD_SLICE.md`）。
+
+**用法**：打开 laohanAI.app → 视频号下载页 → 贴视频号分享链接 → 首次需用**腾讯元宝账号**登录（webview 采集 cookie，凭证存 macOS Keychain，后续免登）→ 下载。
+
+**原理**：元宝 cookie（hy_user + hy_token）→ 两步官方 API（元宝 get_parse_result → 视频号 get_feed_info）。走官方接口，不装证书、不改系统代理。
+
+**失效症状与去向**：元宝接口变更时 app 内报"页面内容暂时无法识别/链接不可用"等；处理 = 更新 laohanagent 产品（拉最新代码重新构建 laohanAI.app），接口细节见设计文档。已知 gotcha：解析第二步合法返回是 201 不是 200，报错别急着判定接口挂了。
+
+### 方案 A：wx_video_download（MITM 代理）
 
 基于 MITM 代理拦截微信视频号视频流，使用 `wx_video_download` 二进制（来自 [hanzhcn/wx_channels_download](https://github.com/hanzhcn/wx_channels_download)）。
 
