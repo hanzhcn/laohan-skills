@@ -22,10 +22,11 @@ if pgrep -f "wx_video_download" >/dev/null 2>&1; then
     exit 0
 fi
 
-# 没有二进制？下载
+# 没有二进制？下载（直连失败自动换 ghfast.top 镜像，外部/国内网络兜底）
 if [ ! -f "$BIN" ]; then
     echo "首次使用，下载 ${VERSION} 中..."
-    curl -L -o /tmp/wx_video.zip "$URL" --progress-bar
+    curl -L --connect-timeout 15 -o /tmp/wx_video.zip "$URL" --progress-bar ||
+        curl -L --connect-timeout 15 -o /tmp/wx_video.zip "https://ghfast.top/$URL" --progress-bar
     unzip -o /tmp/wx_video.zip -d /tmp/wx_video_tmp >/dev/null
     cp /tmp/wx_video_tmp/wx_video_download "$BIN"
     chmod +x "$BIN"
@@ -36,7 +37,8 @@ fi
 # 证书没装？装
 if ! sudo security find-certificate -c "$CERT_NAME" /Library/Keychains/System.keychain >/dev/null 2>&1; then
     echo "安装证书（需要输入密码）..."
-    curl -sL "https://github.com/${REPO}/releases/download/${VERSION}/SunnyRoot.cer" -o /tmp/SunnyRoot.cer
+    curl -sL --connect-timeout 15 "https://github.com/${REPO}/releases/download/${VERSION}/SunnyRoot.cer" -o /tmp/SunnyRoot.cer ||
+        curl -sL --connect-timeout 15 "https://ghfast.top/https://github.com/${REPO}/releases/download/${VERSION}/SunnyRoot.cer" -o /tmp/SunnyRoot.cer
     sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/SunnyRoot.cer
     rm -f /tmp/SunnyRoot.cer
     echo "证书安装完成"

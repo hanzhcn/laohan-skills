@@ -108,7 +108,26 @@ opencli wechat-channels whoami               # 登录态确认
 
 > **⚠️ 用前时效检查（Jeffrey 2026-10-21 要求）**：视频号没有稳定公开接口，两套方法都依赖逆向微信/元宝的行为，**随时可能失效**。每次使用前先确认所用方案仍工作（A 看播放页是否出现下载按钮；B 看 app 能否正常出下载结果），失效时按各自排障段处理并检查上游更新。网络上其他方法未经验证，不纳入降级链。
 
-### 方案 B：laohanAI.app 元宝登录（官方接口，优先试）
+### 外部用户自配置（装了本 skill 的任何机器）
+
+**环境判定（AI 按此自动路由）**：
+- 机器上有 `laohanAI.app`（老韩AI 桌面产品，未公开发布）→ 可走方案 B
+- 没有 → 只走方案 A，一条命令全自动配置
+
+**Mac（方案 A 全自动，外部用户主路径）**：在**本 skill 目录**下执行
+```bash
+bash scripts/wx-video-download.sh
+```
+脚本自包含，自动完成：查上游最新版（GitHub API 失败用兜底版本）→ 下载二进制到 `~/.local/bin/`（直连失败自动换 ghfast.top 镜像）→ 安装 SunnyNet 证书（需输一次 sudo 密码）→ 启动代理。**前提**：微信 PC 客户端已登录。成功标志：微信→视频号→点视频，播放页出现下载按钮，文件落 `~/Downloads`。支持 arm64/x86_64。
+
+**Windows（手动三步，无脚本）**：
+1. [上游 release](https://github.com/ltaoo/wx_channels_download/releases) 下载 zip（国内可加 `https://ghfast.top/` 前缀）解压
+2. 管理员运行 exe
+3. `certutil -addstore Root SunnyRoot.cer` 装证书
+
+**后续维护**：重启后需重跑一次（代理是进程不是服务）；微信升级后播放页无下载按钮 = 版本过期，`rm ~/.local/bin/wx_video_download` 后重跑脚本自动拉新版。
+
+### 方案 B：laohanAI.app 元宝登录（官方接口，需老韩AI 产品，本机优先试）
 
 自研产品 `laohanAI.app`（`/Applications/laohanAI.app`）内置的视频号下载模块（源码 `~/Documents/laohanagent/apps/desktop`，设计文档 `docs/SHIPINHAO_DOWNLOAD_SLICE.md`）。
 
