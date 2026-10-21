@@ -1,7 +1,7 @@
 ---
 name: laohan-xiazai
-description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access。纯技术查证/搜教程心得类搜索（不带平台名、不取内容）让位 laohan-sousuo（Jeffrey 2026-10-02 拍板）。
-version: "1.3.1"
+description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access；浏览器操作（登录态页面/JS 渲染/多步交互/跨站搬运）优先 huashu-chrome MCP（2026-10-21 起，真登录态+效果证据，替代 chrome-devtools MCP）。纯技术查证/搜教程心得类搜索（不带平台名、不取内容）让位 laohan-sousuo（Jeffrey 2026-10-02 拍板）。
+version: "1.4.0"
 ---
 
 # 从互联网拿内容
@@ -15,7 +15,7 @@ version: "1.3.1"
 ## 不适用场景
 
 - 批量爬取/爬虫开发 → 这不是爬虫框架，是一次性内容获取工具
-- 需要登录才能访问且用户未登录 → 告诉用户先登录对应平台，web-access CDP 可以接管已登录的 Chrome
+- 需要登录才能访问且用户未登录 → 告诉用户先登录对应平台，huashu-chrome / web-access 可以用已登录的 Chrome
 - 下载付费内容/会员内容 → 不处理侵权场景
 
 ## 前置检查（定期更新，命令报错时必做）
@@ -131,27 +131,27 @@ opencli doctor
 平台封装已试过（opencli / agent-reach / yt-dlp 全部失败）
   ↓ 问题：普通网页抓取即可
 轻量抓取 → Scrapling MCP get（普通 HTTP 请求，无 JS 渲染）
-  ↓ 问题：页面需要 JS 渲染
-JS 渲染抓取 → Scrapling MCP fetch（Playwright 浏览器渲染）
-  ↓ 问题：被反爬拦截
+  ↓ 问题：页面需要 JS 渲染 / 登录态 / 多步交互（点击/翻页/表单/上传）
+huashu-chrome MCP（用户日常 Chrome 真登录态 + 22 工具：snapshot/click/fill/act 批处理；每步带效果证据，28 站出厂经验库）
+  ↓ 问题：被反爬拦截且 huashu-chrome 也过不去
 反检测抓取 → Scrapling stealthy_fetch（绕过检测 + 提取内容）
   ↓ 问题：页面结构未知，写不出选择器
 AI 浏览器 → browser-use（AI 理解页面结构、自主操作）
-  ↓ 问题：需要登录态，或要多步交互（点击/翻页/表单/上传）/视频帧采样
-CDP 接管 → web-access（接管用户日常 Chrome，天然登录态；已知需登录时跳过 browser-use 直接来这层）
+  ↓ 问题：需要登录态但 huashu-chrome 扩展离线，或视频帧采样
+CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
   ↓ 问题：需要代码级精确控制，或要独立无登录态浏览器做隔离
-手动驱动 → ECC Playwright MCP（代码级精确控制每一步）
+手动驱动 → Playwright（代码级精确控制每一步）
 ```
 
 **每层解决的问题不同，不要跳层**：
 - 普通网页 → Scrapling get（最轻，HTTP 直接请求）
-- JS 渲染 → Scrapling fetch（需要浏览器但不需隐身）
+- JS 渲染 / 登录态 / 多步交互 → **huashu-chrome（2026-10-21 起首选**，真登录态+效果证据+站点经验；工具：snapshot 拍元素清单、click/type/fill 操作、act 一次跑多步、fetch 带 cookie 调接口、network 看接口。前置：`npx huashu-chrome doctor` 显示扩展在线）
 - 反爬拦截 → Scrapling stealthy（隐身模式绕过检测）
 - 页面看不懂 → browser-use（AI 理解能力）
-- 需要登录态 / 多步交互 / 视频采样 → web-access（用户日常 Chrome 的真实登录态 + 确定性 CDP API）
+- huashu-chrome 离线时的登录态兜底 / 视频采样 → web-access（CDP 接管）
 - 精确操作 → Playwright（人工级控制）
 
-**成本递增，能浅不深**：Scrapling get（HTTP 秒级）< Scrapling fetch（浏览器秒级）< Scrapling stealthy（反检测）< browser-use（需调 LLM API）< web-access（需 CDP 连接）< Playwright（需写代码）
+**成本递增，能浅不深**：Scrapling get（HTTP 秒级）< huashu-chrome（自家 Chrome，秒级）< Scrapling stealthy（反检测）< browser-use（需调 LLM API）< web-access（需 CDP 连接）< Playwright（需写代码）
 
 ## 评论采集
 
