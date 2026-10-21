@@ -37,6 +37,8 @@ Jeffrey 观察（2026-10-02 钉死）：开发中经常不主动查教程、凭�
 
 ## 工具链与降级
 
+0. **外部环境适配**（本机没有 anysearch / 上述 hook 语境不适用时）：三路检索的**方法论不变**，只换引擎——官方文档路：`WebFetch` 读官方 URL（或 `curl -sL "https://r.jina.ai/<官方URL>"`）；GitHub issue 路：`gh search issues`（外部装 [gh](https://cli.github.com/) 即可，与引擎无关）；社区心得路：原生 WebSearch，被限/无原生搜索时用 `curl -sL "https://html.duckduckgo.com/html/?q=<query>"` 或 SearXNG 公共实例。**输出合同（来源标注/版本日期）在任何环境下都强制**。零依赖兜底命令详见 laohan-xiazai 的「外部环境自举」节。
+
 1. **anysearch**（默认引擎）：
 
    ```bash
