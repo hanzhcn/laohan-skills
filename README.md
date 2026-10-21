@@ -49,7 +49,7 @@ npx skills add hanzhcn/laohan-skills -a codex --skill laohan-chushicodex -y
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 选题决策（热点+达人库+抖音验证）
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（5 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
-npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun         # 📊 内容校准打分+预测
+npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun         # 📊 内容校准（接上游引擎）
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 秋芝封面（1 模板 × 3 尺寸）
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ 柱子哥封面体系(三层合成,默认套)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词

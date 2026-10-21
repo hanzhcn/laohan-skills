@@ -48,7 +48,7 @@ No need to install all. Pick what you need and copy the command (requires [Claud
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 Topic decision (trends + creator scan + Douyin validation)
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (5 inputs → script)
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
-npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun         # 📊 Content calibration scoring
+npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun         # 📊 Content calibration (upstream engine)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 Qiuzhi covers (1 template × 3 sizes)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ TzFilm-style cover system (3-layer, default)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Storyboard prompts

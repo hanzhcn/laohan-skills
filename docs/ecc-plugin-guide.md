@@ -92,8 +92,8 @@ ECC 缓存路径包含版本号：`~/.claude/plugins/cache/ecc/ecc/2.2.3/`。版
 ### 运行时控制
 
 ```bash
-# 控制 hook 严格度
-export ECC_HOOK_PROFILE=minimal|standard|strict
+# 控制 hook 严格度（三选一：minimal / standard / strict，默认 standard）
+export ECC_HOOK_PROFILE=standard
 
 # 临时禁用特定 hook
 export ECC_DISABLED_HOOKS=hook-id1,hook-id2
@@ -195,7 +195,7 @@ claude  # 重新启动
 
 **原因**: 每个启用的 MCP 服务器都在 system prompt 中占 token。
 
-**解决**: 控制 5-8 个 MCP 服务器以内。ECC 提供 27 个 MCP 配置（`mcp-configs/mcp-servers.json`），只选择需要的启用。
+**解决**: 控制 5-8 个 MCP 服务器以内。ECC 提供 34 个 MCP 配置（`mcp-configs/mcp-servers.json`），只选择需要的启用。
 
 ---
 
