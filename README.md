@@ -44,13 +44,12 @@ npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenCla
 
 不必全装。挑你要的，复制对应命令（前提：已装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 OpenClaw）：
 
-**内容创作（10 个）**
+**内容创作（11 个）**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 AI 热点三路并行抓取
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（6 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 内容校准打分+预测
-npx skills add hanzhcn/laohan-skills --skill laohan-chushihua  # 🚀 项目初始化(新建+接入)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 封面提示词
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ 柱子哥封面体系(三层合成,默认套)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 分镜提示词
@@ -86,7 +85,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-duopingtai              # �
 
 ---
 
-## 内容创作（10 个）
+## 内容创作（11 个）
 
 > 从选题到成片，8 步全流程覆盖。每一步都有对应技能，说一句就能触发。
 

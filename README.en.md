@@ -40,13 +40,12 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuang
 
 No need to install all. Pick what you need and copy the command (requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code)):
 
-**Content Creation (10)**
+**Content Creation (11)**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 3-source AI trend aggregation
 npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ Unified creation engine (6 inputs → script)
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ Douyin compliance scan
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun            # 📊 Content calibration scoring
-npx skills add hanzhcn/laohan-skills --skill laohan-chushihua  # 🚀 Project init (create + adopt)
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 Cover image prompts
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianzhuzige  # 🖼️ TzFilm-style cover system (3-layer, default)
 npx skills add hanzhcn/laohan-skills --skill laohan-fenjingtishici   # 🎬 Storyboard prompts
@@ -62,12 +61,11 @@ npx skills add hanzhcn/laohan-skills --skill laohan-xiazai           # 📥 30+ 
 npx skills add hanzhcn/laohan-skills --skill laohan-douyinsousuo     # 🔍 Douyin keyword search
 ```
 
-**Developer Tools (4 · self-use/advanced, content creators can skip)**
+**Developer Tools (8 · self-use/advanced, content creators can skip)**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-shencha          # 🔎 Technical doc audit
 npx skills add hanzhcn/laohan-skills --skill laohan-gengxin          # 🔄 Tool version checker
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaocheng        # 📖 Config tutorial router
-npx skills add hanzhcn/laohan-skills --skill laohan-skillcreator     # 🛠️ Create/modify skills
 npx skills add hanzhcn/laohan-skills --skill laohan-bianpai    # 🧭 Workflow state router (tells the single next step)
 npx skills add hanzhcn/laohan-skills --skill laohan-daoyan     # 🎬 Director pre-production (two-pass review)
 npx skills add hanzhcn/laohan-skills --skill laohan-sucai      # 🎞️ B-roll stock footage supplier (visual-reviewed)
@@ -79,7 +77,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-chushicodex # ⚙️ Codex e
 
 ---
 
-## Content Creation (10)
+## Content Creation (11)
 
 > From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
 
@@ -227,7 +225,7 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 
 ---
 
-## Developer Tools (4 · self-use/advanced)
+## Developer Tools (3 · self-use/advanced)
 
 > ⚠️ Below are for developers (maintenance/config/audit). **Content creators can skip this section.**
 
@@ -236,7 +234,6 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 | 🔎 **shencha** | Technical doc deep audit — verify URLs, versions, params accuracy | "深度审查" |
 | 🔄 **gengxin** | Tool version checker — npm/brew/pip/GitHub/plugins | "检查更新" |
 | 📖 **jiaocheng** | Tutorial router — claude-mem / GLM / ECC / Gemini (5 tutorials) | "教程" |
-| 🛠️ **skillcreator** | Meta-skill — create / modify / optimize Claude Code Skills | "创建 skill" |
 
 ---
 
@@ -263,7 +260,7 @@ Mac + Windows installer packages. Install and use directly. Based on MITM proxy 
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | notebooklm (slide generation) |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | xiazai / chuangzuo (local transcription) |
 
-Skills with no extra dependencies: redian · weigui · cheat · shencha · gengxin · jiaocheng · skillcreator · fengmian · fenjing. douyinsousuo reuses the installed opencli and no longer ships a Python/browser runtime.
+Skills with no extra dependencies: redian · weigui · cheat · shencha · gengxin · jiaocheng · fengmian · fenjing. douyinsousuo reuses the installed opencli and no longer ships a Python/browser runtime.
 
 ---
 
