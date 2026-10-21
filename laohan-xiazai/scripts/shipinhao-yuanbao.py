@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""视频号下载 — 元宝凭证方案（skill 自包含，无需 laohanAI.app）。
+"""视频号下载 — 元宝凭证方案（skill 自包含脚本）。
 
-链路（移植自 laohanagent shipinhao.rs，2026-10-21 版）：
-  1. login   : playwright 打开 yuanbao.tencent.com，用户登录后采集
-               cookie（hy_user+hy_token）+ 元宝 API 请求头（x-device-id 等），
-               存 ~/.local/share/laohan-xiazai/yuanbao-cred.json (0600)
+链路：
+  1. login   : playwright 打开 yuanbao.tencent.com（需用户微信扫码登录，
+               人工动作 AI 无法代替），采集 cookie（hy_user+hy_token）+
+               元宝 API 请求头，存 ~/.local/share/laohan-xiazai/yuanbao-cred.json (0600)
   2. download: POST 元宝 get_parse_result → data.playable_url 提取 token/eid
                → POST channels get_feed_info → h264/h265 videoUrl → 下载
 
@@ -69,7 +69,11 @@ def cmd_login() -> int:
         return 2
     os.makedirs(os.path.dirname(CRED_PATH), exist_ok=True)
     cred = {"headers": {}, "cookie": "", "saved_at": time.strftime("%Y-%m-%d %H:%M:%S")}
-    print(f"打开元宝登录页（最长等 {LOGIN_TIMEOUT_S // 60} 分钟）→ 微信扫码登录…")
+    print("=" * 56)
+    print("⚠️  需要你操作：即将打开浏览器窗口 → 用微信扫码登录腾讯元宝")
+    print("    · 人工扫码动作，AI 无法代替；最长等 5 分钟")
+    print("    · 凭证只存本机（0600），不上传；登录一次后续免登")
+    print("=" * 56)
     with sync_playwright() as p:
         try:
             # 优先用本机真 Chrome（免下载 chromium）；无 Chrome 再用 playwright 自带
