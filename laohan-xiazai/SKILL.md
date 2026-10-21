@@ -260,6 +260,8 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 
 **搜索优先级**：通用搜索/事实查询/垂直领域 → **anysearch**（最轻最快）→ opencli（平台结构化数据）→ agent-reach（opencli 未覆盖的平台兜底）。
 
+**技术查证类搜索（API 用法/报错归因/版本兼容/"先查再说"）**：走同仓 `laohan-sousuo` 的三路检索（官方文档/GitHub issue/社区心得 + 来源标注输出）。未装 sousuo 时的最小三路法：① 官方文档 `WebFetch`（或 `curl -sL "https://r.jina.ai/<官方URL>"`）② `gh search issues "关键词" --repo owner/repo` ③ 社区 `curl -sL "https://html.duckduckgo.com/html/?q=<query>"`——**结论必须带 `(verified: URL)`，查不到如实说推断**。
+
 ### Scrapling 调用路径
 
 | 环境 | 方式 | 说明 |
