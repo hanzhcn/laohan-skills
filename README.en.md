@@ -83,7 +83,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying    # 📊 Douyin dat
 
 ## Content Creation (12)
 
-> From topic selection to final recording, 8-step full pipeline. Each step has a matching skill — just say the word.
+> From topic selection to final cut, full pipeline coverage. Each step has a matching skill — just say the word.
 
 ```
 laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → laohan-fengmianqiuzhi / laohan-fenjingtishici → laohan-notebooklm → laohan-luping / laohan-donghua
@@ -161,7 +161,7 @@ You: 校准打分 / 帮我打分 / 预测一下播放量
 
 > *"Script written, real-person video shot — how do I composite a polished final cut?"*
 
-B-roll animation compositing for legacy episodes or explicit Remotion/HyperFrames comparisons, rendered from AST and renderer handoffs. 24-technique library (count-up / text reveal / strike-through list / gradient sweep / vignette breathing / scan-line / word-level karaoke, etc.). New episodes default to direct Codex production and do not use this skill.
+B-roll animation compositing for legacy episodes or when Remotion/HyperFrames is explicitly requested, rendered from AST and renderer handoffs. 24-technique library (count-up / text reveal / strike-through list / gradient sweep / vignette breathing / scan-line / word-level karaoke, etc.). New episodes default to direct Codex production and do not use this skill.
 
 ```
 你: 做 B-roll / 给视频加特效 / 生成动画片段
@@ -205,7 +205,7 @@ Tier 6  Precision       → Playwright (code-level control)
 
 Covers: Video download / search aggregation / web extraction / comment scraping / speech transcription / creator data
 
-Integrated tools: opencli · agent-reach · AnySearch · yt-dlp · Scrapling · huashu-chrome · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download
+Integrated tools (common selection, 20+ total): opencli · agent-reach · AnySearch · yt-dlp · Scrapling · huashu-chrome · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download, etc.
 
 ```
 You: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文字
@@ -238,7 +238,7 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 
 | Skill | One-liner | Say | Notes |
 |-------|-----------|-----|-------|
-| 🌐 **laohan-sousuo** | Verify technical claims before asserting — API usage / version behavior / config semantics / error attribution, with cited sources | "上网搜" "查证" "先查再说" | Prevents invented API behavior; conclusions carry `(verified: URL)`, and it says plainly when nothing was found |
+| 🌐 **laohan-sousuo** | Verify technical claims before asserting — 3-way retrieval (official docs / GitHub issues / community posts), with cited sources | "上网搜" "查证" "先查再说" | Prevents invented API behavior; conclusions carry `(verified: URL)`, and it says plainly when nothing was found |
 | 🔎 **laohan-shencha** | Technical doc deep audit — verify URLs, versions, params accuracy | "深度审查" | Read-only by default; verifies facts only and will not rewrite your templates or wording |
 | 🔄 **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | "检查更新" | — |
 | 📖 **laohan-jiaocheng** | Tutorial router — claude-mem / GLM / ECC / Gemini (5 tutorials) | "教程" | — |
@@ -246,6 +246,26 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 | 🧭 **laohan-bianpai** | Video workflow state router — inspect artifacts and gate the next step | "恢复 episode" "判断下一步" | Routes only — never calls other skills or publishes |
 | 📦 **laohan-sucai** | Search, download, and visually review B-roll against a source manifest | "配素材" "找 B-roll" | Optimizes for look and pacing, not for sourcing evidence per sentence |
 | 📈 **laohan-yunying** | Post-publish registration, metrics, comments, and retro handoff | "运营" "数据" "复盘" | — |
+
+### 🏛️ Governance Skills (11 · private repo, not in this pack)
+
+> These live in a private governance repo (`~/.agents`) and are **not installable from this public pack**. Listed only so you can see the full system:
+
+| Skill | What it does | Say | When |
+|-------|--------------|-----|------|
+| 📚 **devrules** | Load the dev rulebook before work, then recite it back | "学习规则" "接上规则" | New window/model taking over important work |
+| 🏗️ **chushihua** | One-shot project init (doc skeleton + git gates + review ledger) | "初始化" "开新项目" | Every new project |
+| 🔌 **harness** | Wire a new AI client into the rule system (5 steps + 6 case studies) | "新 harness" | Every new AI tool (one-time) |
+| ✅ **review** | Two-level review: self-review → cross-model adversarial → item-by-item adjudication | "审查" "对抗审查" | Every code change |
+| 🔍 **paicha** | Failure investigation: attribute the red → read-only diagnosis → fix with evidence | "排查" "为什么失败" | When something breaks (describe symptoms) |
+| ⚖️ **caijue** | Validate another AI's suggestions before applying them | "裁决" "按这个修" | Taking over another window's review findings |
+| 🤝 **jiaojie** | Window handoff: write/read a state pack and verify it | "交接" "接手" | Switching between parallel windows |
+| 🚀 **fabu** | Cross-project release manual: ordered surfaces / four syncs / gate checks | "发布" | When shipping |
+| 🧹 **shouwei** | Pre-close audit: worktrees / unpushed commits / deploy consistency | "收尾" | Before closing a window |
+| 📋 **doccheck** | Six mechanical doc checks (pointers / counts / length / orphans / broken links) | "文档体检" | Periodically as docs grow |
+| 🎫 **edu-guard** | GLM quota guard: check quota and apply reset cards on schedule | "开守卫" | Quota management |
+
+**In one line**: learn (devrules) → initialize (chushihua) → wire (harness) → review (review) → diagnose (paicha) → adjudicate (caijue) → hand off (jiaojie) → release (fabu) → wrap up (shouwei) → docs (doccheck).
 
 ---
 
@@ -259,7 +279,7 @@ Mac + Windows installer packages. Install and use directly. Based on MITM proxy 
 
 ## Prerequisites
 
-> Only [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Codex](https://developers.openai.com/codex/), or [OpenClaw](https://github.com/openclaw/openclaw) is required. Below are optional enhancements.
+> [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Codex](https://developers.openai.com/codex/), or [OpenClaw](https://github.com/openclaw/openclaw) is all you need to install the pack. Some skills need the optional tools below, and laohan-jiaozhun also needs the upstream cheat-on-content engine (not in this repo).
 
 | Tool | Install | Enhances which skills |
 |------|---------|----------------------|
@@ -272,7 +292,9 @@ Mac + Windows installer packages. Install and use directly. Based on MITM proxy 
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | laohan-notebooklm (slide generation) |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | laohan-xiazai / laohan-chuangzuo (local transcription) |
 
-Skills that commonly need no extra dependencies: laohan-xuanti · laohan-weigui · laohan-shencha · laohan-gengxin · laohan-jiaocheng · laohan-chushicodex · laohan-fengmianqiuzhi · laohan-fengmianzhuzige · laohan-fenjingtishici. laohan-jiaozhun requires the upstream cheat-on-content engine (not in this repo). laohan-douyinsousuo reuses the installed opencli and no longer ships a Python/browser runtime.
+> This table lists common enhancements only; other tools in the fallback chain are documented in each skill and installed on demand.
+
+Skills that commonly need no extra dependencies: laohan-xuanti · laohan-weigui · laohan-shencha · laohan-gengxin · laohan-jiaocheng · laohan-chushicodex · laohan-fengmianqiuzhi · laohan-fenjingtishici. laohan-jiaozhun requires the upstream cheat-on-content engine (not in this repo). laohan-fengmianzhuzige requires the Remotion runtime, a local Python vision environment (rembg/onnxruntime), and ffmpeg. laohan-douyinsousuo reuses the installed opencli and no longer ships a Python/browser runtime.
 
 ---
 

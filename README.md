@@ -84,7 +84,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying          # 📈 发�
 
 ## 内容创作（12 个）
 
-> 从选题到成片，8 步全流程覆盖。每一步都有对应技能，说一句就能触发。
+> 从选题到成片，全流程覆盖。每一步都有对应技能，说一句就能触发。
 
 ```
 laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → laohan-fengmianqiuzhi / laohan-fenjingtishici → laohan-notebooklm → laohan-luping / laohan-donghua
@@ -206,7 +206,7 @@ laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → lao
 
 覆盖：视频下载 / 搜索聚合 / 网页提取 / 评论采集 / 语音转录 / 博主数据
 
-集成工具：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · huashu-chrome · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download
+集成工具（常用项，共 20+）：opencli · agent-reach · AnySearch · yt-dlp · Scrapling · huashu-chrome · browser-use · web-access · Jina Reader · ffmpeg · whisper.cpp · tesseract · wx_video_download 等
 
 ```
 你: 下载这个视频 / 搜一下 xxx / 读一下这个链接 / 帮我转文字
@@ -293,7 +293,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 
 ## 前置依赖
 
-> 只需 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可使用全部技能。以下为可选增强。
+> 只需 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 [OpenClaw](https://github.com/openclaw/openclaw) 即可安装全部技能；部分技能另需下表的可选工具，laohan-jiaozhun 还需上游 cheat-on-content 引擎（不在本仓）。
 
 | 工具 | 安装 | 增强哪些技能 |
 |------|------|-------------|
@@ -306,7 +306,9 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [nlm CLI](https://pypi.org/project/notebooklm-mcp-cli/) + [poppler](https://poppler.freedesktop.org/) | `pip install notebooklm-mcp-cli` + `brew install poppler` | laohan-notebooklm（幻灯片生成） |
 | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) | `brew install whisper-cpp` | laohan-xiazai / laohan-chuangzuo（本地语音转录） |
 
-常见无需额外依赖的技能：laohan-xuanti · laohan-weigui · laohan-shencha · laohan-gengxin · laohan-jiaocheng · laohan-chushicodex · laohan-fengmianqiuzhi · laohan-fengmianzhuzige · laohan-fenjingtishici；laohan-jiaozhun 需配合上游 cheat-on-content 引擎（不在本仓）；laohan-douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
+> 本表只列常用增强项；降级链中的其余工具见各 skill 文档，按需安装。
+
+常见无需额外依赖的技能：laohan-xuanti · laohan-weigui · laohan-shencha · laohan-gengxin · laohan-jiaocheng · laohan-chushicodex · laohan-fengmianqiuzhi · laohan-fenjingtishici；laohan-jiaozhun 需配合上游 cheat-on-content 引擎（不在本仓）；laohan-fengmianzhuzige 需 Remotion runtime、本地 Python 视觉环境（rembg/onnxruntime）与 ffmpeg；laohan-douyinsousuo 复用已安装的 opencli，不再自带 Python/浏览器依赖。
 
 ---
 

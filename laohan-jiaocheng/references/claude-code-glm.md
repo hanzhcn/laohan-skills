@@ -1,6 +1,6 @@
 # Claude Code + 智谱 GLM：国内大模型驱动 AI 编程助手
 
-> 日期: 2026-10-21 | 兼容 Claude Code 2.1.203+（当前最新 2.1.306）、智谱 GLM-5.2 / GLM-4.7
+> 日期: 2026-10-21 | 兼容 Claude Code 2.1.203+（当前最新 2.1.306）、智谱 GLM-5.2 / GLM-5.3 / GLM-4.7
 
 ---
 
@@ -26,7 +26,7 @@ https://open.bigmodel.cn/api/anthropic
 
 | 依赖 | 说明 |
 |------|------|
-| Claude Code | `~/.local/bin/claude`（官方安装），版本 ≥ 2.1.203（当前最新 2.1.306；`_SUPPORTED_CAPABILITIES` 需要 2.1.172+） |
+| Claude Code | `~/.local/bin/claude`（官方安装），建议版本 ≥ 2.1.203（当前最新 2.1.306） |
 | 智谱 API Key | 到 https://open.bigmodel.cn 注册，购买 GLM Coding Plan 套餐 |
 
 ### 2. 配置环境变量
@@ -142,7 +142,7 @@ GLM 模型 ID（如 `glm-5.2[1m]`）不匹配 Claude Code 内置的模型模式�
 ### 会话内快捷键
 
 | 快捷键 | 功能 |
---------|------|
+|------|------|
 | `Option+T` (macOS) / `Alt+T` (Linux/Windows) | 切换 thinking 开关 |
 | `Ctrl+O` | 切换查看完整思考输出 |
 
@@ -205,6 +205,8 @@ GLM 模型 ID（如 `glm-5.2[1m]`）不匹配 Claude Code 内置的模型模式�
 }
 ```
 
+> `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 是全局设置，不区分模型。切换到不带 `[1m]` 的模型（如 `glm-5.3`）时，把它调回默认值或该模型的实际窗口值（如 `200000`）；否则自动压缩阈值会超过真实上下文窗口，可能导致请求失败。Claude Code 会把该窗口上限压到模型上下文窗口，但无法识别第三方端点背后的真实限制。
+
 ---
 
 ## 已知限制
@@ -213,7 +215,7 @@ GLM 模型 ID（如 `glm-5.2[1m]`）不匹配 Claude Code 内置的模型模式�
 |------|------|
 | 功能检测降级 | GLM 模型 ID 不匹配 Claude Code 内置模式，需手动声明 `_SUPPORTED_CAPABILITIES` |
 | Prompt Caching | GLM 端可能不完全支持 Anthropic 的 caching 协议 |
-| 上下文窗口 | GLM 的上下文窗口与 Claude 原生模型不同，Claude Code 的上下文管理基于 200K 假设 |
+| 上下文窗口 | GLM 的上下文窗口与 Claude 原生模型不同；用 `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 按实际窗口设置自动压缩阈值 |
 | 模型路由透明度 | 智谱服务端做模型映射，界面显示的模型名与实际运行模型可能不同 |
 
 ---
@@ -281,6 +283,6 @@ claude update     # 更新
 ## 参考资源
 
 - 智谱官方 Claude Code 配置文档: https://docs.bigmodel.cn/cn/guide/develop/claude
-- Claude Code 官方模型配置文档: https://docs.claude.com/claude-code/model-config
+- Claude Code 官方模型配置文档: https://code.claude.com/docs/en/model-config
 - Claude Code 官方安装方式: `~/.local/bin/claude`（不要用 npm 安装）
 - GitHub Issue — 第三方 Provider 支持: https://github.com/anthropics/claude-code/issues/52572

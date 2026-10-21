@@ -15,6 +15,8 @@ ECC (everything-claude-code) 是 Claude Code 最全面的功能增强插件，�
 | Commands | 94 | plugin.json 声明目录（`commands/`，legacy command shims） |
 | Hooks | 24 | `hooks/hooks.json`（常驻自动加载） |
 
+> 计数以 v2.2.3 为准；上游主分支可能领先于发布版本，升级后以实际缓存目录为准。
+
 **仓库**: https://github.com/affaan-m/everything-claude-code
 
 ---
@@ -22,17 +24,22 @@ ECC (everything-claude-code) 是 Claude Code 最全面的功能增强插件，�
 ## 安装
 
 ```bash
-# 1. 刷新市场索引
+# 1. 注册 ECC 市场（只需一次；已注册过可跳过）
+claude plugins marketplace add affaan-m/everything-claude-code
+
+# 2. 刷新市场索引
 claude plugins marketplace update
 
-# 2. 安装
-claude plugins install ecc@everything-claude-code
+# 3. 安装
+claude plugins install ecc@ecc
 
-# 3. 启用
-claude plugins enable ecc@everything-claude-code
+# 4. 启用
+claude plugins enable ecc@ecc
 
-# 4. 重启 Claude Code 会话
+# 5. 重启 Claude Code 会话
 ```
+
+> 用 `claude plugins marketplace list` 可确认市场是否已注册（ECC 的市场名显示为 `ecc`）。跳过第 1 步就安装会报 unknown marketplace。
 
 安装后自动获得 agents、skills、commands、hooks。**但 rules 需要手动复制**（见下文）。
 
@@ -42,25 +49,27 @@ claude plugins enable ecc@everything-claude-code
 
 ### 为什么需要手动复制
 
-Claude Code 插件系统**不支持通过插件分发 rules**。这是上游限制。Rules 必须通过 flat copy 到 `~/.claude/rules/`。
+Claude Code 插件系统**不支持通过插件分发 rules**。这是上游限制。Rules 必须手动复制到 `~/.claude/rules/`。
 
 ### 复制步骤
 
 ```bash
 # 定位 ECC 缓存目录（版本号会变）
-ECC_ROOT=$(ls -td ~/.claude/plugins/cache/everything-claude-code/ecc/*/ | head -1)
+ECC_ROOT=$(ls -td ~/.claude/plugins/cache/ecc/ecc/*/ | head -1)
 echo "ECC 根目录: $ECC_ROOT"
 
-# 先删旧 rules（保留你自定义的文件，如 claude-internals.md、jeffrey.md 等）
-rm -f ~/.claude/rules/{coding-style,hooks,patterns,security,testing}.md
+# 放进独立子目录，更新时整体替换（~/.claude/rules 支持递归加载子目录）
+mkdir -p ~/.claude/rules/ecc
+rm -f ~/.claude/rules/ecc/*.md
 
-# 当前个人环境不再 flat copy ECC common/python rules；只保留用户自建 rules。
-# 如确需语言规则，按需从 "$ECC_ROOT/rules/<language>/" 手动复制对应文件。
+# 复制通用规则，按需追加语言规则
+cp "$ECC_ROOT"/rules/common/*.md ~/.claude/rules/ecc/
+# 例如 Python：cp "$ECC_ROOT"/rules/python/*.md ~/.claude/rules/ecc/
 ```
 
 ### 为什么不用 symlink
 
-ECC 缓存路径包含版本号：`~/.claude/plugins/cache/everything-claude-code/ecc/2.2.3/`。版本更新后路径变了，symlink 会断掉。
+ECC 缓存路径包含版本号：`~/.claude/plugins/cache/ecc/ecc/2.2.3/`。版本更新后路径变了，symlink 会断掉。
 
 ---
 
@@ -99,29 +108,31 @@ export ECC_DISABLED_HOOKS=hook-id1,hook-id2
 ### 步骤 1: 刷新市场索引
 
 ```bash
+# 市场未注册时先执行：claude plugins marketplace add affaan-m/everything-claude-code
 claude plugins marketplace update
 ```
 
 ### 步骤 2: 更新插件
 
 ```bash
-claude plugins update ecc@everything-claude-code
+claude plugins update ecc@ecc
 ```
 
-> **注意 marketplace 注册名**：ECC 的 marketplace key 是 `everything-claude-code`，但插件内部名称是 `ecc`。更新格式是 `plugin_name@marketplace_key`，即 `ecc@everything-claude-code`。旧格式 `everything-claude-code@everything-claude-code` 会报 "Plugin not found"。检查方法：`cat ~/.claude/plugins/known_marketplaces.json` 查看 key 和 installLocation。
+> **注意 plugin@marketplace 标识**：插件标识格式是 `plugin_name@marketplace_key`。用仓库地址添加市场时，marketplace key 取 marketplace.json 里的 `name`（ECC 为 `ecc`），插件名也是 `ecc`，所以完整标识是 `ecc@ecc`。如果你的 `~/.claude/plugins/known_marketplaces.json` 里 key 是别的值（旧版 CLI 或从其他来源注册过），命令中的后半段要换成该 key。
 >
 > 没有 `update --all` 命令，只能逐个更新。
 
-### 步骤 3: 重新 flat copy rules
+### 步骤 3: 重新复制 rules
 
 ```bash
-ECC_ROOT=$(ls -td ~/.claude/plugins/cache/everything-claude-code/ecc/*/ | head -1)
+ECC_ROOT=$(ls -td ~/.claude/plugins/cache/ecc/ecc/*/ | head -1)
 
-# 删旧的 ECC rules（保留自定义文件）
-rm -f ~/.claude/rules/{coding-style,hooks,patterns,security,testing}.md
-
-# 当前个人环境不再 flat copy ECC common/python rules；只保留用户自建 rules。
-# 如确需语言规则，按需从 "$ECC_ROOT/rules/<language>/" 手动复制对应文件。
+# 整体替换，避免旧版本规则残留
+mkdir -p ~/.claude/rules/ecc
+rm -f ~/.claude/rules/ecc/*.md
+cp "$ECC_ROOT"/rules/common/*.md ~/.claude/rules/ecc/
+# 如使用语言规则，同样重新复制：
+# cp "$ECC_ROOT"/rules/python/*.md ~/.claude/rules/ecc/
 ```
 
 ### 步骤 4: 检查 settings.json 有无 ECC hooks 残留
@@ -192,9 +203,9 @@ claude  # 重新启动
 
 | 文件 | 路径 |
 |------|------|
-| 插件 plugin.json | `~/.claude/plugins/cache/everything-claude-code/ecc/<VERSION>/.claude-plugin/plugin.json` |
-| 插件 hooks | `~/.claude/plugins/cache/everything-claude-code/ecc/<VERSION>/hooks/hooks.json` |
-| 插件缓存 | `~/.claude/plugins/cache/everything-claude-code/ecc/<VERSION>/` |
+| 插件 plugin.json | `~/.claude/plugins/cache/ecc/ecc/<VERSION>/.claude-plugin/plugin.json` |
+| 插件 hooks | `~/.claude/plugins/cache/ecc/ecc/<VERSION>/hooks/hooks.json` |
+| 插件缓存 | `~/.claude/plugins/cache/ecc/ecc/<VERSION>/` |
 | 已安装插件信息 | `~/.claude/plugins/installed_plugins.json` |
 | 用户配置 | `~/.claude/settings.json` |
 | 用户 rules | `~/.claude/rules/` |
@@ -257,5 +268,5 @@ claude plugins validate <path>
 ## 参考资源
 
 - ECC 仓库: https://github.com/affaan-m/everything-claude-code
-- Claude Code 插件系统官方文档: https://docs.claude.com/claude-code/plugins
-- ECC MCP 配置以实际插件版本为准：`~/.claude/plugins/cache/everything-claude-code/ecc/<VERSION>/mcp-configs/`
+- Claude Code 插件系统官方文档: https://code.claude.com/docs/en/plugins
+- ECC MCP 配置以实际插件版本为准：`~/.claude/plugins/cache/ecc/ecc/<VERSION>/mcp-configs/`
