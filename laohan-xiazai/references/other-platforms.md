@@ -104,42 +104,41 @@ opencli wechat-channels publish <video>      # [write] 发布视频到视频号
 opencli wechat-channels whoami               # 登录态确认
 ```
 
-**下载别人视频**——本机两条已验证路径，按 A→B 降级：
+**下载别人视频**——两条已验证路径，按 B→A 降级（B 免证书免代理优先）：
 
-> **⚠️ 用前时效检查（Jeffrey 2026-10-21 要求）**：视频号没有稳定公开接口，两套方法都依赖逆向微信/元宝的行为，**随时可能失效**。每次使用前先确认所用方案仍工作（A 看播放页是否出现下载按钮；B 看 app 能否正常出下载结果），失效时按各自排障段处理并检查上游更新。网络上其他方法未经验证，不纳入降级链。
+> **⚠️ 用前时效检查（Jeffrey 2026-10-21 要求）**：视频号没有稳定公开接口，两套方法都依赖逆向微信/元宝的行为，**随时可能失效**。每次使用前先确认所用方案仍工作（B 跑一次 status + 小样下载；A 看播放页是否出现下载按钮），失效时按各自排障段处理并检查上游更新。网络上其他方法未经验证，不纳入降级链。
 
-### 外部用户自配置（装了本 skill 的任何机器）
+### 外部用户自配置（装了本 skill 的任何机器，AI 按此自动路由）
 
-**环境判定（AI 按此自动路由）**：
-- 机器上有 `laohanAI.app`（老韩AI 桌面产品，未公开发布）→ 可走方案 B
-- 没有 → 只走方案 A，一条命令全自动配置
+**统一路径：优先方案 B（元宝脚本，无需装证书/代理），B 不可用或失效再降方案 A（MITM）**。
 
-**Mac（方案 A 全自动，外部用户主路径）**：在**本 skill 目录**下执行
+---
+
+### 方案 B：元宝凭证脚本（官方接口，优先；外部用户主路径）
+
+skill 自包含脚本 `scripts/shipinhao-yuanbao.py`，走元宝→视频号官方两步 API，**不装根证书、不改系统代理**（移植自 laohanagent shipinhao.rs，2026-10-21 实测验收通过）。
+
+**首次配置（AI 自动执行）**：
 ```bash
-bash scripts/wx-video-download.sh
+# 依赖：python3 + playwright（下载本体只需标准库）
+pip3 install playwright                       # 已装则跳过
+# 登录采集凭证（弹出浏览器→用户微信扫码登录元宝，一次性）
+python3 scripts/shipinhao-yuanbao.py login
+python3 scripts/shipinhao-yuanbao.py status   # 确认凭证有效
 ```
-脚本自包含，自动完成：查上游最新版（GitHub API 失败用兜底版本）→ 下载二进制到 `~/.local/bin/`（直连失败自动换 ghfast.top 镜像）→ 安装 SunnyNet 证书（需输一次 sudo 密码）→ 启动代理。**前提**：微信 PC 客户端已登录。成功标志：微信→视频号→点视频，播放页出现下载按钮，文件落 `~/Downloads`。支持 arm64/x86_64。
+- 有真 Chrome 时脚本自动复用（免下 chromium）；无 Chrome 需 `playwright install chromium`
+- 凭证存 `~/.local/share/laohan-xiazai/yuanbao-cred.json`（0600），后续免登
 
-**Windows（手动三步，无脚本）**：
-1. [上游 release](https://github.com/ltaoo/wx_channels_download/releases) 下载 zip（国内可加 `https://ghfast.top/` 前缀）解压
-2. 管理员运行 exe
-3. `certutil -addstore Root SunnyRoot.cer` 装证书
+**下载**：
+```bash
+python3 scripts/shipinhao-yuanbao.py "分享文本或链接"   # 文件落 ~/Downloads
+```
 
-**后续维护**：重启后需重跑一次（代理是进程不是服务）；微信升级后播放页无下载按钮 = 版本过期，`rm ~/.local/bin/wx_video_download` 后重跑脚本自动拉新版。
+**排障**：401/403 = 凭证过期，重跑 `login`；"未返回 playable_url" = 视频被删/限流或接口变更；解析第二步合法返回 201 非 200，别误判接口挂。环境变量 `SHIPINHAO_CRED` 可自定义凭证路径。
 
-### 方案 B：laohanAI.app 元宝登录（官方接口，需老韩AI 产品，本机优先试）
+### 方案 A：wx_video_download（MITM 代理，B 失效时的降级）
 
-自研产品 `laohanAI.app`（`/Applications/laohanAI.app`）内置的视频号下载模块（源码 `~/Documents/laohanagent/apps/desktop`，设计文档 `docs/SHIPINHAO_DOWNLOAD_SLICE.md`）。
-
-**用法**：打开 laohanAI.app → 视频号下载页 → 贴视频号分享链接 → 首次需用**腾讯元宝账号**登录（webview 采集 cookie，凭证存 macOS Keychain，后续免登）→ 下载。
-
-**原理**：元宝 cookie（hy_user + hy_token）→ 两步官方 API（元宝 get_parse_result → 视频号 get_feed_info）。走官方接口，不装证书、不改系统代理。
-
-**失效症状与去向**：元宝接口变更时 app 内报"页面内容暂时无法识别/链接不可用"等；处理 = 更新 laohanagent 产品（拉最新代码重新构建 laohanAI.app），接口细节见设计文档。已知 gotcha：解析第二步合法返回是 201 不是 200，报错别急着判定接口挂了。
-
-### 方案 A：wx_video_download（MITM 代理）
-
-基于 MITM 代理拦截微信视频号视频流，使用 `wx_video_download` 二进制（来自 [hanzhcn/wx_channels_download](https://github.com/hanzhcn/wx_channels_download)）。
+基于 MITM 代理拦截微信视频号视频流，使用 `wx_video_download` 二进制（来自 [hanzhcn/wx_channels_download](https://github.com/hanzhcn/wx_channels_download)）。需要装根证书 + 跑代理进程，侵入性高于方案 B，但不存在登录凭证依赖。
 
 ### 工作原理
 1. 启动本地 HTTPS 代理（系统代理端口 2023，API 端口 2022）

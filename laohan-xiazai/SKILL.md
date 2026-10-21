@@ -112,7 +112,7 @@ opencli doctor
 | 小红书 | `opencli xiaohongshu download`（需 Browser Bridge） | agent-reach | Jina Reader | — |
 | 知乎 | `opencli zhihu` | Jina Reader | — | — |
 | 公众号 | `opencli weixin download`（导出 Markdown） | `fetch.py` | agent-reach | Jina Reader |
-| 视频号 | B `laohanAI.app` 元宝登录（官方接口，用前查时效） | A wx_video_download（MITM 代理） | — | — |
+| 视频号 | B 元宝凭证脚本 `scripts/shipinhao-yuanbao.py`（官方接口，免证书免代理，用前查时效） | A wx_video_download（MITM 代理） | — | — |
 | 未知平台 | `yt-dlp` | Scrapling MCP（get） | Scrapling stealthy | Jina Reader |
 
 降级时注意：
