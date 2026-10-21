@@ -1,6 +1,6 @@
 # Claude Code + 智谱 GLM：国内大模型驱动 AI 编程助手
 
-> 日期: 2026-05-20 | 基于 Claude Code 2.1.42+ 和智谱 GLM-5.1
+> 日期: 2026-10-21 | 兼容 Claude Code 2.1.203+（当前最新 2.1.306）、智谱 GLM-5.2 / GLM-4.7
 
 ---
 
@@ -26,7 +26,7 @@ https://open.bigmodel.cn/api/anthropic
 
 | 依赖 | 说明 |
 |------|------|
-| Claude Code | `~/.local/bin/claude`（官方安装），版本 ≥ 2.1.42 |
+| Claude Code | `~/.local/bin/claude`（官方安装），版本 ≥ 2.1.203（当前最新 2.1.306；`_SUPPORTED_CAPABILITIES` 需要 2.1.172+） |
 | 智谱 API Key | 到 https://open.bigmodel.cn 注册，购买 GLM Coding Plan 套餐 |
 
 ### 2. 配置环境变量
@@ -38,10 +38,10 @@ https://open.bigmodel.cn/api/anthropic
   "env": {
     "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
     "ANTHROPIC_AUTH_TOKEN": "你的智谱API Key",
-    "ANTHROPIC_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5.1"
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.7",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000"
   }
 }
 ```
@@ -52,8 +52,10 @@ https://open.bigmodel.cn/api/anthropic
 |------|------|
 | `ANTHROPIC_BASE_URL` | API 端点地址，智谱的 Anthropic 兼容接口 |
 | `ANTHROPIC_AUTH_TOKEN` | 智谱 API Key（不是 `ANTHROPIC_API_KEY`，Claude Code 通过变量名区分认证方式） |
-| `ANTHROPIC_MODEL` | 默认使用的模型 |
 | `ANTHROPIC_DEFAULT_*_MODEL` | 将 opus/sonnet/haiku 别名映射到指定模型 |
+| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | 自动压缩窗口；使用 `[1m]` 后缀开启 1M 上下文时设为 `1000000` |
+
+> `glm-5.2[1m]` 的 `[1m]` 后缀用于开启 GLM 1M 上下文；若 Claude Code 提示模型不存在，先升级到最新版本。`glm-4.7` 作为 Haiku 档位承担轻量任务。
 
 > 如果 `settings.json` 中已有 `env` 字段，将上述变量合并进去，不要覆盖已有配置。
 
@@ -71,7 +73,7 @@ claude
 # 检查版本
 claude --version
 
-# 启动后正常使用，模型名显示为 glm-5.1
+# 启动后正常使用，模型名显示为 glm-5.2[1m] / glm-4.7
 claude
 ```
 
@@ -113,7 +115,7 @@ Claude Code 的 thinking（扩展思考）是核心推理能力。可通过以�
 
 ### Thinking 降级机制
 
-GLM 模型 ID（如 `glm-5.1`）不匹配 Claude Code 内置的模型模式匹配规则，Claude Code 可能无法自动识别模型支持的功能。
+GLM 模型 ID（如 `glm-5.2[1m]`）不匹配 Claude Code 内置的模型模式匹配规则，Claude Code 可能无法自动识别模型支持的功能。
 
 可通过环境变量显式声明功能支持：
 
@@ -196,9 +198,9 @@ GLM 模型 ID（如 `glm-5.1`）不匹配 Claude Code 内置的模型模式匹�
 ```json
 {
   "env": {
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air"
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.3",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.7"
   }
 }
 ```
@@ -239,7 +241,7 @@ mv ~/.claude/settings.json ~/.claude/settings.json.bak
 
 ### 版本兼容
 
-建议使用 Claude Code 2.1.42 以上版本：
+建议使用 Claude Code 2.1.203 以上版本（当前最新 2.1.306）：
 
 ```bash
 claude --version  # 检查
@@ -257,13 +259,13 @@ claude update     # 更新
   "env": {
     "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
     "ANTHROPIC_AUTH_TOKEN": "你的智谱API Key",
-    "ANTHROPIC_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.1",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5.1",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.7",
     "ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES": "effort,xhigh_effort,thinking,adaptive_thinking",
     "ANTHROPIC_DEFAULT_SONNET_MODEL_SUPPORTED_CAPABILITIES": "effort,thinking,adaptive_thinking",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL_SUPPORTED_CAPABILITIES": "effort,thinking",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "API_TIMEOUT_MS": "3000000",
     "BASH_DEFAULT_TIMEOUT_MS": "300000"
@@ -282,4 +284,3 @@ claude update     # 更新
 - Claude Code 官方模型配置文档: https://docs.claude.com/claude-code/model-config
 - Claude Code 官方安装方式: `~/.local/bin/claude`（不要用 npm 安装）
 - GitHub Issue — 第三方 Provider 支持: https://github.com/anthropics/claude-code/issues/52572
-- 一键启动工具 glm-claude: https://github.com/alchaincyf/glm-claude

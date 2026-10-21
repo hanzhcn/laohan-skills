@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v3.1 | 日期: 2026-06-10 | 作者: 老韩AI & Jeffrey
+> 版本: v3.2 | 日期: 2026-10-21 | 作者: 老韩AI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:
@@ -62,7 +62,7 @@ claude-mem worker (端口 37700+UID%100，见下方说明)
     ↓ (OpenAI 格式 HTTP 请求)
 LiteLLM Proxy (端口 4000)    ← 我们要改的就是这步的 URL
     ↓ (翻译成各家 API 协议)
-DeepSeek / GLM-5.1 / 任意模型
+DeepSeek / GLM-5.2 / 任意模型
 ```
 
 **端口说明**: Worker 端口 = `37700 + (你的系统 UID % 100)`。macOS 典型 UID 501 → 端口 **37701**；Linux 典型 UID 1000 → 端口 **37700**。不确定时运行 `echo $((37700 + $(id -u) % 100))` 查看。也可在 settings.json 中通过 `CLAUDE_MEM_WORKER_PORT` 固定端口。下文用 `{PORT}` 表示你的实际端口。
@@ -71,11 +71,11 @@ DeepSeek / GLM-5.1 / 任意模型
 
 **可行性依据**:
 - claude-mem 源码 `OpenRouterProvider.ts` 中 URL 是硬编码常量，编译后打包进 `worker-service.cjs`
-- LiteLLM 支持 `zai/glm-5.1`（智谱）和 `openai/deepseek-v4-flash`（DeepSeek，通过 `openai/` 前缀透传模型名），暴露 OpenAI 兼容端点
+- LiteLLM 支持 `zai/glm-5.2`（智谱）；DeepSeek 侧用 `openai/deepseek-flash` + 显式 `api_base` 透传模型名，暴露 OpenAI 兼容端点
 - 请求格式（model、messages、temperature、max_tokens）完全一致
 
 **已知限制**:
-- GLM-5 的 `enable_thinking` 推理模式无法通过 LiteLLM 激活（[Issue #25697](https://github.com/BerriAI/litellm/issues/25697)）
+- GLM 的 `enable_thinking` 曾无法通过 LiteLLM 激活（[Issue #25697](https://github.com/BerriAI/litellm/issues/25697)，已于 2026-04 修复）；如遇参数报错先升级 LiteLLM
 - 每次 claude-mem 更新后需要重新 patch，并同时检查 installed cache 与 marketplace plugin 两处 worker
 - claude-mem 硬编码了 `temperature: 0.3`、`max_tokens: 4096`，不可配置（已通过 `drop_params: True` 兼容）
 
@@ -86,8 +86,8 @@ DeepSeek / GLM-5.1 / 任意模型
 | 依赖 | 最低版本 | 用途 | 检查命令 |
 |------|---------|------|----------|
 | Claude Code | 最新 | 主力 IDE | `claude --version` |
-| Node.js | ≥20.0.0 | claude-mem 运行时（package.json 要求 ≥20） | `node --version` |
-| Bun | 任意 | claude-mem worker 进程（缺失时安装器自动装） | `bun --version` |
+| Node.js | ≥20.12.0 | claude-mem 运行时（package.json 要求 ≥20.12.0） | `node --version` |
+| Bun | ≥1.1.31 | claude-mem worker 进程（缺失时安装器自动装） | `bun --version` |
 | uv | 任意 | 向量搜索依赖（缺失时安装器自动装） | `uv --version` |
 | SQLite 3 | 任意 | 持久化存储（通常系统自带） | `sqlite3 --version` |
 | Python | ≥3.10 | LiteLLM | `python3 --version` |
@@ -105,8 +105,9 @@ PASS=true
 if command -v node &>/dev/null; then
   NODE_VER=$(node -v | sed 's/v//')
   NODE_MAJOR=$(echo "$NODE_VER" | cut -d. -f1)
-  if [ "$NODE_MAJOR" -lt 20 ]; then
-    echo "❌ Node.js: $NODE_VER (需要 ≥20.0.0)"
+  NODE_MINOR=$(echo "$NODE_VER" | cut -d. -f2)
+  if [ "$NODE_MAJOR" -lt 20 ] || { [ "$NODE_MAJOR" -eq 20 ] && [ "$NODE_MINOR" -lt 12 ]; }; then
+    echo "❌ Node.js: $NODE_VER (需要 ≥20.12.0)"
     PASS=false
   else
     echo "✅ Node.js: $NODE_VER"
@@ -118,7 +119,13 @@ fi
 
 # Bun
 if command -v bun &>/dev/null; then
-  echo "✅ Bun: $(bun --version)"
+  BUN_VER=$(bun --version)
+  if [ "$(printf '%s\n' 1.1.31 "$BUN_VER" | sort -V | head -1)" = "1.1.31" ]; then
+    echo "✅ Bun: $BUN_VER"
+  else
+    echo "❌ Bun: $BUN_VER (需要 ≥1.1.31)"
+    PASS=false
+  fi
 else
   echo "❌ Bun 未安装 → 需要安装: curl -fsSL https://bun.sh/install | bash"
   PASS=false
@@ -227,25 +234,25 @@ litellm_settings:
   drop_params: True
 
 model_list:
-  # 智谱 GLM-5.1（Coding 套餐，专属端点）
+  # 智谱 GLM-5.2（Coding 套餐，专属端点）
   # Coding 端点: https://open.bigmodel.cn/api/coding/paas/v4（注意不是通用端点）
   # 通用端点: https://open.bigmodel.cn/api/paas/v4（非 Coding 场景用）
-  - model_name: glm-5.1
+  - model_name: glm-5.2
     litellm_params:
-      model: zai/glm-5.1
+      model: zai/glm-5.2
       api_base: https://open.bigmodel.cn/api/coding/paas/v4
       api_key: os.environ/ZAI_API_KEY
 
-  # DeepSeek V4 Flash（便宜快速）
+  # DeepSeek Flash（V4.1，便宜快速）
   # 使用 openai/ 前缀 + 显式 api_base，让 LiteLLM 直接透传模型名
-  # 不用 deepseek/ 前缀，因为 deepseek-v4-flash 的原生支持 PR 未合并
-  - model_name: deepseek-v4-flash
+  # 不依赖 LiteLLM 内置的 deepseek provider 映射，避免版本差异
+  - model_name: deepseek-flash
     litellm_params:
-      model: openai/deepseek-v4-flash
+      model: openai/deepseek-flash
       api_base: https://api.deepseek.com/v1
       api_key: os.environ/DEEPSEEK_API_KEY
 
-  # DeepSeek V4 Pro（旗舰，75%折扣至 2026-05-31）
+  # DeepSeek V4 Pro（旗舰）
   - model_name: deepseek-v4-pro
     litellm_params:
       model: openai/deepseek-v4-pro
@@ -308,7 +315,7 @@ pkill -f "worker-service.cjs" || true
 {
   "CLAUDE_MEM_PROVIDER": "openrouter",
   "CLAUDE_MEM_OPENROUTER_API_KEY": "sk-litellm-local",
-  "CLAUDE_MEM_OPENROUTER_MODEL": "glm-5.1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "glm-5.2",
   "CLAUDE_MEM_MODE": "code--zh",
   "CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES": "20",
   "CLAUDE_MEM_OPENROUTER_MAX_TOKENS": "100000",
@@ -324,7 +331,7 @@ pkill -f "worker-service.cjs" || true
 |------|---|------|
 | `CLAUDE_MEM_PROVIDER` | `openrouter` | 必须选这个（走 OpenAI 兼容协议） |
 | `CLAUDE_MEM_OPENROUTER_API_KEY` | 任意非空字符串 | LiteLLM 本地不校验，但 claude-mem 检查非空 |
-| `CLAUDE_MEM_OPENROUTER_MODEL` | `glm-5.1` | 对应 LiteLLM config.yaml 中的 model_name |
+| `CLAUDE_MEM_OPENROUTER_MODEL` | `glm-5.2` | 对应 LiteLLM config.yaml 中的 model_name |
 | `CLAUDE_MEM_MODE` | `code--zh` | 中文编码模式（其他: `code` 英文, `code--ja` 日文, `code--es` 西班牙文） |
 | `CLAUDE_MEM_CONTEXT_OBSERVATIONS` | `30` | 会话开始时注入的历史观察数（默认 50，可调低节省 token） |
 | `CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES` | `20` | 每次调用发送的最大上下文消息数（控制 token 消耗） |
@@ -381,21 +388,21 @@ npx claude-mem status
 ### 4.1 LiteLLM 可用性
 
 ```bash
-# 测试 GLM-5.1
+# 测试 GLM-5.2
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "glm-5.1",
+    "model": "glm-5.2",
     "messages": [{"role": "user", "content": "你好，回复OK即可"}],
     "temperature": 0.3,
     "max_tokens": 100
   }' | python3 -m json.tool
 
-# 测试 DeepSeek V4 Flash
+# 测试 DeepSeek Flash (V4.1)
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "Hello, just reply OK"}],
     "temperature": 0.3,
     "max_tokens": 100
@@ -487,7 +494,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/
 改 `~/.claude-mem/settings.json` 中的 `CLAUDE_MEM_OPENROUTER_MODEL`：
 
 ```json
-"CLAUDE_MEM_OPENROUTER_MODEL": "deepseek-v4-flash"
+"CLAUDE_MEM_OPENROUTER_MODEL": "deepseek-flash"
 ```
 
 然后重启 worker，观察日志中的模型名称是否切换。
@@ -538,7 +545,7 @@ tail -f ~/.claude-mem/logs/worker-$(date +%Y-%m-%d).log
 ```bash
 # 编辑 settings
 vi ~/.claude-mem/settings.json
-# 改 CLAUDE_MEM_OPENROUTER_MODEL: "glm-5.1" → "deepseek-v4-flash"
+# 改 CLAUDE_MEM_OPENROUTER_MODEL: "glm-5.2" → "deepseek-flash"
 
 # 重启 worker
 npx claude-mem stop && sleep 2 && npx claude-mem start
@@ -573,9 +580,9 @@ grep "CLAUDE_MEM_OPENROUTER_MODEL" ~/.claude-mem/settings.json
 
 ### 7.1 claude-mem Token 消耗
 
-claude-mem 每次 hook 触发都会调用 LLM 生成 observation。一次 Claude Code 会话可能触发数十次。使用国产模型（GLM-5.1 / DeepSeek V4 Flash）成本极低（每次 < ¥0.01），但仍需关注。
+claude-mem 每次 hook 触发都会调用 LLM 生成 observation。一次 Claude Code 会话可能触发数十次。使用国产模型（GLM-5.2 / DeepSeek Flash V4.1）成本极低（每次 < ¥0.01），但仍需关注。
 
-**建议**: 先用 `deepseek-v4-flash`（最便宜），确认稳定后再考虑 `glm-5.1` 或 `deepseek-v4-pro`。
+**建议**: 先用 `deepseek-flash`（最便宜），确认稳定后再考虑 `glm-5.2` 或 `deepseek-v4-pro`。
 
 ### 7.2 进程管理
 
@@ -612,7 +619,7 @@ echo $DEEPSEEK_API_KEY
 curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
   -H "Authorization: Bearer $ZAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"glm-5.1","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"glm-5.2","messages":[{"role":"user","content":"hi"}]}'
 ```
 
 ### Q2: Patch 后 URL 长度不一致怎么办
@@ -631,12 +638,12 @@ curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
 curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
   -H "Authorization: Bearer $ZAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"glm-5.1","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"glm-5.2","messages":[{"role":"user","content":"hi"}]}'
 
 curl -s https://api.deepseek.com/v1/chat/completions \
   -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}]}'
 ```
 
 ### Q4: claude-mem 日志显示 "OpenRouter API error" 或新窗口上下文永远是旧的
@@ -788,7 +795,7 @@ uv tool uninstall litellm
                        │          │
               ┌────────▼──┐  ┌───▼────────────┐
               │ 智谱 GLM         │  │ DeepSeek              │
-              │ zai/glm-5.1      │  │ openai/deepseek-v4-flash│
+              │ zai/glm-5.2      │  │ openai/deepseek-flash│
               │ Coding端点        │  │ api.deepseek          │
               └────────────┘  └────────────────┘
 ```

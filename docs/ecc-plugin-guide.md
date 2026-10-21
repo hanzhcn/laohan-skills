@@ -1,6 +1,6 @@
 # ECC 插件安装维护完全指南
 
-> 日期: 2026-06-10 | 基于 ECC (everything-claude-code) v2.0.0+
+> 日期: 2026-10-21 | 基于 ECC (everything-claude-code) v2.2.3+
 
 ---
 
@@ -10,10 +10,10 @@ ECC (everything-claude-code) 是 Claude Code 最全面的功能增强插件，�
 
 | 组件 | 数量 | 加载方式 |
 |------|------|----------|
-| Agents | 64 | 目录自动扫描（`agents/`） |
-| Skills | 261 | plugin.json 声明目录（`skills/`） |
-| Commands | 84 | plugin.json 声明目录（`commands/`） |
-| Hooks | 28 | `hooks/hooks.json`（常驻自动加载） |
+| Agents | 68 | 目录自动扫描（`agents/`） |
+| Skills | 293 | plugin.json 声明目录（`skills/`） |
+| Commands | 94 | plugin.json 声明目录（`commands/`，legacy command shims） |
+| Hooks | 24 | `hooks/hooks.json`（常驻自动加载） |
 
 **仓库**: https://github.com/affaan-m/everything-claude-code
 
@@ -60,7 +60,7 @@ rm -f ~/.claude/rules/{coding-style,hooks,patterns,security,testing}.md
 
 ### 为什么不用 symlink
 
-ECC 缓存路径包含版本号：`~/.claude/plugins/cache/everything-claude-code/ecc/2.0.0/`。版本更新后路径变了，symlink 会断掉。
+ECC 缓存路径包含版本号：`~/.claude/plugins/cache/everything-claude-code/ecc/2.2.3/`。版本更新后路径变了，symlink 会断掉。
 
 ---
 
@@ -240,7 +240,7 @@ claude plugins validate <path>
 ```json
 {
   "name": "ecc",
-  "version": "2.0.0",
+  "version": "2.2.3",
   "skills": ["./skills/"],
   "commands": ["./commands/"],
   "mcpServers": {}

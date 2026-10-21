@@ -1,6 +1,6 @@
 # claude-mem + LiteLLM：用国产大模型驱动 Claude Code 跨会话记忆
 
-> 版本: v2.1 | 日期: 2026-05-31 | 作者: 老韩AI & Jeffrey
+> 版本: v3.2 | 日期: 2026-10-21 | 作者: 老韩AI & Jeffrey
 > 录制教学用，每一步都必须可复现
 >
 > 项目地址:
@@ -62,7 +62,7 @@ claude-mem worker (端口 37700+UID%100，见下方说明)
     ↓ (OpenAI 格式 HTTP 请求)
 LiteLLM Proxy (端口 4000)    ← 我们要改的就是这步的 URL
     ↓ (翻译成各家 API 协议)
-DeepSeek / GLM-5.1 / 任意模型
+DeepSeek / GLM-5.2 / 任意模型
 ```
 
 **端口说明**: Worker 端口 = `37700 + (你的系统 UID % 100)`。macOS 典型 UID 501 → 端口 **37701**；Linux 典型 UID 1000 → 端口 **37700**。不确定时运行 `echo $((37700 + $(id -u) % 100))` 查看。也可在 settings.json 中通过 `CLAUDE_MEM_WORKER_PORT` 固定端口。下文用 `{PORT}` 表示你的实际端口。
@@ -71,12 +71,12 @@ DeepSeek / GLM-5.1 / 任意模型
 
 **可行性依据**:
 - claude-mem 源码 `OpenRouterProvider.ts` 中 URL 是硬编码常量，编译后打包进 `worker-service.cjs`
-- LiteLLM 支持 `zai/glm-5.1`（智谱）和 `openai/deepseek-v4-flash`（DeepSeek，通过 `openai/` 前缀透传模型名），暴露 OpenAI 兼容端点
+- LiteLLM 支持 `zai/glm-5.2`（智谱）；DeepSeek 侧用 `openai/deepseek-flash` + 显式 `api_base` 透传模型名，暴露 OpenAI 兼容端点
 - 请求格式（model、messages、temperature、max_tokens）完全一致
 
 **已知限制**:
-- GLM-5 的 `enable_thinking` 推理模式无法通过 LiteLLM 激活（[Issue #25697](https://github.com/BerriAI/litellm/issues/25697)）
-- 每次 claude-mem 更新后需要重新 patch
+- GLM 的 `enable_thinking` 曾无法通过 LiteLLM 激活（[Issue #25697](https://github.com/BerriAI/litellm/issues/25697)，已于 2026-04 修复）；如遇参数报错先升级 LiteLLM
+- 每次 claude-mem 更新后需要重新 patch，并同时检查 installed cache 与 marketplace plugin 两处 worker
 - claude-mem 硬编码了 `temperature: 0.3`、`max_tokens: 4096`，不可配置（已通过 `drop_params: True` 兼容）
 
 ---
@@ -86,8 +86,8 @@ DeepSeek / GLM-5.1 / 任意模型
 | 依赖 | 最低版本 | 用途 | 检查命令 |
 |------|---------|------|----------|
 | Claude Code | 最新 | 主力 IDE | `claude --version` |
-| Node.js | ≥20.0.0 | claude-mem 运行时（package.json 要求 ≥20） | `node --version` |
-| Bun | 任意 | claude-mem worker 进程（缺失时安装器自动装） | `bun --version` |
+| Node.js | ≥20.12.0 | claude-mem 运行时（package.json 要求 ≥20.12.0） | `node --version` |
+| Bun | ≥1.1.31 | claude-mem worker 进程（缺失时安装器自动装） | `bun --version` |
 | uv | 任意 | 向量搜索依赖（缺失时安装器自动装） | `uv --version` |
 | SQLite 3 | 任意 | 持久化存储（通常系统自带） | `sqlite3 --version` |
 | Python | ≥3.10 | LiteLLM | `python3 --version` |
@@ -105,8 +105,9 @@ PASS=true
 if command -v node &>/dev/null; then
   NODE_VER=$(node -v | sed 's/v//')
   NODE_MAJOR=$(echo "$NODE_VER" | cut -d. -f1)
-  if [ "$NODE_MAJOR" -lt 20 ]; then
-    echo "❌ Node.js: $NODE_VER (需要 ≥20.0.0)"
+  NODE_MINOR=$(echo "$NODE_VER" | cut -d. -f2)
+  if [ "$NODE_MAJOR" -lt 20 ] || { [ "$NODE_MAJOR" -eq 20 ] && [ "$NODE_MINOR" -lt 12 ]; }; then
+    echo "❌ Node.js: $NODE_VER (需要 ≥20.12.0)"
     PASS=false
   else
     echo "✅ Node.js: $NODE_VER"
@@ -118,7 +119,13 @@ fi
 
 # Bun
 if command -v bun &>/dev/null; then
-  echo "✅ Bun: $(bun --version)"
+  BUN_VER=$(bun --version)
+  if [ "$(printf '%s\n' 1.1.31 "$BUN_VER" | sort -V | head -1)" = "1.1.31" ]; then
+    echo "✅ Bun: $BUN_VER"
+  else
+    echo "❌ Bun: $BUN_VER (需要 ≥1.1.31)"
+    PASS=false
+  fi
 else
   echo "❌ Bun 未安装 → 需要安装: curl -fsSL https://bun.sh/install | bash"
   PASS=false
@@ -227,25 +234,25 @@ litellm_settings:
   drop_params: True
 
 model_list:
-  # 智谱 GLM-5.1（Coding 套餐，专属端点）
+  # 智谱 GLM-5.2（Coding 套餐，专属端点）
   # Coding 端点: https://open.bigmodel.cn/api/coding/paas/v4（注意不是通用端点）
   # 通用端点: https://open.bigmodel.cn/api/paas/v4（非 Coding 场景用）
-  - model_name: glm-5.1
+  - model_name: glm-5.2
     litellm_params:
-      model: zai/glm-5.1
+      model: zai/glm-5.2
       api_base: https://open.bigmodel.cn/api/coding/paas/v4
       api_key: os.environ/ZAI_API_KEY
 
-  # DeepSeek V4 Flash（便宜快速）
+  # DeepSeek Flash（V4.1，便宜快速）
   # 使用 openai/ 前缀 + 显式 api_base，让 LiteLLM 直接透传模型名
-  # 不用 deepseek/ 前缀，因为 deepseek-v4-flash 的原生支持 PR 未合并
-  - model_name: deepseek-v4-flash
+  # 不依赖 LiteLLM 内置的 deepseek provider 映射，避免版本差异
+  - model_name: deepseek-flash
     litellm_params:
-      model: openai/deepseek-v4-flash
+      model: openai/deepseek-flash
       api_base: https://api.deepseek.com/v1
       api_key: os.environ/DEEPSEEK_API_KEY
 
-  # DeepSeek V4 Pro（旗舰，75%折扣至 2026-05-31）
+  # DeepSeek V4 Pro（旗舰）
   - model_name: deepseek-v4-pro
     litellm_params:
       model: openai/deepseek-v4-pro
@@ -254,83 +261,51 @@ model_list:
 EOF
 ```
 
-### 步骤 4: Patch claude-mem 的 OpenRouter URL
+### 步骤 4: Patch claude-mem 的 OpenRouter URL（⚠️ 最关键一步）
 
-**这是最关键的一步**。把硬编码的 OpenRouter URL 替换成本地 LiteLLM。
-
-```bash
-# 定位 worker-service.cjs（3.8MB 打包文件）
-WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
-
-# 确认文件存在
-if [ -z "$WORKER_FILE" ]; then
-  echo "ERROR: worker-service.cjs 未找到"
-  exit 1
-fi
-echo "目标文件: $WORKER_FILE"
-
-# 备份原文件
-cp "$WORKER_FILE" "${WORKER_FILE}.bak"
-
-# 执行替换（macOS 用 sed -i ''，Linux 用 sed -i）
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-else
-  sed -i 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-fi
-
-# 验证替换成功
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "PATCH SUCCESS"
-else
-  echo "PATCH FAILED — 恢复备份"
-  mv "${WORKER_FILE}.bak" "$WORKER_FILE"
-  exit 1
-fi
-```
-
-**写一个持久化 patch 脚本**（每次 claude-mem 更新后执行）：
+**这是最关键的一步**。claude-mem 的 `worker-service.cjs` 硬编码了 `https://openrouter.ai/api/v1/chat/completions`，即使配置了本地 LiteLLM，请求仍会发到公网 OpenRouter。`sk-litellm-local` key 在公网会 401，导致 observation 写不进去——**这就是"新窗口上下文永远是同一批旧数据"的根因**。
 
 ```bash
-cat > ~/.claude-mem/patch-litellm.sh << 'SCRIPT'
-#!/bin/bash
-# claude-mem LiteLLM Patch — 每次更新后执行
-set -e
+# 修补两个可能的 worker 来源：installed cache + marketplace plugin。
+# 只修 cache 会产生假阳性：cache 已 patched，但实际运行 worker 可能仍来自 marketplace。
+python3 - <<'PY'
+import json
+from pathlib import Path
 
-WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
+old = 'https://openrouter.ai/api/v1/chat/completions'
+new = 'http://localhost:4000/v1/chat/completions'
+paths = []
 
-if [ -z "$WORKER_FILE" ]; then
-  echo "ERROR: worker-service.cjs 未找到，确认 claude-mem 已安装"
-  exit 1
-fi
+installed = Path.home() / '.claude/plugins/installed_plugins.json'
+if installed.exists():
+    data = json.loads(installed.read_text())
+    item = data.get('plugins', {}).get('claude-mem@thedotmack', [{}])[0]
+    install_path = item.get('installPath')
+    if install_path:
+        paths.append(Path(install_path) / 'scripts/worker-service.cjs')
 
-# 检查是否已经 patched
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "ALREADY PATCHED: $WORKER_FILE"
-  exit 0
-fi
+paths.append(Path.home() / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs')
 
-# 备份 + 替换（兼容 macOS 和 Linux）
-cp "$WORKER_FILE" "${WORKER_FILE}.bak"
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-else
-  sed -i 's|https://openrouter.ai/api/v1/chat/completions|http://localhost:4000/v1/chat/completions|g' "$WORKER_FILE"
-fi
+seen = set()
+for path in paths:
+    if path in seen or not path.exists():
+        continue
+    seen.add(path)
+    text = path.read_text()
+    patched = text.replace(old, new)
+    if patched != text:
+        path.with_suffix(path.suffix + '.bak').write_text(text)
+        path.write_text(patched)
+    final = path.read_text()
+    print(path)
+    print('  openrouter=', final.count(old), 'localhost=', final.count(new))
+PY
 
-# 验证
-if grep -q "localhost:4000" "$WORKER_FILE"; then
-  echo "PATCH SUCCESS: $WORKER_FILE"
-  echo "备份保留: ${WORKER_FILE}.bak"
-else
-  echo "PATCH FAILED — 恢复备份"
-  mv "${WORKER_FILE}.bak" "$WORKER_FILE"
-  exit 1
-fi
-SCRIPT
-
-chmod +x ~/.claude-mem/patch-litellm.sh
+# 重启 worker（必须重启才能生效；也可等新会话 hook 自动拉起）
+pkill -f "worker-service.cjs" || true
 ```
+
+**持久化自动 patch 脚本**：当前个人环境使用 `~/.claude-mem/hooks/auto-patch.sh`，在 Claude Code `SessionStart` 自动执行。脚本应同时覆盖 installed cache 和 marketplace plugin 两处路径；无补丁需求时保持静默。
 
 ### 步骤 5: 配置 claude-mem Settings
 
@@ -340,10 +315,10 @@ chmod +x ~/.claude-mem/patch-litellm.sh
 {
   "CLAUDE_MEM_PROVIDER": "openrouter",
   "CLAUDE_MEM_OPENROUTER_API_KEY": "sk-litellm-local",
-  "CLAUDE_MEM_OPENROUTER_MODEL": "glm-5.1",
+  "CLAUDE_MEM_OPENROUTER_MODEL": "glm-5.2",
   "CLAUDE_MEM_MODE": "code--zh",
   "CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES": "20",
-  "CLAUDE_MEM_OPENROUTER_MAX_TOKENS": "131072",
+  "CLAUDE_MEM_OPENROUTER_MAX_TOKENS": "100000",
   "CLAUDE_MEM_CONTEXT_OBSERVATIONS": "30",
   "CLAUDE_MEM_CHROMA_ENABLED": "true",
   "CLAUDE_MEM_LOG_LEVEL": "INFO"
@@ -356,11 +331,11 @@ chmod +x ~/.claude-mem/patch-litellm.sh
 |------|---|------|
 | `CLAUDE_MEM_PROVIDER` | `openrouter` | 必须选这个（走 OpenAI 兼容协议） |
 | `CLAUDE_MEM_OPENROUTER_API_KEY` | 任意非空字符串 | LiteLLM 本地不校验，但 claude-mem 检查非空 |
-| `CLAUDE_MEM_OPENROUTER_MODEL` | `glm-5.1` | 对应 LiteLLM config.yaml 中的 model_name |
+| `CLAUDE_MEM_OPENROUTER_MODEL` | `glm-5.2` | 对应 LiteLLM config.yaml 中的 model_name |
 | `CLAUDE_MEM_MODE` | `code--zh` | 中文编码模式（其他: `code` 英文, `code--ja` 日文, `code--es` 西班牙文） |
 | `CLAUDE_MEM_CONTEXT_OBSERVATIONS` | `30` | 会话开始时注入的历史观察数（默认 50，可调低节省 token） |
 | `CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES` | `20` | 每次调用发送的最大上下文消息数（控制 token 消耗） |
-| `CLAUDE_MEM_OPENROUTER_MAX_TOKENS` | `131072` | 每次调用的最大 token 预算（上游模型会自行限制） |
+| `CLAUDE_MEM_OPENROUTER_MAX_TOKENS` | `100000` | 每次调用的最大 token 预算（上游模型会自行限制） |
 | `CLAUDE_MEM_CHROMA_ENABLED` | `true` | 向量搜索（默认开启，需 uv 已安装） |
 | `CLAUDE_MEM_LOG_LEVEL` | `INFO` | 日志级别（调试时可改为 `DEBUG`） |
 
@@ -373,51 +348,6 @@ python3 -c "import json; json.load(open('$HOME/.claude-mem/settings.json'))" && 
 **注意**: claude-mem 安装器会自动设置 `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`（写入 `~/.claude/settings.json` 的 env 字段），禁用 Claude Code 自带的 auto-memory，避免两套记忆系统冲突。这是正常行为。
 
 ### 步骤 6: 启动 LiteLLM Proxy
-
-**推荐方式：launchd 自启动**（开机自动运行，崩溃自动重启）
-
-```bash
-# 创建包装脚本（source ~/.zshrc 获取 API Key）
-cat > ~/.local/bin/claude-mem-litellm.sh << 'EOF'
-#!/bin/bash
-source ~/.zshrc 2>/dev/null
-exec litellm --config ~/.claude-mem/litellm/config.yaml --port 4000 --host 127.0.0.1
-EOF
-chmod +x ~/.local/bin/claude-mem-litellm.sh
-
-# 创建 launchd plist
-cat > ~/Library/LaunchAgents/com.claude-mem.litellm.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.claude-mem.litellm</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/Users/YOUR_USERNAME/.local/bin/claude-mem-litellm.sh</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/Users/YOUR_USERNAME/.claude-mem/logs/litellm.log</string>
-    <key>StandardErrorPath</key>
-    <string>/Users/YOUR_USERNAME/.claude-mem/logs/litellm.log</string>
-</dict>
-</plist>
-EOF
-# ⚠️ 记得把 YOUR_USERNAME 替换为你的实际用户名
-
-# 加载服务（立即启动）
-launchctl load ~/Library/LaunchAgents/com.claude-mem.litellm.plist
-
-# 验证
-curl -s http://localhost:4000/health | python3 -m json.tool
-```
-
-**备选方式：nohup 手动启动**（临时测试用）
 
 ```bash
 # 设置 API Key（按需选择）
@@ -458,21 +388,21 @@ npx claude-mem status
 ### 4.1 LiteLLM 可用性
 
 ```bash
-# 测试 GLM-5.1
+# 测试 GLM-5.2
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "glm-5.1",
+    "model": "glm-5.2",
     "messages": [{"role": "user", "content": "你好，回复OK即可"}],
     "temperature": 0.3,
     "max_tokens": 100
   }' | python3 -m json.tool
 
-# 测试 DeepSeek V4 Flash
+# 测试 DeepSeek Flash (V4.1)
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "Hello, just reply OK"}],
     "temperature": 0.3,
     "max_tokens": 100
@@ -484,13 +414,22 @@ curl -s http://localhost:4000/v1/chat/completions \
 ### 4.2 Patch 验证
 
 ```bash
-# 确认 worker-service.cjs 中不再有 openrouter.ai
-WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
-grep -c "openrouter.ai" "$WORKER_FILE"
-# 预期: 0
-
-grep -c "localhost:4000" "$WORKER_FILE"
-# 预期: ≥1
+python3 - <<'PY'
+import json
+from pathlib import Path
+old = 'https://openrouter.ai/api/v1/chat/completions'
+new = 'http://localhost:4000/v1/chat/completions'
+data = json.loads((Path.home() / '.claude/plugins/installed_plugins.json').read_text())
+paths = [
+    Path(data['plugins']['claude-mem@thedotmack'][0]['installPath']) / 'scripts/worker-service.cjs',
+    Path.home() / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for path in paths:
+    text = path.read_text()
+    print(path)
+    print('  openrouter=', text.count(old), 'localhost=', text.count(new))
+PY
+# 预期：两处都是 openrouter=0 / localhost=1
 ```
 
 ### 4.3 端到端验证
@@ -508,7 +447,7 @@ curl -s http://localhost:$PORT/api/health
 # 3. 打开 Claude Code，开始一次新会话
 # 4. 执行一个简单操作（如 ls）
 # 5. 查看 claude-mem 日志，确认 observation 已写入
-tail -20 ~/.claude-mem/logs/worker-$(date +%Y-%m-%d).log
+tail -20 ~/.claude-mem/logs/claude-mem-$(date +%Y-%m-%d).log
 
 # 6. 打开 Web UI 查看记忆流
 open http://localhost:$PORT
@@ -555,7 +494,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/
 改 `~/.claude-mem/settings.json` 中的 `CLAUDE_MEM_OPENROUTER_MODEL`：
 
 ```json
-"CLAUDE_MEM_OPENROUTER_MODEL": "deepseek-v4-flash"
+"CLAUDE_MEM_OPENROUTER_MODEL": "deepseek-flash"
 ```
 
 然后重启 worker，观察日志中的模型名称是否切换。
@@ -569,10 +508,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:$PORT/
 > **启动顺序**: 必须先启动 LiteLLM，再启动 claude-mem worker。Worker 启动后会立即尝试连接 LiteLLM，如果 LiteLLM 没就绪，worker 会报 OpenRouter API error。
 
 ```bash
-# 1. 先启动 LiteLLM（launchd 方式，推荐）
-launchctl kickstart -k gui/$(id -u)/com.claude-mem.litellm
-
-# 或 nohup 方式（临时）
+# 1. 先启动 LiteLLM
 nohup litellm --config ~/.claude-mem/litellm/config.yaml --port 4000 --host 127.0.0.1 > ~/.claude-mem/logs/litellm.log 2>&1 &
 echo $! > ~/.claude-mem/litellm.pid
 
@@ -586,10 +522,7 @@ npx claude-mem start
 # 停 claude-mem
 npx claude-mem stop
 
-# 停 LiteLLM（launchd 方式）
-launchctl bootout gui/$(id -u)/com.claude-mem.litellm
-
-# 停 LiteLLM（nohup 方式）
+# 停 LiteLLM
 kill $(cat ~/.claude-mem/litellm.pid) 2>/dev/null
 ```
 
@@ -612,7 +545,7 @@ tail -f ~/.claude-mem/logs/worker-$(date +%Y-%m-%d).log
 ```bash
 # 编辑 settings
 vi ~/.claude-mem/settings.json
-# 改 CLAUDE_MEM_OPENROUTER_MODEL: "glm-5.1" → "deepseek-v4-flash"
+# 改 CLAUDE_MEM_OPENROUTER_MODEL: "glm-5.2" → "deepseek-flash"
 
 # 重启 worker
 npx claude-mem stop && sleep 2 && npx claude-mem start
@@ -622,26 +555,21 @@ npx claude-mem stop && sleep 2 && npx claude-mem start
 
 ## 六、升级 claude-mem 后的维护
 
-### auto-patch hook（推荐）
-
-已配置 SessionStart hook（`~/.claude-mem/hooks/auto-patch.sh`），每次 Claude Code 启动时自动检查 worker-service.cjs 是否被升级覆盖，发现 openrouter.ai URL 则自动替换为 localhost:4000。**无需手动 patch**。
-
-### 手动 patch（备选）
+**⚠️ 每次升级后必须重新 patch，否则"上下文永远是旧的"问题会复现。**
 
 ```bash
-# 1. 正常更新
+# 方式 A: npx 更新（会覆盖 worker-service.cjs）
 npx claude-mem install
 
-# 2. 重新 patch
-~/.claude-mem/patch-litellm.sh
+# 方式 B: 插件管理器更新（同样会覆盖）
+claude plugins update claude-mem@thedotmack
 
-# 3. 重新配置（如果 settings 被覆盖）
-# 检查 settings.json 中的关键配置是否还在
+# 无论哪种方式，更新后立即重新 patch
+~/.claude-mem/hooks/auto-patch.sh
+
+# 检查 settings 是否被覆盖（偶尔会被重置）
 grep "CLAUDE_MEM_PROVIDER" ~/.claude-mem/settings.json
 grep "CLAUDE_MEM_OPENROUTER_MODEL" ~/.claude-mem/settings.json
-
-# 4. 重启
-npx claude-mem stop && sleep 2 && npx claude-mem start
 ```
 
 ---
@@ -652,15 +580,15 @@ npx claude-mem stop && sleep 2 && npx claude-mem start
 
 ### 7.1 claude-mem Token 消耗
 
-claude-mem 每次 hook 触发都会调用 LLM 生成 observation。一次 Claude Code 会话可能触发数十次。使用国产模型（GLM-5.1 / DeepSeek V4 Flash）成本极低（每次 < ¥0.01），但仍需关注。
+claude-mem 每次 hook 触发都会调用 LLM 生成 observation。一次 Claude Code 会话可能触发数十次。使用国产模型（GLM-5.2 / DeepSeek Flash V4.1）成本极低（每次 < ¥0.01），但仍需关注。
 
-**建议**: 先用 `deepseek-v4-flash`（最便宜），确认稳定后再考虑 `glm-5.1` 或 `deepseek-v4-pro`。
+**建议**: 先用 `deepseek-flash`（最便宜），确认稳定后再考虑 `glm-5.2` 或 `deepseek-v4-pro`。
 
 ### 7.2 进程管理
 
-claude-mem worker 不会随系统自启动，只在 Claude Code 启动时通过 SessionStart hook 触发。LiteLLM 已配置为 launchd 服务（`~/Library/LaunchAgents/com.claude-mem.litellm.plist`），开机自动运行，崩溃自动重启。
+claude-mem worker 不会随系统自启动，只在 Claude Code 启动时通过 SessionStart hook 触发。LiteLLM 也不会自启动。
 
-**建议**: 如果 LiteLLM 未配置 launchd，机器重启后需手动先启动 LiteLLM，再启动 Claude Code（触发 worker）。
+**建议**: 如果机器重启，需手动先启动 LiteLLM，再启动 Claude Code（触发 worker）。或将 LiteLLM 配置为 launchd 服务。
 
 ### 7.3 LiteLLM 参数兼容性
 
@@ -668,40 +596,11 @@ claude-mem 硬编码发送 `temperature: 0.3` 和 `max_tokens: 4096`。部分国
 
 ### 7.4 升级后 patch 失效
 
-每次 `npx claude-mem install` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/patch-litellm.sh`。
+每次 `npx claude-mem install` 或 `claude plugins update claude-mem@thedotmack` 更新后，`worker-service.cjs` 会被覆盖，patch 失效。必须重新执行 `~/.claude-mem/hooks/auto-patch.sh`，并确认 installed cache 与 marketplace plugin 两处都已替换。**症状：升级后发现新窗口上下文永远是旧的 → 基本可以确定 patch 被覆盖了。**
 
 ### 7.5 GLM Coding 端点限制
 
 Coding 端点 `https://open.bigmodel.cn/api/coding/paas/v4` 仅限 Coding 场景。如果需要通用场景（非 coding），需切换到通用端点 `https://open.bigmodel.cn/api/paas/v4`。
-
-### 7.6 Restart Guard 死锁（2026-05-31 发现）
-
-**现象**: hooks 正常触发（PostToolUse 事件写入 pending_messages），但 observation 不再生成，上下文注入停止。
-
-**根因**: worker 的 generator 有 restart guard 机制——连续失败 ≥5 次后 session 被标记为 dead，停止处理 pending_messages。但 hooks 继续写入队列，导致 pending_messages 无限积压。这是保护机制（防死循环）的副作用——dead session 后无自动恢复路径。
-
-**检测**:
-```bash
-# pending_messages 堆积（pending > 50 且持续不降 = 死锁）
-sqlite3 ~/.claude-mem/claude-mem.db "SELECT status, COUNT(*) FROM pending_messages GROUP BY status;"
-
-# 今日 observation 数量（应持续增长）
-sqlite3 ~/.claude-mem/claude-mem.db "SELECT COUNT(*) FROM observations WHERE created_at_epoch > $(date -v-8H +%s)000;"
-```
-
-**修复**: 清除旧会话孤儿消息 + 重启 worker
-```bash
-# 查看哪些 session 有 stuck 消息
-sqlite3 ~/.claude-mem/claude-mem.db "SELECT session_db_id, status, COUNT(*) FROM pending_messages GROUP BY session_db_id, status;"
-
-# 删除旧 session 的孤儿消息（替换 130 为当前 session ID）
-sqlite3 ~/.claude-mem/claude-mem.db "DELETE FROM pending_messages WHERE session_db_id != 130;"
-
-# 重启 worker
-pkill -f "worker-service.cjs"
-```
-
-**注意**: 多开 Claude Code 终端时更容易触发——不同终端分配不同 session ID，exit 后旧 session 的消息残留变成孤儿，导致队列看似卡死（pending 数量不变）。
 
 ---
 
@@ -720,7 +619,7 @@ echo $DEEPSEEK_API_KEY
 curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
   -H "Authorization: Bearer $ZAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"glm-5.1","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"glm-5.2","messages":[{"role":"user","content":"hi"}]}'
 ```
 
 ### Q2: Patch 后 URL 长度不一致怎么办
@@ -739,24 +638,65 @@ curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
 curl -s https://open.bigmodel.cn/api/coding/paas/v4/chat/completions \
   -H "Authorization: Bearer $ZAI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"glm-5.1","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"glm-5.2","messages":[{"role":"user","content":"hi"}]}'
 
 curl -s https://api.deepseek.com/v1/chat/completions \
   -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}]}'
+  -d '{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}]}'
 ```
 
-### Q4: claude-mem 日志显示 "OpenRouter API error"
+### Q4: claude-mem 日志显示 "OpenRouter API error" 或新窗口上下文永远是旧的
 
-检查 LiteLLM 是否在运行：`curl http://localhost:4000/health`。如果 LiteLLM 挂了，claude-mem 会报 OpenRouter 错误（因为请求发到了 localhost:4000 但没人响应）。
+**这是最常见的问题，有两层原因：**
+
+1. **LiteLLM 没启动**（`curl http://localhost:4000/health` 确认）。机器重启后 LiteLLM 不自启动。
+2. **Patch 被覆盖**（更隐蔽）。升级 claude-mem 后 `worker-service.cjs` 被覆盖，请求又发到公网 OpenRouter，`sk-litellm-local` key 401。**症状：LiteLLM 明明在跑，但 observation 写不进去，上下文永远是同一批旧数据。**
+
+```bash
+# 一键诊断：installed cache 与 marketplace plugin 都应只有 localhost:4000，没有 openrouter.ai
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+home = Path.home()
+installed = json.loads((home / '.claude/plugins/installed_plugins.json').read_text())
+install_path = Path(installed['plugins']['claude-mem@thedotmack'][0]['installPath'])
+files = [
+    install_path / 'scripts/worker-service.cjs',
+    home / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for f in files:
+    s = f.read_text()
+    print(f'{f}: openrouter={s.count("https://openrouter.ai/api/v1/chat/completions")} localhost={s.count("http://localhost:4000/v1/chat/completions")}')
+PY
+# 预期: 两行都为 openrouter=0 localhost=1
+# 如果看到 openrouter>0 → 重新执行 patch: ~/.claude-mem/hooks/auto-patch.sh
+```
 
 ### Q5: 想切回 OpenRouter
 
+不推荐切回。若确实要切回，不能只恢复 cache；需要同时恢复 installed cache 与 marketplace plugin 两处备份，否则运行中的 worker 可能仍走 localhost 或 OpenRouter，状态不一致。
+
 ```bash
-# 恢复备份
-WORKER_FILE=$(find ~/.claude/plugins/cache/thedotmack/claude-mem ~/.claude/plugins/marketplaces/thedotmack -name "worker-service.cjs" -path "*/scripts/*" 2>/dev/null | head -1)
-cp "${WORKER_FILE}.bak" "$WORKER_FILE"
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+home = Path.home()
+installed = json.loads((home / '.claude/plugins/installed_plugins.json').read_text())
+install_path = Path(installed['plugins']['claude-mem@thedotmack'][0]['installPath'])
+files = [
+    install_path / 'scripts/worker-service.cjs',
+    home / '.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs',
+]
+for f in files:
+    bak = Path(str(f) + '.bak')
+    if not bak.exists():
+        raise SystemExit(f'缺少备份: {bak}')
+    f.write_text(bak.read_text())
+    print(f'已恢复: {f}')
+PY
 
 # 改 settings
 # CLAUDE_MEM_OPENROUTER_API_KEY: 你的真实 OpenRouter Key
@@ -814,22 +754,21 @@ uv tool uninstall litellm
 
 | 文件 | 说明 |
 |------|------|
-| `~/.claude/plugins/marketplaces/thedotmack/` | claude-mem 插件源目录（git repo） |
-| `~/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs` | Worker 源文件（未 patch，openrouter.ai） |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/` | **运行时目录**（hooks 实际解析到这里） |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/worker-service.cjs` | Worker 运行时副本（**patch 目标**） |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/hooks/hooks.json` | 6 个生命周期 hook |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/scripts/mcp-server.cjs` | MCP 搜索服务器 |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/skills/mem-search/` | mem-search 技能 |
-| `~/.claude/plugins/cache/thedotmack/claude-mem/<version>/ui/viewer.html` | Web UI 查看器 |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/` | claude-mem 插件缓存目录（版本号会变） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/worker-service.cjs` | Worker 主进程（patch 目标） |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/worker-service.cjs.bak` | 备份（patch 脚本创建） |
+| `~/.claude/plugins/marketplaces/thedotmack/plugin/hooks/hooks.json` | 6 个生命周期 hook |
+| `~/.claude/plugins/cache/thedotmack/claude-mem/<版本号>/scripts/mcp-server.cjs` | MCP 搜索服务器 |
+| `~/.claude/plugins/marketplaces/thedotmack/plugin/skills/mem-search/` | mem-search 技能 |
+| `~/.claude/plugins/marketplaces/thedotmack/plugin/ui/viewer.html` | Web UI 查看器 |
 | `~/.claude-mem/settings.json` | 所有配置 |
 | `~/.claude-mem/claude-mem.db` | SQLite 数据库（observations/sessions） |
 | `~/.claude-mem/chroma/` | Chroma 向量数据库（自动创建） |
 | `~/.claude-mem/litellm/config.yaml` | LiteLLM 配置 |
-| `~/.claude-mem/patch-litellm.sh` | 升级后 patch 脚本 |
+| `~/.claude-mem/hooks/auto-patch.sh` | SessionStart 自动 patch 脚本，覆盖 installed cache 与 marketplace plugin 两处 worker |
 | `~/.claude-mem/litellm.pid` | LiteLLM 进程 PID |
-| `~/.claude-mem/logs/` | 日志目录 |
+| `~/.claude-mem/logs/claude-mem-YYYY-MM-DD.log` | claude-mem 日志 |
+| `~/.claude-mem/logs/litellm.log` | LiteLLM 日志 |
 
 ---
 
@@ -856,7 +795,7 @@ uv tool uninstall litellm
                        │          │
               ┌────────▼──┐  ┌───▼────────────┐
               │ 智谱 GLM         │  │ DeepSeek              │
-              │ zai/glm-5.1      │  │ openai/deepseek-v4-flash│
+              │ zai/glm-5.2      │  │ openai/deepseek-flash│
               │ Coding端点        │  │ api.deepseek          │
               └────────────┘  └────────────────┘
 ```
