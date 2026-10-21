@@ -138,6 +138,11 @@ python3 scripts/shipinhao-yuanbao.py "分享文本或链接"   # 文件落 ~/Dow
 
 **排障**：401/403 = 凭证过期，重跑 `login`；"未返回 playable_url" = 视频被删/限流或接口变更；解析第二步合法返回 201 非 200，别误判接口挂。环境变量 `SHIPINHAO_CRED` 可自定义凭证路径。
 
+**huashu-chrome 浏览器辅助（仅本机装了该 MCP 时；2026-10-22 实测定界）**：
+- ✅ **能做**：免登录读元信息——真 Chrome 打开 sph 分享链接（如 `https://weixin.qq.com/sph/xxx`），跳转 finder-preview 页可读标题/文案/作者/日期/点赞评论数，适合下载前核验内容
+- ❌ **不能做**：下载视频流——网页端不播放视频号视频（只出"扫码前往微信观看"浮层，network 无 mp4/m3u8 请求），**别把这条路当下载方案再试**
+- 视频号助手网页版（channels.weixin.qq.com/platform）是创作者后台，需扫码登录且只能管理自己的内容，与下载别人视频无关
+
 ### 方案 A：wx_video_download（MITM 代理，B 失效时的降级）
 
 基于 MITM 代理拦截微信视频号视频流，使用 `wx_video_download` 二进制（来自 [hanzhcn/wx_channels_download](https://github.com/hanzhcn/wx_channels_download)）。需要装根证书 + 跑代理进程，侵入性高于方案 B，但不存在登录凭证依赖。
