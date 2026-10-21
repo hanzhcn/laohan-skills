@@ -6,7 +6,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hanzhcn/laohan-skills?style=social)](https://github.com/hanzhcn/laohan-skills/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/Skills-23-blue.svg)](https://github.com/hanzhcn/laohan-skills)
+[![Skills](https://img.shields.io/badge/Skills-22-blue.svg)](https://github.com/hanzhcn/laohan-skills)
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20OpenClaw-green.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
 **Claude Code Skills Pack** — Content creation pipeline + 30+ platform acquisition + dev tools
@@ -24,7 +24,7 @@ Built by [老韩AI](https://github.com/hanzhcn) · Search **老韩AI** on Douyin
 > **Don't install all** — pick only the skills you need. Full per-skill commands in [Install on demand](#install-on-demand).
 
 ```bash
-# Install all 16 skills (requires Claude Code or OpenClaw)
+# Install all 22 skills (requires Claude Code or OpenClaw)
 npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名
 
 # Install one (recommended: pick what you need)
