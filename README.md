@@ -32,7 +32,7 @@ npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenCla
 npx skills add hanzhcn/laohan-skills --skill laohan-xiazai
 
 # 多选几个
-npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-chuangzuo
+npx skills add hanzhcn/laohan-skills --skill laohan-xiazai --skill laohan-xuanti --skill laohan-chuangzuo
 
 # Codex 专用初始化 skill（只安装到 Codex）
 npx skills add hanzhcn/laohan-skills -a codex --skill laohan-chushicodex -y
@@ -47,7 +47,7 @@ npx skills add hanzhcn/laohan-skills -a codex --skill laohan-chushicodex -y
 **内容创作（12 个）**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 选题决策（热点+达人库+抖音验证）
-npx skills add hanzhcn/laohan-skills --skill laohan-chuangzuo        # ✍️ 统一创作引擎（5 输入→口播稿）
+npx skills add hanzhcn/laohan-skills --skill laohan-xuanti --skill laohan-chuangzuo # ✍️ 统一创作引擎（5 输入→口播稿）
 npx skills add hanzhcn/laohan-skills --skill laohan-weigui           # 🛡️ 抖音文案违规检测
 npx skills add hanzhcn/laohan-skills --skill laohan-jiaozhun         # 📊 内容校准（接上游引擎）
 npx skills add hanzhcn/laohan-skills --skill laohan-fengmianqiuzhi   # 🎨 秋芝封面（1 模板 × 3 尺寸）
@@ -111,6 +111,8 @@ laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → lao
 <tr><td>
 
 ### ✍️ laohan-chuangzuo（创作）
+
+与laohan-xuanti一起安装；两技能共享来源/论证/素材交接检查模块。缺依赖明确失败，不能用空大纲跳过材料。本机分发面沿用受管skills目录链接，单独复制chuangzuo不构成完整安装。
 
 > *"五种输入，一个出口——无论你手上有什么，都能变成口播稿。"*
 

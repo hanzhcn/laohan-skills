@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, realpathSync, statSync} from 'node:fs';
 import {basename, dirname, join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {verifyCreationHandoff, creationFraming} from './creation-handoff-contract.mjs';
 
 const args = process.argv.slice(2);
 const episodeIndex = args.indexOf('--episode');
@@ -205,10 +206,14 @@ for (const item of items) {
   if (readyForWriting(item) && !['ALIGNED', 'ADJACENT', 'UNAVAILABLE'].includes(alignment.status)) block('可写候选平台证据不能矛盾或未决');
   const fit = item.creator_fit;
   if (!fit || !['FIRSTHAND_EXPERIENCE', 'BUILT_OR_TESTED', 'OWNED_EVIDENCE', 'LONG_TERM_PRACTICE', 'RESEARCHED_JUDGMENT', 'NOT_ESTABLISHED'].includes(fit.basis) || !nonEmpty(fit.why_jeffrey) || !nonEmpty(fit.distinctive_judgment) || (readyForWriting(item) && fit.basis === 'NOT_ESTABLISHED')) block('schema 4必须登记真实作者依据与独特判断');
-  if (item.content_form === 'tutorial-video' && readyForWriting(item)) {
+  if (readyForWriting(item) && (item.content_form === 'tutorial-video' || item.creation_handoff?.production?.delivery_modes?.some((x) => ['OPERATION', 'EFFECT_COMPARISON'].includes(x)))) {
     const proof = item.tutorial_proof;
     const path = proof?.evidence_path && target(proof.evidence_path);
     if (proof?.status !== 'VERIFIED' || !path || !existsSync(path) || !statSync(path).isFile() || proof.evidence_sha256 !== shaFile(path) || !nonEmpty(proof.version_boundary) || !nonEmpty(proof.recovery)) block('教程选中前必须绑定本机实测、版本边界与失败恢复');
+  }
+  if (readyForWriting(item)) {
+    try { verifyCreationHandoff({handoff: item.creation_handoff, review: item.material_review, root: projectRoot, evidenceIds: item.evidence_ids, contentForm: item.content_form, tutorialProof: item.tutorial_proof, tutorialRoot: root, framing: creationFraming(item)}); }
+    catch (error) { block('material: ' + error.message); }
   }
 }
 const screening = candidates.screening_summary;
@@ -345,7 +350,7 @@ if (autoSelected.length === 1) {
   if (topic.schema_version !== 4 || topic.selected_candidate_id !== selected.id || !nonEmpty(topic.audience) || !nonEmpty(topic.thesis) || !nonEmpty(topic.auto_selection_rationale)) block('最终选题必须是schema 4并绑定AUTO_SELECTED候选与自主定题理由');
   if (!Array.isArray(topic.evidence) || !uniqueNonEmpty(topic.evidence.map((x) => x?.id)) || !topic.evidence.every((x) => validEvidence(x) && selected.evidence_ids.includes(x.id) && JSON.stringify(x) === JSON.stringify(evidenceById.get(x.id))) || !topic.evidence.some((x) => x.source_type === 'PRIMARY')) block('最终选题必须绑定所选候选的同字节PRIMARY来源');
   if (!Array.isArray(topic.claim_evidence_map) || [...topic.claim_evidence_map.flatMap((claim) => claim.evidence_ids || []), ...(selected.platform_alignment?.evidence_ids || []), ...(selected.content_gap?.evidence_ids || [])].some((id) => !topic.evidence.some((ev) => ev.id === id))) block('最终选题来源必须覆盖全部主张映射与平台/内容缺口引用');
-  for (const key of ['audience', 'thesis', 'content_form', 'audience_level', 'audience_promise', 'creator_fit', 'assumed_prerequisites', 'jargon_to_explain', 'platform_query_intent', 'platform_alignment', 'content_gap', 'claim_evidence_map']) if (JSON.stringify(topic[key]) !== JSON.stringify(selected[key])) block('最终选题与所选候选字段漂移: ' + key);
+  for (const key of ['audience', 'thesis', 'content_form', 'audience_level', 'audience_promise', 'creator_fit', 'assumed_prerequisites', 'jargon_to_explain', 'platform_query_intent', 'platform_alignment', 'content_gap', 'claim_evidence_map', 'creation_handoff', 'material_review', 'tutorial_proof']) if (JSON.stringify(topic[key]) !== JSON.stringify(selected[key])) block('最终选题与所选候选字段漂移: ' + key);
   const experiment = topic.experiment;
   const allowedKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec', 'digg_count', 'comment_count', 'share_count']);
   if (!nonEmpty(experiment?.hypothesis_id) || !nonEmpty(experiment.intervention) || !nonEmpty(experiment.expected_metric)

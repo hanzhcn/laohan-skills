@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {verifySepiaReview} from './sepia-contract.mjs';
+import {verifyCreationHandoff, verifyCreationBinding, creationFraming} from '../../laohan-xuanti/scripts/creation-handoff-contract.mjs';
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -39,6 +40,14 @@ const promisesAudienceResource = (text) => text.split(/[。！？!?；;\n]/u).so
 // 用来判断"这句话是否真实出现在正文里"（金句判定）。
 const normalizeProse = (value) => String(value ?? '').replace(/[\s，。！？、,.!?；;：:“”「」『』（）()《》【】\[\]\-—–…·]/g, '').toLowerCase();
 const uniqueNonEmpty = (items) => Array.isArray(items) && items.length > 0 && items.every(nonEmpty) && new Set(items).size === items.length;
+const checkCreation = (owner, root, tutorialRoot = root) => {
+  try { return verifyCreationHandoff({handoff: owner.creation_handoff, review: owner.material_review, root, evidenceIds: owner.evidence_ids || owner.evidence?.map((x) => x.id), contentForm: owner.content_form, tutorialProof: owner.tutorial_proof, tutorialRoot, framing: creationFraming(owner)}); }
+  catch (error) { fail('material: ' + error.message); }
+};
+const checkCreationBinding = (handoff, unitIds, visualAnchors = []) => {
+  try { verifyCreationBinding({handoff, contract: decision.creation_handoff_contract, unitIds, visualAnchors}); }
+  catch (error) { fail('material-binding: ' + error.message); }
+};
 
 let base;
 let scriptPath;
@@ -113,12 +122,15 @@ if (seriesDraftArg) {
     if (!Array.isArray(citation.segments) || !citation.segments.length) return true;
     return citation.segments.some((segment) => !source.key_segments.some((item) => item.start_seconds === segment.start_seconds && item.end_seconds === segment.end_seconds) || !script.includes(formatTime(segment.start_seconds)) || !script.includes(formatTime(segment.end_seconds)));
   })) fail('series-draft稿件与决策必须逐来源列出URL，并为每个视频引用资料包中的真实关键时间段');
+  // Material checks are additional to the original packet/citation checks; DRAFT is not stage 2 completion.
+  checkCreationBinding(checkCreation({...packet, audience: research.audience, audience_problem: researchEpisode.beginner_problem}, baseReal, seriesDir), decision.used_claim_ids);
   console.log(`PASS chuangzuo series draft contract series=${packet.series_id} episode=${packet.episode_id}`);
   process.exit(0);
 }
 
 let researchedCandidate = null;
 let researchCandidatesPath = null;
+let creationHandoff = null;
 if (candidateMode) {
   if (decision.contract_version === 'candidate-script-v1') fail('旧candidate-script-v1已退役；必须补选题研究绑定并使用共同content-units-v2创作合同');
   const firstLineEnd = script.indexOf('\n');
@@ -144,7 +156,7 @@ if (candidateMode) {
   }
   const topicValidator = resolve(import.meta.dirname, '../../laohan-xuanti/scripts/check-topic-contract.mjs');
   const topicResult = spawnSync('node', [topicValidator, '--workspace', researchPath, '--base', baseReal], {encoding: 'utf8'});
-  if (topicResult.status !== 0) fail('选题研究未通过: ' + (topicResult.stderr || topicResult.stdout || 'validator failed').trim());
+  if (topicResult.status !== 0) fail('topic-research: 选题研究未通过: ' + (topicResult.stderr || topicResult.stdout || 'validator failed').trim());
   researchCandidatesPath = join(researchPath, '00-选题-candidates.json');
   researchedCandidate = JSON.parse(readFileSync(researchCandidatesPath, 'utf8')).candidates.find((item) => item.id === research.candidate_id);
   if (!researchedCandidate || researchedCandidate.disposition !== 'SHORTLISTED') fail('稿件必须绑定本轮可写的SHORTLISTED选题，不能引用淘汰项');
@@ -235,6 +247,8 @@ if (episodeArg || candidateMode) {
     fail('选题不是合法JSON');
   }
   if (topic.schema_version === 4) {
+    // The formal episode path consumes the same material contract, independently of --candidate.
+    creationHandoff = checkCreation(topic, candidateMode ? baseReal : realpathSync(resolve(base, '../..')), candidateMode ? resolve(base, decision.topic_research_contract.workspace_path) : baseReal);
     // 2026-09-17五步法合同：AI自主定题，无采访/大纲确认门槛
     if (!candidateMode && (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale))) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
     if (candidateMode && decision.outline_sha256 !== shaFile(outlinePath)) fail('候选大纲必须绑定当前SHA');
@@ -353,6 +367,8 @@ if (episodeArg || candidateMode) {
   }
 } else if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') {
   fail('独立模式创作决策必须使用 schema 3 / content-units-v1');
+} else {
+  creationHandoff = checkCreation(decision, baseReal);
 }
 if (decision.script_title !== title || decision.script_hash !== shaFile(scriptPath)) fail('创作决策未绑定当前稿标题与SHA-256');
 const activeStylePath = resolve(base, decision.active_style_file || '');
@@ -456,7 +472,7 @@ const argumentPlan = decision.argument_plan || {};
 const requiredArgumentFields = ['opening_contract', 'material_tradeoffs', 'shootable_expression', 'originality_and_citations'];
 if (!requiredArgumentFields.every((key) => nonEmpty(argumentPlan[key])) || !uniqueNonEmpty(argumentPlan.reasoning_path)) fail('argument_plan 必须包含开场、论证路径、素材取舍、可拍表达与原创引用规划');
 const originalContributions = decision.original_contributions;
-if (!Array.isArray(originalContributions) || originalContributions.length < 1 || originalContributions.some((item) => !nonEmpty(item?.judgement) || !nonEmpty(item?.viewer_value)) || (originalContributions.length === 1 && !nonEmpty(decision.single_contribution_rationale))) fail('original_contributions 必须至少一项；只有一项时需说明不硬凑第二项的理由');
+if (!Array.isArray(originalContributions) || originalContributions.length < 1 || originalContributions.some((item) => !nonEmpty(item?.judgement) || !nonEmpty(item?.viewer_value))) fail('original_contributions 必须记录有观众价值的原创判断或取舍，不设增量数量配额');
 
 const opening = decision.opening_contract || {};
 if (opening.status !== 'PASS' || !nonEmpty(opening.anchor_text) || !['DEFAULT_SIGNATURE', 'TOPIC_SPECIFIC_HOOK'].includes(opening.mode)) fail('opening_contract 必须登记合法开场模式与第一段锚点');
@@ -490,6 +506,7 @@ const normalizedClaims = units.map((unit) => unit.claim.replace(/[\s，。！？
 if (new Set(normalizedClaims).size !== normalizedClaims.length) fail('content_units 存在重复判断');
 const visualAnchors = decision.visual_anchors;
 if (!Array.isArray(visualAnchors) || visualAnchors.length < 1 || visualAnchors.some((item) => !unitIds.includes(item?.content_unit_id) || !nonEmpty(item?.audience_understanding) || !nonEmpty(item?.visual_expression))) fail('visual_anchors 必须至少绑定一个内容单位，并写清观众理解任务与可视化表达');
+if (creationHandoff) checkCreationBinding(creationHandoff, unitIds, visualAnchors);
 
 const audit = decision.paragraph_audit;
 if (!Array.isArray(audit) || audit.length !== paragraphs.length) fail('paragraph_audit 必须逐段覆盖全部有效口播段落');

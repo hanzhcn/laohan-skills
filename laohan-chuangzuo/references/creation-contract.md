@@ -16,6 +16,27 @@
 
 独立写作使用已验证单期资料包时可以只生成`script-pool/<series-id>/`草稿；稿件必须带非口播的“来源与时间点”附录，决策使用`series-draft-v1`并标记`DRAFT / NOT_STAGE_2_COMPLETE`，绑定packet SHA与series research SHA。它不伪造Episode人工记录，也不能宣称②完成。
 
+## 选题→写作的创作交接（2026-10-23取代空大纲旁路）
+
+保持xuanti→chuangzuo→Sepia一线。文件像大纲不代表材料充分：只允许跳重复抽取，不允许跳来源理解、论证或真实材料。原创综合/亲历/主稿改编是来源模式，观点/教程是内容形态，两维独立，可多模式、多主稿。只借视听效果的来源不得假装成为正文论证；复杂参考的核心材料不可得，须改变真实承诺或换题。秋芝等作者可以借可兑现的观点/简单教学，不按作者名一刀切。
+
+`creation_handoff`（schema_version=1）放在当前schema4可写candidate；正式00选题逐字段带入；普通独立新写作放decision；系列草稿放canonical episode-packet。字段唯一实现为xuanti的`scripts/creation-handoff-contract.mjs`，两侧ESM import；candidate既有子进程仍验证整个研究。无依赖明确失败，不另建入口。
+
+- `prepared_by={actor,context_id}`记录实际准备上下文。
+- `composition_modes[]`：FIRSTHAND / RESEARCH_SYNTHESIS / SOURCE_ADAPTATION，可多选，对应内容来源，不能只写发现线索。
+- `sources[]`：唯一id、可选evidence_id（若填必须属于当前候选），roles（DISCOVERY_ONLY/FACT_CHECK/SYNTHESIS_INPUT/ADAPTATION_BASE/FIRSTHAND_RECORD/VISUAL_REFERENCE）、snapshot_path/snapshot_sha256、read_scope、summary。每项绑定实读本地非空快照，不用URL/标题替原文。FIRSTHAND_RECORD必须speaker=Jeffrey且真实记录；不能把作者亲历改我。ADAPTATION_BASE追加adaptation：problem、thesis、reasoning_chain[]、examples、necessary_conditions、audiovisual_dependencies、adoption_and_changes；源无例证/条件/视听依赖如实说明，不凑。
+- `argument_units[]`：至少一个真实核心判断，单一判断记录一项；唯一id、kind=SOURCE_FACT/EDITORIAL_INFERENCE/HYPOTHETICAL/JEFFREY_FIRSTHAND、statement、source_ids[]、reasoning、boundary、viewer_value。事实/亲历须相应内容源；推论/假设明确依据与边界，可以没有外部source。不能按来源逐条堆摘要，也不固定论证卡数、反例数。
+- `production.delivery_modes[]`：EXPLANATION/OPERATION/EFFECT_COMPARISON，按真实承诺，可多选。`materials[]`每项id、required布尔、purpose、argument_unit_ids[]、status。AVAILABLE_ARTIFACT需path/sha256真实材料；VERIFIED_CAPABILITY需verified_instance={path,sha256,delivery_modes[],material_type,reuse_plan,differences,verified_scope_basis,differences_within_verified_scope:true}，绑定同类既往实例/回执及本题差异在已验证范围内的依据，不能只写“有录屏/图表能力”。既往证据可在本项目motion/baselines等目录，不限本期。差异未验证则UNRESOLVED；该态只准非required并有reason。无required时须narration_only_reason解释为何讲述已足够。required未就绪回①，不能动画代实测。
+- tutorial-video或OPERATION/EFFECT_COMPARISON均须写作前已有tutorial_proof={status:VERIFIED,evidence_path,evidence_sha256,version_boundary,recovery}；其path相对研究目录/episode/独立根/系列目录，其余快照与材料path相对项目根。换观点标签不免实跑，实际承诺的语义由材料读者核。
+
+①入围→②写作前，root组织另一个独立上下文或Jeffrey实际读来源与关键材料。`material_review`与handoff并列，避免自hash循环：status=ACCEPTED、reviewer={actor,context_id}且不同准备context、handoff_sha256（共享handoffHash稳定键排序JSON）、reviewed_at、report_path/report_sha256、rationale；审核另绑framing_sha256（共享creationFraming提取受众/问题/论点/承诺/形态/标题方向/工作标题及系列身份；独立读取script_title与hook_contract，系列读取上游research受众/单期问题），报告正文须含这两项SHA；操作/效果承诺另绑tutorial_proof_sha256（稳定键排序JSON）且报告含该SHA，防实跑/版本边界被换掉。报告说明来源论证/必要条件有无丢失、素材能否兑现承诺、复用差异是否可控，以及本题必要反例/异见查到什么或未查原因。REJECTED回①；非空和SHA只证记录存在不证模型读懂。第二个材料读者不替代项目要求的跨模型家族复核。
+
+`decision.creation_handoff_contract={schema_version:1,handoff_sha256,unit_bindings[],visual_bindings[]}`：每个content_unit一条{content_unit_id,argument_unit_ids[]}；有据新增推论可加new_inference={kind:EDITORIAL_INFERENCE|HYPOTHETICAL,basis,boundary,source_ids[]}，新增事实或操作承诺回材料更新再审。每个visual_anchor一条{visual_anchor_index,material_ids[],narration_only_reason}，索引从0开始，引用实际已就绪材料；无材料解释为何仅讲述可兑现。required材料须落在画面或unit_bindings.material_ids，且材料argument_unit_ids与该正文单位映射的论证ID相交，不能挂到无关段落冒充兑现。系列草稿用used_claim_ids对应content_unit_id，不伪造后续TTS/正式完成。作者可选取/重排，不强制逐段照包。
+
+适用入口：topic readyForWriting、script候选、正式schema4、普通独立content-units-v1及series-draft早返回前。历史schema3 Episode按原冻结合同；用户已录制/raw-first按原外层路径，不重创作。旧两组三稿与7个旧系列packet原件/回执保留，不直接满足新写作门；复用须在新研究修订补交接/审核重绑，不追填旧回执。
+
+程序只核结构/路径/绑定/状态。真实论证、角度、全文语义、理解成本与效果仍由实际读者判断；外部留存/完播阈值、英语句长/固定镜头频次和博客自报不能成为本项目通过门。新增表格不能证明爆款。Sepia只改表达，发现内容问题退回，不补写缺失论证或虚构材料。
+
 ## 规划与原创增量
 
 schema 3 必须先证明它执行了创作规划，而不是落稿后补一个hash：
@@ -23,7 +44,7 @@ schema 3 必须先证明它执行了创作规划，而不是落稿后补一个ha
 - `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`、`input_mode`、`structure_tool`、`structure_rationale` 均非空；
 - `fact_boundary`、`alternative_structures`、`unproven_assumptions` 均为非空字符串数组；
 - `argument_plan.opening_contract`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations` 均非空，`reasoning_path` 是非空步骤数组；
-- `original_contributions` 至少1项，每项必须同时写非空 `judgement` 与 `viewer_value`。只有1项时必须有非空 `single_contribution_rationale`，说明为什么这一题不该硬凑第二项；schema 2 的字符串数组不能冒充 schema 3 原创增量。
+- `original_contributions` 至少1项，每项必须同时写非空 `judgement` 与 `viewer_value`。按本题表达原创判断或取舍，不设增量数量配额；schema 2 的字符串数组不能冒充 schema 3 原创增量。
 - `visual_anchors` 至少1项，每项包含存在于 `content_units` 的 `content_unit_id`、非空 `audience_understanding` 与 `visual_expression`。它证明稿件给导演留下了可视化抓手，不规定具体动画技术。
 - `01-口播稿.md`正文只允许Jeffrey实际口播文本，不得包含`[B-Roll]`、`[字幕]`、`[画面]`、镜头提示、转场提示、特效提示、Remotion执行提示或其他导演指令。`visual_anchors`只能存在于决策记录，不能通过Markdown标注提前替导演选卡片、PPT、具体技术、时长或位置。
 - `publish_copy_contract` 必须在Step 3登记3个标题候选、唯一主推标题、选择理由、至少两条可回到正文的标题证据、视频介绍证据及其结构；落稿后再绑定主推标题原文和视频介绍SHA。

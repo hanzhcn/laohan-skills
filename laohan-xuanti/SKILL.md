@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.4.1
+version: 3.5.0
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -82,7 +82,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 - `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个不同账号的近期同母题异常仅为系列试水线索，须核异常、日期、独立性与完整内容。系列优先采用可追更形式（"挑战30天XX""10天教会XX"式进度感系列，必须由内容任务支持，不能声称已知算法权重），形式写入`topic_corroboration.series_format_hint`（可空）。
 - `packaging_assessment`（第5步验收藏）：非空`title_direction`与`cover_concept`（一句话，不做图）、三问布尔`worth_collecting`/`evergreen_half_year`/`title_clickable`、非空`rationale`。标题承诺必须成立；非收藏或时效题以value_basis=DECISION_SUPPORT|SHARE_FOR_RECOGNITION|TIMELY_ACTION如实说明，不强制常青。
 
-分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
+分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、研究目录/本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
 
 ### 3. 对短名单做抖音关键词验证
 
@@ -97,6 +97,10 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 对最终候选的事实前提查找官网、官方公告、论文、产品文档或原始公开记录。平台热榜、搜索结果、媒体转述只能是 `PLATFORM_SIGNAL` 或 `SECONDARY`。
 
 把 PRIMARY 与 PLATFORM_SIGNAL evidence 写入候选文件；每条有稳定 `id`、`source`、`source_type`、`url`、`retrieved_at`。缺 PRIMARY 时缩窄论点为可证范围；仍无法成立就换候选或 BLOCKED。
+
+### 写作前交接与独立材料审核
+
+可写候选必须按`../laohan-chuangzuo/references/creation-contract.md`的创作交接定义添加creation_handoff与material_review：交源内容/主稿论证、可重组判断、真实可兑现材料；发现来源/核事实/改编依据/视听参考分用途。root在①→②前组织独立上下文读实际来源与材料，拒绝回①；操作/效果承诺写作前已有实跑，不因opinion标签豁免。能力复用要同类实例路径+SHA与差异依据，不只自评会录屏。大纲形式不免交接，不按账号模仿不可取得的复杂画面。共同模块在本skill scripts/creation-handoff-contract.mjs，必须与chuangzuo一起可达；机械检查不代替语义或传播验收。
 
 ### 5. AI自主定题（Jeffrey保留否决权）
 
