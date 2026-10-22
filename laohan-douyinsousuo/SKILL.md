@@ -12,7 +12,7 @@ version: "3.3.0"
 
 - `query`：必填，搜索关键词。
 - `limit`：可选，1—30，默认 10。
-- `episode`：可选，本期 `episodes/<slug>` 路径；只允许写 `00-抖音搜索证据.json` 与 `.md`，不得写 candidates、source-health 或 `00-选题.*`。
+- `episode`：可选，本期 `episodes/<slug>` 路径；三稿研究阶段用互斥的`--workspace <研究目录>`复用同一包装器，不伪造episode。只允许写 `00-抖音搜索证据.json` 与 `.md`，不得写 candidates、source-health 或 `00-选题.*`。
 
 ## 执行
 
@@ -63,7 +63,7 @@ opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 
 - 互动字段缺失写 `null` 并在 `field_availability` 标记 `false`；实际返回数字 `0` 则保留 0 并标记 `true`，不得混为一谈。
 - 返回空数组时写 `EMPTY_OR_FIELD_UNAVAILABLE`；不能据此断言抖音上没有相关内容。
-- 当前已安装 OpenCLI 1.8.6 的 `douyin search` 只提供搜索结果样本，卡片通常只有点赞字段；`douyin hashtag hot` 可提供全站热点，已由 laohan-xuanti 的 discovery route 使用。`douyin hashtag search` 当前接口实测失败，`hashtag hot --keyword` 也不能可靠按关键词过滤。因此搜索量、供给总量、增长速度和官方内容缺口默认均为 `UNAVAILABLE`；以后只有 OpenCLI 实际返回这些字段时才使用，不从结果条数或点赞反推。
+- 历史OpenCLI 1.8.6及本轮实测2.0.2的`douyin search`只提供搜索结果样本；2.0.2的部分命令使用`{ok:true,data:...}`，包装器显式兼容该成功终态与旧数组/裸对象，`ok:false`不得记成功，合法空结果66单独记空。搜索量、供给总量、增长速度和官方内容缺口默认均为`UNAVAILABLE`；以后只有实际返回这些字段才使用，不从条数或点赞反推。`hashtag hot`为全站热点，历史hashtag关键词失败不能当作新版能力结论，命令行为以本机实测为准。
 - 事实性结论必须回到原视频或权威来源核验；搜索结果只能作为发现证据。
 - 用户单独要求搜索分析时，可总结结果中可见的内容类型和重复角度；不得决定工作流最终选题，不得补造搜索结果未提供的事实。
 - 指定 `episode` 时必须使用 runtime-locked 包装器，先写机器真源 `00-抖音搜索证据.json`，再从它生成 `.md`；Markdown 不得新增 JSON 没有的结论。
@@ -93,6 +93,8 @@ Episode JSON 最小合同：
 ```
 
 `OK` 必须 `result_count > 0` 且等于 results 长度；`EMPTY_OR_FIELD_UNAVAILABLE` 必须为 0 和空数组；FAILED 必须为 0、空数组并有 `error`。全部查询 FAILED 或预检失败时写 `availability_status: UNAVAILABLE`，仍完成 episode 证据落盘；①不得据此推断平台没有需求。
+
+`executor.availability_status`表示本次搜索至少取得一个有效终态（可含合法空结果），不表示有市场需求；预检可达性单独看doctor_status/logged_in。成功退出0却无JSON是协议失败，退出66是明确合法空结果；查询值不得是`-f`或`--limit`等选项。workspace与episode使用同一规则，失败覆盖当前文件如实表示最近尝试，当前下游按研究目录及文件SHA绑定，不把旧成功静默当新证据。
 
 ## 边界
 

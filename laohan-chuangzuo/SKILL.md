@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.8.0"
+version: "3.8.1"
 ---
 
 # 统一创作引擎
@@ -79,11 +79,13 @@ ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink
 OUTPUT_DIR = 普通独立写作时 <当前工作目录>/output/；已验证系列单期资料包的独立草稿写入 <项目>/script-pool/<series-id>/；Episode 模式时 episodes/<slug>/02-创作工作稿/
 ```
 
-## 三稿待选择模式
+## 同一流程的待选择交付阶段
 
-Jeffrey明确要三篇供选时，先从①研究得到三个不同主题/观众任务，再自主选择结构、比较钩子、写纯口播、核来源并做Sepia；候选与同名decision/sepia-input写`script-pool/<任务>/`。decision=`candidate-script-v1 / AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`，由`check-script-contract.mjs --candidate --script <稿.md> --decision <稿.decision.json> --base <项目>`验证。来源账本独立写，绑定事实、亲历、推论/假设边界。不要创建episode、TTS或正式发布物。
+所有自主选题都先执行①五步法研究，再执行本skill全部六步创作和Sepia。Jeffrey要三篇供选时仅延后正式定题、发布物和制作，不另走轻合同。先执行同一`check-topic-contract.mjs --workspace <研究目录> --base <项目>`取得RESEARCH_READY，再为三个实质不同的SHORTLISTED主题/观众任务规划、比较钩子、创作、审来源、逐段审计及Sepia定稿；本机say机械试读与正式稿相同，只作写作QA，不是专属声音或视频音轨。
 
-用户选择后再按目标路线转正式内容审校，最终稿和当前来源锁定后按Motion方法制作；候选PASS不等于正式②完成。此模式优先于下文普通独立正式写作的TTS/发布信息要求。
+纯口播、同名decision/sepia-input、大纲、真实QA音频及来源账本写`script-pool/<任务>/`。decision使用共同`schema4 / content-units-v2`，标`AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`；字段见`references/creation-contract.md`。`check-script-contract.mjs --candidate --script <稿.md> --decision <稿.decision.json> --base <项目>`会实际重跑上游研究门，再继续共同六步/内容单位/逐段/Sepia/QA检查；旧candidate-script-v1不再放行。禁止缺研究、绑定淘汰项、偏离已研究论点或使用过期SHA。不要创建episode、正式配音、口型、渲染或发布物。
+
+用户选择后按目标路线完成正式内容审校和发布绑定，最终稿和来源锁定后按Motion方法制作；待选择PASS不等于正式②完成。下文六步、来源、Sepia及本机机械试读共同执行，发布信息仅在正式交付时生成。
 
 ## Episode 模式
 
@@ -198,7 +200,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 2. **经历归属**：只把Jeffrey真实经历写第一人称；第三方故事自然注明来源，不能把订单/收入/群聊/学费变成自己做过。历史亲历内化授权记录保留，当前生产按真实来源规则执行；
 3. **增量是增补**：老韩自有判断≥2处作为增补，不替换源骨架主体；
 4. **原创表达**：换自己的论点与表达，不为去同源指纹修改真实数字、事实组合、日期或能力边界；假设示例必须明说是假设；
-5. **直读测试**（humanizer 后置）：逐句三问——指代能否在前句找到同类别对象、拟物动词（叫/响/漏/爬/断）有无本体铺垫、术语首现有无当句解释；无铺垫隐喻必须改为字面直白表述，词内误报人工判读保留；
+5. **直读测试**（Sepia 后置）：逐句三问——指代能否在前句找到同类别对象、拟物动词（叫/响/漏/爬/断）有无本体铺垫、术语首现有无当句解释；无铺垫隐喻必须改为字面直白表述，词内误报人工判读保留；
 6. 决策 JSON `rewrite_record` 登记organize绑定及素材取舍理由、经历归属与真实来源、直读测试结果、原创表达与事实保真记录与被否版本演进链。
 
 ## Step 1.5：取材与大纲
@@ -398,7 +400,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 
 两条结构偏好：金句独立成段（与 quote_anchor 同句原句）；术语首现集中。
 
-产出：**正文照旧**（只含 Jeffrey 口播文字，零变化）+ 可选 sidecar `镜头结构.json`（Episode 模式 `02-创作工作稿/`；独立模式与口播稿同 basename）。sidecar 只含语义 role 提示（opening/point/contrast/list/quote/cta）与段落全文/SHA 绑定，**不含任何模板参数或视觉执行细节**（模板 props 归下游适配器产生并审阅）；不进正文、不进创作决策.json、不进 validator 校验范围。humanizer 或实质改稿后必须重出 sidecar（段落 SHA 会失配，下游按全文匹配、失配即拒绝）。
+产出：**正文照旧**（只含 Jeffrey 口播文字，零变化）+ 可选 sidecar `镜头结构.json`（Episode 模式 `02-创作工作稿/`；独立模式与口播稿同 basename）。sidecar 只含语义 role 提示（opening/point/contrast/list/quote/cta）与段落全文/SHA 绑定，**不含任何模板参数或视觉执行细节**（模板 props 归下游适配器产生并审阅）；不进正文、不进创作决策.json、不进 validator 校验范围。Sepia 或实质改稿后必须重出 sidecar（段落 SHA 会失配，下游按全文匹配、失配即拒绝）。
 
 ---
 

@@ -11,28 +11,34 @@ const valueOf = (name) => {
 };
 const valuesOf = (name) => args.flatMap((item, index) => item === name && args[index + 1] ? [args[index + 1]] : []);
 const episodeArg = valueOf('--episode');
+const workspaceArg = valueOf('--workspace');
 const queries = valuesOf('--query');
 const limit = Number(valueOf('--limit') || 10);
-if (!episodeArg || !queries.length || !Number.isInteger(limit) || limit < 1 || limit > 30) throw new Error('用法: search-evidence.mjs --episode episodes/<slug> --query 关键词 [--query 关键词] [--limit 1-30]');
-const episode = resolve(episodeArg);
-if (!existsSync(episode) || !statSync(episode).isDirectory() || !existsSync(join(episode, 'episode-config.json'))) throw new Error('episode 不存在或缺 episode-config.json');
+if (Boolean(episodeArg) === Boolean(workspaceArg) || !queries.length || queries.some((query) => !query.trim() || query.trim().startsWith('-')) || !Number.isInteger(limit) || limit < 1 || limit > 30) throw new Error('用法: search-evidence.mjs --episode episodes/<slug> | --workspace <研究目录> --query 关键词 [--query 关键词] [--limit 1-30]');
+const episode = resolve(episodeArg || workspaceArg);
+if (!existsSync(episode) || !statSync(episode).isDirectory() || (episodeArg && !existsSync(join(episode, 'episode-config.json')))) throw new Error('研究目录不存在或episode缺 episode-config.json');
 
 const run = (commandArgs, timeout = 90000) => spawnSync('opencli', commandArgs, {encoding: 'utf8', timeout, maxBuffer: 16 * 1024 * 1024});
+const processError = (result, fallback) => String(result.error?.code || result.error?.message || result.stderr || result.stdout || result.signal || fallback || `exit ${result.status}`).trim();
+const unwrap = (payload) => {
+  if (payload?.ok === false) throw new Error('OpenCLI返回失败终态: ' + (typeof payload.error === 'string' ? payload.error : payload.error?.message || payload.error?.code || '未提供原因'));
+  return payload?.ok === true ? payload.data : payload;
+};
 const versionRun = run(['--version'], 15000);
 const doctorRun = run(['doctor'], 30000);
 const whoamiRun = run(['douyin', 'whoami', '-f', 'json'], 30000);
 let whoami = null;
 let whoamiError = '';
 if (whoamiRun.status === 0) {
-  try { whoami = JSON.parse(whoamiRun.stdout); } catch { whoamiError = 'OpenCLI whoami 不是合法 JSON'; }
+  try { whoami = unwrap(JSON.parse(whoamiRun.stdout)); } catch (error) { whoamiError = error instanceof SyntaxError ? 'OpenCLI whoami JSON解析失败' : error.message; }
 }
 const version = versionRun.status === 0 ? versionRun.stdout.trim().replace(/^opencli\s+v?/i, '') : 'unknown';
 const doctorStatus = doctorRun.status === 0 ? 'PASS' : 'FAILED';
 const loggedIn = whoami?.logged_in === true;
 const preflightErrors = [
-  versionRun.status === 0 ? '' : String(versionRun.stderr || versionRun.stdout || 'opencli --version 失败').trim(),
-  doctorRun.status === 0 ? '' : String(doctorRun.stderr || doctorRun.stdout || 'opencli doctor 失败').trim(),
-  whoamiRun.status === 0 ? whoamiError : String(whoamiRun.stderr || whoamiRun.stdout || 'opencli douyin whoami 失败').trim(),
+  versionRun.status === 0 ? '' : processError(versionRun, 'opencli --version 失败'),
+  doctorRun.status === 0 ? '' : processError(doctorRun, 'opencli doctor 失败'),
+  whoamiRun.status === 0 ? whoamiError : processError(whoamiRun, 'opencli douyin whoami 失败'),
   whoamiRun.status === 0 && !whoamiError && !loggedIn ? 'OpenCLI 抖音未登录' : ''
 ].filter(Boolean);
 const preflightAvailable = versionRun.status === 0 && doctorRun.status === 0 && whoamiRun.status === 0 && !whoamiError && loggedIn;
@@ -47,12 +53,13 @@ for (const query of queries) {
     continue;
   }
   const result = run(commandArgs);
-  if (result.status !== 0) {
-    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: String(result.stderr || result.stdout || `exit ${result.status}`).trim(), results: []});
+  if (![0, 66].includes(result.status)) {
+    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: processError(result), results: []});
     continue;
   }
   try {
-    const payload = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+    if (result.status === 0 && !result.stdout.trim()) throw new Error('成功退出但没有JSON输出');
+    const payload = unwrap(result.stdout.trim() ? JSON.parse(result.stdout) : []);
     if (!Array.isArray(payload)) throw new Error('返回值不是数组');
     const normalized = payload.map((item, index) => {
       const rank = Number.isInteger(item?.rank) && item.rank > 0 ? item.rank : index + 1;
@@ -86,7 +93,7 @@ for (const query of queries) {
     });
     records.push({query, command, attempted_at: attemptedAt, status: normalized.length ? 'OK' : 'EMPTY_OR_FIELD_UNAVAILABLE', result_count: normalized.length, results: normalized});
   } catch (error) {
-    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `JSON 解析失败: ${error.message}`, results: []});
+    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `${error instanceof SyntaxError ? 'JSON解析失败' : 'OpenCLI协议失败'}: ${error.message}`, results: []});
   }
 }
 
@@ -98,11 +105,11 @@ const jsonTmp = jsonPath + '.tmp';
 writeFileSync(jsonTmp, JSON.stringify(evidence, null, 2) + '\n');
 renameSync(jsonTmp, jsonPath);
 
-const lines = ['# 抖音关键词搜索证据', '', `- 执行时间：${collectedAt}`, `- OpenCLI：${version}`, `- 登录状态：${loggedIn ? '已验证' : '不可用'}`, `- 平台数据：${availabilityStatus}`, ''];
+const lines = ['# 抖音关键词搜索证据', '', `- 执行时间：${collectedAt}`, `- OpenCLI：${version}`, `- 登录状态：${loggedIn ? '已验证' : '不可用'}`, `- 本次搜索执行状态（含合法空结果）：${availabilityStatus}`, ''];
 for (const record of records) {
   lines.push(`## ${record.query}`, '', `- 状态：${record.status}`, `- 实际条数：${record.result_count}`, `- 命令：\`${record.command}\``, '');
   if (record.status === 'FAILED') lines.push(`- 错误：${record.error}`, '');
-  else if (record.status === 'EMPTY_OR_FIELD_UNAVAILABLE') lines.push('- 返回合法空数组；只能判定平台证据未决，不能判定无人做。', '');
+  else if (record.status === 'EMPTY_OR_FIELD_UNAVAILABLE') lines.push('- 返回合法空结果；只能判定平台证据未决，不能判定无人做。', '');
   else {
     lines.push('| # | 作者 | 点赞 | 标题 | 链接 |', '|---|---|---:|---|---|');
     for (const item of record.results) lines.push(`| ${item.rank} | ${item.author.replaceAll('|', '\\|')} | ${item.likes ?? '不可用'} | ${item.desc.replaceAll('|', '\\|').replaceAll('\n', ' ')} | [原视频](${item.url}) |`);

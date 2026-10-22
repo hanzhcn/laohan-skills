@@ -117,19 +117,39 @@ if (seriesDraftArg) {
   process.exit(0);
 }
 
+let researchedCandidate = null;
+let researchCandidatesPath = null;
 if (candidateMode) {
+  if (decision.contract_version === 'candidate-script-v1') fail('旧candidate-script-v1已退役；必须补选题研究绑定并使用共同content-units-v2创作合同');
   const firstLineEnd = script.indexOf('\n');
   const spoken = firstLineEnd >= 0 ? script.slice(firstLineEnd + 1).trim().split(/\n\s*\n/).map((x) => x.trim()).join('\n') : '';
   if (!/^#\s+[^\n]+\n/.test(script)) fail('候选稿第一行标题后必须有正文');
   const cue = spoken.split('\n').find((line) => /^\s*>?\s*(?:\[?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示)[：:])/iu.test(line));
   if (cue) fail('候选口播正文不得混入导演提示');
   const units = decision.content_units;
-  if (decision.contract_version !== 'candidate-script-v1' || decision.schema_version !== 1
+  if (decision.contract_version !== 'content-units-v2' || decision.schema_version !== 4
     || decision.status !== 'AWAITING_JEFFREY_SELECTION' || decision.stage_status !== 'NOT_STAGE_2_COMPLETE'
     || decision.script_title !== title || decision.script_hash !== shaFile(scriptPath) || !spoken
     || /^(?:#{1,6}\s|>|```|---\s*$)/m.test(spoken) || /\[(?:画面|字幕|镜头|B-Roll)/i.test(spoken)) fail('候选稿必须是待选择的纯口播，绑定当前稿SHA且不能声称②完成');
   const pool = join(baseReal, 'script-pool');
   if (!realpathSync(scriptPath).startsWith(pool + '/') || dirname(scriptPath) !== dirname(decisionPath)) fail('候选稿与decision必须同目录位于script-pool');
+  const research = decision.topic_research_contract;
+  if (!nonEmpty(research?.workspace_path) || !nonEmpty(research.candidate_id)) fail('缺选题研究绑定，不能用候选交付跳过xuanti');
+  const researchPath = resolve(base, research.workspace_path);
+  if (!existsSync(researchPath) || !statSync(researchPath).isDirectory() || !realpathSync(researchPath).startsWith(baseReal + '/')) fail('选题研究目录必须在当前项目内');
+  const researchFiles = {'00-选题-signals.json': 'signals_sha256', '00-选题-candidates.json': 'candidates_sha256', '00-选题-source-health.json': 'source_health_sha256', '00-抖音搜索证据.json': 'douyin_sha256'};
+  for (const [file, key] of Object.entries(researchFiles)) {
+    const path = join(researchPath, file);
+    if (!requireFile(path, '选题研究 ' + file).startsWith(realpathSync(researchPath) + '/') || research[key] !== shaFile(path)) fail('选题研究绑定过期或无效: ' + file);
+  }
+  const topicValidator = resolve(import.meta.dirname, '../../laohan-xuanti/scripts/check-topic-contract.mjs');
+  const topicResult = spawnSync('node', [topicValidator, '--workspace', researchPath, '--base', baseReal], {encoding: 'utf8'});
+  if (topicResult.status !== 0) fail('选题研究未通过: ' + (topicResult.stderr || topicResult.stdout || 'validator failed').trim());
+  researchCandidatesPath = join(researchPath, '00-选题-candidates.json');
+  researchedCandidate = JSON.parse(readFileSync(researchCandidatesPath, 'utf8')).candidates.find((item) => item.id === research.candidate_id);
+  if (!researchedCandidate || researchedCandidate.disposition !== 'SHORTLISTED') fail('稿件必须绑定本轮可写的SHORTLISTED选题，不能引用淘汰项');
+  if (decision.topic_thesis !== researchedCandidate.thesis || decision.audience !== researchedCandidate.audience || decision.content_form !== researchedCandidate.content_form
+    || decision.hook_contract?.packaging_title_direction !== researchedCandidate.packaging_assessment.title_direction) fail('稿件论点、受众、形态或标题承诺偏离研究选题');
   if (!Array.isArray(units) || !uniqueNonEmpty(units.map((x) => x?.id))
     || units.some((x) => !nonEmpty(x.claim) || !nonEmpty(x.support) || !nonEmpty(x.viewer_value) || !uniqueNonEmpty(x.claim_ids))) fail('候选稿内容单位缺判断、支撑、观众价值或主张映射');
   const ledgerPath = resolve(base, decision.source_ledger_path || '');
@@ -164,17 +184,14 @@ if (candidateMode) {
         || /TODO|TBD|\[填写\]|\[粘贴\]/i.test(readFileSync(file, 'utf8'));
     })) fail('候选稿承诺观众资源时必须已有完整文件、SHA与交付说明');
   }
-  try { verifySepiaReview({review: decision.language_review_contract, base, spoken, unitIds: units.map((x) => x.id), snapshotPath: relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + '.sepia-input.md'))}); }
-  catch (error) { fail(error.message); }
-  console.log('PASS chuangzuo candidate contract NOT_STAGE_2_COMPLETE title=' + title);
-  process.exit(0);
+  // Continue through the same six-step/content-unit/paragraph/voice/Sepia/QA checks.
 }
 
 const publishHeading = /^##\s+抖音发布信息\s*$/m.exec(script);
-if (!publishHeading) fail('稿件必须包含“## 抖音发布信息”');
+if (!candidateMode && !publishHeading) fail('稿件必须包含“## 抖音发布信息”');
 const titleLineEnd = script.indexOf('\n');
 const shootingNotesIndex = script.search(/^##\s+拍摄备注\s*$/m);
-const bodyEnd = Math.min(publishHeading.index, shootingNotesIndex >= 0 ? shootingNotesIndex : publishHeading.index);
+const bodyEnd = candidateMode ? script.length : Math.min(publishHeading.index, shootingNotesIndex >= 0 ? shootingNotesIndex : publishHeading.index);
 const body = script.slice(titleLineEnd + 1, bodyEnd);
 const forbiddenDirectorCue = body.split('\n').find((line) => /^\s*>?\s*(?:\[?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示)[：:])/iu.test(line));
 if (forbiddenDirectorCue) fail('口播正文不得混入导演或Remotion提示: ' + forbiddenDirectorCue.trim());
@@ -184,7 +201,7 @@ const paragraphs = body
   .filter(Boolean);
 if (!paragraphs.length) fail('稿件没有有效口播段落');
 
-const publishStart = publishHeading.index + publishHeading[0].length;
+const publishStart = publishHeading ? publishHeading.index + publishHeading[0].length : script.length;
 const publishTail = script.slice(publishStart);
 const nextLevelTwoHeading = publishTail.search(/^##\s+/m);
 const publishBlock = (nextLevelTwoHeading >= 0 ? publishTail.slice(0, nextLevelTwoHeading) : publishTail).trim();
@@ -197,27 +214,30 @@ const publishSubsection = (name) => {
 };
 const recommendedTitle = publishSubsection('主推标题');
 const videoDescription = publishSubsection('视频介绍');
+if (!candidateMode) {
 if (!nonEmpty(recommendedTitle) || recommendedTitle.includes('\n') || Array.from(recommendedTitle).length > 30) fail('抖音主推标题必须是30字以内的单行非空标题');
 if (!nonEmpty(videoDescription)) fail('抖音视频介绍不能为空');
 const descriptionHashtags = videoDescription.match(/#[\p{L}\p{N}_-]+/gu) || [];
 if (!descriptionHashtags.includes('#AI新星计划')) fail('抖音视频介绍必须包含#AI新星计划');
 if ((videoDescription.match(/[？?]/g) || []).length !== 1) fail('抖音视频介绍必须且只能包含一个明确互动问题');
+}
 
-if (episodeArg) {
+if (episodeArg || candidateMode) {
   if (decision.schema_version !== 4 || decision.contract_version !== 'content-units-v2') fail('Episode创作决策必须使用 schema 4 / content-units-v2');
-  const topicPath = join(base, '00-选题.json');
-  const outlinePath = join(base, '02-创作工作稿/大纲.md');
+  const topicPath = candidateMode ? researchCandidatesPath : join(base, '00-选题.json');
+  const outlinePath = candidateMode ? resolve(base, decision.outline_path || '') : join(base, '02-创作工作稿/大纲.md');
   if (!requireFile(topicPath, '00-选题.json').startsWith(baseReal + '/')) fail('00-选题.json必须位于当前episode');
   if (!requireFile(outlinePath, '大纲.md').startsWith(baseReal + '/')) fail('大纲.md必须位于当前episode');
   let topic;
   try {
-    topic = JSON.parse(readFileSync(topicPath, 'utf8'));
+    topic = candidateMode ? {...researchedCandidate, schema_version: 4} : JSON.parse(readFileSync(topicPath, 'utf8'));
   } catch {
     fail('选题不是合法JSON');
   }
   if (topic.schema_version === 4) {
     // 2026-09-17五步法合同：AI自主定题，无采访/大纲确认门槛
-    if (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale)) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
+    if (!candidateMode && (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale))) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
+    if (candidateMode && decision.outline_sha256 !== shaFile(outlinePath)) fail('候选大纲必须绑定当前SHA');
     const hook = decision.hook_contract || {};
     // 2026-09-27 改（Jeffrey 选择「允许空池显式登记」）：
     // 原判据要求 expression_pool_usage **非空**，导致 `script-pool/Jeffrey个人表达池.md` 为空时
@@ -338,6 +358,7 @@ if (decision.script_title !== title || decision.script_hash !== shaFile(scriptPa
 const activeStylePath = resolve(base, decision.active_style_file || '');
 if (!nonEmpty(decision.active_style_file) || !existsSync(activeStylePath) || !statSync(activeStylePath).isFile() || decision.active_style_sha256 !== shaFile(activeStylePath)) fail('active style 路径或SHA-256无效');
 
+if (!candidateMode) {
 const publish = decision.publish_copy_contract || {};
 const allowedTitleStrategies = new Set(['SPECIFIC_EVIDENCE_PLUS_COUNTERINTUITIVE_RESULT', 'SEARCHABLE_TOOL_ACTION_RESULT', 'AUDIENCE_PROBLEM_PLUS_UNEXPECTED_RESULT']);
 const allowedDescriptionStructures = new Set([
@@ -352,6 +373,7 @@ const publishEvidenceCorpus = `${recommendedTitle}\n${paragraphs.join('\n')}\n${
 if (!publish.title_evidence.some((evidence) => recommendedTitle.includes(evidence)) || publish.title_evidence.some((evidence) => !publishEvidenceCorpus.includes(evidence))) fail('主推标题证据必须来自标题、正文或视频介绍，且至少一条直接进入标题');
 const descriptionEvidenceCorpus = `${paragraphs.join('\n')}\n${videoDescription}`;
 if (publish.description_evidence.some((evidence) => !descriptionEvidenceCorpus.includes(evidence))) fail('视频介绍证据必须来自正文或介绍');
+}
 
 if (episodeArg) {
   const multiPath = join(base, '12-发布/多平台发布内容.md');
@@ -506,7 +528,7 @@ for (const device of voiceDevices) {
 const languageReview = decision.language_review_contract;
 const expectedSnapshotPath = episodeArg
   ? '02-创作工作稿/humanizer-input.md'
-  : relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + '.humanizer-input.md'));
+  : relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + (candidateMode ? '.sepia-input.md' : '.humanizer-input.md')));
 try { verifySepiaReview({review: languageReview, base, spoken: paragraphs.join('\n'), unitIds, snapshotPath: expectedSnapshotPath}); }
 catch (error) { fail(error.message); }
 
@@ -546,4 +568,4 @@ if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.r
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
 if (Date.parse(languageReview.applied_at) > Date.parse(decision.completed_at)) fail('Sepia执行时间不得晚于最终决策完成时间');
 
-console.log(`PASS chuangzuo script contract schema=${decision.schema_version} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);
+console.log(`PASS chuangzuo script contract schema=${decision.schema_version} phase=${candidateMode ? 'AWAITING_JEFFREY_SELECTION NOT_STAGE_2_COMPLETE' : 'FORMAL'} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=${candidateMode ? 'DEFERRED' : 'PASS'} tts_seconds=${duration.actual_tts_seconds}`);

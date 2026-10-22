@@ -131,9 +131,13 @@ Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同
 
 ## 三稿待选择
 
-`--candidate --script <稿.md> --decision <同名.decision.json> --base <项目>`使用`candidate-script-v1`，稿件与决策同目录位于script-pool。纯口播正文、当前稿SHA、完整内容单位及source_ledger_path/SHA、每单位claim_ids、真实来源/主张类型映射、实际Sepia审校必须成立。
+`--candidate --script <稿.md> --decision <同名.decision.json> --base <项目>`只是共同`schema4 / content-units-v2`的待选阶段，旧`candidate-script-v1`拒绝。稿件与决策同目录位于script-pool，纯口播不含发布信息。共同六步规划、表达池/钩子/正文锚点、内容单位、逐段SHA、两遍去重、作者语域、结构、Sepia和本机say机械QA均继续执行，无提前PASS出口。
 
-状态固定`AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`，不提前选中、不TTS、不创建episode或发布物。三稿要在主题/任务/核心判断上不同；来源与事实审校另存，不能混入口播。用户选择后对选中内容做正式审核和路线交接。
+额外绑定：`topic_research_contract={workspace_path,candidate_id,signals_sha256,candidates_sha256,source_health_sha256,douyin_sha256}`，路径相对项目，SHA绑定研究目录四份当前JSON；实际调用xuanti同一validator的workspace研究阶段，必须成功。candidate_id必须指向可写SHORTLISTED，稿件topic_thesis/audience/content_form及hook_contract.packaging_title_direction与其一致；topic_sha256绑定candidates文件。大纲用outline_path/outline_sha256绑定。source_ledger_path/SHA、每单位claim_ids及真实来源/主张类型映射照常检查。
+
+共同`quality_checks`与`completed_at`在待选阶段也必需；这里的completed_at只记录本轮写作/审校封口时间，不是Jeffrey选择、正式②完成或接受。真正阶段由status/stage_status与入口回执区分，不得因此恢复免QA的候选提前出口。
+
+状态固定`AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`，只延后用户选择、发布物和正式制作。机械QA音频不作为专属声音生产或真人听审；不创建episode、口型或视频。三稿要在主题/任务/核心判断上不同；来源与事实审校另存，不能混入口播。用户选择后对选中内容做正式审核和路线交接。自述完成与机械绑定不能证明研究判断、全文语义或传播效果，仍要实际读来源和独立审稿。
 
 ## 范围
 

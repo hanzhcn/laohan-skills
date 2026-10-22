@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.4.0
+version: 3.4.1
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -175,6 +175,6 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/check-topic-contract.mjs --
 
 ## 非 Episode 模式
 
-用户只要热点简报或三稿供选时，执行`collect-topic-signals.mjs --workspace <已存在研究目录>`，无需episode-config、不创建episode。三稿候选依当前五步法研究后交②候选模式，不提前AUTO_SELECTED或声称①正式完成；其输入与失败仍如实留证。用户只要搜抖音时直接路由 `laohan-douyinsousuo`。
+用户只要热点简报或三稿供选时，执行`collect-topic-signals.mjs --workspace <已存在研究目录>`，无需episode-config、不创建episode。按同一五步法完成signals、长名单筛选、PRIMARY、抖音尝试、source-health与内容核读后，运行同一`check-topic-contract.mjs --workspace <研究目录> --base <项目>`。它对SHORTLISTED执行与生产选中题相同的就绪条件，输出`phase=RESEARCH_READY`；未通过不得交②，不提前AUTO_SELECTED或冒称正式①完成。②每稿绑定该目录当前文件SHA及具体候选，继续共同六步创作与Sepia，不另设轻流程。用户只要搜抖音时直接路由 `laohan-douyinsousuo`。
 
 当前项目五步法优先；未核实的算法权重、固定7天推荐、50—65%故事留存不作事实。SERIES还须topic_corroboration.mother_topic、topic_by_signal（signal_id/mother_topic/viewer_task）、independence_note、content_review_note，按真实内容登记；机械日期检查不能证明母题或独立性。

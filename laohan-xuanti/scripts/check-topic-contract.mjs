@@ -6,16 +6,25 @@ import {spawnSync} from 'node:child_process';
 
 const args = process.argv.slice(2);
 const episodeIndex = args.indexOf('--episode');
-if (episodeIndex === -1 || !args[episodeIndex + 1]) {
-  console.error('用法: check-topic-contract.mjs --episode episodes/<slug>');
+const workspaceIndex = args.indexOf('--workspace');
+const workspaceMode = workspaceIndex !== -1;
+const directoryArg = args[(workspaceMode ? workspaceIndex : episodeIndex) + 1];
+const baseIndex = args.indexOf('--base');
+if ((episodeIndex !== -1) === workspaceMode || !directoryArg || directoryArg.startsWith('--') || (workspaceMode && (baseIndex === -1 || !args[baseIndex + 1]))) {
+  console.error('用法: check-topic-contract.mjs --episode episodes/<slug> | --workspace <研究目录> --base <项目根>');
   process.exit(2);
 }
-const episode = resolve(args[episodeIndex + 1]);
-if (!existsSync(episode) || !statSync(episode).isDirectory() || basename(dirname(episode)) !== 'episodes') {
+const episode = resolve(directoryArg);
+if (!existsSync(episode) || !statSync(episode).isDirectory() || (!workspaceMode && basename(dirname(episode)) !== 'episodes')) {
   console.error('BLOCKED topic contract: episode必须位于episodes/<slug>');
   process.exit(1);
 }
 const root = realpathSync(episode);
+const projectRoot = workspaceMode ? realpathSync(resolve(args[baseIndex + 1])) : realpathSync(dirname(dirname(root)));
+if (workspaceMode && !root.startsWith(projectRoot + '/')) {
+  console.error('BLOCKED topic contract: 研究目录必须位于指定项目根内');
+  process.exit(1);
+}
 const target = (relative) => {
   const path = join(root, relative);
   if (existsSync(path) && !realpathSync(path).startsWith(root + '/')) throw new Error('产物不得逃逸episode: ' + relative);
@@ -34,13 +43,13 @@ for (const relative of ['00-选题-signals.json', '00-选题-candidates.json']) 
 const signals = readJson('00-选题-signals.json');
 const sources = Array.isArray(signals.sources) ? signals.sources : [];
 if (signals.schema_version !== 3 || signals.episode !== basename(episode)) block('signals必须是当前episode的schema 3');
+if (workspaceMode && signals.workspace_kind !== 'CANDIDATE_RESEARCH') block('workspace必须绑定当前候选研究身份');
 const discoveryMode = signals.discovery_mode || 'AUTONOMOUS_SCAN';
 if (!['AUTONOMOUS_SCAN', 'USER_DIRECTION_RESEARCH'].includes(discoveryMode)) block('discovery_mode非法');
 let validatedDirectionResearch = null;
 if (discoveryMode === 'USER_DIRECTION_RESEARCH') {
   const direction = signals.direction_research || {};
   if (!nonEmpty(direction.series_id) || !['DEMAND_VALIDATED', 'EXPERIMENTAL_ONE_OFF'].includes(direction.status) || !nonEmpty(direction.series_research_path) || !/^[a-f0-9]{64}$/.test(direction.series_research_sha256 || '')) block('USER_DIRECTION_RESEARCH必须绑定已验证的系列研究包');
-  const projectRoot = realpathSync(dirname(dirname(root)));
   const seriesRoot = join(projectRoot, 'script-pool/series-research');
   const requestedSeriesPath = resolve(projectRoot, direction.series_research_path);
   if (!existsSync(seriesRoot) || !existsSync(requestedSeriesPath) || !statSync(requestedSeriesPath).isFile()) block('series_research_path或SHA无效');
@@ -80,6 +89,8 @@ const candidatesPath = target('00-选题-candidates.json');
 const candidates = readJson('00-选题-candidates.json');
 const items = Array.isArray(candidates.candidates) ? candidates.candidates : [];
 if (![3, 4].includes(candidates.schema_version) || items.length < 2 || new Set(items.map((item) => item?.id)).size !== items.length) block('candidates必须是schema 3（历史合同）或schema 4（五步法合同）且至少两个唯一候选');
+if (workspaceMode && (candidates.schema_version !== 4 || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md')) || items.some((item) => !['SHORTLISTED', 'REJECTED'].includes(item.disposition)))) block('待选研究必须是schema4短名单，不得提前定题或冒充历史合同');
+const readyForWriting = (item) => item.disposition === 'AUTO_SELECTED' || (workspaceMode && item.disposition === 'SHORTLISTED');
 
 const validateDirectionPackets = () => {
   const topic = existsSync(target('00-选题.json')) ? readJson('00-选题.json') : null;
@@ -191,10 +202,10 @@ for (const item of items) {
   const alignment = item.platform_alignment;
   if (!alignment || !['ALIGNED', 'ADJACENT', 'CONTRADICTED', 'UNRESOLVED', 'UNAVAILABLE'].includes(alignment.status) || !nonEmpty(alignment.rationale) || !Array.isArray(alignment.evidence_ids)
     || (alignment.status === 'UNAVAILABLE' ? alignment.evidence_ids.length !== 0 : !uniqueNonEmpty(alignment.evidence_ids) || alignment.evidence_ids.some((id) => !ids.includes(id) || evidenceById.get(id)?.source_type !== 'PLATFORM_SIGNAL'))) block('schema 4平台语义状态必须绑定实际平台证据，不可用不能伪造对齐');
-  if (item.disposition === 'AUTO_SELECTED' && !['ALIGNED', 'ADJACENT', 'UNAVAILABLE'].includes(alignment.status)) block('AUTO_SELECTED平台证据不能矛盾或未决');
+  if (readyForWriting(item) && !['ALIGNED', 'ADJACENT', 'UNAVAILABLE'].includes(alignment.status)) block('可写候选平台证据不能矛盾或未决');
   const fit = item.creator_fit;
-  if (!fit || !['FIRSTHAND_EXPERIENCE', 'BUILT_OR_TESTED', 'OWNED_EVIDENCE', 'LONG_TERM_PRACTICE', 'RESEARCHED_JUDGMENT', 'NOT_ESTABLISHED'].includes(fit.basis) || !nonEmpty(fit.why_jeffrey) || !nonEmpty(fit.distinctive_judgment) || (item.disposition === 'AUTO_SELECTED' && fit.basis === 'NOT_ESTABLISHED')) block('schema 4必须登记真实作者依据与独特判断');
-  if (item.content_form === 'tutorial-video' && item.disposition === 'AUTO_SELECTED') {
+  if (!fit || !['FIRSTHAND_EXPERIENCE', 'BUILT_OR_TESTED', 'OWNED_EVIDENCE', 'LONG_TERM_PRACTICE', 'RESEARCHED_JUDGMENT', 'NOT_ESTABLISHED'].includes(fit.basis) || !nonEmpty(fit.why_jeffrey) || !nonEmpty(fit.distinctive_judgment) || (readyForWriting(item) && fit.basis === 'NOT_ESTABLISHED')) block('schema 4必须登记真实作者依据与独特判断');
+  if (item.content_form === 'tutorial-video' && readyForWriting(item)) {
     const proof = item.tutorial_proof;
     const path = proof?.evidence_path && target(proof.evidence_path);
     if (proof?.status !== 'VERIFIED' || !path || !existsSync(path) || !statSync(path).isFile() || proof.evidence_sha256 !== shaFile(path) || !nonEmpty(proof.version_boundary) || !nonEmpty(proof.recovery)) block('教程选中前必须绑定本机实测、版本边界与失败恢复');
@@ -319,6 +330,7 @@ for (const item of items) {
   // 五步法第5步：包装与收藏价值
   const pa = item?.packaging_assessment || {};
   if (!nonEmpty(pa.title_direction) || !nonEmpty(pa.cover_concept) || !nonEmpty(pa.rationale) || ![true, false].includes(pa.worth_collecting) || ![true, false].includes(pa.evergreen_half_year) || ![true, false].includes(pa.title_clickable)) block('每个候选必须完成包装前置评估：标题方向、封面概念、收藏三问（值得收藏/半年后有用/标题想点）与理由');
+  if (readyForWriting(item) && (fp.status !== 'PASSED' || pa.title_clickable !== true || (pa.worth_collecting !== true && !['DECISION_SUPPORT', 'SHARE_FOR_RECOGNITION', 'TIMELY_ACTION'].includes(pa.value_basis)))) block('可写候选必须通过假阳性过滤并有兑现标题的观众价值');
 }
 const autoSelected = items.filter((item) => item.disposition === 'AUTO_SELECTED');
 if (autoSelected.length > 1) block('最多只能有一个AUTO_SELECTED候选');
@@ -349,6 +361,11 @@ if (autoSelected.length === 1) {
 }
 if (validatedDirectionResearch?.status !== 'EXPERIMENTAL_ONE_OFF' && items.some((item, index) => index > 0 && item.candidate_origin.priority_rank < items[index - 1].candidate_origin.priority_rank)) block('候选展示顺序必须遵循来源优先级：对标账号在前、自频道其次、全面热点再次、个人表达最后');
 
+if (workspaceMode) {
+  if (!items.some((item) => item.disposition === 'SHORTLISTED')) block('没有可进入创作的短名单', 'TOPIC_RESCAN_REQUIRED');
+  console.log(`PASS redian topic contract schema=4 phase=RESEARCH_READY mode=${discoveryMode}`);
+  process.exit(0);
+}
 if (!autoSelected.length) block('短名单审查不是正式①完成；必须有唯一AUTO_SELECTED及最终选题', 'AWAITING_TOPIC_SELECTION');
 
 if (discoveryMode === 'USER_DIRECTION_RESEARCH') validateDirectionPackets();
