@@ -4,7 +4,7 @@
 
 ## Episode采访与大纲确认
 
-标准Episode必须使用schema 4 / `content-units-v2`。2026-09-17五步法合同：选题为schema 4（AUTO_SELECTED）时，`创作决策.json`绑定当前选题SHA与`expression_pool_usage[]`个人表达池取材记录（每项`used/where`非空），且`hook_contract.fulfills_packaging_promise=true`并登记`packaging_title_direction`，证明前三秒钩子兑现①`packaging_assessment`的标题承诺；无采访、无大纲确认门槛。2026-09-17创作六步法（3.6.0）新增8字段：`structure_type`（TUTORIAL/EXPOSITION/STORY三选一）、`hook_variants[]`（≥3个不同方向+`selected_hook_index`+`tts_selected`读选证据）、`beat_distribution`（等分无空白检查）、`rhythm_anchors[]`（15—30秒密度）、`emotion_arc`（焦虑→释放→踏实三节点）、`quote_anchor`（承载判断的金句）、`comment_hook`（预期评论+高潮处引导）、`hkrr_check`（节奏必须+K/R≥1）。历史episode的schema 3选题继续按原采访/大纲确认合同验证（`反向采访.json`+`大纲确认.json`+四份上游SHA绑定），且不要求8字段。
+标准Episode必须使用schema 4 / `content-units-v2`。2026-09-17五步法合同：选题为schema 4（AUTO_SELECTED）时，`创作决策.json`绑定当前选题SHA与`expression_pool_usage[]`个人表达池取材记录（每项`used/where`非空），且`hook_contract.fulfills_packaging_promise=true`并登记`packaging_title_direction`，证明前三秒钩子兑现①`packaging_assessment`的标题承诺；无采访、无大纲确认门槛。2026-09-17创作六步法（3.6.0）新增8字段：`structure_type`（TUTORIAL/EXPOSITION/STORY/CUSTOM按题选择）、`hook_variants[]`（≥3个不同方向+`selected_hook_index`+`tts_selected`读选证据）、`beat_distribution`（段落推进与空转检查）、`rhythm_anchors[]`（正文实际理解锚点）、`emotion_arc`（如实记录开头/中段/收尾感受）、`quote_anchor`（承载判断的金句）、`comment_hook`（预期评论+高潮处引导）、`hkrr_check`（节奏必须+K/R≥1）。历史episode的schema 3选题继续按原采访/大纲确认合同验证（`反向采访.json`+`大纲确认.json`+四份上游SHA绑定），且不要求8字段。
 
 独立模式继续兼容schema 3 / `content-units-v1`，不伪造Episode人工记录。
 
@@ -119,95 +119,24 @@ Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同
 
 ## 人味与结构
 
-`human_voice_contract` 至少登记4种真实出现在稿件中的设备，例如 `INTERJECTION`、`SELF_DEPRECATION`、`RHETORICAL_QUESTION`、`COLLOQUIAL_EXPLANATION`、`SIGNATURE_INTERACTION`。人味设备允许不增加事实，不能因内容去重被删除。
+`human_voice_contract` 按作者语域如实登记设备（允许0种），例如 `INTERJECTION`、`SELF_DEPRECATION`、`RHETORICAL_QUESTION`、`COLLOQUIAL_EXPLANATION`、`SIGNATURE_INTERACTION`。人味设备允许不增加事实，不能因内容去重被删除。
 
 有分层讲解时设置 `structure_contract.layered=true`，正文使用连续的 `1、2、3……`；每层绑定不同内容单位。无真实层级时设置 `layered=false`，不强行编号。
 
-## humanizer-zh 最终语言定稿
+## Sepia最终语言定稿
 
-正式Episode和普通独立正式稿在内容事实成立后、TTS与hash绑定前，必须保存humanizer输入快照并执行本机冻结的`humanizer-zh`。`series-draft-v1`仅是独立草稿，豁免本门；`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`由Jeffrey确认且已经录制，不自动改写。
+执行`sepia.md`。正式稿`language_review_contract`绑定完整上游包、中文非虚构路由、实际references、输入/输出SHA和逐内容单位零主张增删改审计；不使用humanizer-zh或45分。`quality_checks.language_review=PASS`。保留既有humanizer-input.md兼容路径，不恢复旧工具。
 
-Episode输入快照固定为`02-创作工作稿/humanizer-input.md`；独立正式稿使用同basename`.humanizer-input.md`。`创作决策.json.humanizer_contract`固定为：
+`human_voice_contract={status:"PRESERVED",policy:"AUTHOR_REGISTER",devices:[],review_note:"实际语域判断"}`；devices有则逐条绑定真实段落，允许为空，禁止required_minimum_device_types或强制四种。
 
-```json
-{
-  "status": "PASS",
-  "skill": "humanizer-zh",
-  "skill_path": "agents-skills/humanizer-zh/SKILL.md",
-  "skill_sha256": "<sha256>",
-  "input_snapshot_path": "02-创作工作稿/humanizer-input.md",
-  "input_snapshot_sha256": "<sha256>",
-  "output_spoken_text_sha256": "<最终有效口播文本sha256>",
-  "claim_audit": {
-    "status": "PASS",
-    "audited_content_unit_ids": ["U01"],
-    "added_claims": [],
-    "removed_claims": [],
-    "changed_claims": [],
-    "reviewer": "Codex",
-    "review_note": "逐项对照内容单位，语言改写未改变主张。"
-  },
-  "quality_scores": {
-    "directness": 9,
-    "rhythm": 9,
-    "trust": 9,
-    "authenticity": 9,
-    "conciseness": 9,
-    "total": 45
-  },
-  "applied_at": "<ISO-8601>"
-}
-```
+## 三稿待选择
 
-五项分数均为1—10整数，`total`必须等于五项之和且至少45。主张审计必须逐项覆盖全部`content_units`，三个变更数组必须为空；发现任何主张变化就回到规划与事实步骤，不得把变化伪装成语言润色。机械validator校验路径/SHA、Skill SHA、最终口播SHA、覆盖范围和空变更数组；语义是否真的保持仍由创作者/终审负责。
+`--candidate --script <稿.md> --decision <同名.decision.json> --base <项目>`使用`candidate-script-v1`，稿件与决策同目录位于script-pool。纯口播正文、当前稿SHA、完整内容单位及source_ledger_path/SHA、每单位claim_ids、真实来源/主张类型映射、实际Sepia审校必须成立。
 
-## 自然时长与TTS
+状态固定`AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`，不提前选中、不TTS、不创建episode或发布物。三稿要在主题/任务/核心判断上不同；来源与事实审校另存，不能混入口播。用户选择后对选中内容做正式审核和路线交接。
 
-TTS是可重建的内部机械试读证据，只检查5秒内容锚点、拗口句和自然时长。它不是Jeffrey的正式口播音轨，不进入视频、导演或Remotion，也不能替代真人试拍后按脸部安全区和真实语速进行的节奏对齐；`actual_tts_seconds`只能表述为TTS机械试读时长，不能表述为真人口播实测。
+## 范围
 
-`duration_contract` 固定为：
+series-draft-v1保留原非正式草稿边界；已录制的USER_PROVIDED_FINAL_SCRIPT_AND_RAW不自动改写。旧episode不静默迁移，新期按当前冻结执行器与runtime。
 
-```json
-{
-  "mode": "CONTENT_DETERMINED",
-  "target_is_hard_limit": false,
-  "padding_for_duration": "PROHIBITED",
-  "hot_signal_brevity": "KEEP_CONCISE",
-  "tts_engine": "macos-say",
-  "tts_audio_path": "02-创作工作稿/tts-read-aloud.aiff",
-  "tts_audio_sha256": "<sha256>",
-  "tts_spoken_text_sha256": "<有效口播段落以换行连接后的sha256>",
-  "actual_tts_seconds": 0
-}
-```
-
-`script_metrics` 记录validator按有效口播段落重新计算的 `effective_spoken_chars`、`sentence_count`、`sentence_lengths`、15字阈值与短句占比。它们是测量结果，不是字数或时长门槛。
-
-Episode模式执行：
-
-```bash
-say -o episodes/<slug>/02-创作工作稿/tts-read-aloud.aiff -f /tmp/<slug>-spoken.txt
-ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 episodes/<slug>/02-创作工作稿/tts-read-aloud.aiff
-node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mjs --episode episodes/<slug>
-```
-
-独立模式执行：
-
-```bash
-node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mjs \
-  --script output/script-YYYY-MM-DD.md \
-  --decision output/script-YYYY-MM-DD.decision.json \
-  --base "$PWD"
-```
-
-已验证系列资料包草稿执行：
-
-```bash
-node ~/Documents/laohan-skills/laohan-chuangzuo/scripts/check-script-contract.mjs \
-  --script script-pool/<series-id>/E01-口播稿草稿.md \
-  --decision script-pool/<series-id>/E01-口播稿草稿.decision.json \
-  --series-draft script-pool/series-research/<series-id>/episode-packets/E01.json \
-  --base "$PWD"
-```
-
-Episode只有命令输出 `PASS chuangzuo script contract schema=4` 才完成；独立模式仍输出schema 3。validator检查采访四类完成证据与空缺口、大纲确认、钩子时序、默认签名开场或有理由的题目专属开场、5秒锚点、当前稿/风格SHA、正文没有导演提示、观众资源完整性与四平台交付绑定、真实原创增量、可视化锚点、内容单位、逐段角色、两遍去重、人味至少4种、连续编号、3选1标题证据、视频介绍结构、`#AI新星计划`、TTS音频与Step -1—7执行证据；缺一项立即BLOCKED。
+候选claim按kind登记依据：编辑推论必有reasoning，假设必有assumption_basis，亲历必有firsthand_basis及OWNED_RECORD或真实用户口述记录；来源ID不代替这些边界。不为亲历伪造Jeffrey接受/签名。资源承诺检测两种语序共用判定，仍需实际全文审阅。

@@ -10,11 +10,13 @@ const valueOf = (name) => {
   return index >= 0 ? args[index + 1] : null;
 };
 const episodeArg = valueOf('--episode');
-if (!episodeArg) throw new Error('用法: collect-topic-signals.mjs --episode episodes/<slug> [--sources aihot,hackernews,zhihu,weibo,36kr,bilibili,douyin-hot,toutiao,tieba,hupu]');
+const workspaceArg = valueOf('--workspace');
+if (episodeArg && workspaceArg) throw new Error('episode 与 workspace 不能同时指定');
+if (!episodeArg && !workspaceArg) throw new Error('用法: collect-topic-signals.mjs --episode episodes/<slug> [--sources aihot,hackernews,zhihu,weibo,36kr,bilibili,douyin-hot,toutiao,tieba,hupu]');
 
-const episode = resolve(episodeArg);
-if (!existsSync(episode) || !statSync(episode).isDirectory() || !existsSync(join(episode, 'episode-config.json'))) throw new Error('episode 不存在或缺 episode-config.json: ' + episode);
-if (!isAbsolute(episodeArg) && !episodeArg.includes('episodes/')) throw new Error('episode 必须指向 episodes/<slug>');
+const episode = resolve(episodeArg || workspaceArg);
+if (!existsSync(episode) || !statSync(episode).isDirectory() || (episodeArg && !existsSync(join(episode, 'episode-config.json')))) throw new Error('episode 不存在或缺 episode-config.json: ' + episode);
+if (episodeArg && !isAbsolute(episodeArg) && !episodeArg.includes('episodes/')) throw new Error('episode 必须指向 episodes/<slug>');
 
 const defaultSources = ['aihot', 'hackernews', 'zhihu', 'weibo', '36kr', 'bilibili', 'douyin-hot', 'toutiao', 'tieba', 'hupu'];
 const selectedSources = (valueOf('--sources') || defaultSources.join(',')).split(',').map((item) => item.trim()).filter(Boolean);
@@ -51,7 +53,7 @@ const normalizeItem = (sourceId, item, index) => {
     rank: Number.isInteger(item?.rank) ? item.rank : index + 1,
     title,
     url,
-    published_at: item?.publishedAt ?? item?.published_at ?? item?.created_at ?? null,
+    published_at: item?.publishedAt ?? item?.published_at ?? item?.created_at ?? (Number.isFinite(item?.create_time) ? new Date(item.create_time * 1000).toISOString() : null),
     raw: item
   };
 };
@@ -95,12 +97,12 @@ function collectTrackedCreators() {
     try {
       const payload = finalRun.stdout.trim() ? JSON.parse(finalRun.stdout) : [];
       const rawItems = normalizeArray(payload);
-      const counts = rawItems.map((item) => Number(item?.statistics?.digg_count ?? item?.digg_count ?? 0)).filter((value) => Number.isFinite(value) && value >= 0).sort((a, b) => a - b);
+      const counts = rawItems.map((item) => Number(item?.statistics?.digg_count ?? item?.digg_count ?? NaN)).filter((value) => Number.isFinite(value) && value >= 0).sort((a, b) => a - b);
       const median = counts.length ? (counts[Math.floor((counts.length - 1) / 2)] + counts[Math.ceil((counts.length - 1) / 2)]) / 2 : 0;
       const creatorResults = rawItems.map((item, index) => {
         const normalized = normalizeItem('tracked-douyin-creators', item, index);
-        const diggCount = Number(item?.statistics?.digg_count ?? item?.digg_count ?? 0);
-        const performanceRatio = median > 0 ? Number((diggCount / median).toFixed(2)) : null;
+        const diggCount = Number(item?.statistics?.digg_count ?? item?.digg_count ?? NaN);
+        const performanceRatio = Number.isFinite(diggCount) && median > 0 ? Number((diggCount / median).toFixed(2)) : null;
         const topComments = Array.isArray(item?.top_comments)
           ? item.top_comments.slice(0, 3).map((comment) => ({text: String(comment?.text ?? comment?.content ?? '').slice(0, 120), digg_count: Number(comment?.digg_count ?? comment?.like_count ?? 0)})).filter((comment) => comment.text)
           : [];
@@ -112,10 +114,12 @@ function collectTrackedCreators() {
           creator_sec_uid: creator.sec_uid,
           creator_pool_status: creator.status,
           lane_tags: Array.isArray(creator.lane_tags) ? creator.lane_tags : [],
-          digg_count: diggCount,
+          digg_count: Number.isFinite(diggCount) ? diggCount : null,
+          metrics_observed_at: nowIso(),
+          metrics_observation_basis: 'LIVE_OPENCLI_RESPONSE_AT_FETCH',
           recent_digg_median: median,
           performance_ratio: performanceRatio,
-          anomaly_status: performanceRatio !== null && performanceRatio >= 3 ? 'ANOMALY' : 'NORMAL'
+          anomaly_status: performanceRatio === null ? 'UNAVAILABLE' : performanceRatio >= 3 ? 'ANOMALY' : 'NORMAL'
         };
       });
       results.push(...creatorResults);
@@ -125,15 +129,16 @@ function collectTrackedCreators() {
     }
   }
   const failed = accounts.filter((item) => item.status === 'FAILED').length;
+  const activeFailed = accounts.filter((item) => item.status === 'FAILED' && item.pool_status !== 'PENDING').length;
   const coverage = {expected, attempted: accounts.length, completed: accounts.length - failed, failed, accounts};
   return {
     source_id: 'tracked-douyin-creators',
-    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 30 --with_comments false -f json (数据层全池)',
+    command_or_url: 'opencli douyin user-videos <sec_uid> --limit 30 --with_comments true -f json (数据层全池)',
     attempted_at: attemptedAt,
-    status: failed ? 'FAILED' : results.length ? 'OK' : 'EMPTY',
-    result_count: failed ? 0 : results.length,
-    ...(failed ? {error: `${failed}个对标账号扫描失败，候选生成必须停止`} : {}),
-    results: failed ? [] : results,
+    status: activeFailed ? 'FAILED' : results.length ? 'OK' : 'EMPTY',
+    result_count: activeFailed ? 0 : results.length,
+    ...(failed ? {error: `${failed}个对标账号失败，其中ACTIVE=${activeFailed}；PENDING失败不丢弃成功样本`} : {}),
+    results: activeFailed ? [] : results,
     coverage
   };
 }
@@ -155,6 +160,8 @@ function collectSelfChannel() {
         title: String(video?.title || ''),
         url: `https://www.douyin.com/video/${video.aweme_id}`,
         published_at: video?.published_at || null,
+        metrics_observed_at: video?.metrics?.latest?.observed_at || video?.metrics?.latest?.as_of || null,
+        metrics_freshness: 'HISTORICAL_SNAPSHOT',
         digg_count: digg,
         collect_count: collect,
         play_count: play,
@@ -164,7 +171,7 @@ function collectSelfChannel() {
         anomaly_status: ratio !== null && ratio >= 3 ? 'ANOMALY' : 'NORMAL'
       };
     });
-    return {source_id: 'self-channel', command_or_url: selfChannelPath, attempted_at: attemptedAt, status: results.length ? 'OK' : 'EMPTY', result_count: results.length, results};
+    return {source_id: 'self-channel', command_or_url: selfChannelPath, attempted_at: attemptedAt, baseline_computed_at: payload?.baseline?.computed_at || null, status: results.length ? 'OK' : 'EMPTY', result_count: results.length, results};
   } catch (error) {
     return {source_id: 'self-channel', command_or_url: selfChannelPath, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `自频道数据层不可读: ${error.message}`, results: []};
   }
@@ -227,6 +234,7 @@ const collectedAt = nowIso();
 const signals = {
   schema_version: 3,
   episode: basename(episode),
+  ...(workspaceArg ? {workspace_kind: 'CANDIDATE_RESEARCH', stage_status: 'NOT_STAGE_1_COMPLETE'} : {}),
   collected_at: collectedAt,
   source_plan: [...selectedSources, 'tracked-douyin-creators', 'self-channel', 'personal-expression-pool'],
   sources: records.map((record) => ({...record, record_sha256: sha(JSON.stringify(record.results))}))
@@ -261,7 +269,12 @@ renameSync(healthTmp, healthPath);
 
 const okCount = records.filter((record) => record.status === 'OK').length;
 const hotOkCount = records.filter((record) => selectedSources.includes(record.source_id) && record.status === 'OK').length;
-const trackedComplete = records.find((record) => record.source_id === 'tracked-douyin-creators')?.coverage?.failed === 0;
+const trackedRecord = records.find((record) => record.source_id === 'tracked-douyin-creators');
+const trackedCoverage = trackedRecord?.coverage;
+const trackedComplete = ['OK', 'EMPTY'].includes(trackedRecord?.status) && trackedCoverage?.expected > 0
+  && trackedCoverage.attempted === trackedCoverage.expected && trackedCoverage.accounts.length === trackedCoverage.expected
+  && trackedCoverage.accounts.some((item) => item.pool_status === 'ACTIVE')
+  && trackedCoverage.accounts.every((item) => item.pool_status === 'PENDING' || ['OK', 'EMPTY'].includes(item.status));
 console.log(`signals=${signalsPath}`);
 console.log(`source_health=${healthPath}`);
 console.log(`sources=${records.length} ok=${okCount} empty=${records.filter((record) => record.status === 'EMPTY').length} failed=${records.filter((record) => record.status === 'FAILED').length}`);

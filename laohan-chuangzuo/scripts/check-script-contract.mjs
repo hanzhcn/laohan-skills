@@ -4,6 +4,7 @@ import {existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync} f
 import {tmpdir} from 'node:os';
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {verifySepiaReview} from './sepia-contract.mjs';
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -15,6 +16,8 @@ const scriptArg = option('--script');
 const decisionArg = option('--decision');
 const baseArg = option('--base');
 const seriesDraftArg = option('--series-draft');
+const candidateMode = args.includes('--candidate');
+if (candidateMode && (episodeArg || seriesDraftArg)) throw new Error('候选模式不能冒充Episode或系列正式合同');
 
 const fail = (message) => {
   console.error('BLOCKED chuangzuo script contract: ' + message);
@@ -27,6 +30,10 @@ const requireFile = (path, label) => {
 const shaFile = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
 const shaText = (value) => createHash('sha256').update(value).digest('hex');
 const nonEmpty = (value) => typeof value === 'string' && value.trim().length > 0;
+// 只捕捉明确交付/可领取表述；普通教程中的“资源管理器”“复制提示词”仍由全文审阅判断。
+const promisesAudienceResource = (text) => text.split(/[。！？!?；;\n]/u).some((clause) =>
+  !/(?:不能|不可|不要|不用|没有|尚未|并未)/u.test(clause)
+  && /(?:模板|清单|提示词|命令|资料|资源).{0,80}(?:已(?:经)?(?:放|打包|备好|准备好)|(?:放在|放到).{0,24}(?:置顶评论|评论区|视频介绍|视频描述|简介|附件|下载链接)|(?:你|大家|观众)(?:可以|可|直接|点击|免费)(?:领取|下载|复制|获取))|(?:置顶评论|评论区|视频介绍|视频描述|简介|附件|下载链接).{0,80}(?:领取|下载|复制|获取).{0,24}(?:模板|清单|提示词|命令|资料|资源)/u.test(clause));
 // 2026-09-30：内容层交叉判定用的归一化——只留字词，去空白/中英标点/引号/括号/破折号/省略号并小写。
 // 与下方 content_units 的 claim 去重（normalizedClaims）同源思路，但多覆盖引号、括号、破折号、省略号，
 // 用来判断"这句话是否真实出现在正文里"（金句判定）。
@@ -51,6 +58,8 @@ if (episodeArg) {
 
 const baseReal = requireFile(scriptPath, '口播稿').startsWith(realpathSync(base) + '/') ? realpathSync(base) : null;
 if (!baseReal || !requireFile(decisionPath, '创作决策.json').startsWith(baseReal + '/')) fail('稿件和决策必须位于指定根目录内');
+scriptPath = realpathSync(scriptPath);
+decisionPath = realpathSync(decisionPath);
 
 let decision;
 try {
@@ -105,6 +114,59 @@ if (seriesDraftArg) {
     return citation.segments.some((segment) => !source.key_segments.some((item) => item.start_seconds === segment.start_seconds && item.end_seconds === segment.end_seconds) || !script.includes(formatTime(segment.start_seconds)) || !script.includes(formatTime(segment.end_seconds)));
   })) fail('series-draft稿件与决策必须逐来源列出URL，并为每个视频引用资料包中的真实关键时间段');
   console.log(`PASS chuangzuo series draft contract series=${packet.series_id} episode=${packet.episode_id}`);
+  process.exit(0);
+}
+
+if (candidateMode) {
+  const firstLineEnd = script.indexOf('\n');
+  const spoken = firstLineEnd >= 0 ? script.slice(firstLineEnd + 1).trim().split(/\n\s*\n/).map((x) => x.trim()).join('\n') : '';
+  if (!/^#\s+[^\n]+\n/.test(script)) fail('候选稿第一行标题后必须有正文');
+  const cue = spoken.split('\n').find((line) => /^\s*>?\s*(?:\[?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示)[：:])/iu.test(line));
+  if (cue) fail('候选口播正文不得混入导演提示');
+  const units = decision.content_units;
+  if (decision.contract_version !== 'candidate-script-v1' || decision.schema_version !== 1
+    || decision.status !== 'AWAITING_JEFFREY_SELECTION' || decision.stage_status !== 'NOT_STAGE_2_COMPLETE'
+    || decision.script_title !== title || decision.script_hash !== shaFile(scriptPath) || !spoken
+    || /^(?:#{1,6}\s|>|```|---\s*$)/m.test(spoken) || /\[(?:画面|字幕|镜头|B-Roll)/i.test(spoken)) fail('候选稿必须是待选择的纯口播，绑定当前稿SHA且不能声称②完成');
+  const pool = join(baseReal, 'script-pool');
+  if (!realpathSync(scriptPath).startsWith(pool + '/') || dirname(scriptPath) !== dirname(decisionPath)) fail('候选稿与decision必须同目录位于script-pool');
+  if (!Array.isArray(units) || !uniqueNonEmpty(units.map((x) => x?.id))
+    || units.some((x) => !nonEmpty(x.claim) || !nonEmpty(x.support) || !nonEmpty(x.viewer_value) || !uniqueNonEmpty(x.claim_ids))) fail('候选稿内容单位缺判断、支撑、观众价值或主张映射');
+  const ledgerPath = resolve(base, decision.source_ledger_path || '');
+  const ledgerReal = requireFile(ledgerPath, '候选事实账本');
+  if (!ledgerReal.startsWith(baseReal + '/') || decision.source_ledger_sha256 !== shaFile(ledgerPath)) fail('候选事实账本必须绑定当前文件SHA');
+  const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'));
+  const claims = Array.isArray(ledger.claims) ? ledger.claims : [];
+  const sources = Array.isArray(ledger.sources) ? ledger.sources : [];
+  if (!uniqueNonEmpty(claims.map((x) => x?.id)) || !uniqueNonEmpty(sources.map((x) => x?.id))) fail('候选账本缺唯一主张与真实来源');
+  const used = units.flatMap((x) => x.claim_ids);
+  const validUrl = (value) => { try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) && Boolean(url.hostname) && !url.username && !url.password; } catch { return false; } };
+  if (used.some((id) => !claims.some((x) => {
+    if (x.id !== id || x.status !== 'SUPPORTED' || !nonEmpty(x.statement) || !['PRIMARY', 'JEFFREY_FIRSTHAND', 'EDITORIAL_INFERENCE', 'HYPOTHETICAL'].includes(x.kind) || !Array.isArray(x.source_ids)) return false;
+    if (new Set(x.source_ids).size !== x.source_ids.length || x.source_ids.some((sid) => !sources.some((src) => src.id === sid && (nonEmpty(src.path) || validUrl(src.url))))) return false;
+    const authoredBasis = (x.kind === 'EDITORIAL_INFERENCE' && nonEmpty(x.reasoning)) || (x.kind === 'HYPOTHETICAL' && nonEmpty(x.assumption_basis))
+      || (x.kind === 'JEFFREY_FIRSTHAND' && x.attestation?.by === 'Jeffrey' && nonEmpty(x.attestation.record));
+    if (x.kind === 'EDITORIAL_INFERENCE' && !nonEmpty(x.reasoning)) return false;
+    if (x.kind === 'HYPOTHETICAL' && !nonEmpty(x.assumption_basis)) return false;
+    if (x.kind === 'JEFFREY_FIRSTHAND' && (!nonEmpty(x.firsthand_basis) || (!x.source_ids.some((sid) => sources.some((src) => src.id === sid && src.type === 'OWNED_RECORD')) && !(x.attestation?.by === 'Jeffrey' && nonEmpty(x.attestation.record))))) return false;
+    if (!x.source_ids.length && !authoredBasis) return false;
+    return x.kind !== 'PRIMARY' || x.source_ids.some((sid) => sources.some((src) => src.id === sid && ['PRIMARY', 'OWNED_RECORD'].includes(src.type)));
+  }))) fail('候选稿存在未支持主张、无效事实来源或推论/假设依据缺口');
+  for (const src of sources.filter((x) => x.path)) {
+    const file = resolve(base, src.path);
+    if (!existsSync(file) || !statSync(file).isFile() || !realpathSync(file).startsWith(baseReal + '/') || src.sha256 !== shaFile(file)) fail('候选本地来源SHA或路径无效: ' + src.id);
+  }
+  if (promisesAudienceResource(spoken)) {
+    const resources = decision.resources;
+    if (!Array.isArray(resources) || !resources.length || resources.some((resource) => {
+      const file = resolve(base, resource?.path || '');
+      return !nonEmpty(resource?.delivery_note) || !existsSync(file) || !statSync(file).isFile() || statSync(file).size === 0 || !realpathSync(file).startsWith(baseReal + '/') || resource.sha256 !== shaFile(file)
+        || /TODO|TBD|\[填写\]|\[粘贴\]/i.test(readFileSync(file, 'utf8'));
+    })) fail('候选稿承诺观众资源时必须已有完整文件、SHA与交付说明');
+  }
+  try { verifySepiaReview({review: decision.language_review_contract, base, spoken, unitIds: units.map((x) => x.id), snapshotPath: relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + '.sepia-input.md'))}); }
+  catch (error) { fail(error.message); }
+  console.log('PASS chuangzuo candidate contract NOT_STAGE_2_COMPLETE title=' + title);
   process.exit(0);
 }
 
@@ -163,34 +225,27 @@ if (episodeArg) {
     // 等于用形式合规冒充取材事实，违反项目"禁止伪造产物骗过检查器"。
     // 改法：**空池必须显式声明 + 给出理由**才可通过（不是静默放行）：
     //   expression_pool_status: 'EMPTY' 且 expression_pool_empty_reason 非空。
-    // 非空时仍逐项校验 used/where（原语义不变）。有声明但同时给了非空 usage 视为矛盾，仍按非空路径校验。
+    // 非空时仍逐项校验 used/where（原语义不变）。EMPTY/NOT_USED与非空usage互斥，不能把矛盾声明洗成通过。
     const poolUsage = Array.isArray(decision.expression_pool_usage) ? decision.expression_pool_usage : null;
     const poolUsageOk = poolUsage !== null && (
       poolUsage.length
-        ? poolUsage.every((item) => nonEmpty(item?.used) && nonEmpty(item?.where))
-        : decision.expression_pool_status === 'EMPTY' && nonEmpty(decision.expression_pool_empty_reason)
+        ? !['EMPTY', 'NOT_USED'].includes(decision.expression_pool_status) && poolUsage.every((item) => nonEmpty(item?.used) && nonEmpty(item?.where))
+        : (decision.expression_pool_status === 'EMPTY' && nonEmpty(decision.expression_pool_empty_reason)) || (decision.expression_pool_status === 'NOT_USED' && nonEmpty(decision.expression_pool_unused_reason))
     );
     if (decision.topic_sha256 !== shaFile(topicPath) || !poolUsageOk || hook.fulfills_packaging_promise !== true || !nonEmpty(hook.packaging_title_direction)) fail('schema 4必须绑定当前选题SHA、个人表达池取材记录，并证明钩子兑现①packaging_assessment的标题承诺');
-    // 创作六步法（3.6.0）：8个新字段机械校验
-    if (!['TUTORIAL', 'EXPOSITION', 'STORY'].includes(decision.structure_type)) fail('创作六步法第1步：structure_type必须为TUTORIAL/EXPOSITION/STORY之一');
+    // 当前六步法：规划与真实正文绑定，不沿用旧节奏/情绪配额
+    if (!['TUTORIAL', 'EXPOSITION', 'STORY', 'CUSTOM'].includes(decision.structure_type)) fail('创作六步法第1步：structure_type必须为TUTORIAL/EXPOSITION/STORY之一');
     const variants = Array.isArray(decision.hook_variants) ? decision.hook_variants : [];
     if (variants.length < 3 || variants.some((item) => !nonEmpty(item?.text) || !nonEmpty(item?.direction)) || !Number.isInteger(decision.selected_hook_index) || decision.selected_hook_index < 0 || decision.selected_hook_index >= variants.length || decision.tts_selected !== true) fail('创作六步法第2步：hook_variants必须至少3个不同方向并经TTS读选登记selected_hook_index/tts_selected');
     const beat = decision.beat_distribution || {};
-    if (beat.passed !== true || !nonEmpty(beat.rationale)) fail('创作六步法第3步：beat_distribution必须通过等分格子无空白检查并说明');
+    if (beat.passed !== true || !nonEmpty(beat.rationale)) fail('创作六步法第3步：beat_distribution必须审查各段推进与信息空转并说明');
     // 2026-10-01 加（治理交接 R4）：六步法自陈字段的最低限度语义交叉。三类判据：
     //  (a) 占位禁令——rationale/expected_comments 写「占位/随便写一句/placeholder/待补」直接红
     //      （外部审计实测：beat 理由写「随便写一句话占位」、emotion_arc/comment_hook/hkrr 全写「占位」
     //        曾全部 PASS——字段齐全但语义假）。
     //  (b) beat.rationale 必须引用可核对的对象：正文段号（须在范围）或格子/秒数词汇。
-    //  (c) emotion_arc 的 opening/ending 必须与正文首/尾各有 ≥4 字归一化重叠窗口
-    //      （中段允许概述式表达，只吃占位禁令——诚实边界，勿擅自加严）。
+    //  (c) 情绪描述不作四字重叠判据，具体语义由全文审阅判断。
     const PLACEHOLDER_RE = /(占位|随便写|随便一句|placeholder|TODO|待补|待填|模板生成)/;
-    const windowIn = (text, corpus) => {
-      const needle = normalizeProse(text);
-      const hay = normalizeProse(corpus);
-      for (let i = 0; i + 4 <= needle.length; i++) if (needle.slice(i, i + 4) && hay.includes(needle.slice(i, i + 4))) return true;
-      return false;
-    };
     if (PLACEHOLDER_RE.test(String(beat.rationale))) fail('创作六步法第3步：beat_distribution.rationale 是占位文案——自陈理由必须写真话（R4：字段齐全但语义假 = 不通过）');
     {
       const refs = [...String(beat.rationale).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
@@ -199,7 +254,7 @@ if (episodeArg) {
       if (!citesRange && !citesCells) fail('创作六步法第3步：beat_distribution.rationale 必须引用可核对对象（正文段号须在 1..' + paragraphs.length + '，或等分格子/秒数词汇），不能只写一句无法核对的空话');
     }
     const anchors = Array.isArray(decision.rhythm_anchors) ? decision.rhythm_anchors : [];
-    if (!anchors.length || anchors.some((item) => !nonEmpty(item?.type) || !nonEmpty(item?.position))) fail('创作六步法第3步：rhythm_anchors必须按15—30秒密度登记正文级锚点');
+    if (!anchors.length || anchors.some((item) => !nonEmpty(item?.type) || !nonEmpty(item?.position))) fail('创作六步法第3步：rhythm_anchors必须登记正文真实转折或理解锚点，不设固定秒数配额');
     // 2026-09-30 加内容层交叉判据（治理交接 T10）：rhythm_anchors 自称「正文级锚点」，
     // position 必须真的指到正文段落——「第N段」的 N 必须落在 1..paragraphs.length。
     // 负测：position 写「第99段 末」（段号越界）或「开场处」（无段号）都必须红。
@@ -210,31 +265,17 @@ if (episodeArg) {
       const refs = [...String(item.position).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
       if (!refs.length) fail('创作六步法第3步：rhythm_anchors.position 必须指到正文段落编号（如「第2段 末」），不能只写模糊位置：' + item.type + ' → ' + item.position);
       for (const n of refs) if (n < 1 || n > paragraphs.length) fail('创作六步法第3步：rhythm_anchors 指向不存在的正文段落：' + item.type + ' → 第' + n + '段（正文共 ' + paragraphs.length + ' 段）');
-      // 2026-10-01 加（治理交接 R4）：position 里显式宣称修辞特征时，被指段落必须真含该特征。
-      // 只认「排比」与「提问/反问/设问/疑问」两类可机械核对的宣称（诚实边界：数字/情绪词不核）。
-      const firstRef = refs[0];
-      const claimed = String(item.position) + String(item.type ?? '');
-      if (/排比/.test(claimed) && firstRef) {
-        const clauses = paragraphs[firstRef - 1].split(/[，,、；;\n]/).map((c) => c.trim()).filter((c) => c.length >= 2);
-        const prefixes = new Map();
-        for (const clause of clauses) for (const size of [2, 3]) {
-          const prefix = clause.slice(0, size);
-          if (prefix.length === size) prefixes.set(prefix, (prefixes.get(prefix) || 0) + 1);
-        }
-        const parallel = [...prefixes.values()].some((count) => count >= 3);
-        if (!parallel) fail('创作六步法第3步：rhythm_anchors 宣称第' + firstRef + '段有排比，但该段没有排比特征（≥3 个同前缀分句）——段号在范围不等于内容为真：' + item.type + ' → ' + item.position);
-      }
-      if (/(提问|反问|设问|疑问)/.test(claimed) && firstRef && !/[？?]|吗[^，。]|呢[^，。]/.test(paragraphs[firstRef - 1])) {
-        fail('创作六步法第3步：rhythm_anchors 宣称第' + firstRef + '段有提问/反问，但该段没有问句特征——段号在范围不等于内容为真：' + item.type + ' → ' + item.position);
-      }
+      // A quoted anchor can be checked exactly. Rhetorical labels need editorial review;
+      // same-prefix or question-mark counts do not define valid Chinese rhetoric.
+      if (item.evidence_text && (!nonEmpty(item.evidence_text) || !refs.some((n) => paragraphs[n - 1].includes(item.evidence_text)))) fail('创作六步法第3步：锚点证据原文不在所指段落');
+
     }
     const arc = decision.emotion_arc || {};
-    if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('创作六步法第3步：emotion_arc必须登记开头痛点/中段释放/收尾踏实三节点');
-    // opening 对开头三段、ending 对全篇正文做 ≥4 字归一化重叠（诚实边界：ending 允许概述式收束，
-    // 只要求锚在正文真实文字上——本期实测收尾「落在可执行的自信上」类合法概述在末三段无窗口）。
-    for (const [node, corpusSlice] of [['opening', paragraphs.slice(0, 3).join('\n')], ['ending', paragraphs.join('\n')]]) {
+    if (!nonEmpty(arc.opening) || !nonEmpty(arc.middle) || !nonEmpty(arc.ending)) fail('创作六步法第3步：emotion_arc必须如实登记开头、中段、收尾感受，不预设焦虑弧线');
+    // 情绪是编辑描述，不要求复述正文；这里只拒绝空内容与占位。
+    for (const node of ['opening', 'ending']) {
       if (PLACEHOLDER_RE.test(String(arc[node]))) fail('创作六步法第3步：emotion_arc.' + node + ' 是占位文案——情绪节点必须写真话（R4）');
-      if (!windowIn(arc[node], corpusSlice)) fail('创作六步法第3步：emotion_arc.' + node + ' 与正文' + (node === 'opening' ? '开头三段' : '正文') + '没有任何 ≥4 字重叠——情绪弧必须锚在正文真实文字上，不能是套话');
+
     }
     if (PLACEHOLDER_RE.test(String(arc.middle))) fail('创作六步法第3步：emotion_arc.middle 是占位文案——情绪节点必须写真话（R4）');
     const quote = decision.quote_anchor || {};
@@ -243,9 +284,10 @@ if (episodeArg) {
     // 不存在的句子（如"人生就像一场旅行"）仍能过门，因为六步法 8 个字段此前全是
     // nonEmpty + ===true 的自陈布尔、零处与正文交叉。金句是其中唯一能被机械核对的字段
     // （剪辑/字幕要按它取原文），故要求它逐字出现在口播段落里（忽略标点与空白）。
+    if (!/[\p{L}\p{N}]/u.test(normalizeProse(quote.text))) fail('创作六步法第4步：金句归一化后不能为空或仅有符号');
     if (!normalizeProse(paragraphs.join('\n')).includes(normalizeProse(quote.text))) fail('创作六步法第4步：quote_anchor.text 必须是正文里真实存在的句子（金句不能是正文没说过的句子）：' + quote.text);
     const commentHook = decision.comment_hook || {};
-    if (!nonEmpty(commentHook.expected_comments) || commentHook.guide_at_peak !== true) fail('创作六步法第4步：comment_hook必须登记预期评论方向并把真引导放在情绪最高点');
+    if (!nonEmpty(commentHook.expected_comments) || (commentHook.guide_at_peak !== true && !nonEmpty(commentHook.placement_reason))) fail('创作六步法第4步：comment_hook必须登记预期评论方向并说明真实引导位置（不强制情绪高点）');
     if (PLACEHOLDER_RE.test(String(commentHook.expected_comments))) fail('创作六步法第4步：comment_hook.expected_comments 是占位文案——预期评论必须写真实方向（R4）');
     if (commentHook.guide_placement) {
       const guideRefs = [...String(commentHook.guide_placement).matchAll(/第(\d+)段/g)].map((m) => Number(m[1]));
@@ -293,7 +335,8 @@ if (episodeArg) {
   fail('独立模式创作决策必须使用 schema 3 / content-units-v1');
 }
 if (decision.script_title !== title || decision.script_hash !== shaFile(scriptPath)) fail('创作决策未绑定当前稿标题与SHA-256');
-if (!nonEmpty(decision.active_style_file) || !existsSync(decision.active_style_file) || !statSync(decision.active_style_file).isFile() || decision.active_style_sha256 !== shaFile(decision.active_style_file)) fail('active style 路径或SHA-256无效');
+const activeStylePath = resolve(base, decision.active_style_file || '');
+if (!nonEmpty(decision.active_style_file) || !existsSync(activeStylePath) || !statSync(activeStylePath).isFile() || decision.active_style_sha256 !== shaFile(activeStylePath)) fail('active style 路径或SHA-256无效');
 
 const publish = decision.publish_copy_contract || {};
 const allowedTitleStrategies = new Set(['SPECIFIC_EVIDENCE_PLUS_COUNTERINTUITIVE_RESULT', 'SEARCHABLE_TOOL_ACTION_RESULT', 'AUDIENCE_PROBLEM_PLUS_UNEXPECTED_RESULT']);
@@ -358,7 +401,7 @@ if (episodeArg) {
 
   const resourceContract = decision.audience_resource_contract || {};
   const resources = Array.isArray(resourceContract.resources) ? resourceContract.resources : [];
-  const resourcePromise = /(?:模板|清单|提示词|命令|资料|资源).{0,24}(?:放在|准备好|提供|复制|领取|置顶评论|视频介绍)/u.test(paragraphs.join('\n'));
+  const resourcePromise = promisesAudienceResource(paragraphs.join('\n'));
   if (!['NOT_APPLICABLE', 'BOUND'].includes(resourceContract.status)) fail('audience_resource_contract必须明确BOUND或NOT_APPLICABLE');
   if (resourceContract.status === 'NOT_APPLICABLE') {
     if (resources.length || resourcePromise) fail('口播承诺了观众资源但audience_resource_contract未绑定完整资源');
@@ -454,44 +497,18 @@ for (const group of redundancy.duplicate_groups) {
 const voice = decision.human_voice_contract || {};
 const voiceDevices = Array.isArray(voice.devices) ? voice.devices : [];
 const voiceTypes = voiceDevices.map((item) => item?.type).filter(nonEmpty);
-if (voice.status !== 'PRESERVED' || voice.required_minimum_device_types !== 4 || new Set(voiceTypes).size < 4) fail('人味废话必须保留至少4种不同设备');
+if (voice.status !== 'PRESERVED' || voice.policy !== 'AUTHOR_REGISTER' || !nonEmpty(voice.review_note) || 'required_minimum_device_types' in voice) fail('人味审阅必须按作者语域登记，不设设备数量配额');
 for (const device of voiceDevices) {
   const index = auditIds.indexOf(device.paragraph_id);
   if (!nonEmpty(device.type) || index === -1 || !nonEmpty(device.text) || !paragraphs[index].includes(device.text)) fail('人味设备没有绑定类型和真实段落原文');
 }
 
-const humanizer = decision.humanizer_contract || {};
-const humanizerSkillPath = resolve(process.env.HUMANIZER_ZH_SKILL_PATH || join(process.env.HOME || '', '.agents/skills/humanizer-zh/SKILL.md'));
+const languageReview = decision.language_review_contract;
 const expectedSnapshotPath = episodeArg
   ? '02-创作工作稿/humanizer-input.md'
   : relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + '.humanizer-input.md'));
-const snapshotPath = resolve(base, humanizer.input_snapshot_path || '');
-const snapshotReal = requireFile(snapshotPath, 'humanizer输入快照');
-const claimAudit = humanizer.claim_audit || {};
-const scores = humanizer.quality_scores || {};
-const scoreKeys = ['directness', 'rhythm', 'trust', 'authenticity', 'conciseness'];
-const scoreTotal = scoreKeys.reduce((sum, key) => sum + Number(scores[key]), 0);
-if (humanizer.status !== 'PASS'
-  || humanizer.skill !== 'humanizer-zh'
-  || humanizer.skill_path !== 'agents-skills/humanizer-zh/SKILL.md'
-  || !existsSync(humanizerSkillPath)
-  || humanizer.skill_sha256 !== shaFile(humanizerSkillPath)
-  || humanizer.input_snapshot_path !== expectedSnapshotPath
-  || !snapshotReal.startsWith(baseReal + '/')
-  || humanizer.input_snapshot_sha256 !== shaFile(snapshotPath)
-  || humanizer.output_spoken_text_sha256 !== shaText(paragraphs.join('\n'))
-  || claimAudit.status !== 'PASS'
-  || JSON.stringify(claimAudit.audited_content_unit_ids) !== JSON.stringify(unitIds)
-  || !Array.isArray(claimAudit.added_claims) || claimAudit.added_claims.length
-  || !Array.isArray(claimAudit.removed_claims) || claimAudit.removed_claims.length
-  || !Array.isArray(claimAudit.changed_claims) || claimAudit.changed_claims.length
-  || !nonEmpty(claimAudit.reviewer)
-  || !humanizer.pattern_scan || typeof humanizer.pattern_scan.method !== 'string' || !humanizer.pattern_scan.method.trim() || !humanizer.pattern_scan.results || !Object.keys(humanizer.pattern_scan.results).length
-  || !nonEmpty(claimAudit.review_note)
-  || scoreKeys.some((key) => !Number.isInteger(scores[key]) || scores[key] < 1 || scores[key] > 10)
-  || scores.total !== scoreTotal
-  || scores.total < 45
-  || Number.isNaN(Date.parse(humanizer.applied_at))) fail('humanizer-zh必须绑定当前Skill、输入快照、最终口播、全部内容单位的零主张增删改审计和至少45分质量评分');
+try { verifySepiaReview({review: languageReview, base, spoken: paragraphs.join('\n'), unitIds, snapshotPath: expectedSnapshotPath}); }
+catch (error) { fail(error.message); }
 
 const structure = decision.structure_contract || {};
 if (structure.status !== 'PASS' || typeof structure.layered !== 'boolean') fail('缺结构清晰度合同');
@@ -524,9 +541,9 @@ const optional = ['pre_a_b', 'step_1', 'step_1_5'];
 if (!completed.every((key) => steps[key]?.status === 'COMPLETED' && nonEmpty(steps[key]?.reason)) || !optional.every((key) => ['COMPLETED', 'SKIPPED'].includes(steps[key]?.status) && nonEmpty(steps[key]?.reason))) fail('Step -1至7没有逐项执行并记录理由');
 
 const checks = decision.quality_checks || {};
-const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', 'humanizer_zh', 'dynamic_duration', 'structure_clarity', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
+const requiredChecks = ['content_floor', 'semantic_redundancy', 'human_voice', 'language_review', 'dynamic_duration', 'structure_clarity', 'originality', 'regex', 'style_boundary', 'ai_taste', 'technique_purpose'];
 if (!requiredChecks.every((key) => checks[key] === 'PASS') || !nonEmpty(checks.read_aloud_note)) fail('质量检查没有覆盖内容、人味、时长、结构与原有六关');
 if (Number.isNaN(Date.parse(decision.completed_at))) fail('completed_at 不是合法时间');
-if (Date.parse(humanizer.applied_at) > Date.parse(decision.completed_at)) fail('humanizer-zh执行时间不得晚于最终决策完成时间');
+if (Date.parse(languageReview.applied_at) > Date.parse(decision.completed_at)) fail('Sepia执行时间不得晚于最终决策完成时间');
 
 console.log(`PASS chuangzuo script contract schema=${decision.schema_version} paragraphs=${paragraphs.length} content_units=${units.length} voice_types=${new Set(voiceTypes).size} publish_copy=PASS tts_seconds=${duration.actual_tts_seconds}`);

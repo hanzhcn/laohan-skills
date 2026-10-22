@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 出大纲后以大纲模式喂入）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.7.0"
+version: "3.8.0"
 ---
 
 # 统一创作引擎
@@ -22,12 +22,12 @@ version: "3.7.0"
 
 ## 知识来源（唯一正本，symlink 到 OpenClaw workspace）
 
-- **写作规则**：`references/style.md`（恢复 2026-07-11 前实战版本）。其中开场、转场、修辞、标题公式、场景密度、节奏、口头禅和模板均为已验证的默认方法；允许按本题增删或扩充，但不得以“防模板化”为由整体降级成可有可无的抽象建议
+- **写作规则**：`references/style.md`（恢复 2026-07-11 前实战版本）。其中开场、转场、修辞、标题公式和口头禅作为可选工具；按当前六步法判断适用性，不以数量/句长/禁词密度或旧稿节奏限制新题
 - **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 skill.md v3.5）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
 - **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-xuanti/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
 - **镜头友好模式**（可选扩展，默认关闭）：`references/camera-friendly.md`（四句式偏好 + 镜头结构 sidecar 契约；只在 Step 4 句式层叠加，不覆盖既有方法）
-- **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 强制选择）
+- **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 明确选择依据）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
 - **方法论真源**：项目`docs/老韩创作六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
 
@@ -79,15 +79,21 @@ ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink
 OUTPUT_DIR = 普通独立写作时 <当前工作目录>/output/；已验证系列单期资料包的独立草稿写入 <项目>/script-pool/<series-id>/；Episode 模式时 episodes/<slug>/02-创作工作稿/
 ```
 
+## 三稿待选择模式
+
+Jeffrey明确要三篇供选时，先从①研究得到三个不同主题/观众任务，再自主选择结构、比较钩子、写纯口播、核来源并做Sepia；候选与同名decision/sepia-input写`script-pool/<任务>/`。decision=`candidate-script-v1 / AWAITING_JEFFREY_SELECTION / NOT_STAGE_2_COMPLETE`，由`check-script-contract.mjs --candidate --script <稿.md> --decision <稿.decision.json> --base <项目>`验证。来源账本独立写，绑定事实、亲历、推论/假设边界。不要创建episode、TTS或正式发布物。
+
+用户选择后再按目标路线转正式内容审校，最终稿和当前来源锁定后按Motion方法制作；候选PASS不等于正式②完成。此模式优先于下文普通独立正式写作的TTS/发布信息要求。
+
 ## Episode 模式
 
 当参数含 `--episode episodes/<slug>` 时，先读取 `00-选题.md` 和 `00-选题.json`，不得重新选择另一主题。2026-09-17起按五步法合同执行：直接从选题、`script-pool/Jeffrey个人表达池.md`（真实场景、亲历细节、固定表达素材）和系列研究摘录取材，写`02-创作工作稿/大纲.md`后直接写全文；不产生反向采访或大纲确认（历史episode的schema 3选题继续按其原采访合同验证）。最终定稿只能写 `episodes/<slug>/01-口播稿.md`，同时写 schema 4 `02-创作工作稿/创作决策.json`（绑定选题SHA、`expression_pool_usage`取材记录，钩子兑现①packaging_assessment承诺）。共享 `output/` 只允许用于非 workflow 的独立写作，不能作为 episode 输入或真值。
 
 Episode schema 4 在原schema 3全部内容之外，至少增加：
 
-- `topic_sha256`、`interview_sha256`、`outline_sha256`、`outline_approval_sha256`；
+- 当前schema4选题绑定`topic_sha256`；采访/确认三份SHA只对历史schema3选题分支适用；
 - 方向研究型选题必须读取`02-创作工作稿/系列研究摘录.json`，并在`research_source_contract`把全部内容单位映射到资料包claim或Jeffrey原创依据；
-- `hook_contract.designed_after_outline_acceptance=true`并绑定确认时间；
+- 当前schema4选题绑定`hook_contract.fulfills_packaging_promise=true`；历史schema3选题才要求designed_after_outline_acceptance与确认时间；
 - `contract_version=content-units-v2`。普通独立模式仍使用schema 3 / `content-units-v1`；已验证系列单期资料包使用`series-draft-v1`草稿合同，只能标记`DRAFT / NOT_STAGE_2_COMPLETE`。
 
 原内容合同继续包含：
@@ -100,10 +106,10 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `opening_contract` 登记 `mode: DEFAULT_SIGNATURE|TOPIC_SPECIFIC_HOOK`。默认使用“嘿，你有没有这种感觉，”，只有题目存在明显更强的具体结果、数字、动作、冲突或直问时才允许题目专属开场，并记录 `exception_reason`；两种模式的 `anchor_text` 都必须绑定第一段5秒内真实锚点；
 - `visual_anchors` 至少一项，每项绑定一个内容单位，写清观众理解任务与可视化表达；它只给后续导演可拍依据，不规定动画技术；同时保留 `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
 - `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
-- `human_voice_contract` 必须登记至少4种真实出现在稿件中的人味设备；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
+- `human_voice_contract` 必须登记真实作者语域；设备可为空，禁止数量配额；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
-- `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`humanizer_zh`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
+- `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`language_review`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
 - Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#老韩AI`，哔哩哔哩标签固定包含 `老韩AI`。
@@ -123,7 +129,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
 - [ ] Step 5: 质量检查（6关）
-- [ ] Step 5.5: humanizer-zh最终语言定稿与主张零增删改审计
+- [ ] Step 5.5: Sepia中文非虚构语言定稿与主张零增删改审计
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
 - [ ] 镜头友好模式: [可选，默认关闭] 显式启用时句式叠加四偏好并产出镜头结构 sidecar（见下方专节与 references/camera-friendly.md）
@@ -133,7 +139,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 ## Step -1：风格选择（强制，不可跳过）
 
-独立写作时在执行任何创作动作之前，必须让用户选择写作风格。不选择不执行。**Episode mode 例外**：先依据 `00-选题.md`/JSON 的受众、论点、干预和预期效果判断教程型或观点型，锁定 `ACTIVE_STYLE_FILE`，再用该文件选择结构工具；在 gate 真源 `02-创作工作稿/创作决策.json` 记录风格文件、选择理由、替代方案和待验证假设。Step 2 只复核该选择与大纲一致，不得重新选择。可同时写同名 `.md` 人类摘要，但它不代替 JSON。不得因等待风格选择而阻断已授权的 AUTONOMOUS_RUN。
+独立写作先核用户已给的风格与自主权限；已授权三稿候选或AUTONOMOUS_RUN时由执行者按受众任务选择并说明，不重复询问。未给自主权限且风格差异会改变目标时才澄清。**Episode mode 例外**：先依据 `00-选题.md`/JSON 的受众、论点、干预和预期效果判断教程型或观点型，锁定 `ACTIVE_STYLE_FILE`，再用该文件选择结构工具；在 gate 真源 `02-创作工作稿/创作决策.json` 记录风格文件、选择理由、替代方案和待验证假设。Step 2 只复核该选择与大纲一致，不得重新选择。可同时写同名 `.md` 人类摘要，但它不代替 JSON。不得因等待风格选择而阻断已授权的 AUTONOMOUS_RUN。
 
 执行方式：
 1. 读取 `references/styles/` 目录下所有 `.md` 文件
@@ -152,7 +158,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 4. 用户选择后：
    - **通用**：直接使用 style.md 作为唯一规则，不加载额外风格文件
    - **教程型或其他**：读取对应的 `references/styles/<选择>.md` 作为自包含完整规则；不得只摘取其中的抽象结构而跳过语言、场景、节奏、品牌和自检方法
-5. **默认不选**：没有"默认选项"，每次触发都必须选择。防止风格混用
+5. **默认不选**：没有"默认选项"，必须明确选择依据；用户已授权自主写作时可由模型选择，候选可选不同结构
 
 **新增风格**：往 `references/styles/` 目录添加新 `.md` 文件即可，自动被发现。不需要修改本文件。
 
@@ -188,22 +194,22 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 
 素材是对标爆款视频的转录全文时（①已产出），Layer A/B 整理之后按改写管线执行，方法真源为项目`docs/老韩创作六步法.md`改写模式节（原创题不走改写分支，直接走标准六步法）：
 
-1. **organize 是唯一内容来源**：Layer A 模块覆盖≥80%，信息密集型素材（经验指南/盘点/路径讲解）允许按源顺序展开；
-2. **亲历内化**（Jeffrey 2026-09-17授权）：正文、介绍、四平台文案零第三方指代——不提原作者名/账号，不出现"博主/作者/视频里说/up主/那条视频"；对标素材全部内化为老韩第一人称亲历（晒单是自己的单、群是自己的群、学费是自己掏的），细节落地要很像；机械检查第三方指代词表零命中；
+1. **organize保留原始事实及来源**：按本题选取必要材料，不要求源模块覆盖率；新增判断要标真实依据，不能照搬作者骨架；
+2. **经历归属**：只把Jeffrey真实经历写第一人称；第三方故事自然注明来源，不能把订单/收入/群聊/学费变成自己做过。历史亲历内化授权记录保留，当前生产按真实来源规则执行；
 3. **增量是增补**：老韩自有判断≥2处作为增补，不替换源骨架主体；
-4. **指纹脱敏**：与源稿指纹级相同的既定事实（人数×单价×工期组合、案例行业+痛点、行业清单、源稿独有措辞）换成相似但不同的值；并排比对不可通过事实组合锁定同源；正文/介绍/四平台同步并做机械残留检查；
+4. **原创表达**：换自己的论点与表达，不为去同源指纹修改真实数字、事实组合、日期或能力边界；假设示例必须明说是假设；
 5. **直读测试**（humanizer 后置）：逐句三问——指代能否在前句找到同类别对象、拟物动词（叫/响/漏/爬/断）有无本体铺垫、术语首现有无当句解释；无铺垫隐喻必须改为字面直白表述，词内误报人工判读保留；
-6. 决策 JSON `rewrite_record` 登记 organize 绑定、覆盖率、亲历内化声明（含授权）、直读测试结果、指纹脱敏记录与被否版本演进链。
+6. 决策 JSON `rewrite_record` 登记organize绑定及素材取舍理由、经历归属与真实来源、直读测试结果、原创表达与事实保真记录与被否版本演进链。
 
 ## Step 1.5：取材与大纲
 
 Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis、tension、audience、packaging_assessment）；②`script-pool/Jeffrey个人表达池.md`中与题目相关的真实场景、亲历细节和固定表达（在决策JSON的`expression_pool_usage[]`登记`used/where`）；③`USER_DIRECTION_RESEARCH`时的系列研究摘录。反向采访与大纲确认门槛已于2026-09-17砍除；Jeffrey的修改意见在④—⑤或成稿反馈时吸收。
 
 大纲成立后按`docs/老韩创作六步法.md`写全文，机械要求：
-1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY`（教程=问题-方案-演示-总结；科普=现象-原理-案例-升华；故事=问题-低谷-转折-结果-方法，留存最高的格式，亲历题优先）。
+1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY|CUSTOM`（教程/科普/故事是工具，也允许CUSTOM并说明；不设留存率保证）。
 2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`）。
-3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（预计时长等分格子每格至少一个点的检查结论）、`rhythm_anchors[]`（每15—30秒一个正文级锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文；`position`必须用「第N段」指到正文真实段落——段号越界或只写模糊位置会被合同判红，见 3.6.1 内容层交叉判据）、`emotion_arc`（开头痛点焦虑→中段认知释放→收尾踏实感三节点）。
-4. **造记忆点**：登记`quote_anchor`（一句可被观众二创引用的金句，必须承载本期判断非鸡汤，放情绪高点或收尾前；**且必须是正文里真实出现的原句**——字幕/剪辑要按它取原文，validator 自 2026-09-30 起机械核对"逐字出现在口播段落里"，忽略标点与空白）与`comment_hook`（开头可埋问题悬念、真引导放情绪最高点、预期观众最想说什么；有上期评论素材时引用被问最多的问题做跨期钩子）。
+3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（正文各段推进及信息空转检查结论）、`rhythm_anchors[]`（按正文实际理解任务登记锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文；`position`必须用「第N段」指到正文真实段落——段号越界或只写模糊位置会被合同判红，见 3.6.1 内容层交叉判据）、`emotion_arc`（如实记录开头/中段/收尾感受，不预设情绪曲线）。
+4. **造记忆点**：登记`quote_anchor`（一句可被观众二创引用的金句，必须承载本期判断非鸡汤，放情绪高点或收尾前；**且必须是正文里真实出现的原句**——字幕/剪辑要按它取原文，validator 自 2026-09-30 起机械核对"逐字出现在口播段落里"，忽略标点与空白）与`comment_hook`（引导放最自然的位置并说明，记录预期观众最想说什么；有上期评论素材时引用被问最多的问题做跨期钩子）。
 5. **HKRR自检**：登记`hkrr_check`（快乐/知识/共鸣至少一项为true，rhythm必须true，附rationale）；不达标重排再写。
 
 独立自由模式无素材时生成大纲：
@@ -282,11 +288,11 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
 
 **写稿时同步自检：**
-- 关键节奏点尽量≤15字，短句比例以原版60%为默认目标；复杂事实边界允许长句
+- 长短句服从解释和呼吸，不设短句比例或平均句长目标
 - 转场优先使用原版转场句式库，禁“首先/其次/最后”式说明书结构
 - 标点：冒号→逗号，双引号→「」，「---」做句末停顿
-- #19“是不是有点意思”按原版3—5次目标自然融入；若本题语气不适合可减少并记录原因
-- 至少4种原版“废话感”元素，保持真人口播呼吸感
+- #19“是不是有点意思”按本题语气自然使用，不设次数
+- 按作者真实语域保留自然习惯，不凑结巴、语气词、自嘲或设备数量
 - 人味废话单独登记为 `VOICE_ONLY` 或具体人味设备；内容审计时排除它们，不能因为不增加事实就删除
 - 每个内容段必须绑定至少一个内容单位并写清新增信息；同一判断只换词、没有新增支撑/例子/推论/操作/边界时直接合并
 - 节奏按原版快慢交替：开头拉满→缓冲→加速→缓冲→结尾加速→减速
@@ -294,7 +300,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 ## Step 5：质量检查
 
 **E. 内容底线（命中 = 不通过）：**
-- 核心论点、关键证据和必要边界均已覆盖；素材覆盖度以原版≥80%为默认目标
+- 核心论点、关键证据和必要边界均已覆盖；素材取舍围绕本题承诺，不设覆盖比例
 - 有明确反常识论点或足够强的结果演示
 - 结尾行动号召源自素材中的可执行精华
 - 标题核心词在开场和关键结论自然出现；不设出现次数，不为记忆点复述同一内容
@@ -337,10 +343,10 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 反常识钩子或结果演示构成全文核心吸引力
 - #15 回环呼应：结尾照应开头
 - #18 框架命名：使用时形成可复述名称
-- #19 签名互动：“是不是有点意思”按3—5次目标检查
+- #19 签名互动：“是不是有点意思”只在自然时保留，不设次数
 - 横向对比至少1次
-- 技法总计以原版≥7条为默认目标
-- 废话感以原版≥4种为默认目标
+- 技法只保留对本题有效的部分，不设数量目标
+- 人味以直读自然、真实作者习惯为依据，不设数量目标
 - 任何删减都写入 `创作决策.json`，说明为什么删后效果更好；没有证据时保留原版
 
 **F. 发布文案检查：**
@@ -349,21 +355,13 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 视频介绍按当前内容类型完成五段信息结构，数字、功能和结果不超出正文事实边界
 - 视频介绍只保留1个互动问题，并且标签原样包含 `#AI新星计划`
 
-## Step 5.5：humanizer-zh 最终语言定稿（含通用直读测试）
+## Step 5.5：Sepia中文非虚构定稿
 
-humanizer-zh 十类模式扫描后，执行**直读测试**（所有稿通用，改写与原创都执行）：逐句三问——指代能否在前句找到同类别对象、拟物动词（叫/响/漏/爬/断）有无本体铺垫、术语首现有无当句解释；无铺垫隐喻和悬空指代改成字面直白表述，词内误报人工判读保留。humanizer测的是AI腔，直读测试补"人话但看不懂"的缺口。
+按`references/sepia.md`执行完整原包与真实路由：professional、技术域适配、discourse§1—3、style和zh。先诊断后最小修改，不加载fiction/台湾新闻规则，不设45分、词表命中率或人味数量。直读检查指代、隐喻铺垫、术语首现和拗口。
 
-内容、事实、结构、资源承诺和Step 5全部成立后，才执行本步骤。必须完整读取本机`~/.agents/skills/humanizer-zh/SKILL.md`，并先把尚未humanize的完整稿件保存为输入快照：Episode固定为`02-创作工作稿/humanizer-input.md`；普通独立正式稿使用同basename的`.humanizer-input.md`。系列资料包`series-draft-v1`仍是草稿，不执行本门。
+保存完整输入快照；逐内容单位核主张零增删改。正式稿沿用`humanizer-input.md`文件名以兼容媒体/迁移路径，工具绑定字段改为`language_review_contract`，skill必须是sepia。绑定六组件与实际加载references SHA、原包版本、输入/输出、诊断处理、模型身份和时间。无问题允许不改；主张需改回内容/事实阶段，再生成新快照，不偷偷改事实。
 
-本步骤只允许删除AI腔、调整口语、停顿、句长和节奏。禁止新增、删除或改变事实主张、个人经历、数字、日期、来源边界、产品能力、资源承诺、Jeffrey固定表达和内容单位。处理后必须：
-
-1. 逐项对照全部`content_units[].id`，记录`audited_content_unit_ids`；
-2. 确认`added_claims=[]`、`removed_claims=[]`、`changed_claims=[]`，任何非空都回Step 3处理，不能由humanizer直接决定；
-3. 按`humanizer-zh`的直接性、节奏、信任度、真实感、精简度五项各10分评分，总分至少45；
-4. 在`humanizer_contract`绑定Skill路径/SHA、输入快照路径/SHA、最终有效口播SHA、主张审计、评分和执行时间；
-5. 从头朗读最终正文。后续任何实质改稿都必须重新保存输入快照、重跑本步骤，并重新生成TTS、稿件SHA、决策JSON和发布文案绑定。
-
-`USER_PROVIDED_FINAL_SCRIPT_AND_RAW`是Jeffrey已确认并已录制的输入，不自动执行改写；只走其独立的recorded-input guard。
+普通系列草稿按原合同保留非正式边界；本次三稿候选也实际执行Sepia，但不做正式TTS或伪造②完成。用户已提供并录制的正式稿不自动改写，保留recorded-input guard。
 
 ## Step 6：通过/重试
 
@@ -497,11 +495,11 @@ Pre-A/B 按需依赖，不使用对应模式时无需安装。
 
 ## 注意事项
 
-- style.md 和教程型风格文件是经过实战验证的默认方法论，不是仅供参考的候选摘要。Episode 合同只能增加真源、事实和落盘约束，不能覆盖或删除其创作方法
+- style.md和风格文件提供默认工具；事实纪律、当前六步法及本次用户目标优先，旧数量/固定情绪/节奏配额不恢复
 - **风格文件**（`references/styles/`）是完全自包含的写作规范，每次创作前必须选择一个风格。通用模式无额外文件，直接用 style.md；其他模式只读对应风格文件
 - skill.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
 - 转译选题法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）。本 skill 不自带热点搜索；该文件供工作流①前置阶段复用
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
-- 二创脱敏规则（style.md 第十节）：素材来自他人内容时执行；自由模式（原创主题）跳过
+- 二创原创表达与真实来源规则（style.md 第十节）：素材来自他人内容时执行；自由模式（原创主题）跳过
 - 本 skill 不负责选题搜索（那是工作流①阶段的职责，用 laohan-xuanti + laohan-douyinsousuo 出大纲后喂入）
 - 本 skill 不负责平台特定下载（那是 laohan-xiazai 的职责）

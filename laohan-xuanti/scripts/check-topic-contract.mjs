@@ -158,13 +158,115 @@ if (candidates.schema_version === 3) {
 
 // ===== 五步法合同（2026-09-17起）：AI自主定题 + Jeffrey否决权 =====
 
+// Current schema 4 must carry the same factual/health protections as the older runtime.
+const validTime = (value) => Number.isFinite(Date.parse(value)) && Date.parse(value) <= Date.now() + 300000;
+const validEvidence = (x) => nonEmpty(x?.id) && nonEmpty(x.source) && ['PRIMARY', 'PLATFORM_SIGNAL', 'SECONDARY'].includes(x.source_type) && /^https?:\/\//.test(x.url || '') && validTime(x.retrieved_at);
+const evidence = Array.isArray(candidates.evidence) ? candidates.evidence : [];
+if (!uniqueNonEmpty(evidence.map((x) => x?.id)) || !evidence.every(validEvidence)) block('schema 4必须提供唯一、有效时间与URL的PRIMARY/平台来源');
+const evidenceById = new Map(evidence.map((x) => [x.id, x]));
+const allSignalIds = sources.flatMap((x) => Array.isArray(x.results) ? x.results.map((r) => r?.id) : []);
+if (!validTime(signals.collected_at) || !uniqueNonEmpty(sources.map((x) => x?.source_id)) || !uniqueNonEmpty(allSignalIds)
+  || sources.some((x) => !validTime(x.attempted_at) || !(discoveryMode === 'USER_DIRECTION_RESEARCH' ? ['OK', 'EMPTY', 'FAILED', 'PARTIAL'] : ['OK', 'EMPTY', 'FAILED']).includes(x.status)
+    || !Array.isArray(x.results) || x.result_count !== x.results.length
+    || (['OK', 'PARTIAL'].includes(x.status) ? x.result_count <= 0 : x.result_count !== 0)
+    || (x.status === 'FAILED' && !nonEmpty(x.error)) || (x.status === 'PARTIAL' && !nonEmpty(x.error || x.limitations || x.reason))
+    || x.record_sha256 !== createHash('sha256').update(JSON.stringify(x.results)).digest('hex'))) block('schema 4 signals状态、真实观测时间、结果条数或SHA无效');
+for (const item of items) {
+  if (!['opinion-video', 'tutorial-video'].includes(item.content_form) || !['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(item.audience_level)
+    || !nonEmpty(item.audience_problem) || !nonEmpty(item.audience_promise) || !nonEmpty(item.why_now) || !nonEmpty(item.platform_query_intent)
+    || !Array.isArray(item.assumed_prerequisites) || !Array.isArray(item.jargon_to_explain)
+    || [...item.assumed_prerequisites, ...item.jargon_to_explain].some((x) => !nonEmpty(x))) block('schema 4候选必须声明合法内容形态、受众任务、承诺与前提解释');
+  if (!uniqueNonEmpty(item.signal_ids) || item.signal_ids.some((id) => !allSignalIds.includes(id))) block('schema 4候选信号必须实际存在');
+  const gap = item.content_gap;
+  if (!gap || !['CONFIRMED', 'NOT_CONFIRMED', 'UNAVAILABLE'].includes(gap.status) || !nonEmpty(gap.rationale) || !Array.isArray(gap.evidence_ids)
+    || (gap.status === 'UNAVAILABLE' ? gap.evidence_ids.length !== 0 : !uniqueNonEmpty(gap.evidence_ids) || gap.evidence_ids.some((id) => !item.evidence_ids?.includes(id) || evidenceById.get(id)?.source_type !== 'PLATFORM_SIGNAL'))) block('schema 4内容缺口状态必须如实绑定平台证据');
+  const keys = ['audience_fit', 'evidence_strength', 'platform_relevance', 'differentiation', 'creator_fit', 'production_feasibility', 'learning_value'];
+  if (!nonEmpty(item.scorecard?.rationale) || keys.some((key) => !Number.isInteger(item.scorecard[key]) || item.scorecard[key] < 1 || item.scorecard[key] > 5)) block('schema 4候选比较必须有完整七维与理由（不是流量预测）');
+  const ids = item.evidence_ids;
+  const map = item.claim_evidence_map;
+  if (!uniqueNonEmpty(ids) || ids.some((id) => !evidenceById.has(id)) || !ids.some((id) => evidenceById.get(id).source_type === 'PRIMARY')
+    || !Array.isArray(map) || !uniqueNonEmpty(map.map((x) => x?.claim_id))
+    || map.some((x) => !nonEmpty(x.claim) || !uniqueNonEmpty(x.evidence_ids) || x.evidence_ids.some((id) => !ids.includes(id)))) block('schema 4每个候选必须绑定PRIMARY与逐主张来源映射');
+  if (!map.some((x) => x.evidence_ids.some((id) => evidenceById.get(id)?.source_type === 'PRIMARY'))) block('PRIMARY必须实际支撑至少一个主张，不能只挂在来源列表');
+  const alignment = item.platform_alignment;
+  if (!alignment || !['ALIGNED', 'ADJACENT', 'CONTRADICTED', 'UNRESOLVED', 'UNAVAILABLE'].includes(alignment.status) || !nonEmpty(alignment.rationale) || !Array.isArray(alignment.evidence_ids)
+    || (alignment.status === 'UNAVAILABLE' ? alignment.evidence_ids.length !== 0 : !uniqueNonEmpty(alignment.evidence_ids) || alignment.evidence_ids.some((id) => !ids.includes(id) || evidenceById.get(id)?.source_type !== 'PLATFORM_SIGNAL'))) block('schema 4平台语义状态必须绑定实际平台证据，不可用不能伪造对齐');
+  if (item.disposition === 'AUTO_SELECTED' && !['ALIGNED', 'ADJACENT', 'UNAVAILABLE'].includes(alignment.status)) block('AUTO_SELECTED平台证据不能矛盾或未决');
+  const fit = item.creator_fit;
+  if (!fit || !['FIRSTHAND_EXPERIENCE', 'BUILT_OR_TESTED', 'OWNED_EVIDENCE', 'LONG_TERM_PRACTICE', 'RESEARCHED_JUDGMENT', 'NOT_ESTABLISHED'].includes(fit.basis) || !nonEmpty(fit.why_jeffrey) || !nonEmpty(fit.distinctive_judgment) || (item.disposition === 'AUTO_SELECTED' && fit.basis === 'NOT_ESTABLISHED')) block('schema 4必须登记真实作者依据与独特判断');
+  if (item.content_form === 'tutorial-video' && item.disposition === 'AUTO_SELECTED') {
+    const proof = item.tutorial_proof;
+    const path = proof?.evidence_path && target(proof.evidence_path);
+    if (proof?.status !== 'VERIFIED' || !path || !existsSync(path) || !statSync(path).isFile() || proof.evidence_sha256 !== shaFile(path) || !nonEmpty(proof.version_boundary) || !nonEmpty(proof.recovery)) block('教程选中前必须绑定本机实测、版本边界与失败恢复');
+  }
+}
+const screening = candidates.screening_summary;
+const longlist = Array.isArray(screening?.longlist) ? screening.longlist : [];
+if (!screening || screening.raw_signal_count !== allSignalIds.length || !Number.isInteger(screening.event_cluster_count)
+  || screening.event_cluster_count < longlist.length || longlist.length < Math.min(8, screening.event_cluster_count) || longlist.length > 12
+  || !uniqueNonEmpty(longlist.map((x) => x?.event_cluster_id))
+  || longlist.some((x) => !nonEmpty(x.working_title) || !nonEmpty(x.reason) || !['SHORTLISTED', 'REJECTED'].includes(x.disposition)
+    || !uniqueNonEmpty(x.signal_ids) || x.signal_ids.some((id) => !allSignalIds.includes(id))
+    || x.source_count !== new Set(x.signal_ids.map((id) => sources.find((src) => src.results.some((r) => r.id === id))?.source_id)).size)
+  || items.some((x) => !longlist.some((row) => row.event_cluster_id === x.event_cluster_id && row.disposition === 'SHORTLISTED'))) block('schema 4必须保留真实signals到长名单/候选的筛选链路');
+const health = existsSync(target('00-选题-source-health.json')) ? readJson('00-选题-source-health.json') : {};
+const healthSources = Array.isArray(health.sources) ? health.sources : [];
+if (!uniqueNonEmpty(healthSources.map((row) => row?.source_id))) block('source-health必须有唯一非空来源身份');
+for (const record of sources) {
+  if (healthSources.filter((row) => row.source_id === record.source_id && row.result_file === '00-选题-signals.json').length !== 1) block('每个signals来源必须保留唯一对应health记录，不能省略失败源');
+}
+const signalRoles = new Set(['DISCOVERY', 'BENCHMARK_CREATOR', 'PERSONAL_EXPRESSION']);
+if (healthSources.some((row) => (signalRoles.has(row.source_role) || row.result_file === '00-选题-signals.json') && !sources.some((record) => record.source_id === row.source_id))) block('health不得捏造signals之外的发现来源');
+for (const row of healthSources) {
+  const record = sources.find((src) => src.source_id === row.source_id);
+  if (record && (row.status !== record.status || row.result_count !== record.result_count || row.record_sha256 !== record.record_sha256 || row.result_file !== '00-选题-signals.json')) block('source-health不能把signals失败或结果条数洗白，必须绑定同一record SHA');
+}
+if (health.schema_version !== 1 || !validTime(health.collected_at) || !uniqueNonEmpty(healthSources.map((x) => x?.source_id))
+  || healthSources.some((x) => {
+    if (!nonEmpty(x.result_file)) return true;
+    const path = target(x.result_file);
+    return !existsSync(path) || !statSync(path).isFile() || x.result_sha256 !== shaFile(path) || !validTime(x.attempted_at)
+      || !(discoveryMode === 'USER_DIRECTION_RESEARCH' ? ['OK', 'EMPTY', 'FAILED', 'SKIPPED', 'PARTIAL'] : ['OK', 'EMPTY', 'FAILED', 'SKIPPED']).includes(x.status) || !Number.isInteger(x.result_count)
+      || (['OK', 'PARTIAL'].includes(x.status) ? x.result_count <= 0 : x.result_count !== 0)
+      || (x.status === 'FAILED' && !nonEmpty(x.error)) || (x.status === 'PARTIAL' && !nonEmpty(x.error || x.limitations || x.reason)) || (x.status === 'SKIPPED' && !nonEmpty(x.reason));
+  }) || !healthSources.some((x) => x.source_role === 'DISCOVERY' && x.status === 'OK' && sources.some((src) => src.source_id === x.source_id))
+  || !healthSources.some((x) => x.source_role === 'DOUYIN_SEARCH' && ['OK', 'EMPTY', 'FAILED'].includes(x.status) && x.result_file === '00-抖音搜索证据.json')
+  || !healthSources.some((x) => x.source_role === 'PRIMARY_PROOF' && x.status === 'OK' && evidence.some((ev) => ev.source_type === 'PRIMARY' && ev.url === x.command_or_url))) block('schema 4 source-health必须绑定真实结果SHA、DISCOVERY/抖音尝试/PRIMARY角色');
+const douyin = readJson('00-抖音搜索证据.json');
+const validDouyinResult = (x) => nonEmpty(x?.id) && Number.isInteger(x.rank) && x.rank > 0 && nonEmpty(x.desc) && nonEmpty(x.author)
+  && /^https?:\/\//.test(x.url || '') && x.field_availability && ['plays', 'likes', 'comments', 'shares'].every((key) =>
+    typeof x.field_availability[key] === 'boolean' && (x.field_availability[key] ? Number.isFinite(x[key]) && x[key] >= 0 : x[key] === null));
+if (!existsSync(target('00-抖音搜索证据.md')) || statSync(target('00-抖音搜索证据.md')).size === 0 || !validTime(douyin.collected_at) || douyin.executor?.name !== 'opencli'
+  || !nonEmpty(douyin.executor.version) || !['PASS', 'FAILED'].includes(douyin.executor.doctor_status) || typeof douyin.executor.logged_in !== 'boolean'
+  || !['AVAILABLE', 'UNAVAILABLE'].includes(douyin.executor.availability_status)
+  || (douyin.executor.availability_status === 'AVAILABLE' && (douyin.executor.doctor_status !== 'PASS' || !douyin.executor.logged_in))
+  || !Array.isArray(douyin.queries) || !douyin.queries.length
+  || douyin.queries.some((x) => !nonEmpty(x.query) || !nonEmpty(x.command) || !x.command.includes('opencli douyin search') || !validTime(x.attempted_at)
+    || !['OK', 'EMPTY_OR_FIELD_UNAVAILABLE', 'FAILED'].includes(x.status) || !Array.isArray(x.results) || x.result_count !== x.results.length
+    || !x.results.every(validDouyinResult) || (x.status === 'OK' ? !x.results.length : x.results.length !== 0) || (x.status === 'FAILED' && !nonEmpty(x.error)))
+  || (douyin.executor.availability_status === 'UNAVAILABLE' && douyin.queries.some((x) => x.status !== 'FAILED'))
+  || (douyin.queries.every((x) => x.status === 'FAILED') && douyin.executor.availability_status !== 'UNAVAILABLE')) block('schema 4抖音必须是真实预检/登录/查询/结构有效结果，失败与零结果分开');
+
+const douyinCount = douyin.queries.reduce((sum, query) => sum + query.result_count, 0);
+const douyinStatus = douyinCount > 0 ? 'OK' : douyin.queries.every((query) => query.status === 'FAILED') ? 'FAILED' : 'EMPTY';
+if (!healthSources.filter((row) => row.source_role === 'DOUYIN_SEARCH').length || healthSources.filter((row) => row.source_role === 'DOUYIN_SEARCH').some((row) => row.result_file !== '00-抖音搜索证据.json' || row.status !== douyinStatus || row.result_count !== douyinCount)) block('DOUYIN_SEARCH health必须与真实查询聚合状态和条数一致');
+
+
+
 // Jeffrey否决：存在否决记录时进入重扫，不得保留最终选题
+const rejectionHistory = candidates.screening_summary?.rejection_history || [];
+if (!Array.isArray(rejectionHistory) || rejectionHistory.some((entry) => !/^[a-f0-9]{64}$/.test(entry?.candidates_sha256 || '') || !nonEmpty(entry.veto_reason || entry.rejection_reason))) block('否决历史必须保留原候选SHA与真实理由');
+if (rejectionHistory.length && !existsSync(target('00-选题-Jeffrey否决.json'))) block('已有否决历史时必须保留原否决记录，不删除源记录清门');
+if (rejectionHistory.some((entry) => nonEmpty(entry.selected_candidate_title) && items.some((item) => item.title === entry.selected_candidate_title && item.disposition === 'AUTO_SELECTED'))) block('不得重复自动选中历史已否决同题', 'TOPIC_RESCAN_REQUIRED');
 if (existsSync(target('00-选题-Jeffrey否决.json'))) {
   const veto = readJson('00-选题-Jeffrey否决.json');
-  const vetoValid = veto.schema_version === 1 && veto.vetoed_by === 'Jeffrey' && !Number.isNaN(Date.parse(veto.vetoed_at)) && veto.candidates_sha256 === shaFile(candidatesPath) && nonEmpty(veto.selected_candidate_id) && nonEmpty(veto.veto_reason);
-  if (!vetoValid) block('Jeffrey否决记录必须绑定当前候选SHA并说明否决原因');
-  if (items.some((item) => item.disposition === 'AUTO_SELECTED') || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md'))) block('Jeffrey已否决当前选题；必须按否决原因重新扫描，删除AUTO_SELECTED与最终选题，不得进入②', 'TOPIC_RESCAN_REQUIRED');
-  block('Jeffrey已否决并等待重新扫描；新候选必须把否决记录带入screening_summary.rejection_history，且不得重复推被否决的候选', 'TOPIC_RESCAN_REQUIRED');
+  const vetoValid = veto.schema_version === 1 && veto.vetoed_by === 'Jeffrey' && !Number.isNaN(Date.parse(veto.vetoed_at)) && /^[a-f0-9]{64}$/.test(veto.candidates_sha256 || '') && nonEmpty(veto.selected_candidate_id) && nonEmpty(veto.veto_reason);
+  if (!vetoValid) block('Jeffrey否决记录必须绑定候选SHA并说明否决原因');
+  if (veto.candidates_sha256 === shaFile(candidatesPath)) block('Jeffrey已否决当前选题；保留否决记录并按原因重扫，不得进入②', 'TOPIC_RESCAN_REQUIRED');
+  const history = candidates.screening_summary?.rejection_history;
+  if (!Array.isArray(history) || !history.some((entry) => ['candidates_sha256', 'vetoed_at', 'veto_reason', 'selected_candidate_id'].every((key) => entry?.[key] === veto[key]))) block('重新扫描的候选必须保留上轮Jeffrey否决历史，不删除否决记录');
+  if (nonEmpty(veto.selected_candidate_title) && items.some((item) => item.title === veto.selected_candidate_title && item.disposition === 'AUTO_SELECTED')) block('不得重复自动选中Jeffrey已否决的同题', 'TOPIC_RESCAN_REQUIRED');
+
 }
 
 const signalIds = new Set(sources.flatMap((source) => Array.isArray(source.results) ? source.results.map((item) => item?.id) : []));
@@ -199,8 +301,20 @@ for (const item of items) {
   if (item?.topic_kind === 'SERIES_CANDIDATE') {
     const corroboration = item?.topic_corroboration || {};
     const corroborationIds = Array.isArray(corroboration.signal_ids) ? corroboration.signal_ids : [];
-    const creators = new Set(corroborationIds.map((id) => sources.flatMap((source) => Array.isArray(source.results) ? source.results : []).find((result) => result?.id === id)?.creator_sec_uid).filter(Boolean));
-    if (!corroborationIds.length || corroborationIds.some((id) => !signalIds.has(id)) || creators.size < 2 || corroborationIds.every((id) => signalLane.get(id) !== 'BENCHMARK_CREATOR' && signalLane.get(id) !== 'SELF_CHANNEL')) block('SERIES_CANDIDATE必须绑定两个以上不同账号的同母题异常信号');
+    const signalMap = new Map(sources.flatMap((source) => (source.results || []).map((r) => [r.id, r])));
+    const refs = corroborationIds.map((id) => signalMap.get(id));
+    const creators = new Set(refs.map((r) => r?.creator_sec_uid).filter(Boolean));
+    const topicBySignal = corroboration.topic_by_signal;
+    const collectedAt = Date.parse(signals.collected_at);
+    const recentAnomaly = (r) => r?.anomaly_status === 'ANOMALY' && Number.isFinite(r.performance_ratio) && r.performance_ratio >= 3
+      && Number.isFinite(Date.parse(r.published_at)) && Date.parse(r.published_at) <= collectedAt
+      && collectedAt - Date.parse(r.published_at) <= 30 * 86400000
+      && Number.isFinite(Date.parse(r.metrics_observed_at)) && Date.parse(r.metrics_observed_at) <= collectedAt + 300000
+      && collectedAt - Date.parse(r.metrics_observed_at) <= 21 * 86400000;
+    if (!uniqueNonEmpty(corroborationIds) || creators.size < 2 || refs.some((r) => !recentAnomaly(r))
+      || !nonEmpty(corroboration.mother_topic) || !nonEmpty(corroboration.independence_note) || !nonEmpty(corroboration.content_review_note)
+      || !Array.isArray(topicBySignal) || topicBySignal.length !== corroborationIds.length
+      || corroborationIds.some((id) => !topicBySignal.some((x) => x?.signal_id === id && x.mother_topic === corroboration.mother_topic && nonEmpty(x.viewer_task)))) block('SERIES_CANDIDATE必须绑定不同账号的近期同母题异常、观测时间与内容核读；只表示试水线索');
   }
   // 五步法第5步：包装与收藏价值
   const pa = item?.packaging_assessment || {};
@@ -213,16 +327,29 @@ if (autoSelected.length === 1) {
   if (items.some((item) => item !== selected && !['REJECTED', 'SHORTLISTED'].includes(item.disposition))) block('AUTO_SELECTED之外的候选只能是REJECTED或SHORTLISTED');
   if (selected.false_positive_filter?.status !== 'PASSED') block('AUTO_SELECTED候选必须通过假阳性过滤');
   const pa = selected.packaging_assessment || {};
-  if (pa.worth_collecting !== true || pa.evergreen_half_year !== true || pa.title_clickable !== true) block('AUTO_SELECTED候选必须通过收藏价值三问（教程/避坑/清单类天然占优；不达标换角度或换题）');
+  if (pa.title_clickable !== true || (pa.worth_collecting !== true && !['DECISION_SUPPORT', 'SHARE_FOR_RECOGNITION', 'TIMELY_ACTION'].includes(pa.value_basis))) block('AUTO_SELECTED候选必须有兑现标题的观众价值；观点/时效题可登记决策、共鸣分享或即时行动依据');
   if (!existsSync(target('00-选题.json')) || !existsSync(target('00-选题.md')) || statSync(target('00-选题.md')).size === 0) block('AI自主定题后必须生成最终选题JSON与Markdown');
   const topic = readJson('00-选题.json');
   if (topic.schema_version !== 4 || topic.selected_candidate_id !== selected.id || !nonEmpty(topic.audience) || !nonEmpty(topic.thesis) || !nonEmpty(topic.auto_selection_rationale)) block('最终选题必须是schema 4并绑定AUTO_SELECTED候选与自主定题理由');
+  if (!Array.isArray(topic.evidence) || !uniqueNonEmpty(topic.evidence.map((x) => x?.id)) || !topic.evidence.every((x) => validEvidence(x) && selected.evidence_ids.includes(x.id) && JSON.stringify(x) === JSON.stringify(evidenceById.get(x.id))) || !topic.evidence.some((x) => x.source_type === 'PRIMARY')) block('最终选题必须绑定所选候选的同字节PRIMARY来源');
+  if (!Array.isArray(topic.claim_evidence_map) || [...topic.claim_evidence_map.flatMap((claim) => claim.evidence_ids || []), ...(selected.platform_alignment?.evidence_ids || []), ...(selected.content_gap?.evidence_ids || [])].some((id) => !topic.evidence.some((ev) => ev.id === id))) block('最终选题来源必须覆盖全部主张映射与平台/内容缺口引用');
+  for (const key of ['audience', 'thesis', 'content_form', 'audience_level', 'audience_promise', 'creator_fit', 'assumed_prerequisites', 'jargon_to_explain', 'platform_query_intent', 'platform_alignment', 'content_gap', 'claim_evidence_map']) if (JSON.stringify(topic[key]) !== JSON.stringify(selected[key])) block('最终选题与所选候选字段漂移: ' + key);
+  const experiment = topic.experiment;
+  const allowedKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec', 'digg_count', 'comment_count', 'share_count']);
+  if (!nonEmpty(experiment?.hypothesis_id) || !nonEmpty(experiment.intervention) || !nonEmpty(experiment.expected_metric)
+    || !uniqueNonEmpty(experiment.metric_keys) || experiment.metric_keys.some((x) => !allowedKeys.has(x))
+    || !/^T\+[1-9]\d*$/.test(experiment.observation_window || '') || experiment.observation_window_unit !== 'DAY'
+    || !Array.isArray(experiment.metric_targets) || experiment.metric_targets.length !== experiment.metric_keys.length
+    || !uniqueNonEmpty(experiment.metric_targets.map((x) => x?.key)) || experiment.metric_targets.some((x) => !experiment.metric_keys.includes(x.key) || !['INCREASE', 'DECREASE', 'MAINTAIN'].includes(x.direction) || !nonEmpty(x.baseline_ref) || x.measurement_source !== 'douyin_creator_center')) block('schema 4实验必须预注册合法指标、方向、基线与正整数T+N/DAY窗口');
+
 } else if (existsSync(target('00-选题.json')) || existsSync(target('00-选题.md'))) {
   block('存在最终选题但没有AUTO_SELECTED候选，定题链路不完整');
 } else if (items.some((item) => !['REJECTED', 'SHORTLISTED'].includes(item.disposition))) {
   block('未定题时候选只能是REJECTED或SHORTLISTED');
 }
 if (validatedDirectionResearch?.status !== 'EXPERIMENTAL_ONE_OFF' && items.some((item, index) => index > 0 && item.candidate_origin.priority_rank < items[index - 1].candidate_origin.priority_rank)) block('候选展示顺序必须遵循来源优先级：对标账号在前、自频道其次、全面热点再次、个人表达最后');
+
+if (!autoSelected.length) block('短名单审查不是正式①完成；必须有唯一AUTO_SELECTED及最终选题', 'AWAITING_TOPIC_SELECTION');
 
 if (discoveryMode === 'USER_DIRECTION_RESEARCH') validateDirectionPackets();
 
