@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.5.0
+version: 3.6.0
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -8,7 +8,7 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 
 # ①选题决策
 
-热点只用于发现，最终结果是一个可审计的生产决策：为什么现在做、给谁看、论点凭什么成立、抖音上有哪些重复角度、为什么淘汰其他候选，以及发布后如何按固定窗口复盘。
+热点只用于发现，最终结果是一个可审计的生产决策：观众为什么现在想看、为什么选它、有什么可提炼的内容来源、材料与模板怎样兑现，以及发布后如何复盘。可制作和资料齐全不等于值得优先做，多模型票数不替代需求证据。具体方法与opportunity_case/selection_review字段单源见项目docs/老韩选题五步法.md。
 
 ## 边界
 
@@ -17,7 +17,7 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 - ②才写口播稿；①不生成正文、大纲段落或封面。
 - ⑤才做完整事实核验；①仍须给最终事实前提找到至少一条 PRIMARY 原始来源。
 - 不安装新浏览器、爬虫、Python runtime 或第三方 skill。抖音平台访问只用已安装 OpenCLI。
-- 同一事件可以形成观点候选和教程候选；受众任务、标题承诺和内容路径真正不同时可分别参加比较。②—④沿用选中 lane，不混写。
+- 教学、观点、解读、测评、对比、故事、案例、资源及混合形式均可，用opportunity_case.presentation_form自由描述；content_form是现有安全/执行lane，不是创意形式白名单。同事件不同任务/承诺/路径可参加比较；实际操作/效果承诺仍需实跑，不靠换形式标签豁免。
 
 ## 输入
 
@@ -63,7 +63,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 
 同一事件的观点/教程变体在受众任务、标题承诺和内容路径不同时可分别计数。每项必须有：
 
-定角度前置动作：**先读原视频**——必须读过原爆款的转录或完整内容才允许写tension（反驳/补深/亲历替代都建立在实际内容上，没读过就是猜）。对标视频转录复用项目既有转录工具链（large-v3），产物放`数据层/scans/<日期>/`或episode临时目录。想不出差异时用兴趣市场工具：两个高兴趣题材组合=受众叠加，并评估母题受众池大小（工具教程类通常大于纯观点类，同质量优先池大的）。
+定角度前置动作：**先读拟借鉴原视频**——读过转录或完整内容才写反驳/补深/亲历替代，核它依靠论证、案例、结果还是复杂画面取得效果。转录复用既有large-v3，放数据层/scans/<日期>/或研究临时目录。可组合兴趣题材探索新角度，但受众能否叠加、教程或观点谁更适合都按本轮证据判断，不设形式偏好。
 
 形成候选前恢复原版分析：以“AI/GPT/Claude/大模型/机器人/自动化/编程/副业”等直接词和“教育/职业/消费/创业/职场”等间接词标注相关度，但保留可能产生新角度的边缘信号；统计安装教程/进阶技巧/方法论/对比评测/实战/资源推荐等内容类型；标出多平台共振、单平台独有、已拥挤角度和竞品未覆盖机会。它们用于扩大候选，不替代后面的 PRIMARY 与抖音关键词核验。
 
@@ -82,7 +82,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 - `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个不同账号的近期同母题异常仅为系列试水线索，须核异常、日期、独立性与完整内容。系列优先采用可追更形式（"挑战30天XX""10天教会XX"式进度感系列，必须由内容任务支持，不能声称已知算法权重），形式写入`topic_corroboration.series_format_hint`（可空）。
 - `packaging_assessment`（第5步验收藏）：非空`title_direction`与`cover_concept`（一句话，不做图）、三问布尔`worth_collecting`/`evergreen_half_year`/`title_clickable`、非空`rationale`。标题承诺必须成立；非收藏或时效题以value_basis=DECISION_SUPPORT|SHARE_FOR_RECOGNITION|TIMELY_ACTION如实说明，不强制常青。
 
-分数是可挑战的候选比较，不是流量预测。热度不能替代受众价值、证据强度、差异化或可拍性。SELECTED 可为 `ALIGNED`、有明确差异化解释的 `ADJACENT`，也可在 discovery 与 PRIMARY 充分时为如实说明缺失范围的 `UNAVAILABLE`；平台缺失降低 `platform_relevance` 置信度，但不能单独淘汰候选。`CONTRADICTED|UNRESOLVED` 不得入选。教程候选写成确定步骤前仍必须在 `tutorial_proof` 登记 `status: VERIFIED`、研究目录/本期内 `evidence_path`、`evidence_sha256`、非空 `version_boundary` 和 `recovery`。
+分数是可挑战的候选比较，不是流量预测。热度、受众价值、证据和可制作分开论证。平台ALIGNED/ADJACENT/UNAVAILABLE依然是语义/访问状态，不能单独证明需求强弱；可写还须按五步法的opportunity_case给同观众问题的真实证据和selection_review独立比较。平台缺失不单独淘汰，官方发布和相邻关键词也不单独放行；CONTRADICTED/UNRESOLVED不得入选。教程或实际操作/效果承诺仍须tutorial_proof真实实跑、版本与恢复证据。
 
 ### 3. 对短名单做抖音关键词验证
 
@@ -100,13 +100,13 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 
 ### 写作前交接与独立材料审核
 
-可写候选必须按`../laohan-chuangzuo/references/creation-contract.md`的创作交接定义添加creation_handoff与material_review：交源内容/主稿论证、可重组判断、真实可兑现材料；发现来源/核事实/改编依据/视听参考分用途。root在①→②前组织独立上下文读实际来源与材料，拒绝回①；操作/效果承诺写作前已有实跑，不因opinion标签豁免。能力复用要同类实例路径+SHA与差异依据，不只自评会录屏。大纲形式不免交接，不按账号模仿不可取得的复杂画面。共同模块在本skill scripts/creation-handoff-contract.mjs，必须与chuangzuo一起可达；机械检查不代替语义或传播验收。
+可写候选必须按`../laohan-chuangzuo/references/creation-contract.md`的创作交接定义添加creation_handoff与material_review：交源内容/主稿论证、可重组判断、真实可兑现材料；发现来源/核事实/改编依据/视听参考分用途。决定承诺能否兑现的材料先取得，非关键网络补充/本地录屏先记目标与用途后交⑩；Motion依据用实读VISUAL_REFERENCE，说明表达和材料限制，不预锁导演方案。root在①→②前组织独立读者同时核“值得选”和“材料成立”，分别写selection_review/material_review，可共用上下文和报告，拒绝回①。操作/效果承诺写作前已有实跑，不因opinion标签豁免。能力复用要同类实例路径+SHA与差异依据，不只自评会录屏。大纲形式不免交接，不按账号模仿不可取得的复杂画面。共同模块在本skill scripts/creation-handoff-contract.mjs，必须与chuangzuo一起可达；机械检查不代替语义或传播验收。
 
 ### 5. AI自主定题（Jeffrey保留否决权）
 
 五步法全部通过后直接定题，不等待Jeffrey：
 
-- 综合受众适配、证据、作者判断、差异、观众传播理由和制作可行性比较；异常倍数仅作线索，取最优候选标记`AUTO_SELECTED`，其余改`REJECTED`并写具体理由；并列时优先`SELF_CHANNEL`异常方向（自己已被验证的赛道）。
+- 按五步法完成机会论证：各平台最新/高表现、博主动态、小白/评论、自频道、时效和分享动因交叉；比较定位/日期/基线/拥挤与内容/材料/Motion条件。默认可写须需求EVIDENCED、同问题真实支持和selection_review接受；只有既有EXPERIMENTAL_ONE_OFF方向允许如实HYPOTHESIS试验。不得以资料齐全、自评高分或多数票补需求缺口；仍保留自由新角度与平台故障出路。取最优标AUTO_SELECTED，其余给真实取舍，证据不足重扫。
 - 写 schema 4 `00-选题.json`（含`auto_selection_rationale`）与`00-选题.md`后直接进入②。
 - Jeffrey否决：任何时候可写 schema 1 `00-选题-Jeffrey否决.json`（`vetoed_by/vetoed_at/candidates_sha256/selected_candidate_id/veto_reason`必填）。否决后进入`TOPIC_RESCAN_REQUIRED`：按否决原因重新扫描，删除AUTO_SELECTED与最终选题；新候选必须把否决记录（四项+旧候选SHA）原样写入`screening_summary.rejection_history[]`，不得重复推被否决的候选。
 - 信号不足以支撑任何候选通过五步法时进入`TOPIC_RESCAN_REQUIRED`扩大扫描（新登记达人候选、补抖音搜索），不勉强定题。
@@ -131,7 +131,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/check-topic-contract.mjs --
 只有输出`PASS redian topic contract schema=4`才算①完成。
 
 - `schema_version: 4`、`selected_candidate_id`、非空 `rejected_candidate_ids`、非空 `auto_selection_rationale`。
-- 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap` 和 `claim_evidence_map`。
+- 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap`、`claim_evidence_map`、`opportunity_case`与`selection_review`。
 - `audience`、`thesis`、`evidence`、`selection_rationale`、`not_do_reason`。
 - evidence 全部属于选中候选，且至少一条 PRIMARY；平台可用时至少一条 PLATFORM_SIGNAL，`platform_alignment.status=UNAVAILABLE` 时可没有。
 - experiment 含唯一主要 intervention、合法 `metric_keys`、正整数 `T+N`、`observation_window_unit: DAY` 和逐键 `metric_targets`。
@@ -159,7 +159,9 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/check-topic-contract.mjs --
 | OpenCLI 登录/adapter 全路径失败 | 平台证据记 `UNAVAILABLE` 并继续；不安装替代爬虫，不推断蓝海 |
 | 最终候选无 PRIMARY | 缩窄论点或换候选；仍无则 BLOCKED |
 | Jeffrey否决当前选题 | 进入`TOPIC_RESCAN_REQUIRED`；按否决原因重新扫描，否决历史带入新候选，不进入② |
-| 平台结果只支持相邻话题 | 标 `ADJACENT`，补充查询；仍相邻时如实说明差异化与风险，可参加最终比较，不得冒充直接对齐 |
+| 平台结果只支持相邻话题 | 标ADJACENT并补同问题查询/评论；可以从其它平台、达人或自频道证明同受众问题，不能只有相邻产品线索就宣布可写 |
+| 需求仅是官方事件或假设 | 留研究线索并重扫；只有上游已验证EXPERIMENTAL_ONE_OFF方向可如实单期试验，不称热题 |
+| 材料审核接受但无独立选题比较 | 补selection_review，复用既有独立读者也可；不以“事实无错/能制作”宣布值得选 |
 | 教程候选没有本机真实执行证据 | 保持 REJECTED；可保留为待验证候选，不能写成教程已可交付 |
 | 候选不可在既有⑬指标测量 | 换 intervention/metric 或换候选 |
 
@@ -171,7 +173,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/check-topic-contract.mjs --
 
 ❌ “抖音有人搜 Claude Code 迁移，所以能证明‘验证闭环’是当前平台需求。”
 
-✅ “该结果只证明迁移/导入需求，标 ADJACENT；继续搜索验证失败、上线回归等直接意图。若仍无直接结果，可把‘验证闭环’作为差异化观点参加比较，但明确平台证据只支持相邻需求。”
+✅ “该结果只证明迁移/导入需求，标ADJACENT；继续核验证失败、上线回归等具体观众问题。其它真实响应若支持同问题，仍可比较新角度；若只有相邻关键词，就保持待研究身份。”
 
 ❌ “搜索 0 条，所以这是蓝海。”
 

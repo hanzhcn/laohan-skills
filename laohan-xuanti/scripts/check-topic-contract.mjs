@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, realpathSync, statSync} from 'node:fs';
-import {basename, dirname, join, resolve} from 'node:path';
+import {basename, dirname, isAbsolute, join, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {verifyCreationHandoff, creationFraming} from './creation-handoff-contract.mjs';
+import {verifyCreationHandoff, creationFraming, handoffHash} from './creation-handoff-contract.mjs';
 
 const args = process.argv.slice(2);
 const episodeIndex = args.indexOf('--episode');
@@ -337,6 +337,72 @@ for (const item of items) {
   if (!nonEmpty(pa.title_direction) || !nonEmpty(pa.cover_concept) || !nonEmpty(pa.rationale) || ![true, false].includes(pa.worth_collecting) || ![true, false].includes(pa.evergreen_half_year) || ![true, false].includes(pa.title_clickable)) block('每个候选必须完成包装前置评估：标题方向、封面概念、收藏三问（值得收藏/半年后有用/标题想点）与理由');
   if (readyForWriting(item) && (fp.status !== 'PASSED' || pa.title_clickable !== true || (pa.worth_collecting !== true && !['DECISION_SUPPORT', 'SHARE_FOR_RECOGNITION', 'TIMELY_ACTION'].includes(pa.value_basis)))) block('可写候选必须通过假阳性过滤并有兑现标题的观众价值');
 }
+// Audience opportunity and material readiness are separate editorial decisions.
+// This binds the comparison and real observations; it cannot predict popularity.
+const selectionInputsHash = handoffHash({signals, evidence, douyin, candidates: items.map(({disposition, material_review, selection_review, ...candidate}) => candidate)});
+const signalRecords = new Map(sources.flatMap((source) => source.results.map((record) => [record.id, {record, sourceId: source.source_id}])));
+const searchRecords = new Map(douyin.queries.flatMap((query) => query.results.map((record) => [record.id, record])));
+const stringList = (xs) => Array.isArray(xs) && xs.every(nonEmpty) && new Set(xs).size === xs.length;
+const audienceResponse = (record, sourceId) => {
+  const platformFields = {bilibili: ['play', 'danmaku'], zhihu: ['answers'], hupu: ['lights', 'replies']};
+  const fields = ['digg_count', 'play_count', 'likes', 'plays', 'comments', 'comment_count', 'shares', 'share_count', 'collect_count', 'favorites', 'view_count', 'views', ...(platformFields[sourceId] || [])];
+  return fields.some((key) => {
+    const value = record[key] ?? record.raw?.[key];
+    return record.field_availability?.[key] !== false && typeof value === 'number' && Number.isFinite(value) && value > 0;
+  }) || (sourceId === 'hackernews' && Number.isFinite(record.raw?.score) && record.raw.score > 0);
+};
+for (const item of items.filter(readyForWriting)) {
+  const opportunity = item.opportunity_case;
+  if (opportunity?.schema_version !== 1 || !nonEmpty(opportunity.presentation_form)) block('selection: 缺选题机会论证opportunity_case或实际表达形式；旧研究须重新选题，不追填历史');
+  const demand = opportunity.demand;
+  if (!demand || !['EVIDENCED', 'HYPOTHESIS', 'CONTRADICTED'].includes(demand.status) || !Array.isArray(demand.support)
+    || !['cross_check', 'time_window', 'limitations'].every((key) => nonEmpty(demand[key]))) block('selection: 需求须登记真实支持、交叉判断、时间边界与限制');
+  let directAudienceSupport = false;
+  for (const support of demand.support) {
+    const signal = signalRecords.get(support?.signal_id);
+    const record = support?.signal_id ? signal?.record : searchRecords.get(support?.douyin_result_id);
+    if (!record || Boolean(support.signal_id) === Boolean(support.douyin_result_id)
+      || (support.signal_id && (!item.signal_ids.includes(support.signal_id) || signal.sourceId === 'personal-expression-pool'))
+      || !['SAME_VIEWER_PROBLEM', 'ADJACENT_ONLY'].includes(support.relation)
+      || !['AUDIENCE_RESPONSE', 'COMMENT_QUESTION', 'CONTEXT_ONLY'].includes(support.basis)
+      || !['observation', 'audience_link', 'time_note'].every((key) => nonEmpty(support[key]))) block('selection: 需求支持须引用本题真实信号/搜索结果并说明受众关联与时间');
+    if (support.basis === 'AUDIENCE_RESPONSE' && !audienceResponse(record, signal?.sourceId)) block('selection: 观众响应须有原始非零互动，官方更新或结果条数不能冒充需求');
+    const comments = record.top_comments || record.raw?.top_comments;
+    if (support.basis === 'COMMENT_QUESTION' && (!nonEmpty(support.quote) || !Array.isArray(comments) || !comments.some((comment) => (typeof comment === 'string' ? comment : comment?.text || comment?.content) === support.quote))) block('selection: 评论需求须引用原始评论原句');
+    if (support.relation === 'SAME_VIEWER_PROBLEM' && support.basis !== 'CONTEXT_ONLY') directAudienceSupport = true;
+  }
+  if (demand.status === 'EVIDENCED' && !directAudienceSupport) block('selection: 相邻产品/官方消息不能单独证明本题观众需求');
+  const explicitExperiment = discoveryMode === 'USER_DIRECTION_RESEARCH' && validatedDirectionResearch?.status === 'EXPERIMENTAL_ONE_OFF';
+  if (demand.status !== 'EVIDENCED' && !(explicitExperiment && demand.status === 'HYPOTHESIS')) block('selection: 当前需求未证，不以可制作或模型投票替代；补研究或换题', 'TOPIC_RESCAN_REQUIRED');
+  if (!['click', 'stay', 'share_save_discuss', 'difference', 'main_risk'].every((key) => nonEmpty(opportunity.spread?.[key]))) block('selection: 缺点击、看下去、分享收藏讨论、差异与传播风险论证');
+  const handoff = item.creation_handoff;
+  if (!uniqueNonEmpty(opportunity.content_source_ids) || opportunity.content_source_ids.some((id) => !handoff.sources.some((source) => source.id === id && source.roles.some((role) => ['SYNTHESIS_INPUT', 'ADAPTATION_BASE', 'FIRSTHAND_RECORD'].includes(role))))) block('selection: 内容提炼须引用实际综合/改编/亲历来源，查证资料不自动等于创作主稿');
+  const visual = opportunity.visual_plan;
+  const materials = handoff.production.materials;
+  if (!visual || !['MOTION', 'NATIVE_REMOTION', 'OTHER'].includes(visual.route)
+    || !['viewer_needs_to_see', 'expression_and_limits', 'supplementary_reason'].every((key) => nonEmpty(visual[key]))
+    || !stringList(visual.material_ids) || visual.material_ids.some((id) => !materials.some((material) => material.id === id && material.status !== 'UNRESOLVED'))
+    || !stringList(visual.reference_source_ids) || visual.reference_source_ids.some((id) => !handoff.sources.some((source) => source.id === id && source.roles.includes('VISUAL_REFERENCE')))
+    || (visual.route === 'MOTION' && !visual.reference_source_ids.length) || !Array.isArray(visual.supplementary_collection)) block('selection: 画面策略须绑定真实材料/表达边界；Motion须引用已核模板契约、演示或实例');
+  for (const supplement of visual.supplementary_collection) {
+    const material = materials.find((entry) => entry.id === supplement?.material_id);
+    if (!['LOCAL_CAPTURE', 'WEB_SEARCH', 'EXISTING_ASSET'].includes(supplement?.method) || !nonEmpty(supplement.target) || !nonEmpty(supplement.purpose)
+      || typeof supplement.required !== 'boolean' || (supplement.material_id && !material)
+      || (supplement.required && (!material?.required || material.status === 'UNRESOLVED'))) block('selection: 关键补采须先落真实required材料；非关键素材可记录搜索/录屏目标后交⑩');
+  }
+  const comparison = opportunity.comparison;
+  if (!uniqueNonEmpty(comparison?.against_candidate_ids) || comparison.against_candidate_ids.some((id) => id === item.id || !items.some((candidate) => candidate.id === id))
+    || !nonEmpty(comparison.why_preferred) || !nonEmpty(comparison.tradeoffs)) block('selection: 须比较本轮真实其它候选并保留取舍，不按资料齐全或总分直接选题');
+  const review = item.selection_review;
+  if (review?.status !== 'ACCEPTED' || !nonEmpty(review.reviewer?.actor) || !nonEmpty(review.reviewer.context_id)
+    || review.reviewer.context_id === handoff.prepared_by.context_id || !validTime(review.reviewed_at) || !nonEmpty(review.rationale)) block('selection: 缺独立选题复核；材料成立不自动证明值得选');
+  if (review.inputs_sha256 !== selectionInputsHash) block('selection: 选题复核未绑定当前比较、来源与观测；回①重审');
+  const reportPath = review.report_path;
+  if (!nonEmpty(reportPath) || isAbsolute(reportPath) || reportPath.split(/[\\/]/).includes('..')) block('selection: 选题复核报告路径必须相对项目根');
+  const report = resolve(projectRoot, reportPath);
+  if (!existsSync(report) || !realpathSync(report).startsWith(projectRoot + '/') || !statSync(report).isFile() || !statSync(report).size
+    || review.report_sha256 !== shaFile(report) || !readFileSync(report, 'utf8').includes(selectionInputsHash)) block('selection: 选题复核报告缺失、越界、SHA失配或未核本轮比较');
+}
 const autoSelected = items.filter((item) => item.disposition === 'AUTO_SELECTED');
 if (autoSelected.length > 1) block('最多只能有一个AUTO_SELECTED候选');
 if (autoSelected.length === 1) {
@@ -350,7 +416,7 @@ if (autoSelected.length === 1) {
   if (topic.schema_version !== 4 || topic.selected_candidate_id !== selected.id || !nonEmpty(topic.audience) || !nonEmpty(topic.thesis) || !nonEmpty(topic.auto_selection_rationale)) block('最终选题必须是schema 4并绑定AUTO_SELECTED候选与自主定题理由');
   if (!Array.isArray(topic.evidence) || !uniqueNonEmpty(topic.evidence.map((x) => x?.id)) || !topic.evidence.every((x) => validEvidence(x) && selected.evidence_ids.includes(x.id) && JSON.stringify(x) === JSON.stringify(evidenceById.get(x.id))) || !topic.evidence.some((x) => x.source_type === 'PRIMARY')) block('最终选题必须绑定所选候选的同字节PRIMARY来源');
   if (!Array.isArray(topic.claim_evidence_map) || [...topic.claim_evidence_map.flatMap((claim) => claim.evidence_ids || []), ...(selected.platform_alignment?.evidence_ids || []), ...(selected.content_gap?.evidence_ids || [])].some((id) => !topic.evidence.some((ev) => ev.id === id))) block('最终选题来源必须覆盖全部主张映射与平台/内容缺口引用');
-  for (const key of ['audience', 'thesis', 'content_form', 'audience_level', 'audience_promise', 'creator_fit', 'assumed_prerequisites', 'jargon_to_explain', 'platform_query_intent', 'platform_alignment', 'content_gap', 'claim_evidence_map', 'creation_handoff', 'material_review', 'tutorial_proof']) if (JSON.stringify(topic[key]) !== JSON.stringify(selected[key])) block('最终选题与所选候选字段漂移: ' + key);
+  for (const key of ['audience', 'thesis', 'content_form', 'audience_level', 'audience_promise', 'creator_fit', 'assumed_prerequisites', 'jargon_to_explain', 'platform_query_intent', 'platform_alignment', 'content_gap', 'claim_evidence_map', 'creation_handoff', 'material_review', 'tutorial_proof', 'opportunity_case', 'selection_review']) if (JSON.stringify(topic[key]) !== JSON.stringify(selected[key])) block('最终选题与所选候选字段漂移: ' + key);
   const experiment = topic.experiment;
   const allowedKeys = new Set(['plays', 'likes', 'comments', 'shares', 'favorites', 'ctr5s', 'avg_duration_sec', 'digg_count', 'comment_count', 'share_count']);
   if (!nonEmpty(experiment?.hypothesis_id) || !nonEmpty(experiment.intervention) || !nonEmpty(experiment.expected_metric)
