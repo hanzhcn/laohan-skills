@@ -2,6 +2,14 @@
 
 ## 当前任务
 
+### CREATION-VOICE-VALUE-FIX-20261023 — 方法小修已完成，新稿效果待重写验证
+
+root唯一writer，main。Jeffrey认可两题但未接受八稿内容：原作者复述掩盖老韩观点、观众收获不具体，且要求保留品牌开场。chuangzuo3.9.1已同步六步法、入口/creation-contract、Layer A/B、style/教程风格和当前v2 W1指针；去掉80%保留、作者金句优先、强制套句式/旧素材锚点覆盖①、教程优先观点降频等相反指令。观点/教学按可兑现承诺分工，不强迫每篇两种兼做；必要引用/亲历归属、事实及操作证据底线保留。默认“嘿，你有没有这种感觉，”后接本题钩子，模型不能以自认更强删掉；程序兼容分支仍不能证明用户授权，未冒称新增硬门。
+
+免费Magpie DeepSeek实际首审4项必要修改均修，另普查修教程风格同型开场；完整增量复审APPROVE。真实VERSION_DRIFT反例已按来源版本同步registry3.9.1，并用现有工具重算锁；598文件/30执行器、M6与生产依赖检查PASS，两仓diff检查和六项针对性冲突检查PASS。正常提交hook、两仓Git实际终态以视频证据closeout为准。规格=视频docs/handoff/CREATION_VOICE_VALUE_FIX_20261023.md；证据=motion/baselines/references/creation-voice-value-fix-20261023/。
+
+本轮只修方法并留两题方向示例，不把示例登记候选PASS、不改原八稿/decision、不追填新风格SHA或用户接受。旧八稿程序通过只作原版本历史；完整重写须按新版先复核承诺/材料，再实际走同一skill。新稿震撼/共鸣/可操作效果未验，不新研究、不创建episode/声音/口型/视频或发布。未知file和他窗WIP保留。
+
 ### TOPIC-RECENCY-FIX-20261023 选题时效小修（工程验收完成）
 
 root唯一writer；main，起点b209a02d58a1efefcd9f9cbe10894d33022b0d0f。xuanti3.7.0同一Episode/workspace门核近7天当前支撑的真实发布时间、观测和审核有效期；优先72小时/7天，旧内容只作参考、形式开放。95项选题与下游、完整84/84全实跑通过且输入稳定；独立GPT发现的自频道误挡已修并复验，确认免费Step完成文本复核。全量首跑的隔离夹具漏复制入口新文档已补原目标，原断言不变；新冻结v3重跑全绿，GPT该夹具增量到期中断后由root精确差异/真实红与恢复探针接管，不冒签正式批准。旧推荐已在视频项目撤回，不新写稿/出片/付费回退。规格=视频docs/handoff/TOPIC_RECENCY_FIX_20261023.md；两仓正常提交/推送与保留WIP终态以视频motion/baselines/references/topic-recency-fix-20261023/verification.json及closeout.json为准。
@@ -24,6 +32,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-10-23·口播立场与观众收获小修。** Jeffrey认可选题但否定八稿的材料复述/干货不足及开场偏离；chuangzuo3.9.1修入口、整理、风格及教程风格的相反指令，保留来源与实跑，不新增质量字段/配额。免费DeepSeek首审4项修复、增量APPROVE，程序兼容分支不能证明用户授权的边界明写。视频六步法/v2 W1及registry/既有锁工具同步；旧稿不追填SHA，新稿效果待完整重写。实际两仓Git/检查与失败以视频creation-voice-value-fix-20261023证据为准。
 
 **2026-10-23·AI选题时效小修。** xuanti3.7.0当前支撑日期/观测/失效门接入同一Episode/workspace，旧高赞仅参考，形式开放。95项与完整84项实跑及具名误挡修复/免费Step复核通过；隔离夹具真实失项补齐后全量恢复，超时审查不冒签。旧推荐撤回、未新选题或写稿，正常两仓Git事实见视频同任务closeout.json。
 

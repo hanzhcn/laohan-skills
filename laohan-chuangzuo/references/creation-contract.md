@@ -39,6 +39,8 @@
 
 ## 规划与原创增量
 
+内容价值与来源表达按视频项目六步法第1/4/5步。现有`argument_plan`写老韩的论证/取舍，`original_contributions`写有据立场，`viewer_value`落到本稿具体判断或任务；不以非空字符串或机械PASS证明震撼、共鸣、干货。原博主姓名/助手查证过程通常留证据包，不是口播必填。必要独有经历/引用保持归属或不采用，不偷换为Jeffrey亲历。观点与教学按主承诺组织，不因工具名强制教学，不因缺实测把全文写成风险提醒；操作/效果证据底线不变。
+
 schema 3 必须先证明它执行了创作规划，而不是落稿后补一个hash：
 
 - `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`、`input_mode`、`structure_tool`、`structure_rationale` 均非空；
@@ -65,6 +67,8 @@ Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同
 四个平台的允许交付方式为`DESCRIPTION_APPENDIX`、`BODY_APPENDIX`、`MANUAL_PINNED_COMMENT`或`ATTACHED_RESOURCE_CARD`。`12-发布/多平台发布内容.md`必须在每个平台块内以`### 观众资源交付`登记同一资源标题与方式。MANUAL涉及置顶评论时只准备完整文本交Jeffrey；FULL不得自动回复评论或私信，平台字段无法完整承载时必须停止，不能只交付半份。
 
 `opening_contract.mode` 只能是 `DEFAULT_SIGNATURE` 或 `TOPIC_SPECIFIC_HOOK`。前者要求 `required_prefix` 为“嘿，你有没有这种感觉，”并位于第一段开头；后者要求 `required_prefix` 为 `null`、`exception_reason` 非空，且第一段直接使用题目专属的具体结果、数字、动作、冲突或直问。两种模式的 `anchor_text` 都必须是第一段真实原文；validator用本机TTS测量从开头到该锚点的时长，超过5秒即BLOCKED。
+
+当前创作默认保留品牌开场，只有Jeffrey本次明确指定其它开场才可使用例外。上述代码兼容分支只核模式/理由/正文与时长，不能证明用户授权；不得把程序允许TOPIC_SPECIFIC_HOOK解释成模型可自行删开场。审核须对照真实用户指令，本轮方法修订不冒称新增了授权机械门。
 
 ## 内容单位
 
