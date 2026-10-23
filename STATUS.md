@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### TOPIC-RECENCY-FIX-20261023 选题时效小修（工程验收完成）
+
+root唯一writer；main，起点b209a02d58a1efefcd9f9cbe10894d33022b0d0f。xuanti3.7.0同一Episode/workspace门核近7天当前支撑的真实发布时间、观测和审核有效期；优先72小时/7天，旧内容只作参考、形式开放。95项选题与下游、完整84/84全实跑通过且输入稳定；独立GPT发现的自频道误挡已修并复验，确认免费Step完成文本复核。全量首跑的隔离夹具漏复制入口新文档已补原目标，原断言不变；新冻结v3重跑全绿，GPT该夹具增量到期中断后由root精确差异/真实红与恢复探针接管，不冒签正式批准。旧推荐已在视频项目撤回，不新写稿/出片/付费回退。规格=视频docs/handoff/TOPIC_RECENCY_FIX_20261023.md；两仓正常提交/推送与保留WIP终态以视频motion/baselines/references/topic-recency-fix-20261023/verification.json及closeout.json为准。
+
 ### TOPIC-SELECTION-OPTIMIZATION-20261023 选题传播论证与内容/画面交接（工程验收完成）
 
 root唯一writer；main，起点80e02858081f204af122e8b146ac28b955bff73e。按Jeffrey要求只优化xuanti3.6.0：同一topic门分开核真实需求/传播取舍、内容参考和补采/模板支撑，开放形式，增加绑定本轮比较的独立selection_review，保留原材料/实跑/否决门。76项选题、schema3/候选35/正式/普通独立、运行锁/文档/生产依赖已验；两位独立GPT复核及原反例复验通过，Magpie免费DS429后免费Step完整文本复核通过（未独立实跑）。完整84/84实跑通过、输入稳定；首次入口指针遗漏和后续提交说明缺Spec行均保留失败记录并按正式门修复，正常提交再跑26项并复用同字节58项通过，视频实现411f8099893195232582bbeba64fb1b47bd5e04a。规格=视频项目docs/handoff/TOPIC_SELECTION_OPTIMIZATION_20261023.md；最终两仓提交/推送事实见视频证据目录closeout.json。旧Claude四稿与评分保留但不直接续制作；本轮方法改造完成，实际新选题效果待下一轮验证，不新写稿/出片/发布，无收费fallback。
@@ -20,6 +24,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-10-23·AI选题时效小修。** xuanti3.7.0当前支撑日期/观测/失效门接入同一Episode/workspace，旧高赞仅参考，形式开放。95项与完整84项实跑及具名误挡修复/免费Step复核通过；隔离夹具真实失项补齐后全量恢复，超时审查不冒签。旧推荐撤回、未新选题或写稿，正常两仓Git事实见视频同任务closeout.json。
 
 **2026-10-23·选题传播依据与制作条件分开论证。** xuanti3.6.0保持单线、多维发现和自由形式，增加真实同问题响应/评论、传播取舍、内容来源与画面补采/模板依据及独立候选比较；原门保留。76项选题与完整84项实跑、正常提交复用验证及独立GPT/免费Step复核已完成；旧四稿保留比较，实际传播尚未验。最终Git以视频同任务closeout.json为准。
 

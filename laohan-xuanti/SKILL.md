@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.6.0
+version: 3.7.0
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -44,7 +44,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
   --episode episodes/<slug>
 ```
 
-`AUTONOMOUS_SCAN`按五步法第1步扫爆款：`数据层/tracked-creators.json`全池逐账号扫描（ACTIVE必扫且失败阻断；PENDING一并扫描供交叉印证，失败如实记录不阻断）、`数据层/self-channel.json`自频道异常倍数（自己异常倍数高的方向优先深挖）、全面热点（辅助输入）与`script-pool/Jeffrey个人表达池.md`（素材来源）。扫描同时执行**时间分层**（近30天异常=当前线索，核内容与观测时间后比较；3个月前异常=常青题，需再验证当下热度）与**异常分级**（3倍=值得注意，10倍以上=大机会优先深挖），并消费每条异常的`top_comments`高赞评论——高赞评论是观众没被满足的问题，直接作为候选线索。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > SELF_CHANNEL(2) > BROAD_HOTSPOT(3) > PERSONAL_EXPRESSION(4)`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续。需要缩小热点route时才传 `--sources`，不能借此跳过达人库和自频道。
+`AUTONOMOUS_SCAN`按五步法第1步扫爆款：`数据层/tracked-creators.json`全池逐账号扫描（ACTIVE必扫且失败阻断；PENDING一并扫描供交叉印证，失败如实记录不阻断）、`数据层/self-channel.json`自频道异常倍数（自己异常倍数高的方向优先深挖）、全面热点（辅助输入）与`script-pool/Jeffrey个人表达池.md`（素材来源）。扫描同时执行**时间分层**（优先近72小时/7天，扩查30天只找线索；旧高赞仅作历史参考，入围须按五步法timeliness绑定近7天当前支撑，缺日期先补detail/原帖，不得用本轮采集时间代发布时间）与**异常分级**（3倍=值得注意，10倍以上=大机会优先深挖），并消费每条异常的`top_comments`高赞评论——高赞评论是观众没被满足的问题，直接作为候选线索。默认发现与展示优先级为`BENCHMARK_CREATOR(1) > SELF_CHANNEL(2) > BROAD_HOTSPOT(3) > PERSONAL_EXPRESSION(4)`。全面热点默认 route 为 AIHOT、Hacker News、知乎、微博、36kr、B站、抖音热榜、头条、贴吧和虎扑；某一路失败如实记录，其他热点路继续。需要缩小热点route时才传 `--sources`，不能借此跳过达人库和自频道。
 
 脚本只写：
 
@@ -82,7 +82,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 - `topic_kind`（第3步看重复）：`SERIES_CANDIDATE|ONE_OFF`。前者必须绑定`topic_corroboration.signal_ids`——两个不同账号的近期同母题异常仅为系列试水线索，须核异常、日期、独立性与完整内容。系列优先采用可追更形式（"挑战30天XX""10天教会XX"式进度感系列，必须由内容任务支持，不能声称已知算法权重），形式写入`topic_corroboration.series_format_hint`（可空）。
 - `packaging_assessment`（第5步验收藏）：非空`title_direction`与`cover_concept`（一句话，不做图）、三问布尔`worth_collecting`/`evergreen_half_year`/`title_clickable`、非空`rationale`。标题承诺必须成立；非收藏或时效题以value_basis=DECISION_SUPPORT|SHARE_FOR_RECOGNITION|TIMELY_ACTION如实说明，不强制常青。
 
-分数是可挑战的候选比较，不是流量预测。热度、受众价值、证据和可制作分开论证。平台ALIGNED/ADJACENT/UNAVAILABLE依然是语义/访问状态，不能单独证明需求强弱；可写还须按五步法的opportunity_case给同观众问题的真实证据和selection_review独立比较。平台缺失不单独淘汰，官方发布和相邻关键词也不单独放行；CONTRADICTED/UNRESOLVED不得入选。教程或实际操作/效果承诺仍须tutorial_proof真实实跑、版本与恢复证据。
+分数是可挑战的候选比较，不是流量预测。热度、受众价值、证据和可制作分开论证。平台ALIGNED/ADJACENT/UNAVAILABLE依然是语义/访问状态，不能单独证明需求强弱；可写还须按五步法的opportunity_case给同观众问题的真实证据、timeliness当前支撑/真实日期/失效时间和selection_review独立比较；不以常青标签、旧累计高赞或弱新样本顶替近期传播机会。平台缺失不单独淘汰，官方发布和相邻关键词也不单独放行；CONTRADICTED/UNRESOLVED不得入选。教程或实际操作/效果承诺仍须tutorial_proof真实实跑、版本与恢复证据。
 
 ### 3. 对短名单做抖音关键词验证
 

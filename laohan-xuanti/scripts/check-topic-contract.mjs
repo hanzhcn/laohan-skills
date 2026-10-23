@@ -340,8 +340,9 @@ for (const item of items) {
 // Audience opportunity and material readiness are separate editorial decisions.
 // This binds the comparison and real observations; it cannot predict popularity.
 const selectionInputsHash = handoffHash({signals, evidence, douyin, candidates: items.map(({disposition, material_review, selection_review, ...candidate}) => candidate)});
-const signalRecords = new Map(sources.flatMap((source) => source.results.map((record) => [record.id, {record, sourceId: source.source_id}])));
+const signalRecords = new Map(sources.flatMap((source) => source.results.map((record) => [record.id, {record, sourceId: source.source_id, observedAt: record.metrics_observed_at ?? (source.source_id === 'self-channel' ? null : source.attempted_at)}])));
 const searchRecords = new Map(douyin.queries.flatMap((query) => query.results.map((record) => [record.id, record])));
+const searchObservedAt = new Map(douyin.queries.flatMap((query) => query.results.map((record) => [record.id, record.metrics_observed_at ?? query.attempted_at])));
 const stringList = (xs) => Array.isArray(xs) && xs.every(nonEmpty) && new Set(xs).size === xs.length;
 const audienceResponse = (record, sourceId) => {
   const platformFields = {bilibili: ['play', 'danmaku'], zhihu: ['answers'], hupu: ['lights', 'replies']};
@@ -393,6 +394,31 @@ for (const item of items.filter(readyForWriting)) {
   const comparison = opportunity.comparison;
   if (!uniqueNonEmpty(comparison?.against_candidate_ids) || comparison.against_candidate_ids.some((id) => id === item.id || !items.some((candidate) => candidate.id === id))
     || !nonEmpty(comparison.why_preferred) || !nonEmpty(comparison.tradeoffs)) block('selection: 须比较本轮真实其它候选并保留取舍，不按资料齐全或总分直接选题');
+  // AI topics need current evidence. A recent retrieval cannot refresh an old post.
+  const timeliness = opportunity.timeliness;
+  const clock = Date.now();
+  const week = 7 * 86400000;
+  const recent = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value))
+    && Date.parse(value) <= clock && clock - Date.parse(value) <= week;
+  if (!timeliness || !Array.isArray(timeliness.current_support) || !timeliness.current_support.length
+    || !nonEmpty(timeliness.rationale) || !nonEmpty(timeliness.version_boundary)) block('selection: 时效缺当前支撑、理由或版本边界；旧题只能作参考', 'TOPIC_RESCAN_REQUIRED');
+  const validUntil = typeof timeliness.valid_until === 'string' ? Date.parse(timeliness.valid_until) : NaN;
+  if (!recent(timeliness.checked_at) || !Number.isFinite(validUntil)
+    || validUntil <= clock || validUntil > Date.parse(timeliness.checked_at) + week) block('selection: 时效审核或有效期缺失、过期、未来或超过7天；回①复核', 'TOPIC_RESCAN_REQUIRED');
+  const currentRefs = new Set();
+  for (const ref of timeliness.current_support) {
+    const key = ref?.signal_id ? 'signal:' + ref.signal_id : 'douyin:' + ref?.douyin_result_id;
+    if (currentRefs.has(key)) block('selection: 时效当前支撑不得重复', 'TOPIC_RESCAN_REQUIRED');
+    currentRefs.add(key);
+    const support = demand.support.find((entry) => Boolean(ref?.signal_id) !== Boolean(ref?.douyin_result_id)
+      && (ref.signal_id ? entry.signal_id === ref.signal_id : entry.douyin_result_id === ref.douyin_result_id));
+    if (!support || (!explicitExperiment && (support.relation !== 'SAME_VIEWER_PROBLEM' || support.basis === 'CONTEXT_ONLY'))) block('selection: 时效须引用已核同问题的真实支撑，不能拿相邻新闻顶替', 'TOPIC_RESCAN_REQUIRED');
+    const signal = signalRecords.get(ref.signal_id);
+    const record = ref.signal_id ? signal?.record : searchRecords.get(ref.douyin_result_id);
+    if (!recent(record?.published_at)) block('selection: 时效当前支撑发布时间未知、未来或超过7天；补查原帖或换题', 'TOPIC_RESCAN_REQUIRED');
+    const observedAt = ref.signal_id ? signal?.observedAt : searchObservedAt.get(ref.douyin_result_id);
+    if (!recent(observedAt)) block('selection: 时效当前支撑观测过旧或未知，读取旧快照不能刷新热度', 'TOPIC_RESCAN_REQUIRED');
+  }
   const review = item.selection_review;
   if (review?.status !== 'ACCEPTED' || !nonEmpty(review.reviewer?.actor) || !nonEmpty(review.reviewer.context_id)
     || review.reviewer.context_id === handoff.prepared_by.context_id || !validTime(review.reviewed_at) || !nonEmpty(review.rationale)) block('selection: 缺独立选题复核；材料成立不自动证明值得选');
