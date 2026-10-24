@@ -2,6 +2,12 @@
 
 ## 当前任务
 
+### OPENCLAW-TO-NPX-20261024 — 已完成
+
+root唯一writer，main；Jeffrey要求npx共享安装并彻底清理OpenClaw全局技能层。4项已由真实npx1.7.4从原版本本地来源安装至agents，锁明确local；整个OpenClaw/skills已备份移出，不影响外部软链目标。laohan-xiazai1.6.1只修三条路径和错误OpenClaw前提，搜索方法不变。
+
+真实试装、全局安装/清单、锁的其他条目保持、5922外部入口、Codex原生四项/其他条目与cheat15本源、API/浏览器OpenClaw0/npx74/总550、红绿路径检查已验；免费DeepSeek超时后免费Step有效APPROVE，未走收费。仅安装与接线验收，业务/发布未运行。来源包/旧目录保留可恢复；不是远端自动更新。详见[回执](docs/handoff/OPENCLAW_TO_NPX_20261024.md)。
+
 ### CREATION-VOICE-VALUE-FIX-20261023 — 方法小修已完成，新稿效果待重写验证
 
 root唯一writer，main。Jeffrey认可两题但未接受八稿内容：原作者复述掩盖老韩观点、观众收获不具体，且要求保留品牌开场。chuangzuo3.9.1已同步六步法、入口/creation-contract、Layer A/B、style/教程风格和当前v2 W1指针；去掉80%保留、作者金句优先、强制套句式/旧素材锚点覆盖①、教程优先观点降频等相反指令。观点/教学按可兑现承诺分工，不强迫每篇两种兼做；必要引用/亲历归属、事实及操作证据底线保留。默认“嘿，你有没有这种感觉，”后接本题钩子，模型不能以自认更强删掉；程序兼容分支仍不能证明用户授权，未冒称新增硬门。

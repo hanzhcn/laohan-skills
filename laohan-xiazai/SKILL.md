@@ -1,7 +1,7 @@
 ---
 name: laohan-xiazai
 description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access；浏览器操作（登录态页面/JS 渲染/多步交互/跨站搬运）优先 huashu-chrome MCP（2026-10-21 起，真登录态+效果证据，替代 chrome-devtools MCP）。纯技术查证/搜教程心得类搜索（不带平台名、不取内容）让位 laohan-sousuo（Jeffrey 2026-10-02 拍板）。
-version: "1.6.0"
+version: "1.6.1"
 ---
 
 # 从互联网拿内容
@@ -266,15 +266,15 @@ web-access 与 huashu-chrome 都连用户日常 Chrome（登录态共享）；hu
 
 ### 搜索兜底
 
-> 注：`smart-search`/`web-search`/`multi-search-engine`/`baidu-search` 位于 `~/.openclaw/skills/`，**需 OpenClaw 环境已安装**；`anysearch` 在 `~/.agents/skills/`（通用，无 OpenClaw 也可用）。无 OpenClaw 环境时优先 anysearch。
+> 注：这些搜索技能通过 `~/.agents/skills/` 通用入口使用，不依赖 OpenClaw 运行环境；`anysearch`、`smart-search` 和其余搜索兜底沿用下方各自依赖与优先级。
 
 | 工具 | 场景 | 说明 |
 |------|------|------|
 | anysearch | 实时搜索+垂直领域+批量并行+URL全文提取 | 16 个垂直领域（股票/CVE/DOI/法律/学术等；Stock/CVE/DOI 是触发标识符非 domain），`~/.agents/skills/anysearch/`，`/anysearch` |
 | smart-search | opencli 搜索路由 | 基于 opencli 的智能搜索，覆盖社交/技术/新闻/购物，`~/.agents/skills/smart-search/` |
-| web-search | 通用网页搜索 | DuckDuckGo API，轻量搜索，`~/.openclaw/skills/web-search/` |
-| multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.openclaw/skills/multi-search-engine/` |
-| baidu-search | 中文内容搜索 | 百度 AI 搜索，中文场景优于通用引擎，`~/.openclaw/skills/baidu-search/` |
+| web-search | 通用网页搜索 | DuckDuckGo API，轻量搜索，`~/.agents/skills/web-search/` |
+| multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.agents/skills/multi-search-engine/` |
+| baidu-search | 中文内容搜索 | 百度 AI 搜索，中文场景优于通用引擎，`~/.agents/skills/baidu-search/` |
 
 **搜索优先级**：通用搜索/事实查询/垂直领域 → **anysearch**（最轻最快）→ opencli（平台结构化数据）→ agent-reach（opencli 未覆盖的平台兜底）。
 
