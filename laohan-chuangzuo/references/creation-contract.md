@@ -41,6 +41,8 @@
 
 内容价值与来源表达按视频项目六步法第1/4/5步。现有`argument_plan`写老韩的论证/取舍，`original_contributions`写有据立场，`viewer_value`落到本稿具体判断或任务；不以非空字符串或机械PASS证明震撼、共鸣、干货。原博主姓名/助手查证过程通常留证据包，不是口播必填。必要独有经历/引用保持归属或不采用，不偷换为Jeffrey亲历。观点与教学按主承诺组织，不因工具名强制教学，不因缺实测把全文写成风险提醒；操作/效果证据底线不变。
 
+教学执行同一六步法“教学动作主线”，沿用现有organize/argument_plan/structure_contract/content_units记录具体动作、前后依赖和观众结果，不增schema或质量自陈布尔。正文连续编号与自然承接须由实际全文跟做审阅确认，现有SHA/编号检查不证明可操作；单个动作或三条概念标题不算兑现任务。用户明确要教学时，缺材料先补并重审，不能静默换成讲解；来源有操作也不能因源标签为观点而跳过提取。
+
 schema 3 必须先证明它执行了创作规划，而不是落稿后补一个hash：
 
 - `topic_thesis`、`hypothesis_id`、`content_form`、`audience`、`expected_audience_effect`、`input_mode`、`structure_tool`、`structure_rationale` 均非空；
