@@ -139,9 +139,12 @@ python3 scripts/shipinhao-yuanbao.py "分享文本或链接"   # 文件落 ~/Dow
 
 **排障**：401/403 = 凭证过期，重跑 `login`；"未返回 playable_url" = 视频被删/限流或接口变更；解析第二步合法返回 201 非 200，别误判接口挂。环境变量 `SHIPINHAO_CRED` 可自定义凭证路径。
 
-**huashu-chrome 浏览器辅助（仅本机装了该 MCP 时；2026-10-22 实测定界）**：
+**B' 匿名变体（2026-10-27 实测全链拉通，免扫码）**：元宝 `get_parse_result` **不要求登录态，匿名会话 Cookie 即可**（Chrome 未登录元宝的页面内 fetch 实测 200）。本机有 huashu-chrome MCP 时的零人工路径：① 开 tab 到 `yuanbao.tencent.com`（未登录即可）→ ② 页面内 `fetch` POST `https://yuanbao.tencent.com/api/weixin/get_parse_result`，body `{"type":"video_channel_url","url":"<sph链接>","scene":1}` → ③ 取返回 `data.playable_url` 的 `token`/`eid` 参数 → ④ curl POST `https://channels.weixin.qq.com/finder-preview/api/feed/get_feed_info`（body `{"baseReq":{"generalToken":<token>},"exportId":<eid>}`，无需 Cookie）→ ⑤ `h264VideoInfo.videoUrl` 直链下载。**纯 curl 裸调不行**：元宝 Cookie 由页面 JS 运行时写入（GET 首页不 set），必须真实浏览器页面承载。无凭证且 Jeffrey 不在（不能扫码）时走此路。
+
+**huashu-chrome 浏览器辅助（仅本机装了该 MCP 时；2026-10-22 实测定界，2026-10-27 部分修订）**：
 - ✅ **能做**：免登录读元信息——真 Chrome 打开 sph 分享链接（如 `https://weixin.qq.com/sph/xxx`），跳转 finder-preview 页可读标题/文案/作者/日期/点赞评论数，适合下载前核验内容
-- ❌ **不能做**：下载视频流——网页端不播放视频号视频（只出"扫码前往微信观看"浮层，network 无 mp4/m3u8 请求），**别把这条路当下载方案再试**
+- ✅ **能做（2026-10-27 修订）**：元宝页面内 fetch 走上方 B' 匿名变体全链拉视频直链（旧"不能下载"结论仅限"直接在 finder-preview 页面等视频流"这条路）
+- ❌ **不能做**：在 finder-preview 页面直接抓视频流——网页端不播放视频号视频（只出"扫码前往微信观看"浮层，network 无 mp4/m3u8 请求），**别把这条路当下载方案再试**
 - 视频号助手网页版（channels.weixin.qq.com/platform）是创作者后台，需扫码登录且只能管理自己的内容，与下载别人视频无关
 
 ### 方案 A：wx_video_download（MITM 代理，B 失效时的降级）
