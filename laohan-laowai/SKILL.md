@@ -47,16 +47,31 @@ curl -X POST $BASE/v1/dh/voice-assets -H "Authorization: Bearer $LEASE" \
 - lease 供给：`node ~/Documents/laohanagent/scripts/e2e-lease-provision.mjs`（三级自动续期；mint 新号需 admin 会话，积分=0 时是卡点）
 - 架构事实：产品渲染链 TTS=算力机 CosyVoice3 bridge（零样本+best15+ASR自检）；微调模型不在该链——成片用参考录音零样本，微调模型用于独立合成场景（laowai 主项目旁白等）
 
-### ⑤ API 渲染（TTS→音频→驱动口型→成片）
+### ⑤ 同声口型渲染（DH-ROUTE 路线④，2026-10-28 实战验证——唯一正确流程）
+
+**方法真源：`~/Documents/laohanvideo/motion/mastery/DH-ROUTE.md` + `motion/tools/README-same-voice.md`（本节只是入口索引，冲突以真源为准）。**
+
+不走的路（都验证过不是正路）：产品 lease/operations 报价链（29积分/次，网页向导已淘汰）、ispeech 图+音频（另一条产品链）、直控生产 worker。
 
 ```
-文案（英文口播稿）→ stages 构造（buildCreationStages）
-→ resolveCloudPlan 报价 → POST /v1/dh/render-jobs → 轮询产物 → 下载 raw
+① 最终 WAV：音色模型在 pro6000-a 合成整稿（laohan-yinse 流程）→ 24kHz 单声道 PCM16
+② 形象素材：已有素材直接复用（无需产品订单）
+③ Mac prepare：python3 motion/tools/same-voice-local.py prepare \
+     --audio <24k.wav> --avatar <形象.mp4> --max-input-frames 180 --out <全新目录>
+④ validate manifest → 上传 manifest/inputs/chunks/run-same-voice-remote.py 到
+   pro6000-a:/root/autodl-tmp/laohan/motion-same-voice/<小写实验名>/
+⑤ 预检（无 --run）→ 真跑：--run（total_timeout 3600s，单块 480s 上限）
+⑥ Mac assemble：same-voice-local.py assemble → same-voice-candidate.mp4（原 WAV 主声）
 ```
 
-现成骨架：`~/Documents/laohanagent/scripts/e2e-lab-dh.mjs`（SCRIPT_FILE 喂文案原生支持；E2E_BASE 指向目标环境）。管线本质：音色模型读文案生成完整音频 → 音频驱动形象循环素材口型（Duix/TBDub）。
+**坑（全部实战踩过）**：
+- ★形象素材开头可能是插入 B-roll（案例画面）——prepare 前多点抽帧验证全程同一正脸；mediapipe 丢脸 >10 帧直接 RuntimeError（chunk-001 判例：开头 5 秒小女孩 B-roll）
+- ★生产活动保护：GPU 有生产 TBDub 任务时本任务自动 STOP_UNKNOWN_CUDA_PID 让路——等生产空闲 --resume（已存在 outputs 目录不能重跑，只能 resume）
+- 音频必须 24k 单声道 PCM16；180 帧分块上限（1080 宽输入 20GiB 内存保护）
+- 隔离 runner SHA 必须匹配 `469d820e...`（冻结保护）
+- 完成证据：assemble 产物 same-voice-candidate.mp4 全帧数一致+完整解码；状态=候选待听审，Jeffrey 过目后才算验收
 
-**完成证据**：render-jobs 终态成功 + raw 视频可解码（ffprobe 通过）+ 时长与文案档位匹配。
+**Motion 模板包装（⑥后期）：不需要学习/执行**（Jeffrey 2026-10-28 指示——口型成片即交付物）。
 
 ### ⑥ 后期
 
