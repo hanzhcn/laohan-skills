@@ -80,7 +80,21 @@ nohup bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-trai
 - 实测速度：70 段/8 分钟数据，PRO 6000 单卡几分钟一个 epoch，全程约 10-30 分钟级
 - GPU 与生产 TTS 共存：训练约再占 16-20G（共 97G），不冲突；但别在生成高峰训
 
-**产物**：`exp/<人名>/llm/` 下 checkpoint（model.safetensors）。
+**产物**：`exp/<人名>/llm/epoch_N_whole.pt`（含 epoch/step 元数据键——★坑3：直接 cp 当 llm.pt 用会 `Unexpected key(s): epoch, step` 加载失败，必须剥离）。
+
+### 5.5 模型组装与合成验收（2026-10-27 实战验证）
+
+```bash
+# ① 组装推理目录（底座全家 + 微调 llm.pt）
+cp -r $PM /root/autodl-tmp/cosyvoice-train/model-<人名>-v1
+# ② 剥离元数据键后存 llm.pt（坑3修复）
+python -c "import torch; sd=torch.load('exp/<人名>/llm/epoch_N_whole.pt',map_location='cpu',weights_only=True); sd.pop('epoch',None); sd.pop('step',None); torch.save(sd,'model-<人名>-v1/llm.pt')"
+# ③ 合成验收：PYTHONPATH 必须=仓目录，REF_WAV 必须绝对路径（坑4/坑5）
+cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + inference_zero_shot(英文测试句, prompt=BlankEN模板+参考段文本, REF_WAV)
+```
+
+- 合成产物 SYNTH_DONE 后 scp 回本地给 Jeffrey 听审（相似度≥8/10 拍板）
+- 模型回迁：只回迁 llm.pt（约 2GB），底座本地/服务器都有不重复迁
 
 ### 完成证据（训练环节怎么算完成）
 
