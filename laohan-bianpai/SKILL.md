@@ -1,6 +1,6 @@
 ---
 name: laohan-bianpai
-version: "1.24.0"
+version: "1.25.0"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
@@ -41,7 +41,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 1. 恢复工作先运行 `vendors`。它把当时可用 vendor 的状态和完整 HEAD SHA 写入 schema 3 `FROZEN_ON_RESUME`；进行中 episode 只能在两方 HEAD 与原冻结值一致时续用，旧 schema 2 因缺 commit 证据必须 BLOCKED，不能从当前 HEAD 猜填。`--sync` 只会在新 episode 前或独立维护窗口、Cheat 工作树干净、活动 lane 没有 schema migration 时更新。新 episode 只能从 `UP_TO_DATE` 或审计过的 `READY_LOCAL_AHEAD` 状态创建；更新可用/待安装不得写成 READY。schema 2 episode 还必须通过 `00-编排/executor-lock.json`；registry/runtime lock 漂移时不得刷新 preflight 掩盖执行器变化。
    已存在且通过机械核验的 `00-编排/supersession-record.json` 必须优先返回 `SUPERSEDED`，不得继续 vendors/status/next/check，也不得用新 lock 覆盖旧 lock。
 2. 读取 `episode-config.json`，先运行 config gate。失败时停在①之前，不路由任何内容或生产步骤。
-3. 按①—⑭检查标准产物，并在⑥与⑦之间检查V5.1导演初稿`D1`和最终复审`D2`。新episode默认 `CODEX_DIRECT + Remotion`，媒体窗口归属固定如下：
+3. 按①—⑭检查标准产物，并在⑥与⑦之间检查V5.1导演初稿`D1`和最终复审`D2`。新episode默认 `CODEX_DIRECT + Remotion`，媒体窗口归属固定如下（数字人×Motion模板路线2026-10-27起为正式路线但不建episode、不走本①—⑭链，分流见「不适用」节）：
 
    ```text
    06-原片剪辑与制作准备：同一Codex Desktop任务连续完成⑧和⑨，只冻结clean/SRT、direct-brief与source-manifest。
@@ -74,6 +74,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 不适用
 
+- 数字人×Motion模板制作（2026-10-27正式路线）→ 不创建episode、不路由①—⑭/CODEX_DIRECT⑧—⑪剪辑链；锁定稿后按项目 `docs/视频生产入口与适配.md`「Motion正式路线接入」节分发：制作读 `motion/mastery/DH-ROUTE.md` §一A—一C + `PRODUCTION-METHOD-V4.md` + `PIPELINE.md`，工程建 `motion/projects/<日期-slug>/`，制作门=production-guard门链+check-delivery；⑫—⑭发布/运营两路共用。原生Remotion路线的episode编排不受影响。
 - 写口播稿、发布 → 使用对应专业skill。06与09使用 `codex-direct-production` executor；07、08各自独立且条件式创建。⑧不路由人工候选审批：不确定KEEP，事实冲突回上游。
 - 只有一个独立文案、没有 episode 目录 → 先创建 episode，不猜文件位置。
 
