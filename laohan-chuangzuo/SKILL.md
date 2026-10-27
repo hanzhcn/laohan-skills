@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 产出已核材料交接后写作）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.9.2"
+version: "3.10.0"
 ---
 
 # 统一创作引擎
@@ -40,6 +40,7 @@ version: "3.9.2"
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 明确选择依据）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
 - **方法论真源**：项目`docs/老韩创作六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
+- **否稿改稿案例库**：`references/case-book.md`（Jeffrey 真实裁决按"为何这样改/换条件怎么办/哪些用法会错"组织；修稿与吸收否稿意见前先查库，条件吻合按案例判断走，新裁决由当轮登记）
 
 GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 
@@ -116,7 +117,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - Step 3 的 `argument_plan`：`opening_contract`、`reasoning_path`、`material_tradeoffs`、`shootable_expression`、`originality_and_citations`；
 - 至少一项 `original_contributions`，每项写清新增判断及其观众价值；只有一项时必须登记 `single_contribution_rationale`，证明没有为了数量硬凑第二个观点；
 - `opening_contract` 登记 `mode: DEFAULT_SIGNATURE|TOPIC_SPECIFIC_HOOK`。默认使用“嘿，你有没有这种感觉，”，题目钩子接其后；只有Jeffrey本次明确指定其它开场才例外并保留真实指令依据，不得由模型自认更强而豁免。代码保留兼容分支不等于授权，详creation-contract；`anchor_text`按现有机械QA核真实正文；
-- `visual_anchors` 至少一项，每项绑定一个内容单位，写清观众理解任务与可视化表达；它只给后续导演可拍依据，不规定动画技术；同时保留 `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
+- `visual_anchors` 至少一项，每项绑定一个内容单位，写清观众理解任务与可视化表达；它只给后续导演可拍依据，不规定动画技术；**钩子承诺即时配对**：开场钩子、结果声明或反差断言所在内容单位（或其紧随单位）的 visual_anchor，`visual_expression` 必须绑定真实证据材料（实拍/录屏/真实数据画面，材料经①creation_handoff就绪），不得只有示意性表达——钩子开的支票要在紧邻处兑现，不许隔段慢慢补；同时保留 `content_sufficiency`、唯一 `content_units`、覆盖全部口播段落SHA的 `paragraph_audit`、两遍 `semantic_redundancy_review`；
 - `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
 - `human_voice_contract` 必须登记真实作者语域；设备可为空，禁止数量配额；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
@@ -219,7 +220,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 
 大纲成立后按`docs/老韩创作六步法.md`写全文，机械要求：
 1. **定结构**：决策JSON登记`structure_type: TUTORIAL|EXPOSITION|STORY|CUSTOM`（教程/科普/故事是工具，也允许CUSTOM并说明；不设留存率保证）。
-2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`）。
+2. **钩子三变体**：先出3个不同方向的开头钩子登记`hook_variants[]`（各含text+direction），TTS读出声后选最自然的（登记`selected_hook_index`与`tts_selected: true`）；选中钩子必须兑现①`packaging_assessment.title_direction`的标题承诺（`hook_contract.fulfills_packaging_promise=true`），且钩子所在内容单位的可视化兑现按决策字段区的钩子承诺即时配对规则执行。
 3. **铺内容**：内容单位制照旧；另登记`beat_distribution`（正文各段推进及信息空转检查结论）、`rhythm_anchors[]`（按正文实际理解任务登记锚点：悬念/转折/提问/数字，供⑨导演，不进口播正文；`position`必须用「第N段」指到正文真实段落——段号越界或只写模糊位置会被合同判红，见 3.6.1 内容层交叉判据）、`emotion_arc`（如实记录开头/中段/收尾感受，不预设情绪曲线）。
 4. **造记忆点**：登记`quote_anchor`（一句可被观众二创引用的金句，必须承载本期判断非鸡汤，放情绪高点或收尾前；**且必须是正文里真实出现的原句**——字幕/剪辑要按它取原文，validator 自 2026-09-30 起机械核对"逐字出现在口播段落里"，忽略标点与空白）与`comment_hook`（引导放最自然的位置并说明，记录预期观众最想说什么；有上期评论素材时引用被问最多的问题做跨期钩子）。
 5. **HKRR自检**：登记`hkrr_check`（快乐/知识/共鸣至少一项为true，rhythm必须true，附rationale）；不达标重排再写。

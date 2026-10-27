@@ -1,6 +1,6 @@
 ---
 name: laohan-yunying
-version: "1.1.0"
+version: "1.2.0"
 description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登记的作品记录，回收作品数据和评论洞察，并把真实数据交给 cheat-on-content 复盘。Use when 用户说抓作品数据、复盘评论、登记手动发布结果、进入⑬数据或⑭评论。
 ---
 
@@ -70,6 +70,8 @@ TzFilm 的评论导出只允许 export，不允许 reply。显式导入：`pytho
 首选 `douyin-session` 抓取高赞评论；Cookie 失效时引导用户重新登录，失败后让用户粘贴高赞评论。评论可用时写 `14-评论/comments.jsonl`，每行固定为 `{"platform":"douyin","aweme_id":"<id>","captured_at":"ISO-8601","source":"douyin-session|manual","text":"评论正文","likes":0}`；不可用时仍写洞察文件并说明原因。
 
 写 `14-评论/insights.md`，首行必须为 `评论数据状态: AVAILABLE` 或 `评论数据状态: UNAVAILABLE`。UNAVAILABLE 时第二行必须是 `失败原因: <具体原因>`；之后记录抓取时间、来源、代表评论、3—5 个主题、选题信号与待验证假设。
+
+AVAILABLE 时必须另写**吸引错了谁**一节：对照①选题登记的 `audience` 与 `audience_promise`，记录实际评论者与预期观众的差异（如期许教小白、来的全是求成品的；预期学习者、实际求打包资源的），并沿选题→展示（封面/标题/开头）→承接（内容路径）三处找最早偏差点，只登记判断依据，不断言单一原因。发现错位时生成一条 `feedback_hypotheses` 候选（intervention 指向偏差最早点，每次只调整一个因素），交 `cheat-retro` 按既有假说机制验证；不错位也写一句"未见错位"及依据，不留空。
 
 T+N 数据和评论齐备后，调用上游 `cheat-retro`。它写 prediction 的 `## 复盘` 段、`rubric-memo.md` 和经用户确认的 `script_patterns.md`；本 skill 不修改 rubric。完成后写 `14-评论/retro-handoff.json`：`status: "COMPLETE"`、episode、aweme_id、prediction_file、prediction_after_retro_sha256、rubric_memo_sha256、snapshots_sha256、insights_sha256、comments_sha256（无评论时为 null）和 ISO `completed_at` 都必填；还必须写非空 `feedback_hypotheses` 数组，每项有唯一 hypothesis_id、intervention、expected_metric、`T+N` observation_window、`OPEN|SUPPORTED|REJECTED|INCONCLUSIVE` status 与目标 `feedback_target: "①"|"④"`。结论为 `UPGRADE_EVIDENCE` 时，额外要求至少两期 evidence_episode_ids 和 comparison_note；单期结论只准 OBSERVATION 或 HYPOTHESIS。没有这些证据不得把⑭标完成。
 
