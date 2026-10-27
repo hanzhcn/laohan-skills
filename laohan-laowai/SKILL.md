@@ -1,6 +1,6 @@
 ---
 name: laohan-laowai
-description: 老外博主复刻→数字人→抖音视频全流程总控（含调用 laohan-yinse）。从"选一个外国博主"到"数字人视频发布"的端到端自动化流程：博主选型与资料包下载→声音模型（服务器微调，硬性前置，调 laohan-yinse）→形象素材处理（字幕检测/裁剪/硬门槛）→laohanagent API 全自动注册与渲染（零网页）→双语字幕后期→发布与流量复盘。Use when 复刻老外博主、数字人账号、老外数字人、复刻博主做视频、老外IP起号、数字人全流程、新博主资料包、数字人怎么生成。
+description: 老外博主复刻→数字人→抖音视频全流程总控（含调用 laohan-yinse）。从"选一个外国博主"到"数字人视频发布"的端到端自动化流程：博主选型与资料包下载→声音模型（服务器微调，硬性前置，调 laohan-yinse）→形象素材处理（字幕检测/裁剪/硬门槛）→same-voice 同声口型本地工具链（pro6000-a 音色合成+TBDub 口型）→双语字幕后期→发布与流量复盘。Use when 复刻老外博主、数字人账号、老外数字人、复刻博主做视频、老外IP起号、数字人全流程、新博主资料包、数字人怎么生成。
 ---
 
 # laohan-laowai — 老外博主复刻数字人全流程
@@ -28,24 +28,11 @@ description: 老外博主复刻→数字人→抖音视频全流程总控（含�
 - **字幕必须去除**（会被引擎复制进成片）：博主视频普遍带字幕 → 底部 crop 或换无字幕条；多点抽帧验证（首/中/尾/多段）
 - 转码 h264；处理实录与判例参照项目 docs/dh-production-guide.md
 
-### ④ API 资产注册（全自动，零网页，2026-10-27 实战验证）
+### ④ 形象与声音资产（复用已有素材，不走产品注册）
 
-```bash
-# 形象（★坑6：curl -F 必须显式 ;type=video/mp4，否则服务端收 octet-stream 拒收）
-curl -X POST $BASE/v1/dh/avatar-assets -H "Authorization: Bearer $LEASE" \
-  -F "file=@<母版>.mp4;type=video/mp4" -F "name=<名>" -F "devicePublicId=$DEVICE"
-# 音色（三步）：
-# ① 建档案：POST /v1/speech/voice-profiles  JSON {name, device_public_id}
-# ② 参考录音（25s 最佳段，WAV PCM）：
-#    ★坑7：consentVersion 必须显式传 "voice-reference-v2"（0071 迁移后），空值=400 invalid_voice_reference_media 无 reason
-#    ★坑8：电平门禁 active_ratio≥0.15 且 rms≥0.01——原声电平低的先 loudnorm=I=-16 归一
-curl -X POST $BASE/v1/dh/voice-assets -H "Authorization: Bearer $LEASE" \
-  -F "file=@<参考>.wav;type=audio/wav" -F "voiceProfileId=$VPID" -F "clientAssetId=$(uuidgen)" \
-  -F "devicePublicId=$DEVICE" -F "consentAcknowledged=true" -F "consentVersion=voice-reference-v2"
-```
-
-- lease 供给：`node ~/Documents/laohanagent/scripts/e2e-lease-provision.mjs`（三级自动续期；mint 新号需 admin 会话，积分=0 时是卡点）
-- 架构事实：产品渲染链 TTS=算力机 CosyVoice3 bridge（零样本+best15+ASR自检）；微调模型不在该链——成片用参考录音零样本，微调模型用于独立合成场景（laowai 主项目旁白等）
+- **形象素材：已有博主视频直接复用**（prepare 前多点抽帧验证全程同一正脸；开头 B-roll 插入画面必须掐掉——见⑤坑）
+- **声音：laohan-yinse 微调模型整稿合成**（见②调用，24kHz PCM16 WAV 由 yinse 第 7 步产出）
+- ~~产品 avatar-assets/voice-assets API 注册~~ **已淘汰**（2026-10-28）：那是产品网页向导链（零样本参考录音+29积分/次渲染），与本 skill 的 same-voice 路线互斥，且违反"声音不走零样本"红线。历史踩坑记录（MIME 显式 type / consentVersion=voice-reference-v2 / loudnorm 电平门禁）仅当未来确需产品链时参考。
 
 ### ⑤ 同声口型渲染（DH-ROUTE 路线④，2026-10-28 实战验证——唯一正确流程）
 
@@ -84,6 +71,10 @@ curl -X POST $BASE/v1/dh/voice-assets -H "Authorization: Bearer $LEASE" \
 - 抖音：养号 2-3 天再发；账号装修（人设简介前 3 行钩子）
 - 数据：opencli douyin stats/videos 拉取；10 条内决策点（引流款 vs 人设款占比调整）
 
+## 完成证据（全流程怎么算完成）
+
+① 最终 WAV 绑定 SHA 且 Jeffrey 整轨听审通过；② assemble 产物 same-voice-candidate.mp4 全帧数一致+完整解码（ffprobe 无错）；③ 字幕/AI 标识在成片可见；④ **发布前必须 Jeffrey 明确批准**（外部发布授权不可由 agent 自拍板）——发布动作本身另按项目合同执行。
+
 ## 反触发（不用本 skill 的场景）
 
 - 真人实拍/老韩本人出镜项目（走 laohanvideo 真人路线）
@@ -94,7 +85,7 @@ curl -X POST $BASE/v1/dh/voice-assets -H "Authorization: Bearer $LEASE" \
 
 - 声音模型未建成 → 全流程停在②，不跳过训练直接渲染（零样本已被禁用）
 - 形象素材字幕去不净/硬门槛不达 → 换素材条或重新选型，不降门槛上传
-- API 注册/渲染失败 → 按 e2e 脚本日志定位（引用 laohanagent 排障文档），不退回网页手动操作
+- 渲染链失败 → 按真源 DH-ROUTE/README 排障；同一故障重试上限 3 次，仍失败报阻塞并上报 Jeffrey（不无限重试、不退回网页/产品链绕路）
 - 验收（深肤色还原/口型/音色）不过 → 回退候选形象名单（persona-candidates 排序），不硬发
 
 ## 关键红线

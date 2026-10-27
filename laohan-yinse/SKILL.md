@@ -35,7 +35,7 @@ ffmpeg -y -i <视频>.mp4 -vn -ac 1 -ar 44100 <博主>-<条目名>.wav
 ### 3. 拼接训练主素材
 
 ```bash
-for f in <博主>-*.wav; do echo "file '$f'"; done > concat.txt
+for f in <博主>-*.wav; do case "$f" in *-full-*) continue;; esac; echo "file '$f'"; done > concat.txt
 ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 ```
 
@@ -85,7 +85,8 @@ nohup bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-trai
 ### 5.5 模型组装与合成验收（2026-10-27 实战验证）
 
 ```bash
-# ① 组装推理目录（底座全家 + 微调 llm.pt）
+# ① 组装推理目录（底座全家 + 微调 llm.pt）；PM=底座权重根
+PM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512
 cp -r $PM /root/autodl-tmp/cosyvoice-train/model-<人名>-v1
 # ② 剥离元数据键后存 llm.pt（坑3修复）
 python -c "import torch; sd=torch.load('exp/<人名>/llm/epoch_N_whole.pt',map_location='cpu',weights_only=True); sd.pop('epoch',None); sd.pop('step',None); torch.save(sd,'model-<人名>-v1/llm.pt')"
@@ -98,13 +99,24 @@ cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + infer
 
 ### 完成证据（训练环节怎么算完成）
 
-① data/{train,dev}/parquet 生成且 extract_features.sh 打印 EXTRACT_DONE；② `model-<博主>-<版本>/CosyVoice-BlankEN/model.safetensors` 文件产出并拷回本地；③ 验收三条（见第 6 步）全过并登记。任一不满足=未完成，不进形象/渲染阶段。
+① data-{博主}/{train,dev}/parquet 生成且 pipeline-<博主>.sh 日志打印 PIPELINE_DONE；② `model-<博主>-<版本>/llm.pt`（微调权重，剥离 epoch/step 键后）产出并拷回本地 assets/voice-models/<博主>/；③ 验收三条（见第 6 步）全过并登记。任一不满足=未完成，不进形象/渲染阶段。
 
 ### 6. 模型回迁 + 登记 + 验收
 
 - checkpoint 拷回本地项目 assets/voice-models/<博主>/（Jeffrey 惯例：服务器训完放本地）
 - 登记表（项目内维护）：博主/建模日期/素材/模型路径/验收状态
 - 验收三条：①固定测试句（英文+中文各一）与原声主观相似度 ≥8/10（Jeffrey 听审）②F0 基频域 ±20Hz ③连续 10 次生成无破音/吞字/漂移
+
+### 7. 整稿合成（交付给口型链的最终 WAV——laohan-laowai ⑤ 的输入契约）
+
+```python
+# 服务器 CosyVoice 仓内跑（PYTHONPATH=$PWD）；长文分 chunk 返回必须 torch.cat 拼接（★坑：只取首 chunk=截断）
+speech = torch.cat([c["tts_speech"] for c in cv.inference_zero_shot(全文案, prompt, REF_WAV, stream=False)], dim=-1)
+torchaudio.save(out, speech, cv.sample_rate)
+# 下载回 Mac 后统一转 24kHz 单声道 PCM16（口型链硬要求，此步由本 skill 交付时完成）：
+ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
+```
+- 完成证据：整稿时长与文案语速匹配（英文≈7-8 词/s 抽查）+ Jeffrey 整轨听审通过 + SHA 绑定。
 
 ## 反触发（不用本 skill 的场景）
 
@@ -120,6 +132,6 @@ cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + infer
 
 ## 红线
 
-- 只训练**已决策复刻**的博主（复刻合规决策先行：起号期灰色可接受、商业化前换纯生成）
+- 只训练**已决策复刻**的博主（复刻合规决策先行：**需 Jeffrey 逐博主明确决策并留证**；商业化前必须切纯生成形象）
 - 服务器操作限训练目录 `/root/autodl-tmp/cosyvoice-train/`，不碰生产 7 进程与 `/data/laohan/laohan-node`
 - GPU 训练费用按既有授权，不新增付费点；AutoDL 关机后生产进程不自启（勿随意重启算力机）
