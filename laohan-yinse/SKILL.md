@@ -39,26 +39,48 @@ for f in <博主>-*.wav; do echo "file '$f'"; done > concat.txt
 ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 ```
 
-### 4. 上传服务器并准备数据（pro6000-a）
+### 4. 上传服务器并准备数据（pro6000-a）——2026-10-27 实战验证版
 
 训练机：`ssh pro6000-a`（AutoDL RTX PRO 6000 Blackwell 96G，seetacloud 西部；生产算力机，跑 7 进程服务）。训练工作目录：`/root/autodl-tmp/cosyvoice-train/`（Jeffrey 先例 model-jeffrey-v3-05 在此）。
 
+**切段（本机，已验证）**：ffmpeg silencedetect 找静音点，静音中点作切点，聚成 4-15s 段：
+```python
+# ffmpeg -i full.wav -af silencedetect=noise=-35dB:d=0.45 -f null -
+# 解析 silence_start/end 取中点为切点，4-15s 聚段，<3.5s 丢弃，>15.5s 硬切 10s
+```
+段命名 `<人名>_b<批>_s<毫秒6位>.wav`（对齐 Jeffrey 判例）。78 段/483s 实测一次通过。
+
+**每段转录（本机）**：SenseVoice 批量；转录后**清洗噪声符号**（🎼😊 等表情要删，否则进训练文本污染）。
+
+**数据目录结构（六件套，缺一训练必挂——三个坑全踩过）**：
+```
+data-<人名>/{train,dev}/     # 9:1 分
+  *.wav                     # 切段音频（与文本同目录）
+  text            # 每行: <utt_id> <转录文本>
+  utt2spk         # 每行: <utt_id> <说话人名>
+  spk2utt         # 一行: <说话人名> <所有utt_id空格连>
+  wav.scp         # 每行: <utt_id> <wav绝对路径>   ★坑1：缺它 extract_embedding 直接 FileNotFoundError
+  instruct        # 每行: <utt_id> You are a helpful assistant.<|endofprompt|>   ★坑2：缺它训练 forward KeyError instruct_token（不是目录是文件）
+  parquet/ + *.data.list  # ★不手写：管线 make_parquet_list 自动生成
+```
+打包上传：`tar czf data-<人名>.tar.gz data-<人名>/ && scp ... pro6000-a:/root/autodl-tmp/cosyvoice-train/`（mac tar 的 xattr 警告无害）。
+
+### 5. 特征提取 + 微调训练（服务器，2026-10-27 实战验证配方）
+
+**独立脚本模式（不碰 Jeffrey 原 data/ 与脚本）**：复制 `pipeline.sh`→`pipeline-<人名>.sh`、`train.sh`→`train-<人名>.sh`，改四处：`D=data-<人名>`、`--model_dir exp/<人名>/llm`、`--tensorboard_dir tb/<人名>/llm`、`--rdzv_endpoint=localhost:1235`（端口错开 1234 防撞）。
+
 ```bash
-scp <博主>-full-*.wav pro6000-a:/root/autodl-tmp/cosyvoice-train/data/wav/
+# 服务器上一键跑（特征提取CPU → parquet → GPU训练，自动串接）
+nohup bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-train.log 2>&1 &
+# 日志盯关键行：PIPELINE_DONE → "train start" → "Epoch N Step M" → TRAIN_DONE
 ```
 
-服务器上数据准备（判例实见）：切段 wav 放 `data/wav/`，命名 `<人名>_<来源>_<段号>_s<秒点>.wav`（Jeffrey 判例：`jeffrey_9878_b0_s31730.wav`，段长 3-15s）；每段配转录文本（SenseVoice/Paraformer 自动转写+人工抽校）。**data.list 不手写**——run.sh 的 prepare 阶段从切段 wav+文本生成 parquet 清单（`run.sh:69-70` 实见：`cat data/{...}/parquet/data.list > data/train.data.list`）。
+- 底座：`Fun-CosyVoice3-0.5B-2512`（英文素材走其中 CosyVoice-BlankEN，对路）
+- 训练配方：torchrun 单卡 `cosyvoice/bin/train.py --model llm --use_amp`（conf/cosyvoice3.yaml 默认档）
+- 实测速度：70 段/8 分钟数据，PRO 6000 单卡几分钟一个 epoch，全程约 10-30 分钟级
+- GPU 与生产 TTS 共存：训练约再占 16-20G（共 97G），不冲突；但别在生成高峰训
 
-### 5. 特征提取 + 微调训练（服务器）
-
-```bash
-# 特征提取（已有脚本：campplus embedding + speech_token，CPU 即可）
-bash /root/autodl-tmp/cosyvoice-train/extract_features.sh
-# 微调训练：CosyVoice3 官方 libritts 配方（底座 Fun-CosyVoice3-0.5B-2512）
-cd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3
-bash run.sh --stage 1 --stop-stage 4   # UNVERIFIED：stage 边界与 Jeffrey v3.05 实际训练参数首跑核实回填
-# 产出：model-<博主>-<版本>/CosyVoice-BlankEN/model.safetensors
-```
+**产物**：`exp/<人名>/llm/` 下 checkpoint（model.safetensors）。
 
 ### 完成证据（训练环节怎么算完成）
 
