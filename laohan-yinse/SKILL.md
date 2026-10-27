@@ -42,19 +42,18 @@ ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 ffmpeg -y -i <最清晰条>.wav -ss <起点> -t 25 <博主>-reference-25s.wav
 ```
 
-### 4. 建立（两条路径，先 A 后 B）
+### 4. 建立（路径 B 为唯一正式方法，Jeffrey 2026-10-27 钉死）
 
-**路径 A：产品内零样本克隆（立即可用，先跑通）**
-- 入口：laohanagent 产品 web（数字人口播智能体）→ 音色上传
-- 素材：`<博主>-reference-25s.wav`（3-30 秒约束，CosyVoice3 零样本）
-- 产出：账号内"我的音色"，生成时选它
-- 质量档位：零样本级（音色接近有偏差，够起号验证）
-
-**路径 B：CosyVoice3 fine-tune（高质量，Jeffrey 惯用流程）**
+**路径 B：CosyVoice3 fine-tune（服务器训练，正式流程）**
 - 素材：`<博主>-full-483s+.wav`（8-10 分钟）
 - 环境：CosyVoice3 源码仓（laohanagent gpu-node `cosyvoice3/CosyVoice/`，含 webui.py）；本机 conda `cosyvoice` 环境无 GPU——**训练在 GPU 服务器跑，训完把 checkpoint 拷回本地/注册进 sidecar 模型库**（Jeffrey 先例：服务器训练→本地使用）
 - 具体训练命令以 GPU 服务器侧实际脚本为准，首跑时核实并回填本节
 - 质量档位：专属模型（高相似度，长期主用）
+
+**路径 A：产品内零样本克隆（仅应急/临时验证，不作为正式交付）**
+- 入口：laohanagent 产品 API `/v1/dh/voice-assets`（3-30 秒参考音频，CosyVoice3 零样本）
+- 用 `<博主>-reference-25s.wav`；产出即时音色档案
+- 限制：音色相似度有限，仅等待 B 模型训练期间的过渡方案
 
 ### 5. 登记与验收
 
