@@ -33,8 +33,10 @@ description: 老外博主复刻→数字人→抖音视频全流程总控（含�
 ```
 POST /v1/dh/avatar-assets  ← 形象视频（处理后的母版）
 POST /v1/dh/voice-assets   ← 音色（微调模型）
-认证：Bearer <lease 令牌>
+认证：Bearer <lease 令牌>   # UNVERIFIED：lease 获取链（e2e 供给链产出）首跑核实
 ```
+
+**完成证据**：两 API 返回 asset/profile id 并可在列表接口查到——id 记入项目登记表，缺一不算注册完成。
 
 ### ⑤ API 渲染（TTS→音频→驱动口型→成片）
 
@@ -43,7 +45,9 @@ POST /v1/dh/voice-assets   ← 音色（微调模型）
 → resolveCloudPlan 报价 → POST /v1/dh/render-jobs → 轮询产物 → 下载 raw
 ```
 
-现成骨架：`~/Documents/laohanagent/scripts/e2e-lab-dh.mjs`（SCRIPT_FILE 喂文案原生支持）。管线本质：音色模型读文案生成完整音频 → 音频驱动形象循环素材口型（Duix/TBDub）。
+现成骨架：`~/Documents/laohanagent/scripts/e2e-lab-dh.mjs`（SCRIPT_FILE 喂文案原生支持；E2E_BASE 指向目标环境）。管线本质：音色模型读文案生成完整音频 → 音频驱动形象循环素材口型（Duix/TBDub）。
+
+**完成证据**：render-jobs 终态成功 + raw 视频可解码（ffprobe 通过）+ 时长与文案档位匹配。
 
 ### ⑥ 后期
 
@@ -55,6 +59,19 @@ POST /v1/dh/voice-assets   ← 音色（微调模型）
 
 - 抖音：养号 2-3 天再发；账号装修（人设简介前 3 行钩子）
 - 数据：opencli douyin stats/videos 拉取；10 条内决策点（引流款 vs 人设款占比调整）
+
+## 反触发（不用本 skill 的场景）
+
+- 真人实拍/老韩本人出镜项目（走 laohanvideo 真人路线）
+- 只做选题/文案/装修（单一环节走对应 skill：chuangzuo/weigui 等；本 skill 是复刻数字人全流程总控）
+- 声音模型单环节细节（进入 laohan-yinse，本 skill 只在②处调用它）
+
+## 失败路径
+
+- 声音模型未建成 → 全流程停在②，不跳过训练直接渲染（零样本已被禁用）
+- 形象素材字幕去不净/硬门槛不达 → 换素材条或重新选型，不降门槛上传
+- API 注册/渲染失败 → 按 e2e 脚本日志定位（引用 laohanagent 排障文档），不退回网页手动操作
+- 验收（深肤色还原/口型/音色）不过 → 回退候选形象名单（persona-candidates 排序），不硬发
 
 ## 关键红线
 

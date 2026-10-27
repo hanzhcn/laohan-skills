@@ -45,28 +45,42 @@ ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 
 ```bash
 scp <博主>-full-*.wav pro6000-a:/root/autodl-tmp/cosyvoice-train/data/wav/
-# 服务器上：长音频切段（每段 3-15s）+ 准备 data.list（wav路径|转录文本|spk）
-# 转录文本可用 SenseVoice/Paraformer 对每段自动转写生成
-# 数据落 data/{train,dev}/（9:1 分），list 文件 data/train.data.list、dev.data.list
 ```
+
+服务器上数据准备（判例实见）：切段 wav 放 `data/wav/`，命名 `<人名>_<来源>_<段号>_s<秒点>.wav`（Jeffrey 判例：`jeffrey_9878_b0_s31730.wav`，段长 3-15s）；每段配转录文本（SenseVoice/Paraformer 自动转写+人工抽校）。**data.list 不手写**——run.sh 的 prepare 阶段从切段 wav+文本生成 parquet 清单（`run.sh:69-70` 实见：`cat data/{...}/parquet/data.list > data/train.data.list`）。
 
 ### 5. 特征提取 + 微调训练（服务器）
 
 ```bash
-# 特征提取（已有脚本 extract_features.sh：campplus embedding + speech_token）
+# 特征提取（已有脚本：campplus embedding + speech_token，CPU 即可）
 bash /root/autodl-tmp/cosyvoice-train/extract_features.sh
 # 微调训练：CosyVoice3 官方 libritts 配方（底座 Fun-CosyVoice3-0.5B-2512）
-cd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3 && bash run.sh --stage 1 --stop-stage 4
+cd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3
+bash run.sh --stage 1 --stop-stage 4   # UNVERIFIED：stage 边界与 Jeffrey v3.05 实际训练参数首跑核实回填
 # 产出：model-<博主>-<版本>/CosyVoice-BlankEN/model.safetensors
 ```
 
-首跑时核实 run.sh 实际 stage 边界与 Jeffrey 训练参数（v3.05 的实际命令历史），回填此处。
+### 完成证据（训练环节怎么算完成）
+
+① data/{train,dev}/parquet 生成且 extract_features.sh 打印 EXTRACT_DONE；② `model-<博主>-<版本>/CosyVoice-BlankEN/model.safetensors` 文件产出并拷回本地；③ 验收三条（见第 6 步）全过并登记。任一不满足=未完成，不进形象/渲染阶段。
 
 ### 6. 模型回迁 + 登记 + 验收
 
 - checkpoint 拷回本地项目 assets/voice-models/<博主>/（Jeffrey 惯例：服务器训完放本地）
 - 登记表（项目内维护）：博主/建模日期/素材/模型路径/验收状态
 - 验收三条：①固定测试句（英文+中文各一）与原声主观相似度 ≥8/10（Jeffrey 听审）②F0 基频域 ±20Hz ③连续 10 次生成无破音/吞字/漂移
+
+## 反触发（不用本 skill 的场景）
+
+- 只需临时试听/应急验证音色（走产品零样本）——已被 Jeffrey 禁止用于交付，不从这里走
+- 真人实拍项目的音频处理（不涉及博主复刻）
+- 训练服务器不可达且无替代 GPU——报告阻塞，不降级零样本冒充完成
+
+## 失败路径
+
+- 素材质检不过（BGM/混响）→ 换条或降噪后复检，不强行训练
+- 训练中断 → run.sh 分 stage 重跑已完成跳过；产物缺失如实报未完成
+- 验收相似度 <8/10 → 排查素材纯度/切段质量后重训，不降标准登记
 
 ## 红线
 
