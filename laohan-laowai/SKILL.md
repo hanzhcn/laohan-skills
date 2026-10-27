@@ -28,15 +28,24 @@ description: 老外博主复刻→数字人→抖音视频全流程总控（含�
 - **字幕必须去除**（会被引擎复制进成片）：博主视频普遍带字幕 → 底部 crop 或换无字幕条；多点抽帧验证（首/中/尾/多段）
 - 转码 h264；处理实录与判例参照项目 docs/dh-production-guide.md
 
-### ④ API 资产注册（全自动，零网页）
+### ④ API 资产注册（全自动，零网页，2026-10-27 实战验证）
 
-```
-POST /v1/dh/avatar-assets  ← 形象视频（处理后的母版）
-POST /v1/dh/voice-assets   ← 音色（微调模型）
-认证：Bearer <lease 令牌>   # UNVERIFIED：lease 获取链（e2e 供给链产出）首跑核实
+```bash
+# 形象（★坑6：curl -F 必须显式 ;type=video/mp4，否则服务端收 octet-stream 拒收）
+curl -X POST $BASE/v1/dh/avatar-assets -H "Authorization: Bearer $LEASE" \
+  -F "file=@<母版>.mp4;type=video/mp4" -F "name=<名>" -F "devicePublicId=$DEVICE"
+# 音色（三步）：
+# ① 建档案：POST /v1/speech/voice-profiles  JSON {name, device_public_id}
+# ② 参考录音（25s 最佳段，WAV PCM）：
+#    ★坑7：consentVersion 必须显式传 "voice-reference-v2"（0071 迁移后），空值=400 invalid_voice_reference_media 无 reason
+#    ★坑8：电平门禁 active_ratio≥0.15 且 rms≥0.01——原声电平低的先 loudnorm=I=-16 归一
+curl -X POST $BASE/v1/dh/voice-assets -H "Authorization: Bearer $LEASE" \
+  -F "file=@<参考>.wav;type=audio/wav" -F "voiceProfileId=$VPID" -F "clientAssetId=$(uuidgen)" \
+  -F "devicePublicId=$DEVICE" -F "consentAcknowledged=true" -F "consentVersion=voice-reference-v2"
 ```
 
-**完成证据**：两 API 返回 asset/profile id 并可在列表接口查到——id 记入项目登记表，缺一不算注册完成。
+- lease 供给：`node ~/Documents/laohanagent/scripts/e2e-lease-provision.mjs`（三级自动续期；mint 新号需 admin 会话，积分=0 时是卡点）
+- 架构事实：产品渲染链 TTS=算力机 CosyVoice3 bridge（零样本+best15+ASR自检）；微调模型不在该链——成片用参考录音零样本，微调模型用于独立合成场景（laowai 主项目旁白等）
 
 ### ⑤ API 渲染（TTS→音频→驱动口型→成片）
 
