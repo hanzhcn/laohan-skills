@@ -74,7 +74,7 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 不适用
 
-- 数字人×Motion模板制作（2026-10-27正式路线）→ 不创建episode、不路由①—⑭/CODEX_DIRECT⑧—⑪剪辑链；锁定稿后按项目 `docs/视频生产入口与适配.md`「Motion正式路线接入」节分发：制作读 `motion/mastery/DH-ROUTE.md` §一A—一C + `PRODUCTION-METHOD-V4.md` + `PIPELINE.md`，工程建 `motion/projects/<日期-slug>/`，制作门=production-guard门链+check-delivery；⑫—⑭发布/运营两路共用。原生Remotion路线的episode编排不受影响。
+- 数字人×Motion模板制作（2026-10-27正式路线）→ 不创建episode、不路由①—⑭/CODEX_DIRECT⑧—⑪剪辑链；锁定稿后分发制作入口skill `laohan-motion`（编排骨架+漂移自检），方法真源仍按项目 `docs/视频生产入口与适配.md`「Motion正式路线接入」节：制作读 `motion/mastery/DH-ROUTE.md` §一A—一C + `PRODUCTION-METHOD-V4.md` + `PIPELINE.md`，工程建 `motion/projects/<日期-slug>/`，制作门=production-guard门链+check-delivery；⑫—⑭发布/运营两路共用。原生Remotion路线的episode编排不受影响。
 - 写口播稿、发布 → 使用对应专业skill。06与09使用 `codex-direct-production` executor；07、08各自独立且条件式创建。⑧不路由人工候选审批：不确定KEEP，事实冲突回上游。
 - 只有一个独立文案、没有 episode 目录 → 先创建 episode，不猜文件位置。
 
