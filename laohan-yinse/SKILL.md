@@ -106,6 +106,15 @@ data-<人名>/{train,dev}/     # 按来源视频分组，9:1为目标比例；�
 
 训练/合成均用任务专属启动器建立独立进程组，启动时记录真实PID/PGID、命令行、cwd、数据/配置/输出身份。停止前重新核实归属，无法核实则保留现场报告；只向已核本任务组发信号并确认退出，不按进程名、显存占用或未经核实的`$!`批量回收。
 
+以下是Linux服务器上的人工核验步骤，不是已自动接线的收据系统：启动后先按本任务专属脚本绝对路径核到唯一实际执行者，再填`TASK_PID`和从真实进程读出的`TASK_PGID`，不直接将`$!`当组号。将下列成功查询的输出、时间与任务路径保存到本任务启动收据；停止前重复核对进程启动时间、命令/cwd及全组成员，发现生产/未知成员则不发信号：
+```bash
+set -e -o pipefail
+ps -p "$TASK_PID" -o pid=,ppid=,pgid=,sid=,lstart=,args=
+readlink -f "/proc/$TASK_PID/cwd"
+ps -eo pid=,ppid=,pgid=,sid=,args= | awk -v task_pgid="$TASK_PGID" '$3 == task_pgid'
+```
+按已核归属停止后，重新成功查询同组成员为空才记组退出；查询报错或PID/启动时间已变不算退出证明。不记录凭据或含凭据参数；拿不到完整身份就保留现场，不猜进程号回收。
+
 ```bash
 # 服务器上一键跑（特征提取CPU → parquet → GPU训练，自动串接）
 nohup setsid bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-train.log 2>&1 &
@@ -159,6 +168,10 @@ PYTHONPATH="$PWD" setsid /root/autodl-tmp/cosyvoice-train/venv/bin/python /root/
 - Jeffrey个人的“兴奋B”只属其个人接受记录，不自动成为新博主默认；参考音频与逐字文本也须逐对校准。
 
 ### 7. 整稿合成（交付给口型链的最终 WAV——laohan-laowai ⑤ 的输入契约）
+
+**本期文本绑定**：从当前项目STATUS/INDEX找到本期定稿，记录源稿路径/SHA及本期内容/事实/违规审阅状态，再仅导出口播正文为任务专属`spoken.txt`并记SHA；不得把Markdown标题、中文对照表或制作说明一起送TTS。远端任务脚本显式读取本次上传的`spoken.txt`绝对路径，传输后核同SHA；启动前回读本期源稿/口播导出/模型/参考绑定。旧`synth_ep01.py`和`ep01-script.txt`不因同名集数而成为默认输入。
+
+例：成长项目当前保留的是`docs/scripts/ep01-chores.md`，仅其“英文口播”区是待合成正文；其中北京两年/一万家庭等旧身份说法仍须按本期人设与事实审阅确认。保留稿件不等于新博主可直接照念，不在声音步骤擅改履历或自动视为已批准。
 
 ```python
 # 服务器 CosyVoice 仓内跑（PYTHONPATH=$PWD）；长文分 chunk 返回必须 torch.cat 拼接（★坑：只取首 chunk=截断）

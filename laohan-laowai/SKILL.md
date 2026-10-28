@@ -147,4 +147,5 @@ docs/
 - **网络/worker故障**须由具名生产维护任务处置；内容制作不得据历史判例重启worker或结束其它工作线进程。只读核实并让路，只能回收本任务已核身份的离线进程组。
 - **resume基线变化**是保护条件，不能当成“脏了就换目录绕过”。保留原STOP/基线/次数；生产空闲且旧执行者已退后，确需继续时由root按README显式登记尚未计算范围的新有限阶段，不伪造旧阶段成功。
 - `--expected-checkpoint-sha256`是batch-state.json文件本身SHA；内存增量或生产活动保护触发时不提高阈值、不盲重试、不清全局缓存。
+- 该SHA在服务器只读运行`sha256sum <本次实验绝对目录>/outputs/batch-state.json`取得；不是模型权重的checkpoint SHA，也不是manifest SHA。保留原STOP文件不改字节，runner会再次核同一文件与真实成功回执
 - **分块断点**：从真实batch-state读成功范围。仅已成功0—16块、未算第17块时，零基左闭右开`--start-chunk 17 --end-chunk 18`才表示18块中的最后一块；它不另授恢复/续时权限。按README核原预算/范围/恢复或显式新有限阶段条件；assemble用`--additional-outputs`合并，消费旧STOP的成功前缀还必须显式`--include-verified-stopped-prefix`，逐块核成功退出回执/SHA/几何/帧数，失败块不接纳
