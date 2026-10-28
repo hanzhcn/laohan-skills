@@ -155,3 +155,37 @@ docs/
 - `--expected-checkpoint-sha256`是batch-state.json文件本身SHA；内存增量或生产活动保护触发时不提高阈值、不盲重试、不清全局缓存。
 - 该SHA在服务器只读运行`sha256sum <本次实验绝对目录>/outputs/batch-state.json`取得；不是模型权重的checkpoint SHA，也不是manifest SHA。保留原STOP文件不改字节，runner会再次核同一文件与真实成功回执
 - **分块断点**：从真实batch-state读成功范围。仅已成功0—16块、未算第17块时，零基左闭右开`--start-chunk 17 --end-chunk 18`才表示18块中的最后一块；它不另授恢复/续时权限。按README核原预算/范围/恢复或显式新有限阶段条件；assemble用`--additional-outputs`合并，消费旧STOP的成功前缀还必须显式`--include-verified-stopped-prefix`，逐块核成功退出回执/SHA/几何/帧数，失败块不接纳
+
+## kb78769 全链实战判例（2026-10-29 首期出片，下次按此大幅提速）
+
+> 一夜跑通：素材判定→训练→A/B裁决→整稿→口型→字幕→三档交付。以下全是实测踩坑与最优参数，重复执行直接照抄。
+
+### 素材判定（Qwen听感不可信，用信号法）
+- **Qwen2.5-Omni-3B 的 music/reverb 判断不可用**（校准集实测：加明显合成音乐报"no music"、自然声全报 echo uncertain）——语言模型听感≠声学仪器，只当第三路 ASR 参考
+- **BGM 判定信号法三步**（numpy+soundfile 即可，判据透明）：①源级停顿残留（帧RMS低于floor*1.5且speech-20dB 的帧）②最深停顿 dBFS 接近干净底噪(-49~-60)=否定恒定BGM；③响停顿(>-38dBFS且≥0.3s)总数<1s=否定间歇BGM。残留高但无节拍=高增益词隙尾音，不是音乐
+- 转写终稿=Whisper基准+双ASR词级diff+语境裁决（SenseVoice 分词伪影 navaro/fuckinguck 系统性不采；W 把 spaces 听成 's faces 这类靠 S+Q 2:1 纠）
+- 孤立环境声(0.3-0.4s)直接弃段不微裁——总量够时弃用优于精修
+
+### 训练（pro6000-a）
+- 入口必须 `launch_voice.py pipeline --run --timeout 3600`（直接 pipeline --run 会被 STOP）；远端 python 用绝对路径 `/root/autodl-tmp/cosyvoice-train/venv/bin/python`（非交互 PATH 无 python3）
+- **checkpoint 推理前必须剥 epoch/step 键**：`sd=torch.load(pt); [sd.pop(k) for k in ('epoch','step')]; torch.save(sd,pt)`，否则 AutoModel strict load 拒绝
+- retention 已接线（train-kb78769.sh: single_worker→train_with_retention→train.py）；60段555s 14epoch 实测约70分钟（GPU被抢时会拖30倍）
+- **多窗口并行同任务=双输**：先 SendMessage 核对（ListAgents），A/B 争议用 campplus speaker embedding 相似度客观裁决（embedder 用底模 campplus.onnx，多段真声参考）
+
+### 口型（same-voice）
+- **180帧分块在当前 cgroup（110G限额、生产服务占~39G anon）会反复触 RAM 门**；**直接用 --max-input-frames 120**（23块一次跑通）
+- RAM 门根因=file cache 挤压：先删已成功块的 sample.pkl（每块0.5-0.6G），再跑一个 touch 全页的内存压力进程（bytearray 30G）强制内核回收 cache（memory.reclaim 接口只读时用这招；禁全局 drop_caches）
+- resume 每批次限一次（attempt==1）；再挂=全新命名空间+`--start-chunk/--end-chunk` 有限范围，assemble 用 `--additional-outputs`
+- assemble 前上传三件套别漏：manifest.json + inputs/voiceover.wav + chunks/（scp 多文件+tail 截断会漏看错误，传完 find 数文件数）
+
+### 字幕与成片（Mac 本地）
+- **brew ffmpeg 9 无 libass**（subtitles/ass/drawte 全被砍），远端 AutoDL ffmpeg 也没有；`brew install ffmpeg@7`（keg-only，用全路径 `/opt/homebrew/opt/ffmpeg@7/bin/ffmpeg`）
+- zsh 坑：滤镜参数含 `=` 用引号包整串（`-vf 'subtitles=/path'`）；`-vsync` 已废弃改 `-fps_mode vfr`
+- **字幕时间轴用全局词流对齐**：whisper word_timestamps 词流 × 文案句表（逐句中英对照）做 SequenceMatcher 全局对齐——单锚点 fallback 会连锁错位（thirteen 被识成 13 就脱轨出 7 秒 gap）
+- **美观公式**（Jeffrey 首版"太丑"教训）：句级短条（非段落大块）+中文亮黄粗体44-46pt在上+英文白24pt在下+半透明黑底条(BorderStyle=3)+英文按行数动态调 ZH MarginV（2行时128，防顶穿）+每格中文1行英文≤2行
+- 加速是 `setpts=PTS/SP`（`SP*PTS`是减速反方向）；Jeffrey 本期定**原速**为标准，加速档出对比不默认
+- AI 视觉质检会误读形近字（十岁→七岁），对照原文复核再信
+
+### 交付
+- 成片推飞书：`node ~/.local/share/github-digest/push-feishu.mjs "文本" 附件.mp4`（单附件，多版分多条）
+- 每期结束后按「服务器不留垃圾」节清理；lipsync 中间产物（outputs 7G+）本地远端都要清

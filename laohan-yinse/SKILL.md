@@ -212,3 +212,14 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 - 只训练**已决策复刻**的博主（复刻合规决策先行：**需 Jeffrey 逐博主明确决策并留证**；商业化前必须切纯生成形象）
 - 服务器操作限训练目录 `/root/autodl-tmp/cosyvoice-train/`，不碰生产 7 进程与 `/data/laohan/laohan-node`
 - GPU 训练费用按既有授权，不新增付费点；AutoDL 关机后生产进程不自启（勿随意重启算力机）
+
+## 训练执行判例（2026-10-29 kb78769 首跑实测）
+
+- **推理加载前剥 epoch/step 键**：训练存的 checkpoint 含 `epoch`/`step` 元数据键，CosyVoice3 AutoModel strict load 直接拒（Unexpected key(s)）；推理包 llm.pt 必须是剥过的版本（训练原件保留，另存剥离副本绑定 SHA）
+- **retention wrapper 必须在链上**：`single_worker.py train_with_retention.py train.py`（曾漏接中间层导致 15 份 checkpoint 堆积 30GB 磁盘压线）；llm.pt+yaml 各自登记 registry，retained=latest+best2（CV loss 排序）+init
+- **60段555s/14epoch 单卡约70分钟**（GPU 独占时）；同卡双训练互抢会拖 30 倍并压爆磁盘——开训前 `nvidia-smi --query-compute-apps` + 跨会话 SendMessage 核对无并行任务
+- CV loss 每 epoch 都打（`Epoch N Step M CV info lr ... rank loss X`），ep13=3.8033 收敛正常；保留 latest+best2+init 后 exp/llm 约 5.7G
+- cgroup RAM 门（12GiB 保护线）：删 sample.pkl + 内存压力进程回收 file cache（详见 laohan-laowai 判例节）
+- 远端非交互 shell 无 python3；launch_voice.py 是唯一受控入口（receipt 进程组绑定，超时 SIGKILL 整组）
+- **A/B 模型裁决用 campplus 说话人相似度**（底模自带 campplus.onnx，fbank80→onnx→余弦；8 段真声参考跨 5 源），比人耳听感陈述客观；A_vs_B 0.978 说明同源底模音色高度一致，差异在细节还原度
+- 转写污染教训：spoken 文本导出要精确锚定"英文口播"标题后的引用块——文档头部说明块同是 `> ` 前缀会被误提取，TTS 会把中文说明念出来；ASR 回转验证（词级相似度+词数对齐）能 100% 抓住此类污染
