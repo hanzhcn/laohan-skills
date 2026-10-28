@@ -90,7 +90,7 @@ data-<人名>/{train,dev}/     # 按来源视频分组，9:1为目标比例；�
 ```
 打包上传：`tar czf data-<人名>.tar.gz data-<人名>/ && scp ... pro6000-a:/root/autodl-tmp/cosyvoice-train/`（mac tar 的 xattr 警告无害）。
 
-`wav.scp`必须写**服务器解包后的真实绝对路径**；不能把Mac的`/Users/...`路径原样送入远端。上传后逐项核音频存在、24k/mono/PCM16、ID与source-map一致，再进入特征提取。
+`wav.scp`必须写**服务器解包后的真实绝对路径**；不能把Mac的`/Users/...`路径原样送入远端。上传后逐项核音频存在、24k/mono/PCM16、ID与source-map一致，并读取完整PCM帧核实声明时长，拒绝只有WAV头的截断文件，再进入特征提取。
 
 ### 5. 特征提取 + 微调训练（服务器，2026-10-27 实战验证配方）
 
@@ -100,11 +100,14 @@ data-<人名>/{train,dev}/     # 按来源视频分组，9:1为目标比例；�
 - **pipeline中的train脚本调用**必须改到`train-<人名>.sh`；只改D/输出目录会继续调用旧`train.sh`、训练旧数据。
 - train的`--config`、`--model_dir`、`--tensorboard_dir`、`--rdzv_id`和端口均绑定本任务；端口实际确认空闲，不把1235写死为永远可用。
 - 新副本保留`set -e`并启用`set -o pipefail`；旧脚本只有`set -e`时，`python ... | tail -1`会吞掉前级失败，不能照抄。每阶段另核特征三件套、parquet/ID与实际返回码，不能只看PIPELINE_DONE。
+- 沿真实工具链验证路径与失败传播：Kaldi第二列可含空格，不能用无上限`split()`截断路径；parquet异步worker的失败须被主进程收取，或使用本任务同步写入器。启用`set -u`时先初始化可选`PYTHONPATH`再source配方，避免环境未设置时直接退出。第三方缺陷用任务专属副本修，不覆盖共享原件。
 - `--config`显式指向已复制的`conf/cosyvoice3-<人名>.yaml`；回读实际学习率、epoch上限、scheduler、`padding.use_spk_embedding`与worker数，记录采用哪版基线及理由。不把共享配置、历史1e-5起点或耗时当新博主默认；用未见文本查泛化，发散/退化即停。
 
 **开训前置（不启动GPU推理）**：按训练方法§4/§5核底模`--onnx_path`及`speech_tokenizer_v3.batch.onnx`存在，并与可信权重清单核SHA；记录当前venv的torch/torchaudio/deepspeed/onnxruntime版本。该方法锁定ORT 1.20.1的CPU路径：特征提取进程设`CUDA_VISIBLE_DEVICES=""`，检查脚本实际请求CPUExecutionProvider、CPU加载自检通过并回读会话`get_providers()`；仅打印`get_available_providers()`不能证明实际没走CUDA。失败停在准备阶段，不静默下载/安装、改共享源码或环境；首个本任务训练还须实际验证backward→step→保存→重载，不能只凭旧模型可推理登记兼容。
 
 训练/合成均用任务专属启动器建立独立进程组，启动时记录真实PID/PGID、命令行、cwd、数据/配置/输出身份。停止前重新核实归属，无法核实则保留现场报告；只向已核本任务组发信号并确认退出，不按进程名、显存占用或未经核实的`$!`批量回收。
+
+启动器须处理总截止及SIGINT/SIGTERM/SIGHUP并落真实终态；SIGKILL/断电不可由finally保证回收。核训练器是否另开worker会话：当前torchrun子进程会`start_new_session`，外层组退出不证明worker退出。使用可验证的子组监督，或同组单rank入口，并对所用方式做无GPU进程夹具；真实首训仍须核全部成员与退出，不能将夹具冒作生产证明。
 
 以下是Linux服务器上的人工核验步骤，不是已自动接线的收据系统：启动后先按本任务专属脚本绝对路径核到唯一实际执行者，再填`TASK_PID`和从真实进程读出的`TASK_PGID`，不直接将`$!`当组号。将下列成功查询的输出、时间与任务路径保存到本任务启动收据；停止前重复核对进程启动时间、命令/cwd及全组成员，发现生产/未知成员则不发信号：
 ```bash
@@ -122,7 +125,7 @@ nohup setsid bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人�
 ```
 
 - 底座：`Fun-CosyVoice3-0.5B-2512`（英文素材走其中 CosyVoice-BlankEN，对路）
-- 训练入口：torchrun单卡`cosyvoice/bin/train.py --model llm --use_amp`，读取本任务专属配置，不存在可直接照跑的共享“默认档”
+- 训练入口：单卡`cosyvoice/bin/train.py --model llm --use_amp`，可用上述受控torchrun或同组单rank入口；读取本任务专属配置，不存在可直接照跑的共享“默认档”
 - 实测速度：70 段/8 分钟数据，PRO 6000 单卡几分钟一个 epoch，全程约 10-30 分钟级
 - GPU与生产TTS共卡，空闲显存不证明互不干扰。训练前记录生产基线，训练中按真源监控延迟/错误率，超阈值只暂停本次训练；不重启或结束生产服务。显存与吞吐只报本轮快照，历史16–20G占用不作保证。
 
@@ -183,7 +186,7 @@ torchaudio.save(out, speech, cv.sample_rate)
 ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 ```
 - `inference_zero_shot`是当前CosyVoice的推理方法名，已训练模型仍通过它消费参考音频；禁止的是跳过本博主微调而用基模冒充交付。基模仅作同条件A/B对照，不因函数名误换路线。
-- **长稿分段**：>300 字/词按自然段分次合成再拼（过长语调衰减——Jeffrey 经验值）；分块 chunk 拼接勿截断
+- **长稿分段**：>300 字/词按自然段分次合成再拼（过长语调衰减——Jeffrey 经验值）；逐段收齐所有chunk，任一非空正文段返回零块即失败，不用全篇非空掩盖漏段
 - **响度门**：不预设达标——先测 `ffmpeg -af loudnorm=print_format=summary -f null -` 再按合同决定归一
 - **听感门是硬门**：完整 WAV 必须 Jeffrey 整轨听审通过后才能进口型推理（禁止跳过听审直接出片）
 - 完成证据：整稿逐段核对文案，确认所有分块完整拼接、无缺句/重复/截尾，记录实测时长与采样数；不套用固定英文词/秒作为验收。Jeffrey整轨听审通过并绑定SHA后才交口型链。
