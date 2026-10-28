@@ -13,7 +13,7 @@
 - 新episode的导演预制默认调用`laohan-daoyan` v2.1.2：它只读取视频项目当前`method-v5.json`和`director-state-v5.md`。第一请求先从内容发散2—3个在视觉隐喻、空间组织、运动逻辑或素材角色上本质不同的完整方向，方向形成后才按需读取最小范围Plugin知识，再统一收敛；第二请求只做最终复审，对真正值得增强的位置内部发散2—3个本质不同的候选。非穷尽技术搜索地图只提醒搜索维度，不是必选清单，未入选候选不落盘。两请求都停在`WAITING_FOR_FOOTAGE`。完成时必须同步本期`_status.md`，并在最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`；不能用开始时PASS或干净Git代替episode准入。它不得剪辑、生成clean/SRT、写旧beat-sheet/EDL/motion-plan、实现Remotion或渲染。旧METHOD_LAB只在Jeffrey明确要求历史路线时读取`laohan-daoyan/references/method-lab-legacy.md`。
 - ⑧—⑪由同一个 Codex 任务连续完成：完整观看原片并剪辑、写direct brief与按需source manifest、直接实现Remotion、渲染完整candidate并交Jeffrey观看。`laohan-donghua`、AST、双renderer与proposal/extension/seal只用于Jeffrey明确发起的METHOD_LAB或历史episode。
 - `laohan-sucai/SKILL.md`：⑩仅在 source manifest 有真实 PROOF/BROLL 请求时供应 provider/license/source/SHA 完整且 visually_verified 的本期素材；无请求标 not_applicable，不创建空素材任务。
-- `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanAI视频创作` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
+- `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanvideo` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫—⑭在 laohan-yunying 定义前必须 BLOCKED。
 - V5旧期已有pending candidate再接入V5.1时，只能使用workflow受控迁移冻结原candidate与director-state SHA；bianpai视该期D1/D2为历史兼容完成并停在`JEFFREY_REVIEW`，不得倒退覆盖已生成样片。
 - episode 存在且通过 workflow `verify-episode-supersession.mjs` 的 `supersession-record.json` 时，bianpai 必须优先返回 `SUPERSEDED` 并拒绝 vendors/status/next/check；不得覆盖旧 executor lock 或把作废期迁移到新 runtime。
 - `laohan-jiaozhun/SKILL.md`：只把 episode 接到上游 `cheat-on-content`，不能保留本地教程型评分公式。教程与观点内容必须分开 calibration lane；state 迁移只允许先 dry-run。
@@ -46,4 +46,4 @@
 
 当前方法论真源：
 
-`/Users/hanzhmacbookair/Documents/laohanAI视频创作/docs/动画效果方法论.md`、`docs/动画生产接口规格.md` 与项目内 `animation-method/`。旧 `/Users/hanzhmacbookair/Documents/视频动画/` 只作历史实验/反例/待迁移证据，未经当前合同重验不得作为 runtime 或方法真源。不要恢复 `laohan-donghua v10` 的固定覆盖率、旧项目路径或模板规则。
+`/Users/hanzhmacbookair/Documents/laohanvideo/docs/动画效果方法论.md`、`docs/动画生产接口规格.md` 与项目内 `animation-method/`。旧 `/Users/hanzhmacbookair/Documents/视频动画/` 只作历史实验/反例/待迁移证据，未经当前合同重验不得作为 runtime 或方法真源。不要恢复 `laohan-donghua v10` 的固定覆盖率、旧项目路径或模板规则。

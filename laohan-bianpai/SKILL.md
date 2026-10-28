@@ -13,7 +13,7 @@ description: 真人口播工作流编排器。根据 episode 已落盘产物识�
 ## 命令
 
 ```bash
-# 从 laohanAI视频创作 根目录运行；不要从 skill 目录运行
+# 从 laohanvideo 根目录运行；不要从 skill 目录运行
 
 # 当前状态、缺失产物、唯一下一步
 node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs status --episode episodes/<slug>

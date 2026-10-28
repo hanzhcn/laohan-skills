@@ -1,6 +1,6 @@
 ---
 name: laohan-yunying
-version: "1.3.0"
+version: "1.3.1"
 description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登记的作品记录，回收作品数据和评论洞察，并把真实数据交给 cheat-on-content 复盘。Use when 用户说抓作品数据、复盘评论、登记手动发布结果、进入⑬数据或⑭评论。
 ---
 
@@ -12,7 +12,7 @@ description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登�
 
 ### 1. 发布事实登记
 
-先运行 `bianpai check --require final`，再登记以下两种发布证据来源：
+原生episode先运行 `bianpai check --require final`，再登记以下两种发布证据来源。Motion工程按视频项目PIPELINE和accepted-final登记，不伪造原生门：
 
 - `USER_CONFIRMED_MANUAL`：当前唯一人工发布 source，沿用`publish-record.json`。Jeffrey 在平台手动发布后提供平台身份、URL（抖音还须aweme_id）与平台显示的精确标题`platform_title`；他未提供时**自行从本人账号查询**（opencli douyin videos / huashu-chrome 创作者中心，按发布时间与最终稿标题核对）补齐登记，不等待手工提供（Jeffrey 2026-10-28 钉死）。历史`source: "user-confirmed"`仅允许schema <4 episode只读兼容；迁移或新登记必须写`USER_CONFIRMED_MANUAL`。
 - `ADAPTER_VERIFIED_RECEIPT`：读取`12-发布/*-publish-results.jsonl`中与当前`final.mp4` SHA匹配的最后一个`PUBLISHED`记录；自动回执的 canonical source 固定为 source: ADAPTER_VERIFIED_RECEIPT，缺失或为其他值都不得登记。
@@ -21,11 +21,11 @@ description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登�
 
 ⑫只消费上述归一化登记；原始JSONL行、浏览器页面或“点击过”都不是完成证据。
 
-本Skill不得承担发布点击、上传、表单填写或浏览器控制；这些只属于release package与本机Chrome适配器。自动发布回执只证明对应平台已发布，不证明该平台运营数据已经接通。
+本Skill不得承担发布点击、上传或表单填写；这些只属于release package与本机Chrome适配器。本人创作者中心的只读查询可由上方指定观察器执行，不扩大为发布控制。自动发布回执只证明对应平台已发布，不证明该平台运营数据已经接通。
 
 ### 2. 人工发布记录
 
-`USER_CONFIRMED_MANUAL`只登记 Jeffrey 提供的作品 URL、aweme_id 与 platform_title；不调用 URL 解析、平台浏览器、发布 adapter 或任何替代发布工具。URL 必须包含同一 aweme_id；缺任一身份字段则停，不能编造。`ADAPTER_VERIFIED_RECEIPT`只读取既有回执，不调用或驱动发布 adapter。
+`USER_CONFIRMED_MANUAL`只登记 Jeffrey 明确确认的发布事实；作品 URL、aweme_id 与 platform_title 缺失时先通过只读创作者中心查询补齐，不要求他手工提供。不得调用发布 adapter 或任何替代发布工具。抖音 URL 必须包含同一 aweme_id；查询后仍缺身份则停，不能编造。`ADAPTER_VERIFIED_RECEIPT`只读取既有回执，不调用或驱动发布 adapter。
 
 写 `12-发布/publish-record.json`：
 
@@ -49,9 +49,11 @@ description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登�
 
 ### 3. 数据快照
 
-人工提供的创作者中心数据来源写 `manual`。TzFilm SQLite adapter 只允许显式运行：`python3 scripts/tzfilm_douyin_adapter.py snapshot --db <douyin_stats.db> --episode episodes/<slug>`。它必须从本期 publish-record 读取 aweme_id/platform_title，按精确标题查询并拒绝歧义，不再接受命令行伪造作品 ID，也不得覆盖已有快照。它不运行 launchd、Telegram、预测追踪或任何发布动作。
+人工提供的创作者中心数据来源写 `manual`。旧 TzFilm SQLite 桥接从未存在对应实现，现已退役，不再把被对标账号的数据当成本人数据源，也不声称可运行 `snapshot --db`。
 
-TzFilm 的飞书同步仅作为外部看板；不读取飞书作为数据源，也不写 episode 以外的状态。发布后预测追踪完成并经本地验证后，可额外保存到 `13-数据/tzfilm-tracking.json`，标 `source: tzfilm-tracker` 与抓取时间；它只辅助观察，不得替代 Cheat 的发布前盲预测、retro 或 rubric。
+Motion独立工程的两平台观察使用视频项目真实入口：`python3 motion/tools/observe-published.py --record motion/projects/<slug>/qa/operations/publish-verification.json`。兼容路径 `laohan-yunying/scripts/tzfilm_douyin_adapter.py --record <同一JSON>` 只转发该只读观察器。记录显式绑定抖音aweme_id、视频号objectId和各自发布时间；观察器只读已登录创作者中心，分别追加实际数字或失败原因，不上传/发布/回复。T+1/3/7由各自published_at派生，缺指标/登录失效不补0；同平台同窗口只签一次TARGET，迟到不倒填更早窗口。原生episode的Cheat/⑬验收仍只消费原抖音合同，不用视频号数字冒充抖音预测实绩。
+
+兼容入口固定执行`~/Documents/laohanvideo/motion/tools/observe-published.py`；隔离worktree只作开发验证，生产前必须集成并同步该canonical源码与运行锁，不按record位置寻找另一份观察器。首次观察冻结各平台id/发布时间，改目标须另建记录，保留原观察历史。
 
 发布后默认按① `00-选题.json.experiment.observation_window` 回收；不得在发布后改窗口。`metric_keys` 是预注册的指标键（`plays`、`likes`、`comments`、`shares`、`favorites`、`ctr5s`、`avg_duration_sec`）。数据回收默认**自行查询 Jeffrey 账号数据**（Jeffrey 2026-10-28 钉死，不得让他手工提供）：抖音首选 opencli（`opencli douyin stats`/`opencli douyin videos`，Chrome 登录态）或 huashu-chrome 进创作者中心读取，真值口径仍是创作者中心数字，来源标 `creator-center-auto`；自行查询失败（登录失效/接口变更/字段缺失）必须保留失败原因，降级请 Jeffrey 提供创作者中心数字（来源标 `creator-center` 或 `manual`），不得把空值写成 0。
 
@@ -65,7 +67,7 @@ TzFilm 的飞书同步仅作为外部看板；不读取飞书作为数据源，�
 
 ### 4. 评论与复盘交接
 
-TzFilm 的评论导出只允许 export，不允许 reply。显式导入：`python3 scripts/tzfilm_douyin_adapter.py comments --input <unreplied-comments.json> --episode episodes/<slug>`。adapter 必须验证 selectedWork 精确标题与 publish-record 一致，过滤空文本并去重；禁止调用 `auto_reply.py reply` 或保存回复计划到 episode。
+旧 `comments --input` SQLite桥接同样退役。本人抖音评论的现役采集入口见视频项目 `scripts/fetch-douyin-comments.mjs`；它使用TikHub，须按既有费用/凭据授权显式调用，不因本skill触发付费。原始输出按下方comments合同归一后再交复盘；不得抓取被对标者评论替代本人视频，也不得自动回复。
 
 首选 `douyin-session` 抓取高赞评论；Cookie 失效时引导用户重新登录，失败后让用户粘贴高赞评论。评论可用时写 `14-评论/comments.jsonl`，每行固定为 `{"platform":"douyin","aweme_id":"<id>","captured_at":"ISO-8601","source":"douyin-session|manual","text":"评论正文","likes":0}`；不可用时仍写洞察文件并说明原因。
 

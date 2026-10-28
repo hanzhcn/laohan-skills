@@ -4,7 +4,7 @@ import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const project = resolve(process.argv[2] || join(process.env.HOME || '', 'Documents/laohanAI视频创作'));
+const project = resolve(process.argv[2] || join(process.env.HOME || '', 'Documents/laohanvideo'));
 const read = (path, label) => {
   if (!existsSync(path)) throw new Error(`缺${label}: ${path}`);
   return readFileSync(path, 'utf8');

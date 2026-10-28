@@ -9,8 +9,8 @@ import argparse, json, os, subprocess, sys, urllib.request
 
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # skill根目录
 FONT = os.path.join(SKILL_DIR, "assets", "fonts", "SourceHanSansCN-Heavy.otf")
-RUNTIME = os.environ.get("LAOHAN_REMOTION_RUNTIME",
-    "/Users/hanzhmacbookair/Documents/laohanAI视频创作/animation-method/runtime")
+RUNTIME = os.path.expanduser(os.environ.get("LAOHAN_REMOTION_RUNTIME",
+    "~/Documents/laohan-remotion-runtime"))
 W, H = 1080, 1440  # 3:4 原生画幅（covers_real 实证）——默认值；可被 main() 的 --size 覆盖（2026-09-27 附加式扩展）
 NATIVE_W, NATIVE_H = 1080, 1440  # LaohanCover(Remotion 文字层) 仅支持该画幅
 
