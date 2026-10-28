@@ -109,3 +109,10 @@ docs/
   persona-*.md         人设卡     topic-library-*.md  选题库
   scripts-*.md         文案       account-setup.md    装修
 ```
+
+## 服务器协作判例（2026-10-28 实战，pro6000-a）
+
+- **AutoDL↔ECS 线路丢包**（曾 45%→90%）：症状=worker 间歇 fetch failed 而 curl 偶通；ECS/nginx 全正常（请求到端有 204 应答）。修复=平台侧修线路；线路恢复后 worker 连接池可能仍坏 → `laohan-node restart worker`
+- **dsub 去字幕批处理**（另一工作线的 GPU 任务，PAUSE 文件协调）：杀法 `kill -9 <主控PID> <guardPID>` + `pkill -f paint_strips`——**pkill pattern 陷阱**：主控进程名是 `run2` 不是 `run2.py`，pattern 写 `run2.py` 杀不中，主控会持续拉起新 worker；杀完放 PAUSE 防复活
+- **runner resume 三死锁**：①resume 沿用首次 baseline，中途重启过 worker/日志变化=baseline 永久脏（STOP_PRODUCTION_LOG_CHANGED 复发无解）→ **换全新目录重跑**（cp manifest/inputs/chunks/脚本到新 base）；②`--expected-checkpoint-sha256`=**batch-state.json 文件本身的 SHA**（不是内部字段）；③STOP_CONTAINER_INCREMENT_20_GIB=容器内存增量相对判定，服务内存波动会漂，低成本重试新目录即可过
+- **分块断点**：18 块跑到 17 块被打断 → `--start-chunk 17 --end-chunk 18` 单补，assemble 时 `--additional-outputs` 合并
