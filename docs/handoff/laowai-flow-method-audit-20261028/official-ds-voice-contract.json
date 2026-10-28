@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-28T10:08:38.294547+00:00",
+  "channel": "official-ds-claude-profile",
+  "endpoint": "https://api.deepseek.com/anthropic",
+  "requested_model": "deepseek-flash[1m]",
+  "profile": "/Users/hanzhmacbookair/.claude-deepseek/settings.json",
+  "candidate_commit": "c318187ef10da4298c5d7f9e7483e11fd552ade5",
+  "batch": "voice",
+  "scope": "Scope: entire laohan-yinse skill and voice-to-lipsync interface. Review source grouping, transcript fidelity, real script paths/cwd, checkpoint assembly/loading, whole-wave completion, GPU coexistence and restart instructions. Partner skill is supplied to catch contradictory interfaces. The training methodology is an existing local project reference, not proof a new model is accepted. Source snapshot is read-only; copied per-creator scripts have not yet been prepared or executed.",
+  "candidate_files": {
+    "laohan-yinse/SKILL.md": "b62b49fab630b5a9e99bc3ef76a6213059b95a3c9646b6fe2ae6f5d97d77e9a0",
+    "laohan-laowai/SKILL.md": "34b4d80a6c9600e2030ad2c820f88d6d74af79b43dbc4144f6ebac42563a2db8"
+  },
+  "input_sha256": "024cb2f1dc513723fbc72d50154820a587c7cf04f5f657468b3a2ad03d0a7c6b",
+  "input_bytes": 63101,
+  "total_timeout_seconds": 360,
+  "effort": "max",
+  "max_output_tokens": 128000,
+  "tools": [],
+  "mcp": [],
+  "auto_retry": false,
+  "secrets_or_raw_thinking_saved": false
+}

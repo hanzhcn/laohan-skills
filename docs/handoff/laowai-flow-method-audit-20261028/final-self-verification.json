@@ -1,0 +1,24 @@
+{
+  "at_scope": "final method doc clarification, no production runs",
+  "candidate_commit": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "checks": {
+    "manual_identity_commands_present": true,
+    "query_failure_not_group_exit": true,
+    "manual_not_auto_receipt_claim": true,
+    "current_spoken_text_source_and_transport_sha": true,
+    "old_script_not_default": true,
+    "legacy_persona_claims_not_auto_approved": true,
+    "checkpoint_batch_state_object": true,
+    "preserves_voice_before_lipsync": true,
+    "speed_filter_timebase_preserved": true
+  },
+  "only_two_owned_skills_changed": true,
+  "skill_hashes": {
+    "laohan-yinse/SKILL.md": "0b540663191dce9082972aa2504373a3ac83c26f9e08d677ed784fedf5187b7f",
+    "laohan-laowai/SKILL.md": "1454a1eb6fb3f72d654b908c7348fbb45e7d9b34bcfed91b271ea8cd94475e87"
+  },
+  "runtime_lock_file": "/Users/hanzhmacbookair/Documents/laohanvideo/workflow-runtime-lock.json",
+  "runtime_lock_matching_skill_entries": [],
+  "runtime_lock_not_modified": true,
+  "real_model_audio_video_acceptance": "NOT_TESTED"
+}

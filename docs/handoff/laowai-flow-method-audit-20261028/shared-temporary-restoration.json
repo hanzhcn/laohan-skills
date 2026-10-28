@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-28T10:10:28.417262+00:00",
+  "shared_head": "2fec75575ab9e1a446f32143a2265bf13fca6913",
+  "restored_only_owned_temporary_paths": {
+    "laohan-laowai/SKILL.md": "2d4793d84c5d830a7bedf91341d5dfc1289bfc70e5a7e27c2f3090c9242f3dd9",
+    "laohan-yinse/SKILL.md": "a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed"
+  },
+  "other_dirty_tracked_files_preserved": {
+    "CLAUDE.md": "2a1fc7b6aae439501c1b9659dbdfaeef6b878704310a49725de940b922a35a9f",
+    "STATUS.md": "3bce097a8fb09e24ef02c84ae338a85fc571032b2d2159eeb0335bc7e6748011",
+    "laohan-bianpai/SKILL.md": "2bfa1c6a7183221acacbcba1be19cf8b29bc3689298c48bcb669be00fceccd47",
+    "laohan-daoyan/scripts/test-routing.mjs": "3fbb12e63281718e825d493fc95de4057f513094dbcf0720142d738a16bf1dcf",
+    "laohan-fengmianzhuzige/references/zhuzige-cover-study.md": "61b78925da25ab5d3cab646547c375a4b7db16dc7a12e183add751c972ba6246",
+    "laohan-fengmianzhuzige/scripts/build_cover.py": "993549432a4ef6897d679e79f7220792761a5e391410f3769a9d32a8b552f7ea",
+    "laohan-xiazai/references/douyin.md": "988228c01e5d983a810b822a1da41b37cbd5264f3d0e8ffc357bf3abde4cab25",
+    "laohan-yunying/SKILL.md": "d5a31dcdb5046b441e09427e5ae65ba2e7c5219963270b6b5b31422894c9f234",
+    "laohan-yunying/scripts/tzfilm_douyin_adapter.py": "d096c79f6ba41eac8839a191a3ad8372825d1f91b9f19fcc0d972250dc2e7131"
+  },
+  "STATUS_preserved_because_other_window_modified": true,
+  "staged_unchanged_empty": true,
+  "candidate_kept_at": "/Users/hanzhmacbookair/Documents/laohan-skills-flow-method-audit-20261028",
+  "candidate_commit": "c318187ef10da4298c5d7f9e7483e11fd552ade5",
+  "reason": "isolate unreviewed candidate from shared symlink source before integration"
+}

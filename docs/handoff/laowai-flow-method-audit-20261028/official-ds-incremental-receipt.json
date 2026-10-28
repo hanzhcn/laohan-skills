@@ -1,0 +1,46 @@
+{
+  "status": "VALID_INDEPENDENT_REVIEW",
+  "http_status": "UNVERIFIED_CLI",
+  "batch": "incremental",
+  "candidate_commit": "2b69c712263ec1b40c499b89aaeae950428ed5e3",
+  "cli_phase": "cli_result_received",
+  "cli_last_progress_seconds": 329.713,
+  "thinking_events": 58809,
+  "text_events": 1213,
+  "cli_exit_code": 0,
+  "cli_model": "deepseek-flash[1m]",
+  "cli_result": "success",
+  "provider_model": "deepseek-flash",
+  "provider_stop_reasons": [
+    "end_turn"
+  ],
+  "response_sha256": "c761a8c71df45d592c227591cacb1688e80d774e4411ee0dff6ed5835a756d2c",
+  "result_sha256": "afa5f2bcef708500e81a0e36bacf3569ee76a4771a8427c32a5f1b86e7574794",
+  "finding_count": 4,
+  "usage": {
+    "input_tokens": 41435,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 60023,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "judgment": "PENDING_OWNER_ADJUDICATION",
+  "elapsed_seconds": 330.339,
+  "ended_at": "2026-10-28T10:32:30.148995+00:00",
+  "local_process_group_returned": true
+}

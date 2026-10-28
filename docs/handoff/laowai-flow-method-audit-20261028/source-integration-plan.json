@@ -1,0 +1,22 @@
+{
+  "shared_head": "0ad824dad9b6d7d0fdbd30bc56581b5613e0b199",
+  "reviewed_candidate": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "review_candidate_branch": "task/laowai-flow-method-audit-20261028",
+  "shared_dirty_paths": [
+    "STATUS.md"
+  ],
+  "only_skill_diff_from_isolation_base": [
+    "laohan-laowai/SKILL.md",
+    "laohan-yinse/SKILL.md"
+  ],
+  "target_before_hashes": {
+    "laohan-laowai/SKILL.md": "2d4793d84c5d830a7bedf91341d5dfc1289bfc70e5a7e27c2f3090c9242f3dd9",
+    "laohan-yinse/SKILL.md": "a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed"
+  },
+  "target_candidate_hashes": {
+    "laohan-laowai/SKILL.md": "1454a1eb6fb3f72d654b908c7348fbb45e7d9b34bcfed91b271ea8cd94475e87",
+    "laohan-yinse/SKILL.md": "0b540663191dce9082972aa2504373a3ac83c26f9e08d677ed784fedf5187b7f"
+  },
+  "integration_condition": "complete final review and no concurrent changes to owned targets/index",
+  "plan": "merge reviewed isolated implementation into main preserving prior 0ad824d changes and owned STATUS; then commit task receipts/status only"
+}

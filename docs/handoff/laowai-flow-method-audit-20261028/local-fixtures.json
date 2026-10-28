@@ -1,0 +1,33 @@
+{
+  "fixture_only": true,
+  "gpu_called": false,
+  "face_or_lipsync_acceptance": false,
+  "cases": [
+    {
+      "case": "prepare_22050hz_576x1024_synthetic_fixture",
+      "exit_code": 2,
+      "stdout": "",
+      "stderr_tail": "{\"status\": \"STOP\", \"reason\": \"STOP_REQUIRE_24K_MONO_PCM16_WAV\"}\n"
+    },
+    {
+      "case": "prepare_24000hz_576x1024_synthetic_fixture",
+      "exit_code": 0,
+      "stdout": "{\n  \"status\": \"PREPARED_GPU_NOT_RUN_VOICE_ACCEPTANCE_PENDING\",\n  \"manifest\": \"/private/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/laowai-flow-audit-20261028-u2dnejvr/prepared-24000/manifest.json\",\n  \"sha256\": \"909d71180c00896b4603aeb6f1bfd2009024cbcdb7ed9e2fdf4d03e0e3742ea4\",\n  \"frames\": 25,\n  \"chunks\": 1,\n  \"voice_sha256\": \"e5ea01a23fcb85fd8e608c5c672ea5c22dfab6b0e581d782242f478e4b1c5900\"\n}\n",
+      "stderr_tail": "",
+      "manifest_status": "PREPARED_GPU_NOT_RUN_VOICE_ACCEPTANCE_PENDING",
+      "frame_count": 25,
+      "samples": 24000,
+      "voice_sha_matches_input": true
+    },
+    {
+      "case": "failed_stage_pipefail_False",
+      "exit_code": 0,
+      "stdout": "PIPELINE_DONE_AFTER_FAILED_STAGE"
+    },
+    {
+      "case": "failed_stage_pipefail_True",
+      "exit_code": 23,
+      "stdout": ""
+    }
+  ]
+}

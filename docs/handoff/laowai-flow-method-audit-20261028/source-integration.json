@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-28T10:44:41.903154+00:00",
+  "reviewed_candidate": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "source_merge_commit": "dc418c7b12e1553454063c652be17576d6f42d8d",
+  "prior_other_window_commit_preserved": "0ad824dad9b6d7d0fdbd30bc56581b5613e0b199",
+  "source_skill_hashes": {
+    "laohan-yinse/SKILL.md": "0b540663191dce9082972aa2504373a3ac83c26f9e08d677ed784fedf5187b7f",
+    "laohan-laowai/SKILL.md": "1454a1eb6fb3f72d654b908c7348fbb45e7d9b34bcfed91b271ea8cd94475e87"
+  },
+  "physical_entries": [
+    {
+      "entry": "/Users/hanzhmacbookair/.agents/skills/laohan-laowai/SKILL.md",
+      "exists": true,
+      "realpath": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-laowai/SKILL.md",
+      "sha256": "1454a1eb6fb3f72d654b908c7348fbb45e7d9b34bcfed91b271ea8cd94475e87"
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.agents/skills/laohan-yinse/SKILL.md",
+      "exists": true,
+      "realpath": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-yinse/SKILL.md",
+      "sha256": "0b540663191dce9082972aa2504373a3ac83c26f9e08d677ed784fedf5187b7f"
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.claude/skills/laohan-laowai/SKILL.md",
+      "exists": true,
+      "realpath": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-laowai/SKILL.md",
+      "sha256": "1454a1eb6fb3f72d654b908c7348fbb45e7d9b34bcfed91b271ea8cd94475e87"
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.claude/skills/laohan-yinse/SKILL.md",
+      "exists": true,
+      "realpath": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-yinse/SKILL.md",
+      "sha256": "0b540663191dce9082972aa2504373a3ac83c26f9e08d677ed784fedf5187b7f"
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.codex/skills/laohan-laowai/SKILL.md",
+      "exists": false,
+      "realpath": "/Users/hanzhmacbookair/.codex/skills/laohan-laowai/SKILL.md",
+      "sha256": null
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.codex/skills/laohan-yinse/SKILL.md",
+      "exists": false,
+      "realpath": "/Users/hanzhmacbookair/.codex/skills/laohan-yinse/SKILL.md",
+      "sha256": null
+    }
+  ],
+  "harness_trigger_or_production_behavior": "UNVERIFIED_NOT_CLAIMED",
+  "no_other_wip_staged": true,
+  "snapshot_phase": "POST_MERGE_PRE_PUSH_HISTORY",
+  "source_push_at_this_snapshot": "NOT_YET_PERFORMED",
+  "subsequent_git_closeout": "/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/handoff/flow-method-audit-20261028/git-closeout.json"
+}

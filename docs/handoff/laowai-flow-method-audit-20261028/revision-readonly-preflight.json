@@ -1,0 +1,30 @@
+{
+  "setsid": "/usr/bin/setsid",
+  "files": {
+    "campplus.onnx": {
+      "exists": true,
+      "bytes": 28303423,
+      "sha256": "a6ac6a63997761ae2997373e2ee1c47040854b4b759ea41ec48e4e42df0f4d73"
+    },
+    "speech_tokenizer_v3.onnx": {
+      "exists": true,
+      "bytes": 969451503,
+      "sha256": "23236a74175dbdda47afc66dbadd5bcb41303c467a57c261cb8539ad9db9208d"
+    },
+    "speech_tokenizer_v3.batch.onnx": {
+      "exists": true,
+      "bytes": 969451579,
+      "sha256": "b156b8a7bbff436585e153f4637b9a368009005ac66efa108a6c8bfb34e5ee43"
+    }
+  },
+  "package_versions": {
+    "torch": "2.7.1+cu128",
+    "torchaudio": "2.7.1+cu128",
+    "deepspeed": "0.17.1",
+    "onnxruntime": "1.20.1",
+    "onnxruntime-gpu": null
+  },
+  "actual_ort_session_provider": "UNVERIFIED_NO_SESSION_LOADED",
+  "gpu_execution_started": false,
+  "trusted_expected_onnx_hash_comparison": "NOT_PERFORMED_NO_EXPECTED_MANIFEST_SUPPLIED"
+}

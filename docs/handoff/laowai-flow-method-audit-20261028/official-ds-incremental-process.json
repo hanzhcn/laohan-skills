@@ -1,0 +1,10 @@
+{
+  "wrapper_pid": 40427,
+  "cli_pid": 40429,
+  "cli_pgid": 40429,
+  "isolation": "start_new_session=True, actual PID=PGID",
+  "scope": "current official incremental only; no unrelated processes or argv saved",
+  "after_exit_check": "GROUP_GONE",
+  "remaining_member_pids": [],
+  "checked_at": "2026-10-28T10:34:40.132533+00:00"
+}

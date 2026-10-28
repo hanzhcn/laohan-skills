@@ -1,0 +1,45 @@
+{
+  "verdict": "changes_required",
+  "findings": [
+    {
+      "id": "F17",
+      "severity": "P1",
+      "location": "laohan-yinse/SKILL.md §5「开训前置」；revision-readonly-preflight.json",
+      "evidence": "技能要求按训练方法§4/§5与可信权重清单核SHA，并回读CPU会话实际provider；但随附只读回执明确`trusted_expected_onnx_hash_comparison=NOT_PERFORMED_NO_EXPECTED_MANIFEST_SUPPLIED`、`actual_ort_session_provider=UNVERIFIED_NO_SESSION_LOADED`，只有实际文件哈希，无可比对的预期清单，也无CPU会话加载证据。",
+      "impact": "该完整性/环境前置不可执行：严格执行会阻塞训练，绕过则可能用未核权重训练；原F06未完全闭合。",
+      "minimal_fix": "在项目内提供可信权重清单（路径+SHA）及CPU会话加载自检命令；preflight比对实际SHA、回读`get_providers()`并记录。缺清单或会话失败标记BLOCKED，不训练、不静默下载/安装。"
+    },
+    {
+      "id": "F18",
+      "severity": "P2",
+      "location": "laohan-yinse/SKILL.md §5.5/§7；远端synth_ep01.py；当前保留脚本ep01-chores.md",
+      "evidence": "远端唯一ep01整稿脚本`synth_ep01.py`读取`/root/autodl-tmp/cosyvoice-train/ep01-script.txt`；共享约束说本期保留脚本是`ep01-chores.md`。技能只警告不得运行其Deborah硬编码，未要求新脚本绑定当前脚本路径和SHA。",
+      "impact": "复制旧脚本时可能合成旧稿/错稿或文件缺失，导致整稿内容与项目当前保留脚本不一致。",
+      "minimal_fix": "新`synth-<creator>.py`显式读取当前项目脚本路径（`ep01-chores.md`或STATUS/INDEX指定值）并记录SHA；预合成核对文案SHA；明确废弃/不读`ep01-script.txt`。"
+    },
+    {
+      "id": "F19",
+      "severity": "P1",
+      "location": "laohan-yinse/SKILL.md §5启动命令；laohan-laowai/SKILL.md 故障诊断；README-same-voice.md远端恢复",
+      "evidence": "文本要求任务专属进程组记录真实PID/PGID、命令行、cwd，停止前核验；实际给出的启动命令仅为`nohup setsid bash ... &`，未写收据；`$!`可能是nohup/setsid而非会话PGID，且未给出`ps/getpgid`核验步骤。远端README也只说旧执行者与子进程组退出。",
+      "impact": "共享GPU上无法证明进程组归属，可能无法安全回收本任务，或误判/误杀；不满足「只回收本任务已核进程组」的约束。",
+      "minimal_fix": "用启动包裹器在setsid后写PID/PGID/cmd/cwd收据，或给出明确的`ps -o pid,pgid,cmd`核验步骤；停止前核对并记录组退出；无法核验只报告、不发信号。"
+    },
+    {
+      "id": "F20",
+      "severity": "P2",
+      "location": "motion/tools/README-same-voice.md恢复段；laohan-laowai/SKILL.md服务器协作判例",
+      "evidence": "README写`--expected-checkpoint-sha256 实际检查点SHA`；技能写该参数是`batch-state.json`文件本身SHA。两处对「checkpoint」所指对象不一致。",
+      "impact": "恢复时可能把模型checkpoint SHA误当batch-state SHA，导致合法恢复被拒或现场误判；接口文档不一致。",
+      "minimal_fix": "README明确该参数是`batch-state.json`文件SHA，给出路径与计算方式，并与runner/skill统一命名。"
+    }
+  ],
+  "limitations": [
+    "未执行真实训练、新整稿合成、GPU/lipsync或音视频验收；仅有一个25帧576×1024合成prepare回执和合成速度夹具，不能证明模型、口型或成片质量。",
+    "新创作者@kb78769的凭据、专属模型和真实音视频接受均未完成；Jeffrey验收与发布许可未发生，本结论不构成制作/发布授权。",
+    "实际`run-same-voice-remote.py`、`same-voice-local.py`及runner的路径、SHA、进程组与恢复行为未提供完整实现，无法实测其真实行为。",
+    "README所称1080×1920/pro6000-a满轨实测未由本轮独立复核；本地仅验证576×1024 prepare，不能替代GPU与多块测试。",
+    "速度夹具为合成脉冲，非真实语音/唇模；VFR/CFR、平台帧率要求和真实首末词/唇音偏移仍需实测。",
+    "`LOW_RMS_FALLBACK_REVIEW_REQUIRED`是否有强制人工门、以及多阶段`--additional-outputs`实际恢复语义，尚未由真实失败/恢复实验验证。"
+  ]
+}

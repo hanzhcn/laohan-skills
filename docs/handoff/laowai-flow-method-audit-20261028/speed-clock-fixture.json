@@ -1,0 +1,136 @@
+{
+  "fixture": "synthetic flash/audio pulses; not a real voice or lip model",
+  "ffmpeg_version": "9.0.2",
+  "source_seconds": 4,
+  "source_fps": 25,
+  "unchanged_acceptance_tolerance_seconds": 0.045,
+  "first_attempt": "1.10 speed failed original positive expectation with 70ms and55ms offsets; retained, no assertion relaxed",
+  "cases": [
+    {
+      "speed_factor": 1.0,
+      "expected_seconds": [
+        1.0,
+        3.0
+      ],
+      "video_seconds": [
+        1.0,
+        3.0
+      ],
+      "audio_seconds": [
+        0.98,
+        2.98
+      ],
+      "video_minus_audio_seconds": [
+        0.02,
+        0.02
+      ],
+      "original_45ms_gate": "PASS",
+      "full_decode": "PASS",
+      "decoded_video_frames": 100
+    },
+    {
+      "speed_factor": 1.05,
+      "expected_seconds": [
+        0.9523809523809523,
+        2.857142857142857
+      ],
+      "video_seconds": [
+        1.0,
+        2.92
+      ],
+      "audio_seconds": [
+        0.935,
+        2.835
+      ],
+      "video_minus_audio_seconds": [
+        0.065,
+        0.085
+      ],
+      "original_45ms_gate": "REJECT",
+      "full_decode": "PASS",
+      "decoded_video_frames": 96
+    },
+    {
+      "speed_factor": 1.1,
+      "expected_seconds": [
+        0.9090909090909091,
+        2.727272727272727
+      ],
+      "video_seconds": [
+        0.96,
+        2.76
+      ],
+      "audio_seconds": [
+        0.89,
+        2.705
+      ],
+      "video_minus_audio_seconds": [
+        0.07,
+        0.055
+      ],
+      "original_45ms_gate": "REJECT",
+      "full_decode": "PASS",
+      "decoded_video_frames": 92
+    }
+  ],
+  "conclusion": "Explicit encoder filter timebase preserves the 100 source frames and passes the same 45ms synthetic pulse gate; atempo remains non-exact for words, so real derived output still requires measured anchors/human review. No speed selected.",
+  "real_voice_lipsync_acceptance": "NOT_TESTED",
+  "temporary_artifacts": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/laowai-speed-clock-20261028-o71508z3",
+  "fixed_command": "settb=AVTB,setpts=(PTS-STARTPTS)/S; audio asetpts=PTS-STARTPTS,atempo=S; -fps_mode vfr -enc_time_base:v filter",
+  "fixed_cases": [
+    {
+      "speed_factor": 1.0,
+      "video_seconds": [
+        1.0,
+        3.0
+      ],
+      "audio_seconds": [
+        0.98,
+        2.98
+      ],
+      "video_minus_audio_seconds": [
+        0.02,
+        0.02
+      ],
+      "original_45ms_gate": "PASS",
+      "full_decode": "PASS",
+      "decoded_video_frames": 100
+    },
+    {
+      "speed_factor": 1.05,
+      "video_seconds": [
+        0.95238,
+        2.857142
+      ],
+      "audio_seconds": [
+        0.935,
+        2.835
+      ],
+      "video_minus_audio_seconds": [
+        0.01738,
+        0.022142
+      ],
+      "original_45ms_gate": "PASS",
+      "full_decode": "PASS",
+      "decoded_video_frames": 100
+    },
+    {
+      "speed_factor": 1.1,
+      "video_seconds": [
+        0.90909,
+        2.727272
+      ],
+      "audio_seconds": [
+        0.89,
+        2.705
+      ],
+      "video_minus_audio_seconds": [
+        0.01909,
+        0.022272
+      ],
+      "original_45ms_gate": "PASS",
+      "full_decode": "PASS",
+      "decoded_video_frames": 100
+    }
+  ]
+}

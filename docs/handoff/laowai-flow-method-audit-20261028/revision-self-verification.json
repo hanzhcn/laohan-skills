@@ -1,0 +1,26 @@
+{
+  "checks": {
+    "creator_model_and_owner_distinguished": true,
+    "cpu_session_not_just_available_providers": true,
+    "independent_config_no_default_recipe": true,
+    "assembly_absolute_venv": true,
+    "run_stage_skip_not_promised": true,
+    "process_group_receipts_and_verified_exit": true,
+    "protected_module_distinct_from_runner": true,
+    "max_input_not_universal_180": true,
+    "stopped_prefix_explicit": true,
+    "audio_pending_cannot_authorize_lipsync": true,
+    "matched_ab_only_base_model_exception": true,
+    "correct_real_motion_cwd": true,
+    "speed_encoder_timebase_explicit": true,
+    "derived_clock_measured_not_just_formula": true,
+    "publish_readiness_separate_from_acceptance": true
+  },
+  "scope": "targeted markdown consistency plus actual synthetic speed fixture; not real model acceptance",
+  "skill_hashes": {
+    "laohan-yinse/SKILL.md": "7e4c9922beefe073a0b8887e0336c3b0b07564ab90402d7bd9f8959348be5dcd",
+    "laohan-laowai/SKILL.md": "9f67171bb30960f24c647e79b8a7efdebff0615a0baf930b301c60af27b1c243"
+  },
+  "speed_receipt": "speed-clock-fixture.json",
+  "readonly_receipt": "revision-readonly-preflight.json"
+}

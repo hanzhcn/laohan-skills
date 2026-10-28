@@ -1,0 +1,141 @@
+{
+  "verdict": "changes_required",
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "P1",
+      "location": "motion/mastery/DH-ROUTE.md 文件头、§一A、§七",
+      "evidence": "文件头称「2026-10-27 接入主干……Jeffrey 验收并发布，两个前置条件均满足」；§七称「正式主干接入仍须另有规格与验收」；§一A称「不宣称正式DH主干已升级」。",
+      "impact": "同一方法真源对当前是否已接入、已验收给出互斥状态，执行者可能把历史 v6 首单当成当前 @kb78769 的验收或发布授权。",
+      "minimal_fix": "把文件头改为历史/路线定位；当前状态只以 STATUS.md 为准；删除或限定「接入主干」「已发布」「前置条件均满足」等当前时态断言，明确 @kb78769 尚未完成真实验收。"
+    },
+    {
+      "id": "F02",
+      "severity": "P1",
+      "location": "motion/mastery/DH-ROUTE.md §一B 步骤2、§五",
+      "evidence": "§一B 步骤2写「已训练v3-05结合风格参考合成整稿」；§五写「v3-05是音色模型」；共享约束要求新创作者 @kb78769 使用 creator-specific SFT 模型。",
+      "impact": "新期若按「方法真源」执行，可能继续消费 Jeffrey 的 v3-05 权重或接受记录，而不是 @kb78769 自己的微调模型，违反 creator-specific 要求。",
+      "minimal_fix": "把当前流程改为「本期创作者专属且已验收的模型」；v3-05 明确标为历史；逐期绑定模型路径、SHA 和该创作者接受记录。"
+    },
+    {
+      "id": "F03",
+      "severity": "P1",
+      "location": "laohan-laowai/SKILL.md §⑤ 步骤③、§⑤坑",
+      "evidence": "命令固定写 `--max-input-frames 180`；坑位写「180 帧分块上限（1080 宽输入 20GiB 内存保护）」；README 明确该值来自 1080×1920 同机实测，「不能当作所有GPU/分辨率通用结论」，可选范围 11—300。",
+      "impact": "换几何或分辨率后仍按 180 执行，可能触发 20GiB 容器增量保护导致 prepare 停止，或把经验值误当通用配置。",
+      "minimal_fix": "改成占位符或由本期几何/算力 preflight 选择；记录所选上限；保留 11—300、全新目录和「不提高冻结内存限额」约束。"
+    },
+    {
+      "id": "F04",
+      "severity": "P1",
+      "location": "laohan-laowai/SKILL.md §⑤坑",
+      "evidence": "写「隔离 runner SHA 必须匹配 `469d820e...`（冻结保护）」；DH-ROUTE §一D 明确 `469d820e...` 是隔离安全模块 `run-isolated-pilot.py` 的 SHA，不是 `run-same-voice-remote.py` 的 runner SHA。",
+      "impact": "校验对象错名会导致合法 remote runner 被拒；若为通过检查而修改 runner，则会破坏冻结保护边界。",
+      "minimal_fix": "分开校验：`run-isolated-pilot.py` 固定校验 469；`run-same-voice-remote.py` 另行记录实际 SHA；禁止把 469 当作 runner SHA。"
+    },
+    {
+      "id": "F05",
+      "severity": "P1",
+      "location": "laohan-yinse/SKILL.md §5",
+      "evidence": "先要求「conf/cosyvoice3.yaml也复制为本任务配置，不直接改共享原件」「train的 --config……均绑定本任务」；随后又写「训练配方：torchrun 单卡……（conf/cosyvoice3.yaml 默认档）」；实际快照 `train-deborah.sh` 仍使用 `--config conf/cosyvoice3.yaml`。",
+      "impact": "新博主训练可能继续读取共享配置，lr、epoch、scheduler、use_spk_embedding 未与任务绑定，训练不可复现，也无法证明采用了已核配置。",
+      "minimal_fix": "只允许 `conf/cosyvoice3-<人名>.yaml` 并在 `train-<人名>.sh` 显式 `--config`；列出并回读 v3.1 字段值或明确采用的历史配置；删除「默认档」表述。"
+    },
+    {
+      "id": "F06",
+      "severity": "P1",
+      "location": "laohan-yinse/SKILL.md §5、§5.5",
+      "evidence": "技能未要求在开训前检查 `speech_tokenizer_v3.batch.onnx` 和 onnxruntime provider；训练方法论明确「开训前必做」补该文件、sha 核对、onnxruntime 加载自检，并锁定 CPUExecutionProvider、`CUDA_VISIBLE_DEVICES=\"\"`。",
+      "impact": "缺 batch onnx 时 train.py 初始化会失败；ORT 走 GPU 或版本不符可能在特征提取/训练启动后才暴露，浪费 GPU 并中断生产共卡监控。",
+      "minimal_fix": "在特征提取和 GPU 训练前加只读 preflight：batch onnx 存在、SHA 正确、onnxruntime 版本和 provider 含 CPU；失败则停止，不自动下载。"
+    },
+    {
+      "id": "F07",
+      "severity": "P1",
+      "location": "laohan-yinse/SKILL.md §7、laohan-laowai/SKILL.md 故障诊断",
+      "evidence": "均写「卡 >5 分钟只杀本次离线进程（严禁动生产 bridge/服务）」；未要求记录或核验本任务 PGID、命令行、cwd 或启动收据。共享约束只允许回收「this task's verified process group」。",
+      "impact": "仅凭「本次」或显存判断进程边界，可能误杀生产服务；也不满足共享 GPU 的进程组回收约束。",
+      "minimal_fix": "启动时记录 PGID/PID、命令行和 cwd；停止前核验只属于本任务；仅向核验通过的进程组发信号；无法核验则停止并上报。"
+    },
+    {
+      "id": "F08",
+      "severity": "P1",
+      "location": "laohan-laowai/SKILL.md 服务器协作判例「分块断点」",
+      "evidence": "写「18块跑到17块被打断 → `--start-chunk 17 --end-chunk 18` 单补，assemble 时 `--additional-outputs` 合并」；README 规定只有显式 `--include-verified-stopped-prefix` 才允许消费旧 STOP 回执中已成功前缀，且索引为零基左闭右开。",
+      "impact": "若前17块是 STOP 状态，assemble 缺 `--include-verified-stopped-prefix` 会拒绝或不完整覆盖；「跑到17块」也可能被理解为当前第17块而非已完成17块，导致重跑或漏块。",
+      "minimal_fix": "从 batch-state 读取已完成块数并写清 completed=17 才对应 start=17；STOP 前缀必须加 `--include-verified-stopped-prefix` 并核每块回执、SHA、几何和帧数。"
+    },
+    {
+      "id": "F09",
+      "severity": "P2",
+      "location": "laohan-yinse/SKILL.md 验收、§6；laohan-laowai/SKILL.md §⑤.4、完成证据；DH-ROUTE §五",
+      "evidence": "多处固定写「Jeffrey 盲听终审」「Jeffrey 整轨听审」「Jeffrey 看片明确接受」；共享约束明确用户选择 @kb78769 为新创作者，且新 persona 凭据和真实验收未完成。",
+      "impact": "验收主体未参数化，未定义 @kb78769 与 Jeffrey 的授权/接受关系；可能无法完成验收，或错误复用 Jeffrey 的个人接受记录。",
+      "minimal_fix": "由项目合同读取当前验收人；明确 @kb78769 与 Jeffrey 的角色；保存 creator-specific 接受记录；不得默认复用 Jeffrey 记录。"
+    },
+    {
+      "id": "F10",
+      "severity": "P2",
+      "location": "laohan-yinse/SKILL.md 验收、§5.5",
+      "evidence": "要求「相同参考/文本/固定采样」并交 Jeffrey「盲听」，但未要求固定随机种子，也未规定匿名化文件名和随机播放顺序；参考方法论示例仍使用 `ab_finetuned_*` / `ab_baseline_*` 这类可揭盲命名。",
+      "impact": "A/B 可能因随机采样波动或文件名/顺序揭盲，盲听结论不可复现，无法作为可靠接受依据。",
+      "minimal_fix": "固定 seed、温度、top-p 等采样参数；随机匿名化文件名和播放顺序并保留映射；记录生成参数、文件和判定结果。"
+    },
+    {
+      "id": "F11",
+      "severity": "P2",
+      "location": "laohan-yinse/SKILL.md 反触发；laohan-laowai/SKILL.md 关键红线1",
+      "evidence": "laohan-yinse 写「只需临时试听/应急验证音色（走产品零样本）——已被 Jeffrey 禁止用于交付」；laohan-laowai 写「声音不走零样本」；共享约束只允许基础模型用于 matched A/B。",
+      "impact": "零样本例外边界不清，可能被理解为可用于临时交付或绕过红线，也可能与 A/B 基线要求冲突。",
+      "minimal_fix": "明确零样本仅限同条件 A/B 或非交付试听；产品零样本不得进入交付和口型链；在红线中补「matched A/B 例外」的精确范围。"
+    },
+    {
+      "id": "F12",
+      "severity": "P2",
+      "location": "laohan-yinse/SKILL.md 失败路径",
+      "evidence": "写「训练中断 → run.sh 分 stage 重跑已完成跳过」；但工作流实际生成并使用 `pipeline-<人名>.sh` / `train-<人名>.sh`，没有给出 run.sh 的 task-specific 续跑或跳过机制。",
+      "impact": "恢复时可能调用共享 run.sh 或从共享数据重新训练，不能保证跳过已完成 stage，失败现场和任务隔离可能被破坏。",
+      "minimal_fix": "为本任务脚本定义幂等 stage 检查和明确续跑命令；不要笼统承诺 run.sh 会跳过；恢复前核产物、返回码和当前数据目录。"
+    },
+    {
+      "id": "F13",
+      "severity": "P2",
+      "location": "laohan-laowai/SKILL.md 失败路径",
+      "evidence": "写「验收（深肤色还原/口型/音色）不过 → 回退候选形象名单（persona-candidates 排序），不硬发」。",
+      "impact": "音色或口型失败不是形象候选问题；错误回退到形象名单不能修复，可能掩盖需要重训、重合成或检查音频/PTS 的真实原因。",
+      "minimal_fix": "按失败类型分支：视觉问题回形象候选；音色问题回 laohan-yinse 重训/重合成；口型问题回 DH-ROUTE 查音轨和 PTS；保留原 STOP、预算和检查点。"
+    },
+    {
+      "id": "F14",
+      "severity": "P2",
+      "location": "laohan-laowai/SKILL.md §⑤.5",
+      "evidence": "写「老韩系口播视频标配二次加速（motion 交付链 speed 参数）」「成片级统一变速，口型同步不破坏、无需重跑推理」，随后给出 `setpts=PTS/<S>` + `atempo=<S>` 的 ffmpeg 命令；未说明是否与 motion 链 speed 重复，也未规定 vsync、时长对齐或 A/V 偏移检查。",
+      "impact": "若 motion 链已应用 speed，再次执行会双重加速；简单 setpts/atempo 在 CFR 输出、帧取整或音视频时长不一致时可能产生漂移或尾部错位，「不破坏同步」未被验证。",
+      "minimal_fix": "明确只在最终派生应用一次；使用显式 `-fps_mode vfr` 或等价时间轴处理；核输出时长、首末词、A/V 偏移和接缝；不要把「无需重跑推理」写成免测保证。"
+    },
+    {
+      "id": "F15",
+      "severity": "P2",
+      "location": "laohan-laowai/SKILL.md 完成证据、§⑥、§⑦",
+      "evidence": "§⑥写「AI平台声明与片内水印分别按当前项目合同、Jeffrey最新明确指令及适用平台要求核对」，但完成证据四道门没有 AI disclosure 的检查/记录项；§⑦假定抖音账号注册和发布由 Jeffrey 主导；共享约束要求 AI disclosure，且新 persona 凭据未完成。",
+      "impact": "作品可能通过四道质量门却漏掉强制 AI 披露；发布阶段也没有明确的凭据/授权就绪门，容易把内容接受误当发布许可。",
+      "minimal_fix": "在完成证据中增加 AI disclosure、平台标识和账号凭据 readiness 检查；发布批准单独记录；凭据或合规项未完成时标记 BLOCKED，不进入发布。"
+    },
+    {
+      "id": "F16",
+      "severity": "P2",
+      "location": "motion/mastery/DH-ROUTE.md §五",
+      "evidence": "写「用户明确授权先出候选时记本次授权及听审PENDING，不能登记为最终已验收」；共享约束要求 full-WAV human approval before lipsync；laohan-laowai §⑤.4 也要求 prepare/推理前整轨听审。",
+      "impact": "若「候选」被理解为口型候选，该条可被用来在未完成整轨听审时启动 lipsync，绕过共享接受条件。",
+      "minimal_fix": "限定 PENDING 仅适用于声音候选，并明确不豁免 prepare/lipsync 前的 full-WAV 整轨听审；或删除该提前候选例外。"
+    }
+  ],
+  "limitations": [
+    "本次未执行真实训练、新合成、GPU 推理或口型/视觉验收；仅有 576×1024 合成帧 prepare 回执，不能证明模型、声音、口型或成片质量。",
+    "无法读取实际 `run-same-voice-remote.py`、`same-voice-local.py`、`pipeline-<人名>.sh`、`train-<人名>.sh` 的完整实现，未能核实路径、参数、SHA、进程组和恢复逻辑的真实行为。",
+    "未获得 @kb78769 的真实凭据、账号状态、项目 STATUS 或现行合同全文；验收主体、AI disclosure 和发布授权仍需项目文件确认。",
+    "A/B 盲听、随机种子、参考池风格路由、连续 10 次稳定性检查均未实跑，音色相似度和自然度无法判断。",
+    "speed/subtitle 的 ffmpeg 版本、vsync、时长换算、首末词和口型接缝未实跑，不能确认变速后的同步和字幕时间轴。",
+    "未验证 pro6000-a 当前生产负载、GPU 占用、冻结保护模块和 remote runner 的实际 SHA；这些必须由真实实验或只读核验确认。"
+  ]
+}

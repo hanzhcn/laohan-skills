@@ -1,0 +1,10 @@
+{
+  "wrapper_pid": 59221,
+  "cli_pid": 59225,
+  "cli_pgid": 59225,
+  "isolation": "actual PID=PGID in own session",
+  "after_exit_check": "GROUP_GONE",
+  "no_argv_or_other_processes_saved": true,
+  "remaining_member_pids": [],
+  "checked_at": "2026-10-28T10:42:52.553442+00:00"
+}

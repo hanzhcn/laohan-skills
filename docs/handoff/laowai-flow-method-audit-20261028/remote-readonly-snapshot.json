@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-28T09:33:55.807429+00:00",
+  "read_only": true,
+  "gpu_execution_started": false,
+  "python": "/root/autodl-tmp/cosyvoice-train/venv/bin/python",
+  "scripts": {
+    "pipeline.sh": {
+      "sha256": "c22f907728faffebd964b508f9cf3798e7c1e9aee58a466b5e47fb4c66c9b579",
+      "text": "#!/bin/bash\nset -e\nsource /root/autodl-tmp/cosyvoice-train/venv/bin/activate\ncd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3\n. ./path.sh || exit 1\nexport CUDA_VISIBLE_DEVICES=\"\"\nPM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512\nD=/root/autodl-tmp/cosyvoice-train/data\nfor SPLIT in train dev; do\n  mkdir -p $D/$SPLIT/parquet\n  python ../../../tools/extract_embedding.py --dir $D/$SPLIT --onnx_path $PM/campplus.onnx --num_thread 8 2>&1 | tail -1\n  python ../../../tools/extract_speech_token.py --dir $D/$SPLIT --onnx_path $PM/speech_tokenizer_v3.onnx --num_thread 8 2>&1 | tail -1\n  python ../../../tools/make_parquet_list.py --num_utts_per_parquet 1000 --num_processes 8 --src_dir $D/$SPLIT --des_dir $D/$SPLIT/parquet 2>&1 | tail -1\n  cp $D/$SPLIT/parquet/data.list $D/$SPLIT.data.list\ndone\necho \"[$(date +%T)] PIPELINE_DONE, launching train\"\nunset CUDA_VISIBLE_DEVICES\nbash /root/autodl-tmp/cosyvoice-train/train.sh\n"
+    },
+    "train.sh": {
+      "sha256": "b3177d4edd499b96447162bfa956063abf966468c708cd27b798104b20b6e873",
+      "text": "#!/bin/bash\nset -e\nsource /root/autodl-tmp/cosyvoice-train/venv/bin/activate\ncd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3\n. ./path.sh || exit 1\nPM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512\nD=/root/autodl-tmp/cosyvoice-train/data\necho \"[$(date +%T)] train start\"\ntorchrun --nnodes=1 --nproc_per_node=1 --rdzv_id=jeffrey --rdzv_backend=c10d --rdzv_endpoint=localhost:1234 \\\n  ../../../cosyvoice/bin/train.py \\\n  --train_engine torch_ddp --config conf/cosyvoice3.yaml \\\n  --train_data $D/train.data.list --cv_data $D/dev.data.list \\\n  --model llm --checkpoint $PM/llm.pt \\\n  --qwen_pretrain_path $PM/CosyVoice-BlankEN --onnx_path $PM \\\n  --model_dir /root/autodl-tmp/cosyvoice-train/exp/jeffrey/llm \\\n  --tensorboard_dir /root/autodl-tmp/cosyvoice-train/tb/jeffrey/llm \\\n  --num_workers 1 --prefetch 10 --pin_memory --use_amp\necho \"[$(date +%T)] TRAIN_DONE\"\n"
+    },
+    "pipeline-deborah.sh": {
+      "sha256": "8a1db25f80f3f061449cae069dcf219e07f1fe5f5d5f96ae1135c9fd0be7b03c",
+      "text": "#!/bin/bash\nset -e\nsource /root/autodl-tmp/cosyvoice-train/venv/bin/activate\ncd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3\n. ./path.sh || exit 1\nexport CUDA_VISIBLE_DEVICES=\"\"\nPM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512\nD=/root/autodl-tmp/cosyvoice-train/data-deborah\nfor SPLIT in train dev; do\n  mkdir -p $D/$SPLIT/parquet\n  python ../../../tools/extract_embedding.py --dir $D/$SPLIT --onnx_path $PM/campplus.onnx --num_thread 8 2>&1 | tail -1\n  python ../../../tools/extract_speech_token.py --dir $D/$SPLIT --onnx_path $PM/speech_tokenizer_v3.onnx --num_thread 8 2>&1 | tail -1\n  python ../../../tools/make_parquet_list.py --num_utts_per_parquet 1000 --num_processes 8 --src_dir $D/$SPLIT --des_dir $D/$SPLIT/parquet 2>&1 | tail -1\n  cp $D/$SPLIT/parquet/data.list $D/$SPLIT.data.list\ndone\necho \"[$(date +%T)] PIPELINE_DONE, launching train\"\nunset CUDA_VISIBLE_DEVICES\nbash /root/autodl-tmp/cosyvoice-train/train-deborah.sh\n"
+    },
+    "train-deborah.sh": {
+      "sha256": "aaa34bf641af299f24b85a235fbd09f44a2124045ef1fbb91d5389c03eac9281",
+      "text": "#!/bin/bash\nset -e\nsource /root/autodl-tmp/cosyvoice-train/venv/bin/activate\ncd /root/autodl-tmp/cosyvoice-train/CosyVoice/examples/libritts/cosyvoice3\n. ./path.sh || exit 1\nPM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512\nD=/root/autodl-tmp/cosyvoice-train/data-deborah\necho \"[$(date +%T)] train start\"\ntorchrun --nnodes=1 --nproc_per_node=1 --rdzv_id=deborah --rdzv_backend=c10d --rdzv_endpoint=localhost:1235 \\\n  ../../../cosyvoice/bin/train.py \\\n  --train_engine torch_ddp --config conf/cosyvoice3.yaml \\\n  --train_data $D/train.data.list --cv_data $D/dev.data.list \\\n  --model llm --checkpoint $PM/llm.pt \\\n  --qwen_pretrain_path $PM/CosyVoice-BlankEN --onnx_path $PM \\\n  --model_dir /root/autodl-tmp/cosyvoice-train/exp/deborah/llm \\\n  --tensorboard_dir /root/autodl-tmp/cosyvoice-train/tb/deborah/llm \\\n  --num_workers 1 --prefetch 10 --pin_memory --use_amp\necho \"[$(date +%T)] TRAIN_DONE\"\n"
+    },
+    "synth_deborah.py": {
+      "sha256": "cdf320bf5f72f9fc1268d0c5f53ae6b5d5178de3146ce36fc2d3299d23156cc6",
+      "text": "import sys\nsys.path.append(\"third_party/Matcha-TTS\")\nMODEL_DIR = \"/root/autodl-tmp/cosyvoice-train/model-deborah-v1\"\nREF_WAV = \"/root/autodl-tmp/cosyvoice-train/data-deborah/train/deborah_b0_s000000.wav\"\nREF_TEXT = \"\"\"You tell your child, put your shoes on. Your child keeps playing.\"\"\"\nfrom cosyvoice.cli.cosyvoice import AutoModel\nimport torchaudio\ncv = AutoModel(model_dir=MODEL_DIR)\ntexts = [\n    \"Chinese parents are the most devoted parents in the world. But devotion is not the same as method. Love is the engine, and method is the steering wheel.\",\n    \"At ten years old, my daughter cooked dinner for the whole family once a week. Yes, with a real knife and a real stove. You are a good mom.\",\n]\nprompt = \"You are a helpful assistant.<|endofprompt|>\" + REF_TEXT\nfor i, t in enumerate(texts):\n    for chunk in cv.inference_zero_shot(t, prompt, REF_WAV, stream=False):\n        torchaudio.save(f\"/root/autodl-tmp/cosyvoice-train/deborah-synth-t{i}.wav\", chunk[\"tts_speech\"], cv.sample_rate)\n        break\nprint(\"SYNTH_DONE\")\n"
+    },
+    "synth_ep01.py": {
+      "sha256": "7aab2df9c907abeea71c90917fc64726cf094d5a5326216cedbc58a84644ceaf",
+      "text": "import sys\nsys.path.append(\"third_party/Matcha-TTS\")\nMODEL_DIR = \"/root/autodl-tmp/cosyvoice-train/model-deborah-v1\"\nREF_WAV = \"/root/autodl-tmp/cosyvoice-train/data-deborah/train/deborah_b0_s000000.wav\"\nREF_TEXT = \"You tell your child, put your shoes on. Your child keeps playing.\"\nfrom cosyvoice.cli.cosyvoice import AutoModel\nimport torchaudio\ncv = AutoModel(model_dir=MODEL_DIR)\nscript = open(\"/root/autodl-tmp/cosyvoice-train/ep01-script.txt\").read().strip()\nprompt = \"You are a helpful assistant.<|endofprompt|>\" + REF_TEXT\nout = \"/root/autodl-tmp/cosyvoice-train/deborah-ep01-full.wav\"\nimport torch\nimport torch\nspeech = torch.cat([c[\"tts_speech\"] for c in cv.inference_zero_shot(script, prompt, REF_WAV, stream=False)], dim=-1)\ntorchaudio.save(out, speech, cv.sample_rate)\nprint(\"SYNTH_DONE\", speech.shape[-1]/cv.sample_rate, \"seconds\")\n"
+    }
+  },
+  "generic_synth_py_exists": false,
+  "shared_config": {
+    "sha256": "d83f215b610e4602bb2d34add066124c0b1d5a93fe688d49f51aeae0ba4a528b",
+    "selected_lines": [
+      {
+        "line": 8,
+        "text": "sample_rate: 24000"
+      },
+      {
+        "line": 60,
+        "text": "                t_scheduler: 'cosine'"
+      },
+      {
+        "line": 137,
+        "text": "    resample_rate: !ref <sample_rate>"
+      },
+      {
+        "line": 155,
+        "text": "    sample_rate: !ref <sample_rate>"
+      },
+      {
+        "line": 202,
+        "text": "    optim_conf:"
+      },
+      {
+        "line": 203,
+        "text": "        lr: 5e-7 # change to 1e-5 during sft"
+      },
+      {
+        "line": 204,
+        "text": "    scheduler: constantlr # change to constantlr during sft"
+      },
+      {
+        "line": 207,
+        "text": "    max_epoch: 14"
+      },
+      {
+        "line": 216,
+        "text": "    optim_conf:"
+      },
+      {
+        "line": 217,
+        "text": "        lr: 0.0002 # use small lr for gan training"
+      },
+      {
+        "line": 218,
+        "text": "    scheduler: constantlr"
+      },
+      {
+        "line": 221,
+        "text": "        lr: 0.0002 # use small lr for gan training"
+      },
+      {
+        "line": 223,
+        "text": "    max_epoch: 140"
+      }
+    ]
+  },
+  "model_directories": [
+    "model-jeffrey-v3-05",
+    "model-deborah-v1"
+  ],
+  "frozen_runner_sha256": "469d820e11e5b89820a2c3874c08553ed83dfb8cb18952bbc20dd83b4b471487",
+  "gpu_snapshot": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 97887 MiB, 72684 MiB, 0 %",
+  "scope_limitation": "File presence and static reads only; no model load, training, synthesis or latency probe."
+}

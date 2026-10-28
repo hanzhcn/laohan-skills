@@ -1,0 +1,13 @@
+{
+  "verdict": "APPROVE_METHOD_ONLY",
+  "findings": [],
+  "limitations": [
+    "本轮仅审方法文档，未执行训练、新整稿合成、GPU/lipsync或音视频验收，不构成生产质量、Jeffrey整轨听审或发布许可。",
+    "F17：可信预期ONNX权重清单未提供，ORT CPU会话未实际加载；生产开训前置仍为NOT_PERFORMED/UNVERIFIED，真实训练须补齐并保持BLOCKED，不能标为PASS。",
+    "F18：未实际创建/上传/读取spoken.txt，也未运行远端合成脚本；ep01-chores.md中的旧身份说法及本期内容/事实/违规审阅仍未完成，不能视为已批准。",
+    "F19：TASK_PID/TASK_PGID为人工核验占位符，收据步骤未自动接线；未在真实训练/合成进程上执行停止与组退出验证。",
+    "F20：仅按本地runner源码核对--expected-checkpoint-sha256指向batch-state.json；未执行真实STOP/resume，也未验证模型权重或manifest SHA接口。",
+    "本地576×1024、25帧合成帧夹具仅通过prepare，不等于GPU/lipsync验收；22050Hz夹具被拒仅证明采样率门，不证明模型或成片质量。",
+    "新创作者@kb78769的凭据、专属模型、真实音视频接受及发布许可均未完成；本审查未授权任何生产操作。"
+  ]
+}

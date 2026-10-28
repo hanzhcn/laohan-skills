@@ -1,0 +1,152 @@
+{
+  "at": "2026-10-28T10:22:05.840266+00:00",
+  "reviewed_candidate": "c318187ef10da4298c5d7f9e7483e11fd552ade5",
+  "provider_model": "deepseek-flash",
+  "http_status": "UNVERIFIED_CLI",
+  "owner": "Codex/root",
+  "decisions": [
+    {
+      "id": "F01",
+      "decision": "modify",
+      "evidence_and_reason": "DH-ROUTE属于Jeffrey/Motion项目；主干接入与公网产品API接入不是同一状态，不能据此删除已验历史。§一A与§七也明确新期用本期输入/STATUS。补本项目借用范围，不改他项目状态。",
+      "action": "在两skill与项目索引明确只借工具/时钟/保护，不继承Motion接入、个人模型、接受与发布记录。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F02",
+      "decision": "drop",
+      "evidence_and_reason": "两skill及项目入口已多处明确本博主自有模型，禁止复用Jeffrey/Deborah权重/参考池/接受；DH-ROUTE §一A历史输入并要求后续期次换真实输入。不是本候选仍用v3-05。",
+      "action": "不将Jeffrey个人方法中的v3-05全局改写；在F01适用范围澄清中进一步防误读。",
+      "implementation_status": "REJECTED_WITH_EVIDENCE",
+      "closure_status": "REJECTED_WITH_EVIDENCE"
+    },
+    {
+      "id": "F03",
+      "decision": "modify",
+      "evidence_and_reason": "180是1080×1920/pro6000历史实测而非通用硬门；内存增量保护发生在远端推理，不是本机prepare。README允许11至300并要求保持manifest冻结。",
+      "action": "参数改本期已核值；180只作相同几何历史参考，禁止扩大冻结阈值或改已运行manifest。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F04",
+      "decision": "agree",
+      "evidence_and_reason": "run-same-voice-remote.py FROZEN常量明确指run-isolated-pilot.py；469d不是remote runner文件SHA。",
+      "action": "写全模块路径和SHA；上传的remote脚本另记实际SHA，不编造expected-runner参数。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F05",
+      "decision": "modify",
+      "evidence_and_reason": "候选已要求独立配置并回读，但后文默认档表述残留，可能反向误导；不采纳强制旧1e-5等历史值。",
+      "action": "删默认档，显式专属配置并记录实际lr/epoch/scheduler/use_spk_embedding/worker及来源理由。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F06",
+      "decision": "modify",
+      "evidence_and_reason": "训练方法§4/§5要求batch onnx、ORT1.20.1/CPU与加载自检；本轮只读快照未验证全部session实际provider，不能说当前必缺或必走GPU。",
+      "action": "补任务前置：文件与可信清单SHA、包版本、CPU会话实际provider和CPU加载检查；失败停止，不静默下载/安装/改共享环境。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F07",
+      "decision": "modify",
+      "evidence_and_reason": "skill协作判例已限定已核身份进程组，但合成/训练局部说明仍只说本次进程，需统一。",
+      "action": "任务启动独立组并记录PID/PGID/命令/cwd；回收前核身份、仅停本任务并确认组退出。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F08",
+      "decision": "agree",
+      "evidence_and_reason": "README只允许显式include-verified-stopped-prefix消费STOP中的成功前缀；原例缺此说明且完成17块/跑到17块易混。",
+      "action": "明确只有成功0..16且未算17才对应[17,18)，遵守原预算/恢复条件，组装STOP前缀显式加flag。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F09",
+      "decision": "drop",
+      "evidence_and_reason": "Jeffrey是用户/项目负责人及已指定听看验收人；@kb78769是被选素材创作者。模型没有拿到完整合同而混淆角色，不能把验收权转给博主。",
+      "action": "保持Jeffrey验收；增量复核附项目合同和角色边界，不复用其旧个人声线接受。",
+      "implementation_status": "REJECTED_WITH_EVIDENCE",
+      "closure_status": "REJECTED_WITH_EVIDENCE"
+    },
+    {
+      "id": "F10",
+      "decision": "modify",
+      "evidence_and_reason": "训练方法已要求隐藏标签，skill只写盲听未细化匿名化；固定种子不能保证跨环境逐样本可复现，稳定性重复也不能只复播同样本。",
+      "action": "记录种子与可控采样参数，匿名文件/随机顺序并封存映射；不保证位级确定，不以单个种子取代稳定性检查。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F11",
+      "decision": "modify",
+      "evidence_and_reason": "正式交付禁基模已有明确说明；反触发中的产品零样本提法仍可能误导。",
+      "action": "统一仅同条件A/B基线例外；不自动调用产品零样本，也不进入正式WAV或口型交付。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F12",
+      "decision": "agree",
+      "evidence_and_reason": "本次实际使用pipeline/train专属副本，未核到run.sh已接本任务stage/自动跳过机制。",
+      "action": "删除run.sh自动跳过承诺；保存现场，核数据/配置/权重及训练器真实续跑能力后明确恢复，不覆盖旧产物。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F13",
+      "decision": "agree",
+      "evidence_and_reason": "音色/PTS失败不应一律回形象候选。",
+      "action": "视觉回素材，音色回yinse，口型按音轨身份/PTS/接缝排查；保留原STOP和预算。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F14",
+      "decision": "modify",
+      "evidence_and_reason": "同因子只是理想时钟关系，不能保证编码取整、偏移与听感；不能限定受影响门只在单独音频变速后重跑。",
+      "action": "倍率仅应用一次，记speed来源/累计倍率；音画归零同因子派生，字幕区分烧录/外置，实际复核全部受影响门；做无GPU时钟夹具。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F15",
+      "decision": "modify",
+      "evidence_and_reason": "四道质量门不是完整发布准入，§⑥已要求AI披露；不应将未知账号状态当作所有方法或素材工作阻断。",
+      "action": "另列发布准备：合同标识/平台声明、目标账号就绪、当前候选批准；只记录状态不记秘密，缺项仅阻发布。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F16",
+      "decision": "modify",
+      "evidence_and_reason": "当前项目/skill整轨听审门更具体，不修改其他项目历史用户授权；本skill候选PENDING段仍需消歧。",
+      "action": "明确本项目PENDING只能是声音试听/文档候选，不能放行prepare或口型。",
+      "implementation_status": "CANDIDATE_APPLIED_PENDING_INCREMENTAL_REVIEW",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    }
+  ],
+  "counts": {
+    "agree": 4,
+    "modify": 10,
+    "drop": 2,
+    "pending": 0
+  },
+  "no_external_method_persona_or_production_changes": true,
+  "extra_verified_fixes": [
+    "explicit voice assembly venv",
+    "separate Python/shell code fences",
+    "real motion source cwd",
+    "encoder filter timebase after unchanged-gate failing fixture"
+  ],
+  "closure_candidate": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "final_review": "official-ds-closure-result.json"
+}

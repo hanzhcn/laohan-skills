@@ -11,9 +11,6 @@ owner/唯一writer=Codex/root；main精确提交。三个技能断链及同型�
 
 root 唯一 writer，main；核验 ECC 最新发布 v2.2.3、main 25278e7d 与 Claude rules 文档。教程源及同步副本修正平铺覆盖、mtime 猜生效缓存、旧/新安装标识与 hooks 字段误述；未移动生效 rules、未更新插件/模型/权限。隔离复制与相对引用、真实缓存定位及四类拒绝反例通过；免费 Magpie DeepSeek 两轮完整 HTTP200/stop，首轮3项建议已修或澄清，最终修订 APPROVE，候选 SHA256 `abf14479b3efe1fb1cd90bc0130a43e15a90fda63d9304d3a1f74dc89d7e9f42`。Codex 通用格式检查器不接受原有 version/argument-hint，已核 SKILL.md 未变，本次不改 Claude 元数据。Git终态以实际回读为准；证据：`/Users/hanzhmacbookair/Documents/临时研究/E/ECC-Rules核验-20261028/`。
 
-### LAOWAI-VOICE-HANDOFF-FIX-20261028 — 已修，最终候选增量复核PENDING
-
-owner / 唯一writer：铁柱，当前Codex会话920ba3db；目录`/Users/hanzhmacbookair/Documents/laohan-skills`，main，制作基线`bb366d5a5abcb448c327815e33208457b6ea9577`。SURGICAL_FIX已消除第6步F0±20Hz残留、来源分组丢失、校对步骤和固定英文词/秒验收问题。最终skill文件SHA256=`a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed`；修改前3项红测，修改后7项静态检查及diff检查通过。Magpie实时确认免费DeepSeek首审HTTP200/stop完整有效，SRC-GROUP-01已接受修为逐源切段+source-map+组ID交集检查。增量复核受首次08:49:24Z起180s总截止限制，在剩余14.075秒内未返回完整答复，TimeoutError；**最终增量PENDING**，没有重试/付费回退。下一步：新制作任务先按新预算复核最终SHA的分组修正，再实际准备新博主数据；本轮未训练/合成/改生产/接受新片。来源真源与逐项裁决见[回执](docs/handoff/LAOWAI_VOICE_HANDOFF_FIX_20261028.md)，源码提交/push以Git回读为准，保留所有他项在途状态。
 
 ### OPENCLAW-TO-NPX-20261024 — 已完成
 
@@ -51,6 +48,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-10-28·LAOWAI-FLOW-METHOD-AUDIT-20261028 方法审查完成。** owner/writer=铁柱（920ba3db），main；最终实现`1355fd761702a89be00c6c789b85963dc20173e1`已合入，另一窗口0ad824d完整保留。官方ds实际deepseek-flash三轮完整终态，20项意见4 agree/12 modify/4 drop，最终APPROVE_METHOD_ONLY且无新增finding；HTTP=UNVERIFIED_CLI。真实格式/吞错/速度时钟正反例及定点一致性通过；新人物模型/稿件事实、生产preflight、人耳/口型/发布均未验。源仓Git/清理以本轮最终回读为准，[回执](docs/handoff/LAOWAI_FLOW_METHOD_AUDIT_20261028.md)及完整证据已归档。旧声音交接的14秒失败原文保留，由本次新版全候选复核接续，不冒改历史。
 
 **2026-10-23·口播立场与观众收获小修。** Jeffrey认可选题但否定八稿的材料复述/干货不足及开场偏离；chuangzuo3.9.1修入口、整理、风格及教程风格的相反指令，保留来源与实跑，不新增质量字段/配额。免费DeepSeek首审4项修复、增量APPROVE，程序兼容分支不能证明用户授权的边界明写。视频六步法/v2 W1及registry/既有锁工具同步；旧稿不追填SHA，新稿效果待完整重写。实际两仓Git/检查与失败以视频creation-voice-value-fix-20261023证据为准。
 

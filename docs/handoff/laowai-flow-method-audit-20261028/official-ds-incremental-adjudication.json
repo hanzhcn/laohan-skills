@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-28T10:34:40.102870+00:00",
+  "candidate_commit": "2b69c712263ec1b40c499b89aaeae950428ed5e3",
+  "review_file": "official-ds-incremental-result.json",
+  "decisions": [
+    {
+      "id": "F17",
+      "decision": "drop",
+      "evidence_and_reason": "本轮范围是方法核验，未请求开训；skill明确把可信清单比对/CPU会话加载列为每个新训练的前置。准备快照如实NOT_PERFORMED/UNVERIFIED，不是已声称READY的失败preflight。现有文件存在/版本正确不等实际会话已验，不能为过审当场启动未授权新训练或把本机观测SHA自签为可信预期。",
+      "action": "保留生产前置未完成状态；未来真实训练任务须取得可信来源预期清单并实际CPU会话自检。本轮不声称该生产前置已验。",
+      "closure_status": "REJECTED_WITH_EVIDENCE"
+    },
+    {
+      "id": "F18",
+      "decision": "modify",
+      "evidence_and_reason": "当前Markdown含英文口播、中文对照、旧北京两年/一万家庭等未核新身份说法；不能直接整篇MD送TTS。任务脚本已有明确目标文本要求，但需补源稿/纯口播导出/远端传输SHA绑定。",
+      "action": "按STATUS指定当前稿件，经本期事实/人设/内容审阅后只导出口播区，分别记源稿与spoken.txt SHA、远端SHA；禁止默认复用旧ep01-script.txt，不在本轮改人设或开始合成。",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F19",
+      "decision": "modify",
+      "evidence_and_reason": "候选已要求真实PID/PGID/cmd/cwd和不能信$!，但一行nohup不是完整收据例程；这属于人工方法可操作性补充，不伪称已自动接线。",
+      "action": "补Linux只读ps/proc命令、实际启动身份与组成员回读、收据记录和退出复核；无法核验不发信号，方法命令未实际开训。",
+      "closure_status": "APPLIED_OR_CLARIFIED_IN_REVIEWED_CANDIDATE"
+    },
+    {
+      "id": "F20",
+      "decision": "drop",
+      "evidence_and_reason": "runner execute源码直接sha(controlled(output,batch-state.json))==expected_checkpoint_sha256，skill现已明确对象。README实际检查点SHA未称模型权重，只是简写，不构成两套不同接口。",
+      "action": "保留接口；在自有skill加batch-state本体sha256sum只读示例进一步防误解，不修改他项目README或编造模型checkpoint参数。",
+      "closure_status": "REJECTED_WITH_EVIDENCE"
+    }
+  ],
+  "counts": {
+    "modify": 2,
+    "drop": 2
+  },
+  "no_training_or_production_preflight_claimed": true,
+  "closure_candidate": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "final_review": "official-ds-closure-result.json"
+}

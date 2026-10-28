@@ -1,0 +1,52 @@
+{
+  "status": "METHOD_REVIEW_CLOSED",
+  "candidate_commit": "1355fd761702a89be00c6c789b85963dc20173e1",
+  "official_channel": "ds / api.deepseek.com/anthropic",
+  "provider_model": "deepseek-flash",
+  "requested_model": "deepseek-flash[1m]",
+  "http_status": "UNVERIFIED_CLI",
+  "valid_review_rounds": [
+    {
+      "name": "combined",
+      "candidate": "c318187ef10da4298c5d7f9e7483e11fd552ade5",
+      "result": "official-ds-combined-result.json"
+    },
+    {
+      "name": "incremental",
+      "candidate": "2b69c712263ec1b40c499b89aaeae950428ed5e3",
+      "result": "official-ds-incremental-result.json"
+    },
+    {
+      "name": "closure",
+      "candidate": "1355fd761702a89be00c6c789b85963dc20173e1",
+      "result": "official-ds-closure-result.json"
+    }
+  ],
+  "adjudication_totals": {
+    "agree": 4,
+    "modify": 12,
+    "drop": 4,
+    "unresolved_method_findings": 0
+  },
+  "final_verdict": "APPROVE_METHOD_ONLY",
+  "final_findings": [],
+  "limitations": [
+    "本轮仅审方法文档，未执行训练、新整稿合成、GPU/lipsync或音视频验收，不构成生产质量、Jeffrey整轨听审或发布许可。",
+    "F17：可信预期ONNX权重清单未提供，ORT CPU会话未实际加载；生产开训前置仍为NOT_PERFORMED/UNVERIFIED，真实训练须补齐并保持BLOCKED，不能标为PASS。",
+    "F18：未实际创建/上传/读取spoken.txt，也未运行远端合成脚本；ep01-chores.md中的旧身份说法及本期内容/事实/违规审阅仍未完成，不能视为已批准。",
+    "F19：TASK_PID/TASK_PGID为人工核验占位符，收据步骤未自动接线；未在真实训练/合成进程上执行停止与组退出验证。",
+    "F20：仅按本地runner源码核对--expected-checkpoint-sha256指向batch-state.json；未执行真实STOP/resume，也未验证模型权重或manifest SHA接口。",
+    "本地576×1024、25帧合成帧夹具仅通过prepare，不等于GPU/lipsync验收；22050Hz夹具被拒仅证明采样率门，不证明模型或成片质量。",
+    "新创作者@kb78769的凭据、专属模型、真实音视频接受及发布许可均未完成；本审查未授权任何生产操作。"
+  ],
+  "previous_failures_preserved": true,
+  "production_preflight": "PENDING_NOT_PERFORMED",
+  "new_creator_model_audio_lipsync_acceptance": "NOT_TESTED",
+  "new_persona_and_script_facts": "PENDING",
+  "published_or_sent": false,
+  "runtime_receipt_system_installed": false,
+  "live_review_cli_groups_checked_gone": [
+    "incremental",
+    "closure"
+  ]
+}
