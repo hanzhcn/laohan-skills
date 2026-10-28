@@ -2,11 +2,6 @@
 
 ## 当前任务
 
-### FINAL-RESULT-SKILL-FIX-1f36860d-20261028 — 已修复并完成独立复核
-
-owner/唯一writer=Codex/root；main精确提交。三个技能断链及同型活引用已修，旧未实现SQLite桥接退役，Motion两平台只读观察入口接通，yunying 1.3.1。默认导演自检、真实Remotion文字层通过；视频侧28项选型与12项观察回归通过，绑定改动和旧详情缓存对照旧实现均红、当前绿。官方DeepSeek完整HTTP200/end_turn复核及增量完成，2项实修，其余逐项实证裁决；免费/硅基/CLI失败均未冒签。运行锁、主仓集成和定时任务读回由laohanvideo同ID执行卡及回执闭合；不新安装技能，不出片/发布/回复，其他窗口WIP保留。
-
-
 ### ECC-RULES-GUIDE-FIX-20261028 — 官方用法核验与教程定点修正
 
 root 唯一 writer，main；核验 ECC 最新发布 v2.2.3、main 25278e7d 与 Claude rules 文档。教程源及同步副本修正平铺覆盖、mtime 猜生效缓存、旧/新安装标识与 hooks 字段误述；未移动生效 rules、未更新插件/模型/权限。隔离复制与相对引用、真实缓存定位及四类拒绝反例通过；免费 Magpie DeepSeek 两轮完整 HTTP200/stop，首轮3项建议已修或澄清，最终修订 APPROVE，候选 SHA256 `abf14479b3efe1fb1cd90bc0130a43e15a90fda63d9304d3a1f74dc89d7e9f42`。Codex 通用格式检查器不接受原有 version/argument-hint，已核 SKILL.md 未变，本次不改 Claude 元数据。Git终态以实际回读为准；证据：`/Users/hanzhmacbookair/Documents/临时研究/E/ECC-Rules核验-20261028/`。
@@ -48,6 +43,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-10-28·FINAL-RESULT-SKILL-FIX-1f36860d 已修复并收尾。** 源提交0ad824dad9b6d7d0fdbd30bc56581b5613e0b199已集成并push，三技能默认断链/同型活引用与yunying1.3.1闭合；异模型DeepSeek复核和原针对实测保持。当前main含他窗后续实现，fresh origin一致、工作树无本任务残留；08-10 installer stash查明为历史备份，不恢复/不丢弃，只有明确installer任务时重开。视频调度宿主退出已由持久计划762e787b替换并真实双平台验证；本卡从当前区移出，不新安装/出片/发布。完整原卡备份和两仓本轮Git/归档回执=视频motion/baselines/references/window-final-fix-1f36860d-20261028/closeout-20261028/。
 
 **2026-10-28·LAOWAI-FLOW-METHOD-AUDIT-20261028 方法审查完成。** owner/writer=铁柱（920ba3db），main；最终实现`1355fd761702a89be00c6c789b85963dc20173e1`已合入，另一窗口0ad824d完整保留。官方ds实际deepseek-flash三轮完整终态，20项意见4 agree/12 modify/4 drop，最终APPROVE_METHOD_ONLY且无新增finding；HTTP=UNVERIFIED_CLI。真实格式/吞错/速度时钟正反例及定点一致性通过；新人物模型/稿件事实、生产preflight、人耳/口型/发布均未验。源仓Git/清理以本轮最终回读为准，[回执](docs/handoff/LAOWAI_FLOW_METHOD_AUDIT_20261028.md)及完整证据已归档。旧声音交接的14秒失败原文保留，由本次新版全候选复核接续，不冒改历史。
 
