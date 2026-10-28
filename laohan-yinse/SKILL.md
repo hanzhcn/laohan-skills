@@ -1,6 +1,6 @@
 ---
 name: laohan-yinse
-description: 复刻博主声音模型工作流（硬性前置，唯一方法=服务器微调训练）。任何要复刻博主做数字人视频的，生成视频前必须先在 pro6000 算力机用 CosyVoice3 微调训练该博主的声音模型（8-10 分钟素材），训完拷回本地使用。覆盖：多条视频声音提取→质检→拼接训练素材→pro6000-a 服务器特征提取+微调训练→模型回迁注册→验收。Use when 复刻博主、克隆音色、声音模型、voice clone、训练音色、数字人声音、给博主教声音、声音微调。
+description: 复刻博主声音资产工作流：同一博主优先复用已验模型，缺运行目录先恢复，首次缺模型才以CosyVoice3服务器微调首建。保护长期权重、参考音频/文本、配置和登记；用同一模型生成每期新配音。Use when 复刻博主、克隆音色、声音模型、voice clone、训练音色、数字人声音、给博主教声音、声音微调。
 ---
 
 # laohan-yinse — 复刻博主声音模型（服务器微调）
@@ -9,7 +9,7 @@ description: 复刻博主声音模型工作流（硬性前置，唯一方法=服
 
 **每个复刻博主一个专属声音模型，唯一方法 = pro6000 算力机 CosyVoice3 微调训练**（Jeffrey 2026-10-27 钉死：不走零样本）。声音模型是博主复刻的核心资产：数字人=形象克隆+口型驱动，声音来自 TTS——没有本人音色模型，出来的是"通用音色配这张脸"，瞬间违和。
 
-硬性流程：交付整稿配音与运行同声口型前，先完成本博主声音模型训练、登记与验收；素材视觉筛查/clean处理和声音备料可先做。模型可复用，不能跨博主混用或跳过每期整轨听审。
+硬性前置是**本博主已有训练、登记并验收的专属模型**，不是每期重新训练。同一博主/形象身份固定默认模型版本；换集数、稿件、服装、场景或参考情绪不换模型、不重训。不能跨博主混用，也不能把模型的历史接受当本期新WAV已通过整轨听审。
 
 方法依据：`~/Documents/声音资产/Jeffrey/训练方法论.md` §3/§4/§6—8；整稿声音与口型衔接读 `数字人专属音色融合方法.md` 与 `laohanvideo/motion/mastery/DH-ROUTE.md`。复用数据、训练与听审方法，不复用Jeffrey个人权重、参考池或接受记录；本博主必须有自己的资产绑定。
 
@@ -42,6 +42,15 @@ description: 复刻博主声音模型工作流（硬性前置，唯一方法=服
 记录并固定本次可控采样参数和随机种子；匿名化试听文件名、随机播放顺序并另存揭盲映射，听审后再揭盲。固定种子不保证跨版本/硬件逐样本确定；连续稳定性检查须有独立生成样本，不能反复播放同一WAV冒充。
 
 ## 工作流（七步，含组装与参考池子步骤）
+
+### 0. 先查登记：复用 / 恢复 / 首建
+
+1. 按稳定博主身份查项目 `assets/voice-models/<博主>/voice-asset.json`（已有其他登记布局则沿真源索引，不另造冲突副本）。登记至少含默认模型ID/版本、权重路径/SHA与格式、底模/配置版本及SHA来源、参考WAV/逐字文本与SHA、风格选择、原验收依据、备份/运行位置和保护清单。日期目录或视频文件名不是模型身份，不按mtime或最高epoch猜默认版。
+2. **已有可用模型 → 复用**：核身份、实际权重SHA、依赖与参考配对，直接第7步合成本期新稿；不跑1–5的训练管线，不重新做“每期一个声音模型”，不自动升级默认模型。原模型验收保留原时间和范围，本期音频继续自己的质检/听审。
+3. **已有备份但运行包缺失/迁机 → 恢复**：从已核备份与相同受信底模组装同一版本，记录新位置和SHA映射，实际加载及短句试合成后再做本期整稿。恢复目录/链接/推理格式不等于训练新模型；仅有训练checkpoint时另存推理件，不改原件。缺参考对、配置或备份损坏先找现有可信副本，无法恢复则报告阻塞，禁止自动重训或换基模。
+4. **确为新博主且无既有模型 → 首建**：才执行1–6.5；既有模型升级/重训须记录已核缺陷、目标、负责人明确决定和新版本，原默认/回滚版继续保护。未验收候选先续其验收，不把“状态非ACCEPTED”直接当缺模型再训一遍。
+
+本节为执行分流纪律，不冒称 `pipeline/train` 已实现自动模型发现。现有训练脚本只用于首建或明确批准的重训；每期调用前必须先完成本节核对。
 
 ### 1. 提取（本机 ffmpeg，逐条）
 
@@ -135,12 +144,19 @@ nohup setsid bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人�
 ### 5.5 模型组装与合成验收（2026-10-27 实战验证）
 
 ```bash
-# ① 组装推理目录（底座全家 + 微调 llm.pt）；PM=底座权重根
+# ① 仅首建/恢复时组装；复用分支不运行本块。PM=已核底座权重根
 cd /root/autodl-tmp/cosyvoice-train  # 下方exp/与model-相对路径以此为根
 PM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512
 VOICE_CAND=/root/autodl-tmp/cosyvoice-train/model-<人名>-v1
 test ! -e "$VOICE_CAND" || exit 1  # 只建新候选，禁止嵌套cp或覆盖已有模型
-cp -r "$PM" "$VOICE_CAND"
+# 前置已核这些共享依赖的可信SHA；只链接、只读，不复制底模或链接底模llm.pt。
+for VOICE_DEP in CosyVoice-BlankEN campplus.onnx cosyvoice3.yaml flow.pt hift.pt speech_tokenizer_v3.onnx speech_tokenizer_v3.batch.onnx; do
+  test -e "$PM/$VOICE_DEP" || exit 2
+done
+mkdir "$VOICE_CAND" || exit 2
+for VOICE_DEP in CosyVoice-BlankEN campplus.onnx cosyvoice3.yaml flow.pt hift.pt speech_tokenizer_v3.onnx speech_tokenizer_v3.batch.onnx; do
+  ln -s "$PM/$VOICE_DEP" "$VOICE_CAND/$VOICE_DEP" || exit 2
+done
 # ② 剥离元数据键后存 llm.pt（坑3修复）
 /root/autodl-tmp/cosyvoice-train/venv/bin/python -c "import torch; sd=torch.load('exp/<人名>/llm/epoch_N_whole.pt',map_location='cpu',weights_only=True); sd.pop('epoch',None); sd.pop('step',None); torch.save(sd,'model-<人名>-v1/llm.pt')"
 # ③ 合成验收：先按下文准备本任务脚本，再用已核解释器和工作目录执行
@@ -153,7 +169,7 @@ PYTHONPATH="$PWD" setsid /root/autodl-tmp/cosyvoice-train/venv/bin/python /root/
 **合成脚本必须先准备和核对，不能假设存在通用`synth.py`。** 2026-10-28远端核实：只有任务专用`synth_deborah.py`/`synth_ep01.py`；前者首chunk后`break`，不能复制其截断逻辑。新脚本按第7步完整收集分块，明确本博主MODEL_DIR、已校对REF_WAV/REF_TEXT、目标文本与独立输出路径；可参考`synth_ep01.py`的拼接方式，但不得直接运行其Deborah硬编码。解释器/文件缺失只阻本步骤，不静默安装环境或换生产入口。
 
 - 合成产物 SYNTH_DONE 后 scp 回本地，按上文“验收”节做同条件A/B并交 Jeffrey 盲听；日志成功不等于接受
-- 模型回迁：只回迁 llm.pt（约 2GB），底座本地/服务器都有不重复迁
+- 模型回迁：归档选定专属权重及其格式、必要配置/底模版本、参考池WAV/逐字文本、合成入口和原验收登记；底模复用受信单份，不搬整套环境或全量检查点。仅有一个pt文件不算完整可恢复声音资产。
 
 ### 完成证据（训练环节怎么算完成）
 
@@ -162,7 +178,7 @@ PYTHONPATH="$PWD" setsid /root/autodl-tmp/cosyvoice-train/venv/bin/python /root/
 ### 6. 模型回迁 + 登记 + 验收
 
 - checkpoint 拷回本地项目 assets/voice-models/<博主>/（Jeffrey 惯例：服务器训完放本地）
-- 登记表（项目内维护）：博主/建模日期/素材/模型路径/验收状态
+- 在项目登记 `voice-asset.json`：博主身份/默认模型ID及版本/建模来源/模型路径、格式与SHA/底模与配置/参考池/原验收状态和证据/运行与备份位置/保护清单。已选版与回滚版分开标明，不能把每期新WAV当新模型登记。
 - 验收只引用上文“验收”节：同参考/文本/采样设置的原版与微调版A/B，Jeffrey盲听确认相似度、自然度和错漏字；连续10次生成检查无破音/吞字/漂移。F0仅记录辅助分布，不作±20Hz硬门槛；记录实际听审结论与样音，不将机械指标替代接受。
 
 ### 6.5 参考池与风格选择（2026-10-28 补录，源自 Jeffrey 声音方法 v2.2）
@@ -170,6 +186,7 @@ PYTHONPATH="$PWD" setsid /root/autodl-tmp/cosyvoice-train/venv/bin/python /root/
 - 合成不裸用单条参考：从博主切段中挑**多对参考（不同情绪/风格：如坚定教学/温柔安抚/兴奋）**建参考池，合成时选风格参考驱动韵律（Jeffrey 判例：7 对参考池+默认"兴奋"风格）
 - 风格选择登记进项目（每个博主的默认风格一次定稳）
 - Jeffrey个人的“兴奋B”只属其个人接受记录，不自动成为新博主默认；参考音频与逐字文本也须逐对校准。
+- 权重、参考对、配置、必要合成入口和登记共同构成跨期资产。参考WAV即使位于训练 `data/`/`segments/` 内也受保护；清理前应归档并更新实际合成绑定，不得只留权重删参考。当前只有一对已用参考时如实登记，不伪造多风格参考池完成。
 
 ### 7. 整稿合成（交付给口型链的最终 WAV——laohan-laowai ⑤ 的输入契约）
 
@@ -192,7 +209,7 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 - **听感门是硬门**：完整 WAV 必须 Jeffrey 整轨听审通过后才能进口型推理（禁止跳过听审直接出片）
 - 完成证据：整稿逐段核对文案，确认所有分块完整拼接、无缺句/重复/截尾，记录实测时长与采样数；不套用固定英文词/秒作为验收。Jeffrey整轨听审通过并绑定SHA后才交口型链。
 - **本地备份核对**：回迁模型登记 SHA；重用时先核对备份 SHA 一致（损坏报告勿用，防备份腐坏）
-- **备份≠完整运行目录**：本地备份是微调权重，恢复需官方底模全套+组装步骤；迁机重组后必须重跑试合成验收；**不得覆盖官方底模原件**
+- **备份≠完整运行目录**：完整恢复还需受信底模、配置、参考WAV/文本、合成入口与登记；迁机重组后实际加载并试合成，不重新训练；**不得覆盖官方底模原件**。本期最终WAV仍须按原有听感/完整性要求另验。
 - **GPU 共卡纪律**：合成前核显存>10G；卡>5分钟或生产报错，按第5步启动收据核验并仅停止本任务进程组，确认退出后另定时段；严禁动生产服务，不盲重试
 
 ## 反触发（不用本 skill 的场景）
@@ -203,12 +220,14 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 
 ## 失败路径
 
+- 既有模型/参考缺失或SHA不符 → 先恢复可信副本，恢复不了只停本步骤；不得以再次训练、换基模或清除旧登记掩盖丢失。
 - 素材质检不过（BGM/混响）→ 换条或降噪后复检，不强行训练
 - 训练中断 → 保存本任务退出/数据/配置/特征/权重现场，核专属pipeline/train与训练器实际支持的恢复语义，再登记明确恢复入口；不能假定共享`run.sh`会跳过阶段，不编造续跑参数。无可验证续跑机制则登记新的训练阶段并保留旧产物，不覆盖后冒称续跑成功
 - A/B或Jeffrey盲听未通过 → 排查素材纯度、分组、切段/文本及风格参考，按已核原因决定重合成或重训；不凭F0或日志代替接受、不降标准登记
 
 ## 红线
 
+- 每个博主一个明确默认声音模型版本，后续出片优先复用；重训/换默认版必须另有明确决定。每期收尾不得删除已选/回滚权重、参考对、配置、合成入口及证据，也不得先删运行副本再验证备份。详细逐项清理顺序遵循项目存储规则与 laohan-laowai 的保护节；无完整依赖核对即保留。
 - 只训练**已决策复刻**的博主（复刻合规决策先行：**需 Jeffrey 逐博主明确决策并留证**；商业化前必须切纯生成形象）
 - 服务器操作限训练目录 `/root/autodl-tmp/cosyvoice-train/`，不碰生产 7 进程与 `/data/laohan/laohan-node`
 - GPU 训练费用按既有授权，不新增付费点；AutoDL 关机后生产进程不自启（勿随意重启算力机）
@@ -216,6 +235,7 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 ## 训练执行判例（2026-10-29 kb78769 首跑实测）
 
 - **推理加载前剥 epoch/step 键**：训练存的 checkpoint 含 `epoch`/`step` 元数据键，CosyVoice3 AutoModel strict load 直接拒（Unexpected key(s)）；推理包 llm.pt 必须是剥过的版本（训练原件保留，另存剥离副本绑定 SHA）
+- 上述组装仅首次/恢复时需要；同一已选推理权重跨期复用，不随新稿重复训练或另建默认模型。
 - **retention wrapper 必须在链上**：`single_worker.py train_with_retention.py train.py`（曾漏接中间层导致 15 份 checkpoint 堆积 30GB 磁盘压线）；llm.pt+yaml 各自登记 registry，retained=latest+best2（CV loss 排序）+init
 - **60段555s/14epoch 单卡约70分钟**（GPU 独占时）；同卡双训练互抢会拖 30 倍并压爆磁盘——开训前 `nvidia-smi --query-compute-apps` + 跨会话 SendMessage 核对无并行任务
 - CV loss 每 epoch 都打（`Epoch N Step M CV info lr ... rank loss X`），ep13=3.8033 收敛正常；保留 latest+best2+init 后 exp/llm 约 5.7G

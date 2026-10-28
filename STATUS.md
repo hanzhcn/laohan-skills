@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### VOICE-REUSE-PROTECTION-20261029 — 同一博主复用模型与资产保护
+
+owner/writer=本会话 Codex root；独立 worktree `/Users/hanzhmacbookair/Documents/.worktrees/laohan-skills-voice-reuse-20261029`，任务分支 `task/voice-reuse-protection-20261029`，基线 `9a163aaf8cc01fe6c41eb84c31022121c6255e83`。仅修 laohan-laowai/yinse 的先复用后首建分流、长期资产与临时产物清理边界，并核成长项目当前权重/参考备份；不训练、不删除真实资产、不发布。风险为误删可复用依赖或误触发重训；验证使用临时夹具检验现有 guard 的模型/参考保护及父目录拦截，按真实文件核 SHA，并由 GLM 优先作跨模型对抗复核。审查单次采用通道默认满配/1800秒，不降档、不隐藏回退；失败留回执，继续无依赖工作。完成条件为两技能和项目保留规则一致、当前资产可追溯、针对性检查与独立复核有真实终态；GPU加载/新稿出片不在本轮验收范围。
+
 ### ECC-RULES-GUIDE-FIX-20261028 — 官方用法核验与教程定点修正
 
 root 唯一 writer，main；核验 ECC 最新发布 v2.2.3、main 25278e7d 与 Claude rules 文档。教程源及同步副本修正平铺覆盖、mtime 猜生效缓存、旧/新安装标识与 hooks 字段误述；未移动生效 rules、未更新插件/模型/权限。隔离复制与相对引用、真实缓存定位及四类拒绝反例通过；免费 Magpie DeepSeek 两轮完整 HTTP200/stop，首轮3项建议已修或澄清，最终修订 APPROVE，候选 SHA256 `abf14479b3efe1fb1cd90bc0130a43e15a90fda63d9304d3a1f74dc89d7e9f42`。Codex 通用格式检查器不接受原有 version/argument-hint，已核 SKILL.md 未变，本次不改 Claude 元数据。Git终态以实际回读为准；证据：`/Users/hanzhmacbookair/Documents/临时研究/E/ECC-Rules核验-20261028/`。
