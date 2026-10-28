@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### ECC-RULES-GUIDE-FIX-20261028 — 官方用法核验与教程定点修正
+
+root 唯一 writer，main；核验 ECC 最新发布 v2.2.3、main 25278e7d 与 Claude rules 文档。教程源及同步副本修正平铺覆盖、mtime 猜生效缓存、旧/新安装标识与 hooks 字段误述；未移动生效 rules、未更新插件/模型/权限。隔离复制与相对引用、真实缓存定位及四类拒绝反例通过；免费 Magpie DeepSeek 两轮完整 HTTP200/stop，首轮3项建议已修或澄清，最终修订 APPROVE，候选 SHA256 `abf14479b3efe1fb1cd90bc0130a43e15a90fda63d9304d3a1f74dc89d7e9f42`。Codex 通用格式检查器不接受原有 version/argument-hint，已核 SKILL.md 未变，本次不改 Claude 元数据。Git终态以实际回读为准；证据：`/Users/hanzhmacbookair/Documents/临时研究/E/ECC-Rules核验-20261028/`。
+
 ### LAOWAI-VOICE-HANDOFF-FIX-20261028 — 已修，最终候选增量复核PENDING
 
 owner / 唯一writer：铁柱，当前Codex会话920ba3db；目录`/Users/hanzhmacbookair/Documents/laohan-skills`，main，制作基线`bb366d5a5abcb448c327815e33208457b6ea9577`。SURGICAL_FIX已消除第6步F0±20Hz残留、来源分组丢失、校对步骤和固定英文词/秒验收问题。最终skill文件SHA256=`a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed`；修改前3项红测，修改后7项静态检查及diff检查通过。Magpie实时确认免费DeepSeek首审HTTP200/stop完整有效，SRC-GROUP-01已接受修为逐源切段+source-map+组ID交集检查。增量复核受首次08:49:24Z起180s总截止限制，在剩余14.075秒内未返回完整答复，TimeoutError；**最终增量PENDING**，没有重试/付费回退。下一步：新制作任务先按新预算复核最终SHA的分组修正，再实际准备新博主数据；本轮未训练/合成/改生产/接受新片。来源真源与逐项裁决见[回执](docs/handoff/LAOWAI_VOICE_HANDOFF_FIX_20261028.md)，源码提交/push以Git回读为准，保留所有他项在途状态。
