@@ -1,0 +1,12 @@
+{
+  "started_at": "2026-10-28T08:52:10.102Z",
+  "timeout_ms": 14075,
+  "original_total_deadline": "2026-10-28T08:52:24.177Z",
+  "model": "workbuddy-ai/deepseek-v4.1-flash",
+  "candidate_sha256": "a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed",
+  "prompt_sha256": "cb521fdb939277a0bad03eacddd9912f8809e5c0467fc38e749b7100e7025778",
+  "scope": "SRC-GROUP-01 fix incremental review; no network retry",
+  "ended_at": "2026-10-28T08:52:24.185Z",
+  "valid": false,
+  "error_type": "TimeoutError"
+}

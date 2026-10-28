@@ -1,0 +1,33 @@
+{
+  "started_at": "2026-10-28T08:49:24.177Z",
+  "timeout_seconds": 180,
+  "max_attempts": 1,
+  "route": "http://127.0.0.1:3425/v1/chat/completions",
+  "model": "workbuddy-ai/deepseek-v4.1-flash",
+  "reasoning_effort": "max",
+  "max_tokens": 24000,
+  "baseline_commit": "bb366d5a5abcb448c327815e33208457b6ea9577",
+  "candidate_sha256": "78aa17e7d92d08dfadbf31f6639230076886d634e639500cbc6d5630890e6bf4",
+  "prompt_sha256": "d467f013cd723b074541d6521a957006d789c435319cd413fe4bfe2ebd1a76fd",
+  "cost": "current liveModels free=true rate=0; no paid fallback",
+  "ended_at": "2026-10-28T08:50:30.304Z",
+  "elapsed_ms": 66127,
+  "http_status": 200,
+  "response_model": "deepseek-v4.1-flash",
+  "finish_reason": "stop",
+  "valid": true,
+  "usage": {
+    "completion_tokens": 11483,
+    "completion_tokens_details": {
+      "reasoning_tokens": 11229
+    },
+    "prompt_tokens": 6040,
+    "prompt_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "total_tokens": 17523
+  },
+  "review_text": "{\n  \"verdict\": \"CHANGES_REQUIRED\",\n  \"findings\": [\n    {\n      \"id\": \"SRC-GROUP-01\",\n      \"severity\": \"blocking\",\n      \"evidence\": \"Step 3 requires training cuts to keep source ID and split by source group, but Step 4 still cuts `full.wav` and names segments `<人名>_b<批>_s<毫秒6位>.wav` without source ID; no source manifest is defined. The concat loop also has no dedup filter. The workflow can still concatenate and lose source, so the 9:1 by-source split is not enforceable or auditable.\",\n      \"minimal_fix\": \"In Step 4, cut each original source WAV separately (or keep an explicit concat-timestamp-to-source map), apply dedup groups, put source/dedup group ID in utt_id/filename, and require a source manifest used for train/dev group split; keep full.wav only for audition/archive.\"\n    }\n  ],\n  \"limitations\": \"Read-only text review; no training, synthesis, or listening was executed, so audio-effect acceptance is not verified.\"\n}",
+  "error_code": null
+}

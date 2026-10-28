@@ -35,7 +35,7 @@ description: 复刻博主声音模型工作流（硬性前置，唯一方法=服
 
 **验收 = A/B 对照 + Jeffrey 盲听**：原版（零样本）与微调版在相同参考/文本/固定采样下对照，查错漏字/重复/自然度/相似度，Jeffrey 盲听终审拍板。**F0 是辅助分布指标，不做窄区间硬门槛**（此前"F0 ±20Hz"口径作废——与真源冲突）。
 
-## 工作流（六步）
+## 工作流（七步，含组装与参考池子步骤）
 
 ### 1. 提取（本机 ffmpeg，逐条）
 
@@ -49,6 +49,8 @@ ffmpeg -y -i <视频>.mp4 -vn -ac 1 -ar 44100 <博主>-<条目名>.wav
 
 ### 3. 拼接训练主素材
 
+先记录每条源视频的ID、音频路径、SHA和去重分组；训练切段保持来源ID，同源/重叠片段只进同一侧train/dev。下列拼接仅作主素材试听与归档，不能先拼接再丢失来源随机切分；训练按原来源分组切段。
+
 ```bash
 for f in <博主>-*.wav; do case "$f" in *-full-*) continue;; esac; echo "file '$f'"; done > concat.txt
 ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
@@ -58,18 +60,19 @@ ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 
 训练机：`ssh pro6000-a`（AutoDL RTX PRO 6000 Blackwell 96G，seetacloud 西部；生产算力机，跑 7 进程服务）。训练工作目录：`/root/autodl-tmp/cosyvoice-train/`（Jeffrey 先例 model-jeffrey-v3-05 在此）。
 
-**切段（本机，已验证）**：ffmpeg silencedetect 找静音点，静音中点作切点，聚成 4-15s 段：
+**切段（本机，按源视频分别处理）**：先按第3步的来源记录去重；重复/重叠来源归同一group_id，再分别对保留的源WAV切段，不能对已拼接full.wav盲切。ffmpeg silencedetect 找静音点，静音中点作切点，聚成 4-15s 段：
 ```python
-# ffmpeg -i full.wav -af silencedetect=noise=-35dB:d=0.45 -f null -
+# 对每个保留的源WAV分别运行；full.wav只作试听归档
+# ffmpeg -i <源视频ID>-24k.wav -af silencedetect=noise=-35dB:d=0.45 -f null -
 # 解析 silence_start/end 取中点为切点，4-15s 聚段，<3.5s 丢弃，>15.5s 硬切 10s
 ```
-段命名 `<人名>_b<批>_s<毫秒6位>.wav`（对齐 Jeffrey 判例）。78 段/483s 实测一次通过。
+段命名 `<人名>_src<视频ID>_g<group_id>_s<起点毫秒>.wav`；`utt_id`保留对应来源/组信息。维护`source-map.tsv`记录源视频ID、源WAV路径/SHA、group_id、utt_id、源内起止时间和split；train/dev按group_id整组划分，生成两侧清单后核对组ID无交集。不能以历史Deborah的78段/483s训练成功代替本期来源与切分核验。
 
-**每段转录（本机）**：SenseVoice 批量；转录后**清洗噪声符号**（🎼😊 等表情要删，否则进训练文本污染）。
+**每段转录（本机）**：SenseVoice 批量；转录后**清洗噪声符号**（🎼😊 等表情要删，否则进训练文本污染），逐段对听并校正逐字文本后才写入训练text；抽校或裸ASR输出不能代替。
 
 **数据目录结构（六件套，缺一训练必挂——三个坑全踩过）**：
 ```
-data-<人名>/{train,dev}/     # 9:1 分
+data-<人名>/{train,dev}/     # 按来源视频分组，9:1为目标比例；同源/重叠段不跨split
   *.wav                     # 切段音频（与文本同目录）
   text            # 每行: <utt_id> <转录文本>
   utt2spk         # 每行: <utt_id> <说话人名>
@@ -109,18 +112,18 @@ python -c "import torch; sd=torch.load('exp/<人名>/llm/epoch_N_whole.pt',map_l
 cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + inference_zero_shot(英文测试句, prompt=BlankEN模板+参考段文本, REF_WAV)
 ```
 
-- 合成产物 SYNTH_DONE 后 scp 回本地给 Jeffrey 听审（相似度≥8/10 拍板）
+- 合成产物 SYNTH_DONE 后 scp 回本地，按上文“验收”节做同条件A/B并交 Jeffrey 盲听；日志成功不等于接受
 - 模型回迁：只回迁 llm.pt（约 2GB），底座本地/服务器都有不重复迁
 
 ### 完成证据（训练环节怎么算完成）
 
-① data-{博主}/{train,dev}/parquet 生成且 pipeline-<博主>.sh 日志打印 PIPELINE_DONE；② `model-<博主>-<版本>/llm.pt`（微调权重，剥离 epoch/step 键后）产出并拷回本地 assets/voice-models/<博主>/；③ 验收三条（见第 6 步）全过并登记。任一不满足=未完成，不进形象/渲染阶段。
+① data-{博主}/{train,dev}/parquet 生成且 pipeline-<博主>.sh 日志打印 PIPELINE_DONE；② `model-<博主>-<版本>/llm.pt`（微调权重，剥离 epoch/step 键后）产出并拷回本地 assets/voice-models/<博主>/；③ 第6步引用的同条件A/B、Jeffrey盲听及稳定性检查通过并登记。任一不满足=未完成，不进形象/渲染阶段。
 
 ### 6. 模型回迁 + 登记 + 验收
 
 - checkpoint 拷回本地项目 assets/voice-models/<博主>/（Jeffrey 惯例：服务器训完放本地）
 - 登记表（项目内维护）：博主/建模日期/素材/模型路径/验收状态
-- 验收三条：①固定测试句（英文+中文各一）与原声主观相似度 ≥8/10（Jeffrey 听审）②F0 基频域 ±20Hz ③连续 10 次生成无破音/吞字/漂移
+- 验收只引用上文“验收”节：同参考/文本/采样设置的原版与微调版A/B，Jeffrey盲听确认相似度、自然度和错漏字；连续10次生成检查无破音/吞字/漂移。F0仅记录辅助分布，不作±20Hz硬门槛；记录实际听审结论与样音，不将机械指标替代接受。
 
 ### 6.5 参考池与风格选择（2026-10-28 补录，源自 Jeffrey 声音方法 v2.2）
 
@@ -139,7 +142,7 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 - **长稿分段**：>300 字/词按自然段分次合成再拼（过长语调衰减——Jeffrey 经验值）；分块 chunk 拼接勿截断
 - **响度门**：不预设达标——先测 `ffmpeg -af loudnorm=print_format=summary -f null -` 再按合同决定归一
 - **听感门是硬门**：完整 WAV 必须 Jeffrey 整轨听审通过后才能进口型推理（禁止跳过听审直接出片）
-- 完成证据：整稿时长与文案语速匹配（英文≈7-8 词/s 抽查）+ Jeffrey 整轨听审通过 + SHA 绑定。
+- 完成证据：整稿逐段核对文案，确认所有分块完整拼接、无缺句/重复/截尾，记录实测时长与采样数；不套用固定英文词/秒作为验收。Jeffrey整轨听审通过并绑定SHA后才交口型链。
 - **本地备份核对**：回迁模型登记 SHA；重用时先核对备份 SHA 一致（损坏报告勿用，防备份腐坏）
 - **备份≠完整运行目录**：本地备份是微调权重，恢复需官方底模全套+组装步骤；迁机重组后必须重跑试合成验收；**不得覆盖官方底模原件**
 - **GPU 共卡纪律**：合成前核显存>10G；卡>5 分钟只杀本次离线进程（严禁动生产服务），换时段重试
@@ -154,7 +157,7 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 
 - 素材质检不过（BGM/混响）→ 换条或降噪后复检，不强行训练
 - 训练中断 → run.sh 分 stage 重跑已完成跳过；产物缺失如实报未完成
-- 验收相似度 <8/10 → 排查素材纯度/切段质量后重训，不降标准登记
+- A/B或Jeffrey盲听未通过 → 排查素材纯度、分组、切段/文本及风格参考，按已核原因决定重合成或重训；不凭F0或日志代替接受、不降标准登记
 
 ## 红线
 

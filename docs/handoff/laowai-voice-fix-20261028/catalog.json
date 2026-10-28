@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-28T08:49:24.157Z",
+  "provider": "workbuddy-ai",
+  "source": "installed Magpie liveModels vendor /v3/config",
+  "model": {
+    "id": "deepseek-v4.1-flash",
+    "name": "Deepseek-V4.1-Flash",
+    "context": 1000000,
+    "output": 128000,
+    "images": true,
+    "free": true,
+    "rate": 0,
+    "efforts": [
+      "low",
+      "high",
+      "max"
+    ]
+  }
+}

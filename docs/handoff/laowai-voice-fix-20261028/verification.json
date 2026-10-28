@@ -1,0 +1,23 @@
+{
+  "baseline_commit": "bb366d5a5abcb448c327815e33208457b6ea9577",
+  "candidate_sha256": "a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed",
+  "baseline_red": {
+    "step6_f0_aux_only": false,
+    "no_fixed_english_rate": false,
+    "split_by_source_group": false
+  },
+  "candidate_static_checks": {
+    "step6_f0_aux_only": true,
+    "no_fixed_english_rate": true,
+    "split_by_source_group": true,
+    "step4_cuts_per_source": true,
+    "source_map_and_split_disjoint": true,
+    "full_transcript_review": true,
+    "final_wav_approval_retained": true
+  },
+  "finding_SRC_GROUP_01": "ACCEPTED_FIXED; Step4 now per-source with source-map and disjoint group check",
+  "review_initial": "HTTP_200_STOP_VALID_CHANGES_REQUIRED",
+  "review_incremental": "PENDING_TIMEOUT_AT_ORIGINAL_TOTAL_DEADLINE",
+  "training_synthesis_listening": "NOT_EXECUTED",
+  "runtime_lock_claim": "No runtime verification claimed; existing agents symlink resolves edited source"
+}

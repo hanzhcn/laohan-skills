@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### LAOWAI-VOICE-HANDOFF-FIX-20261028 — 已修，最终候选增量复核PENDING
+
+owner / 唯一writer：铁柱，当前Codex会话920ba3db；目录`/Users/hanzhmacbookair/Documents/laohan-skills`，main，制作基线`bb366d5a5abcb448c327815e33208457b6ea9577`。SURGICAL_FIX已消除第6步F0±20Hz残留、来源分组丢失、校对步骤和固定英文词/秒验收问题。最终skill文件SHA256=`a6c8e2fb8eb8b51904d5c1f08adb96f8450aee0936a3c88e75ba8f74fc11ffed`；修改前3项红测，修改后7项静态检查及diff检查通过。Magpie实时确认免费DeepSeek首审HTTP200/stop完整有效，SRC-GROUP-01已接受修为逐源切段+source-map+组ID交集检查。增量复核受首次08:49:24Z起180s总截止限制，在剩余14.075秒内未返回完整答复，TimeoutError；**最终增量PENDING**，没有重试/付费回退。下一步：新制作任务先按新预算复核最终SHA的分组修正，再实际准备新博主数据；本轮未训练/合成/改生产/接受新片。来源真源与逐项裁决见[回执](docs/handoff/LAOWAI_VOICE_HANDOFF_FIX_20261028.md)，源码提交/push以Git回读为准，保留所有他项在途状态。
+
 ### OPENCLAW-TO-NPX-20261024 — 已完成
 
 root唯一writer，main；Jeffrey要求npx共享安装并彻底清理OpenClaw全局技能层。4项已由真实npx1.7.4从原版本本地来源安装至agents，锁明确local；整个OpenClaw/skills已备份移出，不影响外部软链目标。laohan-xiazai1.6.1只修三条路径和错误OpenClaw前提，搜索方法不变。

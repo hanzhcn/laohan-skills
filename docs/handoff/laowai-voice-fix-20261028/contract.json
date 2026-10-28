@@ -1,0 +1,13 @@
+{
+  "started_at": "2026-10-28T08:49:24.177Z",
+  "timeout_seconds": 180,
+  "max_attempts": 1,
+  "route": "http://127.0.0.1:3425/v1/chat/completions",
+  "model": "workbuddy-ai/deepseek-v4.1-flash",
+  "reasoning_effort": "max",
+  "max_tokens": 24000,
+  "baseline_commit": "bb366d5a5abcb448c327815e33208457b6ea9577",
+  "candidate_sha256": "78aa17e7d92d08dfadbf31f6639230076886d634e639500cbc6d5630890e6bf4",
+  "prompt_sha256": "d467f013cd723b074541d6521a957006d789c435319cd413fe4bfe2ebd1a76fd",
+  "cost": "current liveModels free=true rate=0; no paid fallback"
+}
