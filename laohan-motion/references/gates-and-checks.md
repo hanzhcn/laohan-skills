@@ -4,20 +4,26 @@
 
 ## production-guard 六个 stage
 
+边界：guard只前置检查plan/render；原包 `read/new/setup/doctor/prepare/preview` 保持官方命令原样执行、不经guard（给它们套guard会被STAGE_COMMAND_MISMATCH拒绝）。
+
 | stage | 前置 | 检查/动作 | 产出 |
 |---|---|---|---|
-| direct | director.md+全部输入字段+template_selection（正式片） | 封存编排与输入摘要为新revision；核选型记录 | `.production-receipts/<记录>/` revision + `director_record`引用 |
-| plan | 当前revision | 核revision/输入稳定→执行原包plan→快照官方plan初始字节 | plan成功回执 |
-| pilot | kind=pilot记录（director_parent+source_excerpt） | 复用父编排正文、核同模板/分支/原始声音、逐样本核PCM | 样段渲染输出（仅qa/目录） |
+| direct | director.md+`director/template_contract/director_assets`及`script/asr/source_record/pronunciations/visual_reference/helper/template/workflow`；正式片加`template_selection`。**不要求params/captions/样段审核** | 封存编排与输入摘要为新revision；核选型记录 | `.production-receipts/<记录>/` revision + `director_record`引用 |
+| plan | 当前revision+params/captions就绪 | 核revision/输入稳定→执行原包plan→快照官方plan初始字节 | plan成功回执 |
+| pilot | kind=pilot记录自己的direct+plan+preview（director_parent+source_excerpt） | 复用父编排正文、核同模板/分支/原始声音、逐样本核PCM | 样段渲染输出（仅qa/目录） |
 | review-brief | 真实plan/preview+实际样段 | 生成完整复核任务brief+request，写回`pilot_review_request` | review bindings+`review_request` SHA |
 | render | plan回执+pilot_review全样段覆盖 | 重核用户要求/编排/计划/预览/请求/样段字节→执行原包render | render bindings |
 | delivery | final_review（whole_film_review） | 声源、动态样段、异模型与最终视频检查 | 交付回执 |
 
 硬规则：快照/历史回执只追加；入口生成版本/顺序，不以mtime或自填时间证明事前；旧候选不补造登记；参数调整也重plan/预览/复核。
 
-## production.json 必备字段（schema=laohan.motion-production/1）
+## production.json 字段（schema=laohan.motion-production/1；按阶段就绪）
 
-`director`、`template_contract`（所选公开契约路径）、`director_assets`、`params/captions/script/asr/source_record/pronunciations/visual_reference/input_root`、原包`workflow`、`helper/template`路径与SHA、正式`output`；正式片另加`template_selection`。render期进`official_plan/official_preview/pilot_review`；delivery期进`final_review`。`speed=1`时与来源回执声音SHA必须相等。路径相对该记录；文件名不能替代字节绑定；除人物/声音/音乐外，段内及嵌套素材槽也绑定字节，动态样段须为可实际解码多帧视频。
+- **direct期**：`director`、`template_contract`（所选公开契约路径）、`director_assets`、`script/asr/source_record/pronunciations/visual_reference`、原包`workflow`、`helper/template`路径与SHA；正式片加`template_selection`。
+- **plan期**：`params/captions/input_root`。
+- **render期**：`official_plan/official_preview/pilot_review`。
+- **delivery期**：`final_review`（含whole_film_review）+正式`output`。
+- `speed=1`时与来源回执声音SHA必须相等。路径相对该记录；文件名不能替代字节绑定；除人物/声音/音乐外，段内及嵌套素材槽也绑定字节，动态样段须为可实际解码多帧视频。
 
 ## template-selection.json 要点（schema=laohan.motion-template-selection/1）
 
@@ -30,15 +36,16 @@
 
 ## 异模型复核登记（schema=laohan.motion-visual-review/1）
 
-字段：实际reviewer_model/implementer_model、decision=APPROVE、当前输入bindings、复核scope、findings_resolved、实际动态媒体samples、独立response路径/SHA。scope九项：subtitle-style、subtitle-breaks、action-sequence、semantic-content、viewer-comprehension、presenter-staging、pacing-hierarchy、sample-coverage（final另whole_film_review）。约束：不能编JSON冒充调用；response字节存在不证明模型来源或内容有效，负责人须核实际模型完整终态、原始结论并逐项裁决；完整scope+无明显错误不单独构成APPROVE；缺失/过期/同家族/静帧冒充动态拒绝。
+字段：实际reviewer_model/implementer_model、decision=APPROVE、当前输入bindings、复核scope、findings_resolved、实际动态媒体samples、独立response路径/SHA。scope八项（技术四项+创意四项）：subtitle-style、subtitle-breaks、action-sequence、semantic-content、viewer-comprehension、presenter-staging、pacing-hierarchy、sample-coverage；final另有独立字段`whole_film_review`（delivery强制为true）。约束：不能编JSON冒充调用；response字节存在不证明模型来源或内容有效，负责人须核实际模型完整终态、原始结论并逐项裁决；完整scope+无明显错误不单独构成APPROVE；缺失/过期/同家族/静帧冒充动态拒绝。
 
 ## check-delivery.py（只读检查器）
 
 ```sh
-# plan前
+# plan前（--source-record/--pronunciations新制作必带，缺失则发音稿一致性/未映射读音校验不执行）
 PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
   --params 本期参数.json --captions 本期实际字幕文件 --script 冻结纯口播稿.txt \
-  --asr 原ASR.json --input-root 本期实际素材目录
+  --asr 原ASR.json --input-root 本期实际素材目录 \
+  --source-record 词源目录/source.json --pronunciations motion/mastery/pronunciations.json
 # 交付前：同命令加 --video 实际成片.mp4
 ```
 

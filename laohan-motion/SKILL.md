@@ -1,12 +1,12 @@
 ---
 name: laohan-motion
-version: "1.0.0"
+version: "1.1.0"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
 # laohan-motion · 数字人×Motion模板制作入口
 
-本skill是Motion正式路线的制作编排入口，**不是方法真源**。方法、门与合同只认视频项目内的现行文件；本skill与项目真源冲突时，以项目真源为准，并按laohan-skillcreator流程回本仓修订skill。
+本skill是Motion正式路线的制作编排入口，**不是方法真源**。方法、门与合同只认视频项目内的现行文件；本skill与项目真源冲突时，以项目真源为准，并按laohan-skillcreator流程回本仓修订skill。本文对齐2026-10-28版PIPELINE/V4/DH-ROUTE；听感门等会演进的语义以真源现行文本为准，不从本skill复述。
 
 项目根固定：`/Users/hanzhmacbookair/Documents/laohanvideo`（下文相对路径均从此起算）。
 
@@ -15,7 +15,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 **触发**：创作/制作motion视频、motion路线出片、数字人×Motion模板、锁定稿后走Motion。
 
 **反触发（分流到对应入口）**：
-- 原生Remotion episode（真人横/竖屏、digital_human_portrait竖屏）→ laohan-bianpai / laohan-daoyan。Motion期不建 `episodes/<slug>`、不占原生在制期名额、不跑 `new-episode`/`production-route`/`orchestrate-step`/0—⑭回执与0号门。
+- 原生Remotion episode（真人横/竖屏、digital_human_portrait竖屏）→ laohan-bianpai / laohan-daoyan。用户明确要**竖版数字人**也走原生 digital_human_portrait（Motion现行交付要求为landscape 16:9）。Motion期不建 `episodes/<slug>`、不占原生在制期名额、不跑 `new-episode`/`production-route`/`orchestrate-step`/0—⑭回执与0号门。
 - 历史AST、双renderer对照、恢复历史episode → laohan-donghua。
 - 选题与写稿（未锁定稿）→ laohan-xuanti / laohan-chuangzuo；本skill从锁定稿起接。
 - 声音模型训练（复刻博主音色）→ laohan-yinse；v3-05是老韩已训音色模型，其每期WAV由项目侧产出。
@@ -33,7 +33,8 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 6. `motion/mastery/pronunciations.json` — 发音表真源
 7. `docs/工作区生产合同.md` §一 — Motion边界与凭据红线
 8. `docs/视频生产入口与适配.md`「Motion正式路线接入」节 — 交接点/目录规范/分流/门豁免
-9. `STATUS.md` 当前任务区 — 本期状态与在途工程（已存在同期工程先续接，不另起）
+9. `docs/HARNESS_COMPATIBILITY.md` — 跨宿主读取与实测范围（不把另一模型已读当自己已读）
+10. `STATUS.md` 当前任务区 — 本期状态与在途工程；**开工先查 `motion/projects/` 是否已有同期在途工程（如最新日期目录），有则续接，不另起**
 
 ## 输入契约
 
@@ -49,61 +50,76 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 | # | 步骤 | 执行位置 | 关键产物 |
 |---|------|---------|---------|
 | 1 | 文案定稿（锁定稿交接） | Mac | 冻结显示稿+发音稿 |
-| 2 | 最终配音（v3-05合成，Jeffrey听感通过） | pro6000-a服务器GPU，Mac保存试听 | 本期WAV+SHA+接受记录 |
+| 2 | 最终配音（v3-05合成；合成方法真源=`~/Documents/声音资产/Jeffrey/数字人专属音色融合方法.md`，执行前必读；听感门按DH-ROUTE §一B现行文本执行） | pro6000-a服务器GPU，Mac保存试听 | 本期WAV+SHA+采样数登记 |
 | 3 | 基础形象（合格素材复用优先；确需新素材走`motion/tools/dh-generate-clean.mjs`） | 本地/产品服务器 | 人物素材 |
 | 4 | 同声口型（WAV驱动，`same-voice-local.py`分块+`run-same-voice-remote.py`推理） | pro6000-a GPU，Mac调度 | 口型分块+清单SHA |
-| 5 | 画面拼接（裁核心帧、全局时钟拼合，Mac FFmpeg） | Mac | 完整人物画面，原WAV为唯一主声 |
+| 5 | 画面拼接（唯一入口`same-voice-local.py assemble`，拒绝手搓ffmpeg拼接） | Mac | 完整人物画面，原WAV为唯一主声 |
 | 6 | 导演与模板（声学对齐→全库选型→production-guard门链→plan/pilot/复核/render） | Mac本地 | 官方工程+参数+回执 |
 | 7 | 混音与交付（check-delivery带--video→Jeffrey实际听看接受） | Mac | 成片+accepted-final登记 |
 
 ## 门链（命令形态；字段与argv细节以PIPELINE为准）
 
-所有plan/render/delivery必须经共同入口，直接调helper是显式旁路、不登记门通过：
+所有plan/render/delivery必须经共同入口，直接调helper是显式旁路、不登记门通过。原包 `read/new/setup/doctor/prepare/preview` 保持官方命令原样执行，**不经guard**（guard只前置检查plan/render）：
 
 ```sh
 # ① 声学对齐（写参数前；真实Whisper large-v3对齐+来源回执）
 python3 motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
 
-# ②—⑥ 共同制作入口（--record指向本期production.json）
-python3 motion/tools/production-guard.py --record 本期/production.json --stage direct    # 登记编排+全库选型，封存revision
+# ② 正式片共同制作入口（--record指向本期production.json）
+python3 motion/tools/production-guard.py --record 本期/production.json --stage direct    # 登记编排+全库选型，封存revision（不要求已有params/captions）
 python3 motion/tools/production-guard.py --record 本期/production.json --stage plan  -- node 已核helper.mjs run 实际.motion 原包plan其余参数
-python3 motion/tools/production-guard.py --record 本期/pilot.production.json --stage pilot -- node ... render ...   # 独立kind=pilot记录
-python3 motion/tools/production-guard.py --record 本期/production.json --stage review-brief --sample 本期/qa/样段A.mp4 [--sample 样段B.mp4]
+
+# ③ 首次动态样段：独立kind=pilot记录，先走样段自己的 direct→plan→preview，再pilot渲染
+python3 motion/tools/production-guard.py --record 本期/pilot.production.json --stage direct
+python3 motion/tools/production-guard.py --record 本期/pilot.production.json --stage plan  -- node ... plan参数
+python3 motion/tools/production-guard.py --record 本期/pilot.production.json --stage pilot -- node ... render ...
+# 父编排不要求已有plan或pilot审核（避免首单循环）；父编排新revision后样段须重新登记
+
+# ④ 复核任务（--sample可重复；数量按未证明风险决定，不是两段配额）
+python3 motion/tools/production-guard.py --record 本期/production.json --stage review-brief --sample 本期/qa/样段A.mp4 --sample 本期/qa/样段B.mp4
+
+# ⑤⑥ 渲染与交付
 python3 motion/tools/production-guard.py --record 本期/production.json --stage render -- node ... render ...
 python3 motion/tools/production-guard.py --record 本期/production.json --stage delivery
 
 # 画幅/字幕只读检查：plan前一次；交付前同命令加 --video 实际成片.mp4
+# --source-record/--pronunciations 新制作必带（缺失则发音稿一致性校验不执行）
 PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
   --params 本期参数.json --captions 本期字幕 --script 冻结纯口播稿.txt \
-  --asr 原ASR.json --input-root 本期素材目录
+  --asr 原ASR.json --input-root 本期素材目录 \
+  --source-record 词源目录/source.json --pronunciations motion/mastery/pronunciations.json
 ```
 
-顺序硬约束：正式plan必须引用direct登记的当前revision；首次动态样段先pilot独立登记（避免审核自依赖）；真实plan/preview+实际样段齐备后先review-brief生成完整复核任务，异模型复核通过才render；render/delivery重核全部bindings；参数/素材/声音/编排任何变化→新revision→重新plan/预览/复核，旧回执不补签。
+顺序硬约束：正式plan必须引用direct登记的当前revision；pilot在review-brief之前完成样段自己的登记链；真实plan/preview+实际样段齐备后先review-brief生成完整复核任务，异模型复核通过才完整render；render/delivery重核全部bindings。变化分两类：**新素材/声音/契约/编排变化→先新revision再plan**；**参数调整→不强制新revision，但必须重新plan/预览/复核**。旧回执不补签。
 
 ## 模板全库选型（正式片direct前置，强制）
 
-四步：**全库刷新→候选比较→按需取得并验证→确认或重选**。`production.json`提供`template_selection`指向本期`template-selection.json`（schema=`laohan.motion-template-selection/1`）。要点：从本稿提取必须完成的视觉任务→全catalog轻量筛2—4个入围候选（本地与库外同池，各带"本稿哪段需要什么→模板哪项能力承担→依据→待验证"理由）；选中不在本地按官方流程下载验签登记current-release；同族复用必须写`reuse_comparison`与最强异族备选比较；否决项记`rejections`理由。不从本机已装包惯性重复，作者免费公开分发模板包视为已有下载授权（2026-10-28 Jeffrey指令）。字段细节见PIPELINE「模板全库选型」节。
+四步：**全库刷新→候选比较→按需取得并验证→确认或重选**。`production.json`提供`template_selection`指向本期`template-selection.json`（schema=`laohan.motion-template-selection/1`）。要点：从本稿提取必须完成的视觉任务→全catalog轻量筛2—4个入围候选（本地与库外同池，各带"本稿哪段需要什么→模板哪项能力承担→依据→待验证"理由；**新模板无画像不得直接淘汰，也不强制最终选库外**）；选中不在本地按官方流程下载验签登记current-release（**作者免费公开分发模板包视为已有下载授权（2026-10-28 Jeffrey指令）；付费或需新凭证的包仍先取得明确授权**）；同族复用必须写`reuse_comparison`与最强异族备选比较；否决项记`rejections`理由（同版本同分支且无新证据不重复尝试已否决项；下载失败与表达不匹配分开记录；候选耗尽回到文案端重新计划）。不从本机已装包惯性重复；刷新是轻量catalog级动作，不重做全库深度审计。字段细节见PIPELINE「模板全库选型」节。
+
+**字幕设计选择纪律**：选路线时把原模板演示/相关工程中的字幕作为视觉依据，核对原生与组件分支实际保留的排版/强调/语言能力并记录本片采用哪种；不能只因组件分支接SRT方便就绕过这项选择、用通用字幕层掩盖设计降级。
 
 ## 异模型复核与验收
 
-- review-brief生成完整复核任务（真源=`motion/mastery/VISUAL-REVIEW-BRIEF.md`），连同样段交异模型实际观看，不能只转发文件路径。
-- 复核模型按全局优先级：GLM→codex→Magpie免费DeepSeek→官方ds（禁guiji；与实现者同家族被guard拒绝）；调用满配不降思考档。
-- review schema=`laohan.motion-visual-review/1`，scope九项：subtitle-style/subtitle-breaks/action-sequence/semantic-content/viewer-comprehension/presenter-staging/pacing-hierarchy/sample-coverage，final另有whole_film_review。pilot_review必须覆盖请求中全部样段。
-- 负责人逐项裁决后登记；不编JSON冒充调用；原REVISE不得改写。
+- review-brief生成完整复核任务（真源=`motion/mastery/VISUAL-REVIEW-BRIEF.md`），连同样段交异模型实际观看，不能只转发文件路径；交接时只带完整目标、当前编排与真实材料，**不转抄旧批准/旧QA摘要**；执行者已接触过历史结论须声明暴露范围，不称完全盲审。
+- 复核模型按全局优先级：GLM→codex→Magpie免费DeepSeek→官方ds（禁guiji；与实现者同家族被guard拒绝）；**调用满配：思考档最高合法档不降级、不人为压缩等待/超时、不限制上下文窗口与输出token上限；免费档当场核实该provider/model当前免费标记（同名DeepSeek有收费款）**。
+- review schema=`laohan.motion-visual-review/1`，scope八项（技术四项+创意四项）：subtitle-style/subtitle-breaks/action-sequence/semantic-content/viewer-comprehension/presenter-staging/pacing-hierarchy/sample-coverage；final另有独立字段`whole_film_review`。pilot_review必须覆盖请求中全部样段。
+- 负责人逐项裁决后登记（裁决前自审：从实际叠加动态逐项读回承载意义的画面文字、核疑点原尺寸与声明的观看尺度、检查首末及切换时人物/字幕/主图进退）；不编JSON冒充调用；原REVISE不得改写。
 - Jeffrey实际接受才算final；机械PASS（`MACHINE_CHECKS_PASSED_NOT_ACCEPTANCE`）≠接受。
 
 ## 红线
 
 - **不自动发布**；发布=Jeffrey手动点击。Motion期发布预填按现行实践：工程`deliveries/accepted-final.json`登记+真实Chrome预填+页面回读。
-- `motion/runs/`、媒体原件、凭据不入git；原包只读、不私改、不手拆保护核心。
+- `motion/assets/`、`motion/baselines/`、`motion/runs/`、`motion/projects/`、`motion/deliveries/`均不入git（证据靠STATUS登记+工程目录本机留证）；原包只读、不私改、不手拆保护核心。
 - 凭据零入档；Motion标识疑似泄露按合同§一处置（停调用、记录、账号持有人官网撤销），不擅自换Key。
 - 线上产品代码不动；产品侧只读；服务器成片回传本地并登记SHA后，同批删该任务chunk与preprocess缓存（批量删非本任务产物先跨模型复核）。
-- 物理变速另建候选派生（人物/原声同倍率保音高，字幕/词界/时点统一换算一次），原速输入不覆盖；`speed=1`时声音SHA必须相等。
+- 物理变速另建候选派生（人物/原声同倍率保音高，字幕/词界/时点统一换算一次），原速输入不覆盖；`speed=1`时声音SHA必须相等。**不为凑模板截短/拉伸已验人声或改变嘴型时间**；容量不足换真实表达，不缩减模板能力。
+- 首次使用共同入口的新宿主，须先以本片负例验证（错误词源/缺样段审核会被拒绝）再做正确制作；未实际验证的宿主不标VERIFIED。
 - Motion期豁免的门只限原生Remotion链；共用门照常：发布信息与#AI新星计划、违规检测、候选接受与发布授权、远程算力纪律、Git纪律。
 
 ## 输出与完成证据
 
-- 工程目录：`motion/projects/YYYYMMDD-<slug>/`（production.json、director.md、inputs/、qa/、references/、instance/、`deliveries/`子目录）。
-- 候选/定稿成片与manifest/qa回执归工程`deliveries/`子目录；输入、最终参数、官方工程及QA归工程目录。
+- 工程目录：`motion/projects/YYYYMMDD-<slug>/`（production.json、director.md、inputs/、qa/、references/、instance/、publish/、`deliveries/`子目录）。
+- 候选/定稿成片与manifest/qa回执归工程`deliveries/`子目录（V4旧文"交付成片归motion/deliveries/"已被接入规格取代，以工程deliveries/为准）；输入、最终参数、官方工程及QA归工程目录。
 - STATUS.md登记本期制作状态；接受记录=工程`deliveries/accepted-final.json`。
-- 完成证据链：来源回执（align-source）→direct revision回执→plan成功回执→pilot样段→review-brief请求+异模型response→render bindings→delivery final_review→check-delivery(--video)通过→Jeffrey接受登记。缺环不称完成。
+- 完成证据链：来源回执（align-source）→direct revision回执→plan成功回执→样段自己的direct/plan/pilot回执→review-brief请求+异模型response→render bindings→delivery final_review→check-delivery(--video)通过→Jeffrey接受登记。缺环不称完成。
+- 检查器未支持的合法原包结构：沿其公开原生校验补核并分别记录官方结果与本工具未核范围（UNVERIFIED），官方补核不得冒签production-guard通过；不为过检查改分支或删槽。

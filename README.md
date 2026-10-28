@@ -25,7 +25,7 @@
 > **不必全装**——挑你要的技能单独装，避免装一堆用不上的。完整单装命令见「[按需安装](#按需安装)」。
 
 ```bash
-# 一键全装（22 个技能，需要 Claude Code、Codex 或 OpenClaw）
+# 一键全装（23 个技能，需要 Claude Code、Codex 或 OpenClaw）
 npx skills add hanzhcn/laohan-skills --agent claude-code -g -y   # Codex/OpenClaw 用户把 claude-code 换成对应 agent 名
 
 # 单装一个（推荐：按需挑）
@@ -44,7 +44,7 @@ npx skills add hanzhcn/laohan-skills -a codex --skill laohan-chushicodex -y
 
 不必全装。挑你要的，复制对应命令（前提：已装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex](https://developers.openai.com/codex/) 或 OpenClaw）：
 
-**内容创作（12 个）**
+**内容创作（13 个）**
 ```bash
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti           # 🔥 选题决策（热点+达人库+抖音验证）
 npx skills add hanzhcn/laohan-skills --skill laohan-xuanti --skill laohan-chuangzuo # ✍️ 统一创作引擎（5 输入→口播稿）
@@ -83,7 +83,7 @@ npx skills add hanzhcn/laohan-skills --skill laohan-yunying          # 📈 发�
 
 ---
 
-## 内容创作（12 个）
+## 内容创作（13 个）
 
 > 从选题到成片，全流程覆盖。每一步都有对应技能，说一句就能触发。
 
