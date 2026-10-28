@@ -21,10 +21,11 @@
 
 - **direct前**：`director`、`template_contract`（所选公开契约路径）、`director_assets`、`script/asr/source_record/pronunciations/visual_reference`、原包`workflow`、`helper/template`路径与SHA；正式片加`template_selection`。
 - **plan前**：`params/captions/input_root`，并声明plan输出路径`official_plan`（缺它plan阶段直接exit 1）。
-- **review-brief前**：预览审阅路径`official_preview`（review-brief消费；缺它exit 1）。
+- **pilot记录在pilot前／正式记录在review-brief前**：各自的预览审阅路径`official_preview`须已存在；两个阶段都消费该字段，缺失即exit 1。
 - **pilot/render前**：正式输出路径`output`（缺它render exit 1）；render另绑`pilot_review`。
 - **delivery前**：`final_review`（含whole_film_review）。
-- `speed=1`时与来源回执声音SHA必须相等。路径相对该记录；文件名不能替代字节绑定；除人物/声音/音乐外，段内及嵌套素材槽也绑定字节，动态样段须为可实际解码多帧视频。
+- Motion记录的`speed`固定1.0，与来源回执声音SHA必须相等；物理变速另建候选声音和来源，不在记录里二次换速。路径相对该记录；文件名不能替代字节绑定；除人物/声音/音乐外，段内及嵌套素材槽也绑定字节，动态样段须为可实际解码多帧视频。
+- guard命令的helper/template/workflow及`--plan/--out/--preview-review`须逐项匹配本记录，路径使用解析后的绝对路径；完整约束及具体红字只认PIPELINE「共同入口argv一致性」表，不按占位命令猜参数。
 
 ## template-selection.json 要点（schema=laohan.motion-template-selection/1）
 
@@ -72,7 +73,7 @@ PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
 
 ## 环境与工具事实
 
-- 生产命令统一`PATH="/opt/homebrew/bin:$PATH"`；本机Node22/Conda Python3.13/FFmpeg。
+- 生产命令统一`PATH="/opt/homebrew/bin:$PATH"`；Node/Python/FFmpeg版本以本次实际调用和所选原包doctor结果为准，不沿用历史机器版本。
 - helper/包SHA只认current-release.json与本期实核；固定官网更新检查`https://motiongit.com/assets/motion-runtimes/latest.json`（查询失败只记未确认；查到新版≠旧版失效，不热替换）。
 - 官网通用教程/GitHub样板/个人包可能属不同版本族，不能按同名互换输入或验收。
 - Motion原包与原生Remotion是两条路线：不调用`digital_human_portrait`/`motion_explainer`、不套用固定舞台/小窗默认/默认倍率。

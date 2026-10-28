@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "1.1.1"
+version: "1.1.2"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
@@ -62,8 +62,8 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 所有plan/render/delivery必须经共同入口，直接调helper是显式旁路、不登记门通过。原包 `read/new/setup/doctor/prepare/preview` 保持官方命令原样执行，**不经guard**（guard只前置检查plan/render）：
 
 ```sh
-# ① 声学对齐（写参数前；真实Whisper large-v3对齐+来源回执）
-python3 motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
+# ① 声学对齐（写参数前；先按PIPELINE核解释器可导入stable_whisper/torch，缺环境停止）
+"$HOME/Library/Caches/laohanvideo/whisper-alignment-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
 
 # ② 正式片共同制作入口（--record指向本期production.json）
 python3 motion/tools/production-guard.py --record 本期/production.json --stage direct    # 登记编排+全库选型，封存revision（不要求已有params/captions）

@@ -39,9 +39,9 @@
 
 ### 6a 声学对齐（写参数前）
 ```sh
-python3 motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
+"$HOME/Library/Caches/laohanvideo/whisper-alignment-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
 ```
-- 本机已验stable-ts 2.19.1环境（Whisper large-v3）；回执绑定声音、未经改写的声学记录、发音稿和生产工具快照。
+- 本机解释器与导入预检命令按PIPELINE「共同制作入口」；默认python3不保证含stable_whisper，缺环境停止，不静默换引擎。回执绑定声音、未经改写的声学记录、发音稿和生产工具快照。
 - `--phrases`给保留全文的语义短语、`--windows`给有真实来源的局部搜索区间；每个最终边界由实际音频注意力DTW产生，短语内没有逐字时钟，不冒称逐字扫色。
 - 零时长或未对齐内容报红，不能改JSON或补时；`speed=1`且声音SHA必须与正式记录一致；物理变速另存来源不在此二次换速。
 
