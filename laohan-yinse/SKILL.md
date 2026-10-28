@@ -9,15 +9,17 @@ description: 复刻博主声音模型工作流（硬性前置，唯一方法=服
 
 **每个复刻博主一个专属声音模型，唯一方法 = pro6000 算力机 CosyVoice3 微调训练**（Jeffrey 2026-10-27 钉死：不走零样本）。声音模型是博主复刻的核心资产：数字人=形象克隆+口型驱动，声音来自 TTS——没有本人音色模型，出来的是"通用音色配这张脸"，瞬间违和。
 
-硬性流程：形象处理/视频生成之前，先完成声音模型训练与登记。一次建立、所有视频复用。
+硬性流程：交付整稿配音与运行同声口型前，先完成本博主声音模型训练、登记与验收；素材视觉筛查/clean处理和声音备料可先做。模型可复用，不能跨博主混用或跳过每期整轨听审。
+
+方法依据：`~/Documents/声音资产/Jeffrey/训练方法论.md` §3/§4/§6—8；整稿声音与口型衔接读 `数字人专属音色融合方法.md` 与 `laohanvideo/motion/mastery/DH-ROUTE.md`。复用数据、训练与听审方法，不复用Jeffrey个人权重、参考池或接受记录；本博主必须有自己的资产绑定。
 
 ## 素材标准
 
 | 项 | 要求 |
 |---|---|
-| 总量 | ≥8-10 分钟纯人声（多条原视频） |
+| 总量 | 目标8–10分钟净有效人声（按清洗后逐段时长统计，不以原视频容器时长代替） |
 | 质量 | 单人清晰口播、领夹麦/近场；无明显 BGM/混响（BGM 混入训练=音色污染） |
-| 格式 | WAV 44.1kHz 单声道（提取时归一） |
+| 格式 | 训练用24kHz单声道PCM16 WAV；原视频另存，不反复重采样 |
 | 同源 | 与形象素材同一博主 |
 
 ## 数据铁律（源自训练方法论 v3.1 终版，codex 三轮审查——2026-10-28 三轮查漏补录）
@@ -40,7 +42,7 @@ description: 复刻博主声音模型工作流（硬性前置，唯一方法=服
 ### 1. 提取（本机 ffmpeg，逐条）
 
 ```bash
-ffmpeg -y -i <视频>.mp4 -vn -ac 1 -ar 44100 <博主>-<条目名>.wav
+ffmpeg -n -i <视频>.mp4 -vn -ac 1 -ar 24000 -c:a pcm_s16le <博主>-<视频ID>-24k.wav
 ```
 
 ### 2. 质检
@@ -60,11 +62,12 @@ ffmpeg -y -f concat -safe 0 -i concat.txt -c copy <博主>-full-<总秒数>s.wav
 
 训练机：`ssh pro6000-a`（AutoDL RTX PRO 6000 Blackwell 96G，seetacloud 西部；生产算力机，跑 7 进程服务）。训练工作目录：`/root/autodl-tmp/cosyvoice-train/`（Jeffrey 先例 model-jeffrey-v3-05 在此）。
 
-**切段（本机，按源视频分别处理）**：先按第3步的来源记录去重；重复/重叠来源归同一group_id，再分别对保留的源WAV切段，不能对已拼接full.wav盲切。ffmpeg silencedetect 找静音点，静音中点作切点，聚成 4-15s 段：
+**切段（本机，按源视频分别处理）**：先按第3步的来源记录去重；重复/重叠来源归同一group_id，再分别对保留的源WAV切段，不能对已拼接full.wav盲切。ffmpeg silencedetect辅助定位静音，结合句边界切成约5–15秒：
 ```python
 # 对每个保留的源WAV分别运行；full.wav只作试听归档
 # ffmpeg -i <源视频ID>-24k.wav -af silencedetect=noise=-35dB:d=0.45 -f null -
-# 解析 silence_start/end 取中点为切点，4-15s 聚段，<3.5s 丢弃，>15.5s 硬切 10s
+# 静音中点/句界作候选切点，回听保留完整字头字尾；短段可与同源相邻句合并
+# 长段找不到安全句界时回听重切或剔除，不按固定10秒硬切穿过单词
 ```
 段命名 `<人名>_src<视频ID>_g<group_id>_s<起点毫秒>.wav`；`utt_id`保留对应来源/组信息。维护`source-map.tsv`记录源视频ID、源WAV路径/SHA、group_id、utt_id、源内起止时间和split；train/dev按group_id整组划分，生成两侧清单后核对组ID无交集。不能以历史Deborah的78段/483s训练成功代替本期来源与切分核验。
 
@@ -83,9 +86,17 @@ data-<人名>/{train,dev}/     # 按来源视频分组，9:1为目标比例；�
 ```
 打包上传：`tar czf data-<人名>.tar.gz data-<人名>/ && scp ... pro6000-a:/root/autodl-tmp/cosyvoice-train/`（mac tar 的 xattr 警告无害）。
 
+`wav.scp`必须写**服务器解包后的真实绝对路径**；不能把Mac的`/Users/...`路径原样送入远端。上传后逐项核音频存在、24k/mono/PCM16、ID与source-map一致，再进入特征提取。
+
 ### 5. 特征提取 + 微调训练（服务器，2026-10-27 实战验证配方）
 
-**独立脚本模式（不碰 Jeffrey 原 data/ 与脚本）**：复制 `pipeline.sh`→`pipeline-<人名>.sh`、`train.sh`→`train-<人名>.sh`，改四处：`D=data-<人名>`、`--model_dir exp/<人名>/llm`、`--tensorboard_dir tb/<人名>/llm`、`--rdzv_endpoint=localhost:1235`（端口错开 1234 防撞）。
+**独立脚本模式（不改原 data/、配置与脚本）**：先只读核本机与远端当前版本，再复制 `pipeline.sh`/`train.sh` 为本博主专属文件；`conf/cosyvoice3.yaml`也复制为本任务配置，不直接改共享原件。逐项改并回读：
+
+- pipeline和train两份脚本中的`D`都指向本博主服务器绝对数据目录。
+- **pipeline中的train脚本调用**必须改到`train-<人名>.sh`；只改D/输出目录会继续调用旧`train.sh`、训练旧数据。
+- train的`--config`、`--model_dir`、`--tensorboard_dir`、`--rdzv_id`和端口均绑定本任务；端口实际确认空闲，不把1235写死为永远可用。
+- 新副本保留`set -e`并启用`set -o pipefail`；旧脚本只有`set -e`时，`python ... | tail -1`会吞掉前级失败，不能照抄。每阶段另核特征三件套、parquet/ID与实际返回码，不能只看PIPELINE_DONE。
+- 记录当前配置的学习率、epoch上限、scheduler和worker数；不把共享配置或历史耗时当新博主默认。按真源用未见文本检查泛化，发散/退化时停止本次训练。
 
 ```bash
 # 服务器上一键跑（特征提取CPU → parquet → GPU训练，自动串接）
@@ -96,7 +107,7 @@ nohup bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-trai
 - 底座：`Fun-CosyVoice3-0.5B-2512`（英文素材走其中 CosyVoice-BlankEN，对路）
 - 训练配方：torchrun 单卡 `cosyvoice/bin/train.py --model llm --use_amp`（conf/cosyvoice3.yaml 默认档）
 - 实测速度：70 段/8 分钟数据，PRO 6000 单卡几分钟一个 epoch，全程约 10-30 分钟级
-- GPU 与生产 TTS 共存：训练约再占 16-20G（共 97G），不冲突；但别在生成高峰训
+- GPU与生产TTS共卡，空闲显存不证明互不干扰。训练前记录生产基线，训练中按真源监控延迟/错误率，超阈值只暂停本次训练；不重启或结束生产服务。显存与吞吐只报本轮快照，历史16–20G占用不作保证。
 
 **产物**：`exp/<人名>/llm/epoch_N_whole.pt`（含 epoch/step 元数据键——★坑3：直接 cp 当 llm.pt 用会 `Unexpected key(s): epoch, step` 加载失败，必须剥离）。
 
@@ -104,20 +115,28 @@ nohup bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人名>-trai
 
 ```bash
 # ① 组装推理目录（底座全家 + 微调 llm.pt）；PM=底座权重根
+cd /root/autodl-tmp/cosyvoice-train  # 下方exp/与model-相对路径以此为根
 PM=/root/autodl-tmp/laohan/weights/cosyvoice3/Fun-CosyVoice3-0.5B-2512
-cp -r $PM /root/autodl-tmp/cosyvoice-train/model-<人名>-v1
+VOICE_CAND=/root/autodl-tmp/cosyvoice-train/model-<人名>-v1
+test ! -e "$VOICE_CAND" || exit 1  # 只建新候选，禁止嵌套cp或覆盖已有模型
+cp -r "$PM" "$VOICE_CAND"
 # ② 剥离元数据键后存 llm.pt（坑3修复）
 python -c "import torch; sd=torch.load('exp/<人名>/llm/epoch_N_whole.pt',map_location='cpu',weights_only=True); sd.pop('epoch',None); sd.pop('step',None); torch.save(sd,'model-<人名>-v1/llm.pt')"
-# ③ 合成验收：PYTHONPATH 必须=仓目录，REF_WAV 必须绝对路径（坑4/坑5）
-cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + inference_zero_shot(英文测试句, prompt=BlankEN模板+参考段文本, REF_WAV)
+# ③ 合成验收：先按下文准备本任务脚本，再用已核解释器和工作目录执行
+cd /root/autodl-tmp/cosyvoice-train/CosyVoice
+PYTHONPATH="$PWD" /root/autodl-tmp/cosyvoice-train/venv/bin/python /root/autodl-tmp/cosyvoice-train/synth-<人名>.py
 ```
+
+训练使用真源的checkpoint评估/平均方法；记录实际所选epoch或average_model输入，不机械挑某个历史epoch。上面剥离元数据的示例仅适用于已选择的`epoch_N_whole.pt`；使用官方平均产物时先核其格式，不重复假定元数据存在。
+
+**合成脚本必须先准备和核对，不能假设存在通用`synth.py`。** 2026-10-28远端核实：只有任务专用`synth_deborah.py`/`synth_ep01.py`；前者首chunk后`break`，不能复制其截断逻辑。新脚本按第7步完整收集分块，明确本博主MODEL_DIR、已校对REF_WAV/REF_TEXT、目标文本与独立输出路径；可参考`synth_ep01.py`的拼接方式，但不得直接运行其Deborah硬编码。解释器/文件缺失只阻本步骤，不静默安装环境或换生产入口。
 
 - 合成产物 SYNTH_DONE 后 scp 回本地，按上文“验收”节做同条件A/B并交 Jeffrey 盲听；日志成功不等于接受
 - 模型回迁：只回迁 llm.pt（约 2GB），底座本地/服务器都有不重复迁
 
 ### 完成证据（训练环节怎么算完成）
 
-① data-{博主}/{train,dev}/parquet 生成且 pipeline-<博主>.sh 日志打印 PIPELINE_DONE；② `model-<博主>-<版本>/llm.pt`（微调权重，剥离 epoch/step 键后）产出并拷回本地 assets/voice-models/<博主>/；③ 第6步引用的同条件A/B、Jeffrey盲听及稳定性检查通过并登记。任一不满足=未完成，不进形象/渲染阶段。
+① 特征/parquet实际成功、ID/数量核对通过，不能只凭PIPELINE_DONE日志；② 已选微调权重在完整候选model_dir真实加载、试合成，并拷回本地assets/voice-models/<博主>/核SHA；③ 第6步引用的同条件A/B、Jeffrey盲听及稳定性检查通过并登记。任一不满足=模型未完成，不交整稿配音/口型渲染；不阻断只读素材筛查。
 
 ### 6. 模型回迁 + 登记 + 验收
 
@@ -129,6 +148,7 @@ cd CosyVoice && PYTHONPATH=$PWD python synth.py   # AutoModel(model_dir) + infer
 
 - 合成不裸用单条参考：从博主切段中挑**多对参考（不同情绪/风格：如坚定教学/温柔安抚/兴奋）**建参考池，合成时选风格参考驱动韵律（Jeffrey 判例：7 对参考池+默认"兴奋"风格）
 - 风格选择登记进项目（每个博主的默认风格一次定稳）
+- Jeffrey个人的“兴奋B”只属其个人接受记录，不自动成为新博主默认；参考音频与逐字文本也须逐对校准。
 
 ### 7. 整稿合成（交付给口型链的最终 WAV——laohan-laowai ⑤ 的输入契约）
 
@@ -139,6 +159,7 @@ torchaudio.save(out, speech, cv.sample_rate)
 # 下载回 Mac 后统一转 24kHz 单声道 PCM16（口型链硬要求，此步由本 skill 交付时完成）：
 ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 ```
+- `inference_zero_shot`是当前CosyVoice的推理方法名，已训练模型仍通过它消费参考音频；禁止的是跳过本博主微调而用基模冒充交付。基模仅作同条件A/B对照，不因函数名误换路线。
 - **长稿分段**：>300 字/词按自然段分次合成再拼（过长语调衰减——Jeffrey 经验值）；分块 chunk 拼接勿截断
 - **响度门**：不预设达标——先测 `ffmpeg -af loudnorm=print_format=summary -f null -` 再按合同决定归一
 - **听感门是硬门**：完整 WAV 必须 Jeffrey 整轨听审通过后才能进口型推理（禁止跳过听审直接出片）
