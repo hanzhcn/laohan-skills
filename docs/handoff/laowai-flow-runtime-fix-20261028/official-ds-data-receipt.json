@@ -1,0 +1,14 @@
+{
+  "status": "FAILED",
+  "batch": "data",
+  "candidate_commit": "c474690e9f17bcb8588ccec326979c27b626e989",
+  "source_commit": "2d8f701eb75084715d575d3228d60035a497bce2",
+  "http_status": "UNVERIFIED_CLI",
+  "cli_phase": "provider_thinking",
+  "cli_last_progress_seconds": 359.957,
+  "thinking_events": 59794,
+  "failure_type": "ReviewError",
+  "failure_reason": "cli_timeout",
+  "elapsed_seconds": 360.04,
+  "ended_at": "2026-10-28T12:29:45.736312+00:00"
+}

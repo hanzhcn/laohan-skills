@@ -1,0 +1,10 @@
+{
+  "source_sha256": "b972e3567a1f12d7511e6d0764876adf50c9720e4b83c17b64ee79700dca4bd6",
+  "bridges": {
+    "/Users/hanzhmacbookair/.agents/skills/laohan-yinse/SKILL.md": true,
+    "/Users/hanzhmacbookair/.claude/skills/laohan-yinse/SKILL.md": true
+  },
+  "native_harness_trigger": "NOT_RUN_THIS_TASK",
+  "video_runtime_lock_exists": true,
+  "source_skill_locked": false
+}

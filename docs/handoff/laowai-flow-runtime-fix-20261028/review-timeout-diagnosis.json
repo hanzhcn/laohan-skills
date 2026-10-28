@@ -1,0 +1,64 @@
+{
+  "attempts": [
+    {
+      "batch": "runtime",
+      "input_bytes": 126159,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.05,
+      "thinking_events": 60825
+    },
+    {
+      "batch": "data",
+      "input_bytes": 91646,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.04,
+      "thinking_events": 59794
+    },
+    {
+      "batch": "voice",
+      "input_bytes": 103474,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.04,
+      "thinking_events": 62620
+    },
+    {
+      "batch": "fetch-small",
+      "input_bytes": 18533,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.02,
+      "thinking_events": 58251
+    },
+    {
+      "batch": "features-small",
+      "input_bytes": 36142,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.02,
+      "thinking_events": 64232
+    },
+    {
+      "batch": "session-small",
+      "input_bytes": 30979,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.02,
+      "thinking_events": 60733
+    },
+    {
+      "batch": "synth-small",
+      "input_bytes": 45457,
+      "status": "FAILED",
+      "phase": "provider_thinking",
+      "elapsed": 360.02,
+      "thinking_events": 63781
+    }
+  ],
+  "observed": "provider kept sending thinking events until hard 360s; no completed answer; no proof of network/key outage",
+  "root_process_issue": "input-size hypothesis was NOT sufficient: 18KB focused batch also hit 360s while thinking; actual model-internal cause UNDETERMINED, not network/key outage proof",
+  "action": "stop official DS repeats; no lowering effort or extending in-flight budgets; current live catalog confirms Hy3 free=true/rate=0, Step paid; separate free Hy3 review via existing installed provider with free_only=true; no credential/global config writes",
+  "not_reused_as_approval": true
+}

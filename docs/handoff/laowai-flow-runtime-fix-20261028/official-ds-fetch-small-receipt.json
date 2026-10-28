@@ -1,0 +1,14 @@
+{
+  "status": "FAILED",
+  "batch": "fetch-small",
+  "candidate_commit": "c474690e9f17bcb8588ccec326979c27b626e989",
+  "source_commit": "2d8f701eb75084715d575d3228d60035a497bce2",
+  "http_status": "UNVERIFIED_CLI",
+  "cli_phase": "provider_thinking",
+  "cli_last_progress_seconds": 359.995,
+  "thinking_events": 58251,
+  "failure_type": "ReviewError",
+  "failure_reason": "cli_timeout",
+  "elapsed_seconds": 360.02,
+  "ended_at": "2026-10-28T12:38:08.752853+00:00"
+}

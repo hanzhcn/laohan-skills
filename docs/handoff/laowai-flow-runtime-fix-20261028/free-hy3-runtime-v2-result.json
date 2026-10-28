@@ -1,0 +1,7 @@
+{
+  "candidate_commit": "c474690e9f17bcb8588ccec326979c27b626e989",
+  "source_commit": "2d8f701eb75084715d575d3228d60035a497bce2",
+  "verdict": "APPROVE_CODE_ONLY",
+  "findings": [],
+  "unverified": []
+}

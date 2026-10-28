@@ -1,0 +1,35 @@
+{
+  "old_tree_sha256": {
+    "pipeline.sh": "d3a170f698c3f4142940480edfeb331e1e87729d1fce6dd6e584299cb9ff9233",
+    "train.sh": "b3177d4edd499b96447162bfa956063abf966468c708cd27b798104b20b6e873",
+    "pipeline-deborah.sh": "5a19de8e1dd950a3df5a4811d911f8ba9f9407e9fc810b68bf7e5a44733433d9",
+    "train-deborah.sh": "aaa34bf641af299f24b85a235fbd09f44a2124045ef1fbb91d5389c03eac9281",
+    "synth_deborah.py": "60ed68228b3391b1f80ae6a2191c7efb39789bfc79a5dc3041902c722db25d38",
+    "synth_ep01.py": "7aab2df9c907abeea71c90917fc64726cf094d5a5326216cedbc58a84644ceaf",
+    "CosyVoice/examples/libritts/cosyvoice3/conf/cosyvoice3.yaml": "d83f215b610e4602bb2d34add066124c0b1d5a93fe688d49f51aeae0ba4a528b",
+    "CosyVoice/tools/extract_speech_token.py": "3304ea1ec091338976500f01a29504b590183447763e482453f01aec7641763b"
+  },
+  "new_job_sha256": {
+    "synth-kb78769.py": "153e75fc1542b99af852e760095d953c6249325fe9b46c6636c729cefd06ba4f",
+    "cosyvoice3-kb78769.yaml": "d83f215b610e4602bb2d34add066124c0b1d5a93fe688d49f51aeae0ba4a528b",
+    "extract_embedding_cpu.py": "a76bfd4a9e1723acad3a66552c4f82cda039a2d89159f8608fc5853d6953ae3e",
+    "validate_inputs.py": "e205c1c5b17d0a461eb74cbbd8bce3b71aad43ce19b3c91b8c766741a3a350f4",
+    "README.md": "9159e76508422cc591c7af0038aa315059ab03a4598a4699934ed5dd5d2c37ed",
+    "prepare_parquet.py": "8b8faeedabb56b2ada605c0e2e6c45468660c2feb95b033cca2bb794d5c20096",
+    "extract_speech_token_cpu.py": "c6252474232bf326e80802ce46f53cd0530046b44e9219af322ef558c5f99028",
+    "single_worker.py": "638c1d5f0192ce647c1254cfe67e33052502fb6d2e6292543c1a59c0231b82ea",
+    "launch_voice.py": "1c6c29608b0474bb6d5d6a021e32682a0228ea07aafc14c9ab02e96a9fd2c57c",
+    "train-kb78769.sh": "45957ca0334e19ed9868ed24dd4443dce56fc8f3baee7db7d0a22d251e2699f6",
+    "pipeline-kb78769.sh": "aa31ae78ed2c79561544b9d6acd81971c11eb0fac84df4730df85c5087c63575"
+  },
+  "unexpected_work_dirs": [],
+  "help_checks": {
+    "launch_voice.py": 0,
+    "synth-kb78769.py": 0,
+    "validate_inputs.py": 0
+  },
+  "status": "FRESH_READBACK_PASS",
+  "unmodified_other_snapshot_files": true,
+  "gpu_work": false,
+  "model_acceptance": false
+}

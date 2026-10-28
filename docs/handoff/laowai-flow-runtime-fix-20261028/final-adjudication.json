@@ -1,0 +1,27 @@
+{
+  "candidate_commit": "c474690e9f17bcb8588ccec326979c27b626e989",
+  "source_commit": "2d8f701eb75084715d575d3228d60035a497bce2",
+  "same_model_findings": {
+    "agree_fixed_retested": 5,
+    "pending": 0
+  },
+  "official_ds": {
+    "valid_reviews": 0,
+    "timeout_calls": 7,
+    "approval": false,
+    "http_status": "UNVERIFIED_CLI"
+  },
+  "free_hy3": {
+    "receipt": "free-hy3-runtime-v2-receipt.json",
+    "valid": true,
+    "actual_model": "hy3",
+    "http_status": 200,
+    "finish_reason": "stop",
+    "verdict": "APPROVE_CODE_ONLY",
+    "findings": [],
+    "credit": 0
+  },
+  "decision": "covered execution code repair accepted for offline-script installation only",
+  "production_quality_acceptance": false,
+  "all_manual_production_prerequisites_still_required": true
+}
