@@ -174,7 +174,7 @@ docs/
 - 入口必须 `launch_voice.py pipeline --run --timeout 3600`（直接 pipeline --run 会被 STOP）；远端 python 用绝对路径 `/root/autodl-tmp/cosyvoice-train/venv/bin/python`（非交互 PATH 无 python3）
 - **首次组装须区分训练checkpoint与推理权重**：训练件含 epoch/step 时另存剥离副本，并登记两份SHA；不原地覆盖训练原件。已有可用推理包直接复用，不为每期重复剥离/新建模型。
 - retention 已接线（train-kb78769.sh: single_worker→train_with_retention→train.py）；60段555s 14epoch 实测约70分钟（GPU被抢时会拖30倍）
-- **多窗口并行同任务=双输**：先 SendMessage 核对（ListAgents），A/B 争议用 campplus speaker embedding 相似度客观裁决（embedder 用底模 campplus.onnx，多段真声参考）
+- 同任务避免重复训练：先核其他工作线的实际任务与资源归属。campplus speaker embedding相似度仅作A/B辅助比较，不替代Jeffrey盲听、本期整轨听审和成片接受，也不因相似度高自动批准模型或新WAV。
 
 ### 口型（same-voice）
 - 本次180帧分块触发RAM门，120帧配置完成23块；仅作本期输入/负载的参考，下期重新核几何与资源，不能保证一次跑通。

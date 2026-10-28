@@ -9,3 +9,5 @@
 本期真实资产和反例证据位于成长项目 `docs/handoff/VOICE_REUSE_PROTECTION_20261029/`；项目20GiB预算内补归档首期已用推理件与参考对，保持远端原件及本地两个checkpoint。现有guard隔离夹具验证保护类型不删、保护参考父目录拒绝、真实临时项可释放。Homebrew Python3.15现有19项套件18通过/1平台跳过；Apple Python3.9首跑夹具故障与报告序列化错误如实留档，未改代码/测试。
 
 独立复审：待GLM优先、满配通道的完整有效终态及逐项实证裁决。对抗范围含同博主新稿重训诱导、服装/场景变更、缺备份/参考、回迁即删、旧验收冒用、本地pt存在但恢复未测、跨博主误绑定和父目录清理；未测真实harness派发、恢复GPU加载、音色/成片接受及发布。结果完成后补回执，不冒签。
+
+首轮实况：GLM max/1800s/128000调用在184.26秒以cli_result_failure失败，不能登记通过；Codex因与实现者同属GPT跳过；当前元数据确认免费的Magpie `workbuddy-ai/deepseek-v4.1-flash` max/1800s/128000在487.656秒HTTP200/stop完整返回CHANGES_REQUIRED。F1–F8已逐项实证修正：去除另一处缓存压力清理授权、按真实retained_names去掉额外永久init、campplus仅辅助验收、补原参考/证据与远端入口及SHA保护、合并资产总量19.29GiB后forecast改19.5GiB（上限仍20）、显式单参考风格、去掉ASR100%保证。实际远端模型/参考SHA匹配，四个入口/配置与仓库匹配；storage_guard.py及任务registry未核到，明确未就绪，不擅部署或执行清理。修订增量复审尚待终态。

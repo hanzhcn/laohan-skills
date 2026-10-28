@@ -136,7 +136,7 @@ nohup setsid bash /root/autodl-tmp/cosyvoice-train/pipeline-<人名>.sh > <人�
 
 - 底座：`Fun-CosyVoice3-0.5B-2512`（英文素材走其中 CosyVoice-BlankEN，对路）
 - 训练入口：单卡`cosyvoice/bin/train.py --model llm --use_amp`，可用上述受控torchrun或同组单rank入口；读取本任务专属配置，不存在可直接照跑的共享“默认档”
-- 实测速度：70 段/8 分钟数据，PRO 6000 单卡几分钟一个 epoch，全程约 10-30 分钟级
+- 历史速度记录：70段/8分钟数据曾为10–30分钟级；后来的60段/555s/14epoch约70分钟。两者条件不同，不能作为新博主固定预算；同一博主复用不重新计算训练耗时。
 - GPU与生产TTS共卡，空闲显存不证明互不干扰。训练前记录生产基线，训练中按真源监控延迟/错误率，超阈值只暂停本次训练；不重启或结束生产服务。显存与吞吐只报本轮快照，历史16–20G占用不作保证。
 
 **产物**：`exp/<人名>/llm/epoch_N_whole.pt`（含 epoch/step 元数据键——★坑3：直接 cp 当 llm.pt 用会 `Unexpected key(s): epoch, step` 加载失败，必须剥离）。
@@ -236,10 +236,10 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 
 - **推理加载前剥 epoch/step 键**：训练存的 checkpoint 含 `epoch`/`step` 元数据键，CosyVoice3 AutoModel strict load 直接拒（Unexpected key(s)）；推理包 llm.pt 必须是剥过的版本（训练原件保留，另存剥离副本绑定 SHA）
 - 上述组装仅首次/恢复时需要；同一已选推理权重跨期复用，不随新稿重复训练或另建默认模型。
-- **retention wrapper 必须在链上**：`single_worker.py train_with_retention.py train.py`（曾漏接中间层导致 15 份 checkpoint 堆积 30GB 磁盘压线）；llm.pt+yaml 各自登记 registry，retained=latest+best2（CV loss 排序）+init
-- **60段555s/14epoch 单卡约70分钟**（GPU 独占时）；同卡双训练互抢会拖 30 倍并压爆磁盘——开训前 `nvidia-smi --query-compute-apps` + 跨会话 SendMessage 核对无并行任务
+- **retention wrapper 必须在链上**：`single_worker.py train_with_retention.py train.py`（曾漏接中间层导致检查点堆积）；pt/yaml成对登记，当前 `retained_names` 只保留 latest+best2（按CV loss去重最多三份），init仅在它本身为latest时计入，不额外永久保留。已选模型/回滚版先独立归档保护，不交训练retention删除最后可恢复副本。
+- **60段555s/14epoch 单卡约70分钟**是本次条件下记录，不保证下次耗时；同卡训练互抢会严重拖慢并增加存储压力。开训前核GPU活动及其他工作线，不能据此把参数或70分钟定死；同一博主复用不含重新训练。
 - CV loss 每 epoch 都打（`Epoch N Step M CV info lr ... rank loss X`），ep13=3.8033 收敛正常；保留 latest+best2+init 后 exp/llm 约 5.7G
-- cgroup RAM 门（12GiB 保护线）：删 sample.pkl + 内存压力进程回收 file cache（详见 laohan-laowai 判例节）
+- 本次曾处理 sample.pkl/file cache，**不是通用清理授权**：仅在任务终结、无恢复/组装消费者且有释放证据时逐项处理；不自动制造内存压力、不清全局缓存、不以清cache绕过RAM门。按项目guard与唯一writer流程核对，详见laohan-laowai保护节。
 - 远端非交互 shell 无 python3；launch_voice.py 是唯一受控入口（receipt 进程组绑定，超时 SIGKILL 整组）
-- **A/B 模型裁决用 campplus 说话人相似度**（底模自带 campplus.onnx，fbank80→onnx→余弦；8 段真声参考跨 5 源），比人耳听感陈述客观；A_vs_B 0.978 说明同源底模音色高度一致，差异在细节还原度
-- 转写污染教训：spoken 文本导出要精确锚定"英文口播"标题后的引用块——文档头部说明块同是 `> ` 前缀会被误提取，TTS 会把中文说明念出来；ASR 回转验证（词级相似度+词数对齐）能 100% 抓住此类污染
+- **campplus说话人相似度仅作A/B辅助比较**（底模自带campplus.onnx，fbank80→onnx→余弦；本次8段参考跨5源）。它不证明自然度、错漏字或真实听感，不能代替项目约定的模型验收、本期整轨听审及成片接受；历史具名委派的裁决只按其原范围引用，不自动批准新WAV。
+- 转写污染教训：spoken文本导出要精确锚定“英文口播”标题后的引用块，避免文档说明混入TTS。本次ASR回转识别到了此类污染，不保证覆盖所有污染；仍须按当前授权逐段核对音文并完成本期验收。
