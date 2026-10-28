@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### LAOWAI-GLM-RUNTIME-REVIEW-20261028 — 声音训练反例回填
+
+owner/唯一writer=铁柱（920ba3db），main，基线dec14cd66ea83db0d1ab06640d59ba189f26da4b；沿成长项目既有修复授权最小修改laohan-yinse：训练尝试不得混写旧TensorBoard日志；启动收据残缺仍回收自有组并补STOP，不以损坏收据登记成功。原入口CLI反例已红，代码修后绿；正进行代码核验与GLM-5.3/MAX增量复审，未声明通过。源skill改动不在视频runtime lock内，不修改无关锁/人设或启动GPU。证据及最终Git回读见成长项目`docs/handoff/GLM_RUNTIME_REVIEW_20261028.md`，本仓只精确提交本任务文件后push，不收其他writer改动。
+
 ### ECC-RULES-GUIDE-FIX-20261028 — 官方用法核验与教程定点修正
 
 root 唯一 writer，main；核验 ECC 最新发布 v2.2.3、main 25278e7d 与 Claude rules 文档。教程源及同步副本修正平铺覆盖、mtime 猜生效缓存、旧/新安装标识与 hooks 字段误述；未移动生效 rules、未更新插件/模型/权限。隔离复制与相对引用、真实缓存定位及四类拒绝反例通过；免费 Magpie DeepSeek 两轮完整 HTTP200/stop，首轮3项建议已修或澄清，最终修订 APPROVE，候选 SHA256 `abf14479b3efe1fb1cd90bc0130a43e15a90fda63d9304d3a1f74dc89d7e9f42`。Codex 通用格式检查器不接受原有 version/argument-hint，已核 SKILL.md 未变，本次不改 Claude 元数据。Git终态以实际回读为准；证据：`/Users/hanzhmacbookair/Documents/临时研究/E/ECC-Rules核验-20261028/`。
