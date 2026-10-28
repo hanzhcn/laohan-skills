@@ -9,7 +9,7 @@
 | stage | 前置 | 检查/动作 | 产出 |
 |---|---|---|---|
 | direct | director.md+`director/template_contract/director_assets`及`script/asr/source_record/pronunciations/visual_reference/helper/template/workflow`；正式片加`template_selection`。**不要求params/captions/样段审核** | 封存编排与输入摘要为新revision；核选型记录 | `.production-receipts/<记录>/` revision + `director_record`引用 |
-| plan | 当前revision+params/captions就绪 | 核revision/输入稳定→执行原包plan→快照官方plan初始字节 | plan成功回执 |
+| plan | 当前revision+params/captions/official_plan就绪 | 核revision/输入稳定→执行原包plan→快照官方plan初始字节 | plan成功回执 |
 | pilot | kind=pilot记录自己的direct+plan+preview（director_parent+source_excerpt） | 复用父编排正文、核同模板/分支/原始声音、逐样本核PCM | 样段渲染输出（仅qa/目录） |
 | review-brief | 真实plan/preview+实际样段 | 生成完整复核任务brief+request，写回`pilot_review_request` | review bindings+`review_request` SHA |
 | render | plan回执+pilot_review全样段覆盖 | 重核用户要求/编排/计划/预览/请求/样段字节→执行原包render | render bindings |
@@ -17,12 +17,13 @@
 
 硬规则：快照/历史回执只追加；入口生成版本/顺序，不以mtime或自填时间证明事前；旧候选不补造登记；参数调整也重plan/预览/复核。
 
-## production.json 字段（schema=laohan.motion-production/1；按阶段就绪）
+## production.json 字段（schema=laohan.motion-production/1；按消费stage前就绪）
 
-- **direct期**：`director`、`template_contract`（所选公开契约路径）、`director_assets`、`script/asr/source_record/pronunciations/visual_reference`、原包`workflow`、`helper/template`路径与SHA；正式片加`template_selection`。
-- **plan期**：`params/captions/input_root`。
-- **render期**：`official_plan/official_preview/pilot_review`。
-- **delivery期**：`final_review`（含whole_film_review）+正式`output`。
+- **direct前**：`director`、`template_contract`（所选公开契约路径）、`director_assets`、`script/asr/source_record/pronunciations/visual_reference`、原包`workflow`、`helper/template`路径与SHA；正式片加`template_selection`。
+- **plan前**：`params/captions/input_root`，并声明plan输出路径`official_plan`（缺它plan阶段直接exit 1）。
+- **review-brief前**：预览审阅路径`official_preview`（review-brief消费；缺它exit 1）。
+- **pilot/render前**：正式输出路径`output`（缺它render exit 1）；render另绑`pilot_review`。
+- **delivery前**：`final_review`（含whole_film_review）。
 - `speed=1`时与来源回执声音SHA必须相等。路径相对该记录；文件名不能替代字节绑定；除人物/声音/音乐外，段内及嵌套素材槽也绑定字节，动态样段须为可实际解码多帧视频。
 
 ## template-selection.json 要点（schema=laohan.motion-template-selection/1）
