@@ -2,11 +2,11 @@
 
 ## 当前任务
 
-### VOICE-REUSE-PROTECTION-20261029 — 规则与资产保护复审完成，待同步
+### VOICE-REUSE-PROTECTION-20261029 — 已完成规则修正与归档保护
 
 owner/writer=本会话 Codex root；独立 worktree `/Users/hanzhmacbookair/Documents/.worktrees/laohan-skills-voice-reuse-20261029`，任务分支 `task/voice-reuse-protection-20261029`，基线 `9a163aaf8cc01fe6c41eb84c31022121c6255e83`。仅修 laohan-laowai/yinse 的先复用后首建分流、长期资产与临时产物清理边界，并核成长项目当前权重/参考备份；不训练、不删除真实资产、不发布。风险为误删可复用依赖或误触发重训；验证使用临时夹具检验现有 guard 的模型/参考保护及父目录拦截，按真实文件核 SHA，并由 GLM 优先作跨模型对抗复核。审查单次采用通道默认满配/1800秒，不降档、不隐藏回退；失败留回执，继续无依赖工作。完成条件为两技能和项目保留规则一致、当前资产可追溯、针对性检查与独立复核有真实终态；GPU加载/新稿出片不在本轮验收范围。
 
-阶段回执：GLM完整调用失败不代签；跳过同家族Codex后，确认免费Magpie DeepSeek三轮max/1800s/128000有效HTTP200/stop，最终APPROVE_DOC_SCOPE，F1–F8全部闭合。已归档同一ep13推理权重/参考音文（SHA匹配），ep8仅作回滚，原件不删；实际registry已保护原参考，check/plan通过且无删除候选。未训练、未真实清理、未GPU恢复或新听审。远端guard/registry缺失仍NOT_READY，后续真实任务先补前置，不据此重训。P1旧“模型未完成”段落是历史备料快照，不能覆盖本次已核资产登记或触发重复训练。Git同步及临时工作区收尾见最终回执。
+阶段回执：GLM完整调用失败不代签；跳过同家族Codex后，确认免费Magpie DeepSeek三轮max/1800s/128000有效HTTP200/stop，最终APPROVE_DOC_SCOPE，F1–F8全部闭合。已归档同一ep13推理权重/参考音文（SHA匹配），ep8仅作回滚，原件不删；实际registry已保护原参考，check/plan通过且无删除候选。未训练、未真实清理、未GPU恢复或新听审。远端guard/registry缺失仍NOT_READY，后续真实任务先补前置，不据此重训。P1旧“模型未完成”段落是历史备料快照，不能覆盖本次已核资产登记或触发重复训练。已同步至实际目录：skills main已推送；成长项目保留当前task/kb78769-voice-20261028分支（无remote，不改main）。两处本轮临时worktree和本地任务分支已安全回收；六项生效字节、三份模型及参考SHA已核一致。最终回执见成长项目同名handoff/closeout.json及skills docs/handoff/VOICE_REUSE_PROTECTION_20261029-closeout.json。
 
 ### ECC-RULES-GUIDE-FIX-20261028 — 官方用法核验与教程定点修正
 

@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-28T22:10:37.695572+00:00",
+  "task": "VOICE-REUSE-PROTECTION-20261029",
+  "status": "RULES_AND_ARCHIVE_COMPLETE",
+  "source_integrated_head": "164a09370032b0dafc6c11ea9bfb1f73eaa343a8",
+  "source_published_head": "164a09370032b0dafc6c11ea9bfb1f73eaa343a8",
+  "project_integrated_head": "57b400a47d817f45f7ff7346d68f58f926f7fee2",
+  "project_branch": "task/kb78769-voice-20261028",
+  "project_remote": "NONE; no PR or main merge claimed",
+  "reviewed_skill_candidate": "17f4f5fbbc173e5717624c2466d5e9829ce16cbd",
+  "reviewed_project_candidate": "5fa1fdd4d718a40950cf9d50b0d301b45b895101",
+  "effective_behavior_files": "all six byte hashes match reviewed candidates, see activation-check.json",
+  "model_preservation": "three model hashes and reference pair verified; file inode/size/mtime unchanged after private worktree cleanup",
+  "task_cleanup": {
+    "worktrees_removed": [
+      "/Users/hanzhmacbookair/Documents/.worktrees/laohan-skills-voice-reuse-20261029",
+      "/Users/hanzhmacbookair/Documents/laowai/.worktrees/1chengzhang-voice-reuse-20261029"
+    ],
+    "local_task_branches_removed": true,
+    "remote_task_branches": "NOT_CREATED; source main only was pushed",
+    "scope": "only owned merged worktrees/branches and own empty private lock; no production asset deletion"
+  },
+  "reviews": "GLM failed; same-family Codex skipped; confirmed-free Magpie DeepSeek three valid max rounds, final APPROVE_DOC_SCOPE",
+  "remaining_outside_this_scope": [
+    "remote guard/registry missing at read; fresh preflight/repair required before real operation",
+    "no current GPU restore synthesis or new episode hearing/visual acceptance",
+    "no automatic voice-asset parser or reuse dispatcher added"
+  ],
+  "no_new_training": true,
+  "no_real_asset_cleanup_apply": true,
+  "git_recording_boundary": "Captured before audit-only closeout commit; final commit is identified by Git history. No behavior files change in that commit."
+}
