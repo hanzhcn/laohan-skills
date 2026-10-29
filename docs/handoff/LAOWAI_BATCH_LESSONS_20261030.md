@@ -11,3 +11,7 @@ GLM5.3 max/128000/1800：前次69KB批次完整PASS；本轮首次275.065秒传�
 ## AAC尾长与峰值增量
 
 EP05/06复制命令漏既有输出-t；修后五集final/master逐流/容器按真实D全部一致。EP06新AAC独立实测−18.45LUFS/−2.19dBTP，video payload保持。GLM-5.3满配完整APPROVE_INCREMENT_SCOPE（model-review-n708alq3），两项移交root均补实测：当前视频payload共源及全部修后流级时长；全文/裁决见本同名目录glm-aac-increment。原失败证据保留，不冒听感/连续动态/平台接受。
+
+## AAC内部PTS增量
+
+仅首尾D相同会漏内部gap：03/05/06/07为40/60/80/20ms，04无gap。当前后混加入显式48k重采样/样本计数PTS；从原PCM重混，PCM实际D×48000、新AAC全内部时钟连续/有效末包D、新编码实测峰值通过。新旧视频完整payload及packet PTS/DTS/duration不变，04整文件SHA保持。GLM-5.3 max/128000/1800完整224.131秒APPROVE附P1/P2/P3实测收口条件均已补；其把测量pass input_*误作编码前值的推断被证据更正，不冒平台统一峰值上限。完整回执/逐项裁决在同名目录glm-internal-audio-pts。独立增量原截止内22:32:36结束，子进程0；不代签听感或全动态。
