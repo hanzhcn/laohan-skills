@@ -57,6 +57,28 @@ Episode模式由编排器先核对①的主题、假设、内容形式和受众�
 
 Episode模式还必须生成 `12-发布/多平台发布内容.md`，完整合同见 `multi-platform-publish-contract.md`。该文件绑定当前口播稿 SHA，但不是正文附录，不进入TTS或段落审计。四个平台文案必须分别创作，视频号短标题不超过16字，不能把抖音文案或口播段落复制到其他平台。
 
+## 双引擎对照记录（Step 4.5）
+
+每份新初稿（正式 Episode / 独立 / 待选三稿）在决策 JSON 登记 `dual_engine_contract`（2026-10-29 首版；validator 暂不机械校验该键，流程跑稳后升级机械门）。方法真源 `references/dual-engine-gemini.md`，最小字段：
+
+```json
+{
+  "status": "FUSED",
+  "gemini_session": "老韩文案",
+  "task_package_sha256": "发送给Gemini的完整任务包sha256",
+  "gemini_draft_path": "02-创作工作稿/gemini-draft.md",
+  "gemini_draft_sha256": "…",
+  "comparison_findings": [{"aspect": "钩子", "verdict": "LOCAL更强", "evidence": "…"}],
+  "fusion_table": [{"element": "三问框架", "source": "GEMINI", "rationale": "…"}],
+  "fixes": [{"issue": "元话术残留", "action": "删除「基于2026年10月28日调研」"}]
+}
+```
+
+- `status=SKIPPED` 时 `skip_reason` 非空且为客观原因（通道不可用的实际错误）；主观跳过不允许，SKIPPED 不得事后改称 FUSED
+- 任务包不得包含本地初稿（独立性）；`task_package_sha256` 绑定实际发送全文，可审计是否泄露本地稿
+- Gemini 原稿不改写落盘留证；融合终稿为 Step 5 起唯一受检文本
+- 数字红线对两稿同等生效：终稿全部数字必须落在已核证据内
+
 ## 观众可复制资源
 
 每个Episode都必须在`创作决策.json.audience_resource_contract`明确登记：

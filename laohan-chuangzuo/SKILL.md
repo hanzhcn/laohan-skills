@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 产出已核材料交接后写作）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.10.0"
+version: "3.11.0"
 ---
 
 # 统一创作引擎
@@ -121,7 +121,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
 - `human_voice_contract` 必须登记真实作者语域；设备可为空，禁止数量配额；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
-- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
+- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，`step_4_5` 为 `COMPLETED` 或 `SKIPPED`（Gemini 通道客观不可用，附实际原因；validator 暂不强制该键），不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`language_review`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题（**主推与候选均≤20字**，2026-10-29 Jeffrey 定）、选择理由、标题与介绍证据、视频介绍结构与SHA，以及按目标账号定的标签（**抖音标签≤5个**）。
@@ -141,7 +141,8 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Step 2: 选题确认（模式A/B选择+主题锁定）
 - [ ] Step 3: 规划（原版12项 + 内容单位/自然稿长/分层合同，不可跳过）
 - [ ] Step 4: 写口播稿
-- [ ] Step 5: 质量检查（6关）
+- [ ] Step 4.5: 双引擎对照（网页Gemini「老韩文案」独立出稿→核对→融合，见 references/dual-engine-gemini.md）
+- [ ] Step 5: 质量检查（6关，跑融合终稿）
 - [ ] Step 5.5: Sepia中文非虚构语言定稿与主张零增删改审计
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
@@ -312,6 +313,19 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 每个内容段必须绑定至少一个内容单位并写清新增信息；同一判断只换词、没有新增支撑/例子/推论/操作/边界时直接合并
 - 节奏按原版快慢交替：开头拉满→缓冲→加速→缓冲→结尾加速→减速
 
+## Step 4.5：双引擎对照（网页 Gemini 出稿与融合）
+
+本地初稿完成后、质量检查之前，固定调用网页 Gemini「老韩文案」会话独立出一版口播稿，核对后逐元素融合成终稿；**Step 5 起全部质量门都跑融合终稿**。通道操作、任务包模板、核对清单与融合方法的真源是 `references/dual-engine-gemini.md`，要点：
+
+1. **独立出稿**：任务包（背景/目的/已核证据/结构/风格/红线七段）经 huashu-chrome 发 gemini.google.com「老韩文案」会话（Pro 思考档，勿混老外数字人项目的「老外文案」），**不得包含本地初稿**——喂了即锚定，对照价值归零
+2. **证据约束**：任务包逐条列已核数字并声明「只能用这些」；Gemini 稿取回后逐项核对（数字对证据、口径一致、元话术、时效词、开场句式/口头禅/禁用词、全文完整），EP02/C03 实锤过数字混用与元话术残留；事实硬伤修不了的该处弃用，不因稿好放行编造
+3. **逐元素择优融合**（不拼接）：底版选结构与钩子更强的，逐段吸收另一版更强的金句/比喻/框架；融合稿数字重跑证据核对；合并对照表逐元素留痕（GEMINI/LOCAL/FIXED+理由）
+4. **落盘与登记**：Gemini 原稿不改写落盘（Episode `02-创作工作稿/gemini-draft.md`；独立 `output/gemini-draft-YYYY-MM-DD.md`）；决策 JSON 登记 `dual_engine_contract`（字段见 creation-contract.md）
+5. **降级**：通道客观不可用（扩展离线/登录失效）时 `status=SKIPPED`+实际原因，单引擎初稿继续 Step 5-7 并在交付时说明；「这题简单/时间紧」不是跳过理由，SKIPPED 不得冒称 FUSED
+6. **终稿确认**：融合终稿+双稿差异要点+对照表随 Step 7 交付呈 Jeffrey，按既有验收点确认最终口播稿，不新增流程内阻断门
+
+重跑规则：全新选题首轮必跑；Step 4 实质改稿且融合基础仍在 → 只对受影响部分重对照并说明；选题论点变了整轮重跑；纯错字/标点修复不重跑。
+
 ## Step 5：质量检查
 
 **E. 内容底线（命中 = 不通过）：**
@@ -464,6 +478,7 @@ output/
 ├── organize-YYYY-MM-DD.md      ← Step 1 整理结果（素材模式）
 ├── outline-YYYY-MM-DD.md       ← Step 1.5 大纲（自由模式/热点模式）
 ├── script-YYYY-MM-DD.md        ← Step 7 口播初稿（本 skill 唯一终产物）
+├── gemini-draft-YYYY-MM-DD.md  ← Step 4.5 网页Gemini对照稿（原样落盘不改写）
 ├── script-YYYY-MM-DD.decision.json ← schema 3创作执行证据
 ├── script-YYYY-MM-DD.tts.aiff  ← 本机实际试读证据
 └── (cover-prompts 不在此产出，由 laohan-fengmianqiuzhi 独立 skill 后续生成)
@@ -482,6 +497,7 @@ episodes/<slug>/
 └── 02-创作工作稿/
 　 ├── 创作决策.json
 　 ├── 创作决策.md       ← 可选人类摘要
+　 ├── gemini-draft.md   ← Step 4.5 网页Gemini对照稿（原样落盘不改写）
 　 ├── humanizer-input.md ← 最终语言定稿前的完整稿件快照
 　 ├── tts-read-aloud.aiff ← 本机实际试读证据
     ├── transcript.md
@@ -500,6 +516,7 @@ Episode 模式禁止读取或写入共享 `output/`。
 | 硅基流动 API Key | 语音转文字（Pre-A，优先） | 注册 siliconflow.cn |
 | whisper.cpp | 本地语音转文字（Pre-A，备选） | `brew install whisper.cpp` |
 | nlm CLI + poppler | NotebookLM 幻灯片（Post-A） | `pip install notebooklm-mcp-cli && brew install poppler` |
+| huashu-chrome MCP + gemini.google.com 登录态 | 双引擎对照（Step 4.5，「老韩文案」会话，Pro 账号） | Chrome 扩展 + Pro 登录；不可用时按降级规则 SKIPPED |
 
 Pre-A/B 按需依赖，不使用对应模式时无需安装。
 
