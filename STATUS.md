@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### EP02-FONT-GEMINI-20261030 — 定点修复进行中
+
+owner/writer=root；main；本轮只改laohan-laowai与title-subtitle-layout：按Jeffrey要求放大并固定成长系列字号、意群断句与ASS证据绑定；Gemini双引擎必需且完整新回复才算完成，短暂生成后退回草稿记失败。无TTS/重训/GPU新增，无自动发布或扩大收件人；现有huashu授权内宿主输入后备不替代完整回复验证。正例为54cue真实字形/18px间距/全片渲染，反例为4种生成拒绝、ASS错SHA拒绝、叠字2382像素。待本轮GLM满配跨模型对抗增量复核、精确commit/push。业务实际Gemini仍PENDING，制作证据在成长项目docs/handoff/EP02_REMAKE_20261030/。
+
 ### C03-COVER-GEOMETRY-RECOVERY-20261029 — 技能定点修复已交付
 
 owner/writer=C03制作窗口Codex/root；main，基线8890cc21c961d19079f4fbafecb6e7706e5abec5，接手工作树干净。fengmianqiuzhi1.21.2补每尺寸最多一次几何恢复/一次本人照片质感恢复（两项总计≤2），原整图重采预算不清零；真实provider/输入输出SHA与UNREPORTED边界。免费DeepSeek三轮独立对抗复核skillAPPROVE，原S5图像仍BLOCKED（照片脸不达标），未以方法通过冒图通过或追加第三恢复分支。C03代理另选实质不同真人摄影×利润账本方向，三图已独立APPROVE_FOR_COVER_USE；边距错坐标经AE0像素尺反证被独立撤回，旧图/原REVISE保留。视频registry1.21.2与三物理尺寸/七用途已同步；未冒所有宿主可编辑、Jeffrey逐图接受或实际已发布。证据=视频C03工程qa/cover-*与publish/05-封面/cover-manifest-photo-ledger.json。本次接续核实：上述技能已由8c3bab3正常提交push；媒体制作/双平台发布由视频C03卡登记，不扩张技能默认发布权限。
