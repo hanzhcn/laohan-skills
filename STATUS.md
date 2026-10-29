@@ -2,9 +2,9 @@
 
 ## 当前任务
 
-### LAOWAI-QUALITY-CENTER-LESSONS-20261030 — 规则与模板定点修订
+### LAOWAI-QUALITY-CENTER-LESSONS-20261030 — 规则与模板修订完成
 
-owner/writer=root；main，接手0c4bb94工作树干净；仅laohan-laowai及相关参考/ASS模板。固化成长系列最高保真交付与全画面居中，补齐EP02磁盘预检、并行字幕/文案、Gemini客户端、远端assemble与计时经验；不改EP02成片或共享same-voice工具/模型。完成条件为针对性真实小样和拒绝情境、GLM默认满配独立对抗复核、精确提交push和宿主同源核对。审查采用通道最高档/默认总预算，不以提速降配；无新GPU/发布外发。业务素材盘点与历史证据写成长项目本任务handoff，源仓只存技能修订回执。
+owner/writer=root；main，基线0c4bb94，实现候选87744c72。已固化最高保真母版/兼容衍生、四轨全画面中轴、提速七项准备；原CRF20/fast与x320样例替换。真实6秒150帧CRF0母版像素/PTS相等、音画0起、兼容音频copy，六字形偏差≤0.5px及七项定点情境通过；FFV1/AAC容器时钟+43ms失败原样留证。GLM-5.3 max/128000/1800实际336.2秒VALIDATED/end_turn，17项逻辑对抗/一致性核验PASS，唯一LOW“116MB固定值”按其原建议补为历史实测；不重审未变编码/模板。agents/claude同源，当前Codex实际发现agents入口；无相关runtime lock，不冒所有宿主自动触发/手机播放或全链无损。EP02视频/ASS/WAV未变，无新GPU/外发。业务13条库存就绪0、蓝衣待筛0–1；回执见docs/handoff/LAOWAI_QUALITY_CENTER_LESSONS_20261030.md，提交/push终态由成长项目同任务closeout实证。
 
 ### EP02-FONT-GEMINI-20261030 — 已完成
 

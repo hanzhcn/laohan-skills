@@ -222,7 +222,7 @@ docs/
 - 优先从已核无标raw与不含AI轨的ASS重出，避免对干净区域盲套delogo造成画面损伤。若本期raw确有标识，则按实际证据与已授权范围另处理并复核，不照搬另一片的坐标。只改后期不重训、不重新算口型，不删声音模型/参考。
 
 ### EP02 制作提速判例（2026-10-29，同条件下期目标 35-40 分钟）
-- **★回迁一律远端 assemble（最大坑 25 分钟的解法）**：GPU 块产物单块 300-400MB 共约 5GB，scp 回 Mac 单线程约 1MB/s 要 80 分钟、4 路并发仍 25+ 分钟。正确做法：`scp motion/tools/same-voice-local.py 到服务器 → 远端 venv python 跑 assemble（纯 ffmpeg 拼接无 GPU 依赖）→ 只回传 116MB 成品目录`，全程约 4 分钟。本机已传的部分块可中途弃用不清理服务器（服务器 outputs 按清理纪律另收）
+- **★回迁一律远端 assemble（最大坑 25 分钟的解法）**：GPU 块产物单块 300-400MB 共约 5GB，scp 回 Mac 单线程约 1MB/s 要 80 分钟、4 路并发仍 25+ 分钟。正确做法：`scp motion/tools/same-voice-local.py 到服务器 → 远端 venv python 跑 assemble（纯 ffmpeg 拼接无 GPU 依赖）→ 只回传必要成品目录`（该次约116MB/4分钟，大小与耗时按当期实测，不固定为新片门槛）。本机已传的部分块可中途弃用不清理服务器（服务器 outputs 按清理纪律另收）
 - scp 花括号多源（`host:path/{a,b,c}`）经命令 substitution 组装会静默失败且 `2>/dev/null` 吞错——多源传输用 `xargs -P 4 -I{} scp host:path/{} dest/` 显式路径；rsync 多 source 加尾斜杠在部分版本直接打 usage，别依赖
 - **渲染一次链**：本例历史使用`-vf "delogo=右上,delogo=底部,ass=字幕.ass"`一次CRF17编码；CRF17已被2026-10-30最高保真要求取代，不是新片默认。现按[画质方法](references/quality-and-centering.md)一次滤镜得到无损后期母版，再派生兼容MP4，不再分"烧字幕+delogo"两代；仅确有标识才清标，必要delogo在ass前。
 - **字幕与 GPU 并行**：词锚（合成后 ASR 的 words.json）+对照表生成 cue 与 GPU 推理同时进行，GPU 完成时字幕已就绪；cue 生成时直接防重叠（句 start=上句 end），不要事后修
