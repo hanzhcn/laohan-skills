@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### LAOWAI-FEISHU-FILE-DELIVERY-20261029
+
+owner/writer=root；main，基线`f544f6f1f5567fbacf493a593d74ceda5a625038`。成长EP01飞书交付实跑发现：正式片38,850,428字节超过机器人上传30MB限制，既有脚本附件失败仍可能exit0；本轮已用同一会话的飞书客户端本地文件发送，API回读post.files及回下载SHA完全匹配。仅把已核限制、原文件后备与附件成功判断补入laohan-laowai交付节，不改混音、训练、权限、发布或共享脚本。低风险定点修复，针对真实回执/原脚本检查和单次GLM跨模型对抗复核后精确提交push；GLM使用通道满配/1800秒，无新费用点、失败不冒完成。证据=成长项目`docs/handoff/EP01_BGM_FULL_FEISHU_20261029/`。
+
 ### C03-COVER-GEOMETRY-RECOVERY-20261029 — 技能定点修复已交付
 
 owner/writer=C03制作窗口Codex/root；main，基线8890cc21c961d19079f4fbafecb6e7706e5abec5，接手工作树干净。fengmianqiuzhi1.21.2补每尺寸最多一次几何恢复/一次本人照片质感恢复（两项总计≤2），原整图重采预算不清零；真实provider/输入输出SHA与UNREPORTED边界。免费DeepSeek三轮独立对抗复核skillAPPROVE，原S5图像仍BLOCKED（照片脸不达标），未以方法通过冒图通过或追加第三恢复分支。C03代理另选实质不同真人摄影×利润账本方向，三图已独立APPROVE_FOR_COVER_USE；边距错坐标经AE0像素尺反证被独立撤回，旧图/原REVISE保留。视频registry1.21.2与三物理尺寸/七用途已同步；未冒所有宿主可编辑、Jeffrey逐图接受或实际已发布。证据=视频C03工程qa/cover-*与publish/05-封面/cover-manifest-photo-ledger.json。本次接续核实：上述技能已由8c3bab3正常提交push；媒体制作/双平台发布由视频C03卡登记，不扩张技能默认发布权限。
