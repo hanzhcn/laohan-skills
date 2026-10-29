@@ -224,3 +224,9 @@ docs/
 - **字幕与 GPU 并行**：词锚（合成后 ASR 的 words.json）+对照表生成 cue 与 GPU 推理同时进行，GPU 完成时字幕已就绪；cue 生成时直接防重叠（句 start=上句 end），不要事后修
 - GPU 推理节奏参考：约 75s/块（16 块 89.96s 成片用 20.5 分钟）；块完成数用 `outputs/ | grep -c chunk.*attempt` 监控
 - 丢句/SHA 联动/合成入口判例见 laohan-yinse 整稿合成执行判例节（2026-10-29 同日沉淀）
+
+### EP02 重制判例（2026-10-30 Jeffrey 驳回 EP02 成片，三项执行缺陷）
+- **字幕出屏根因**：cue 生成后用"事后修重叠"脚本只推 ZH 层没推 EN 层→中英时间错位；长中文句（>14字）靠折行未预拆→多行+叠显溢出屏幕。**规矩：cue 生成时直接保证**（ZH/EN 同窗同起止、句 start≥上句 end、长中文句预拆成多条 cue），禁止生成后再跑修补脚本
+- **EP01 质检链是每期必跑全套，不是可选**：glyph-bounds 逐条字形边界（每条字幕实际渲染边界在屏内）、negative-internal-overlap（同屏多块字幕不相撞）、最长条/多行条专项、中英实际间距。EP02 跳链→出屏才被 Jeffrey 发现。质检链命令与参数见 EP01 handoff（glyph-bounds.json/negative-internal-overlap.json 生成方式）
+- **常驻标题规定执行失败**：production-guide 2026-10-29 已定"EP02 起顶部双语主题标题常驻全片、不悄悄改回3秒"——EP02 仍照抄 EP01 的 3 秒退场式。**规矩：字幕/标题制作开工前必读项目 production-guide 的常驻标题与字幕节**，不从记忆或上一期样式复制
+- **制作卡硬门禁（字幕/标题）**：①读 production-guide 标题节 ②cue 生成（同步窗口+预拆长句）③EP01 质检链全套 ④含字幕区+四角的五点目视 ⑤发布包前帧差异门禁。缺任一不交付
