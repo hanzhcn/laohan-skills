@@ -1,0 +1,9 @@
+# laohan-laowai EP01 AI标识纠正
+
+2026-10-29，owner=root，按Jeffrey明确禁止片内任意AI标识指令作SURGICAL_FIX。源码基线1ef7907341d67e7044621527a3e58049e7b307d8，实现00505fed0a397c88cca86349bc051317377b4715：删除ASS样例默认AI样式/事件；按本期合同核原片/raw/最终片四边和全画面；撤去无本期证据的“双处英文引擎水印必然存在且关不掉”泛化，不对干净画面固定delogo，不扩大到平台开关/发布。
+
+旧模板含AI轨、新模板不含且其它行保留的正反例通过；实际EP01从raw仅去AI两行重烧、全解码、2103帧/84.12秒及两次独立AAC payload hash一致，桌面最终片SHA=e11c3f791c30bd5793abc586d75a9b48d01f173a527f2b1cd1a83b463d844605。17件旧成片/预览/派生样段在新片验证后移Trash，raw/模型/参考/外部源片不删。两个宿主真实同源，当前video registry/runtime lock均无laohan-laowai引用，无需改不相关锁；未重训/GPU或外发。
+
+GLM-5.3经受控model-review.py，max/128000/1800一次280.839秒有效end_turn/VALIDATED，HTTP=UNVERIFIED_CLI；输入sha019b282a23bf05cc23a32d95bd6b651406d8ae46ce0f10dcaff4a874c157d1c2，静态11项对抗无阻断。LOW1驳回：check-upstreams适用于skillcreator自身/上游刷新，本轮未改；LOW2补双侧音轨hash相同；INFO1保留非渲染ASS历史Title、INFO2保留独立平台声明边界、INFO3保留历史ASS证据、INFO4确认旧EP01派生样段可恢复移Trash。无未决阻断，源码/媒体审后未改。
+
+完整报告、逐项裁决、实际图片/渲染/清理与最终Git回执在成长项目`docs/handoff/EP01_NO_AI_20261029/`，内容审查候选8f8e2625e24f5d03b926a0b1bc7b3e6d3f0c7ef5。审核者无媒体工具，不代签视听/手机/用户接受。eng-only OCR旧中文角标正对照未识别，不将无命中冒作可靠自动检测；本次实际目检保留抽样范围。只精确提交本任务handoff，不改他窗STATUS。
