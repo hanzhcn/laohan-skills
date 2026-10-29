@@ -225,9 +225,9 @@ web-access 与 huashu-chrome 都连用户日常 Chrome（登录态共享）；hu
 
 | 优先级 | 工具 | 命令 | 说明 |
 |--------|------|------|------|
-| 1 | 硅基流动 API | `curl -X POST https://api.siliconflow.cn/v1/audio/transcriptions -H "Authorization: Bearer $SILICONFLOW_API_KEY" -F "model=FunAudioLLM/SenseVoiceSmall" -F "file=@audio.mp3"` | 秒级，免费，中文优化 |
+| 1 | 已授权的受控ASR入口 | 按现有受控调用器传音频；不source交互shell、不把Bearer放进argv/日志 | 当前配额/成本与语言适用性先核，不能预设免费；对标拆稿仍优先对应reference的MLX large-v3分支 |
 | 2 | whisper-cli | `whisper-cli -m model.bin -f audio.mp3 -l zh` | 本地 C++，快 |
-| 3 | whisper Python | `python3 -c "import whisper; ..."` (small 模型) | 本地，最准 |
+| 3 | whisper Python | `python3 -c "import whisper; ..."` (small 模型) | 本地预跑，不能把small标为最高精度 |
 | 4 | whisper-timestamped | `python3 -c "import whisper_timestamped; ..."` | 精确时间戳，字幕制作用 |
 
 ### 语音合成 / 音视频处理
