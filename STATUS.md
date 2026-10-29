@@ -2,9 +2,9 @@
 
 ## 当前任务
 
-### EP02-FONT-GEMINI-20261030 — 定点修复进行中
+### EP02-FONT-GEMINI-20261030 — 已完成
 
-owner/writer=root；main；本轮只改laohan-laowai与title-subtitle-layout：按Jeffrey要求放大并固定成长系列字号、意群断句与ASS证据绑定；Gemini双引擎必需且完整新回复才算完成，短暂生成后退回草稿记失败。无TTS/重训/GPU新增，无自动发布或扩大收件人；现有huashu授权内宿主输入后备不替代完整回复验证。正例为54cue真实字形/18px间距/全片渲染，反例为4种生成拒绝、ASS错SHA拒绝、叠字2382像素。待本轮GLM满配跨模型对抗增量复核、精确commit/push。业务实际Gemini仍PENDING，制作证据在成长项目docs/handoff/EP02_REMAKE_20261030/。
+owner/writer=root；main；字号候选fecb6c9、原生客户端候选deb004d。本轮固定成长系列720画布中文52/标题72（英文29/34）、意群预拆/证据SHA绑定；双引擎Gemini完整新回复判据、本地客户端4 Argon高的实际发送/取回/清暂存流程。54cue实际全字形/18px间距/叠字2382px、4生成拒绝/错SHA及6前置拒绝路径已核；最终ASS/媒体未因guard新增而重烧，声模/口型无重复。GLM-5.3 max/128000/1800完整346.609秒及增量123.219秒VALIDATED/end_turn/APPROVE；首轮错误字体前提已实证裁决，F1–F7修复或留范围，末轮低风险不触Enter/Send澄清按其原意见补入。Gemini4本地完整三平台稿已融合/违规，业务桌面/飞书原件与回下载SHA已核，不代签平台发布/用户听感接受。源码与完整回执见docs/handoff/EP02_FONT_GEMINI_20261030.md；提交push终态在成长项目同名handoff/source-closeout.json。
 
 ### C03-COVER-GEOMETRY-RECOVERY-20261029 — 技能定点修复已交付
 
