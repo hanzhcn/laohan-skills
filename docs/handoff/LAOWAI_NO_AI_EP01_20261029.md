@@ -7,3 +7,8 @@
 GLM-5.3经受控model-review.py，max/128000/1800一次280.839秒有效end_turn/VALIDATED，HTTP=UNVERIFIED_CLI；输入sha019b282a23bf05cc23a32d95bd6b651406d8ae46ce0f10dcaff4a874c157d1c2，静态11项对抗无阻断。LOW1驳回：check-upstreams适用于skillcreator自身/上游刷新，本轮未改；LOW2补双侧音轨hash相同；INFO1保留非渲染ASS历史Title、INFO2保留独立平台声明边界、INFO3保留历史ASS证据、INFO4确认旧EP01派生样段可恢复移Trash。无未决阻断，源码/媒体审后未改。
 
 完整报告、逐项裁决、实际图片/渲染/清理与最终Git回执在成长项目`docs/handoff/EP01_NO_AI_20261029/`，内容审查候选8f8e2625e24f5d03b926a0b1bc7b3e6d3f0c7ef5。审核者无媒体工具，不代签视听/手机/用户接受。eng-only OCR旧中文角标正对照未识别，不将无命中冒作可靠自动检测；本次实际目检保留抽样范围。只精确提交本任务handoff，不改他窗STATUS。
+
+
+## 随后清晰度追问
+
+用户追问桌面是否最清晰后，从同一raw+相同无AI ASS改CRF14/slow，当前桌面与项目final SHA=a72d79e5c2c8d81b09f06c115ce1d276964dc7b84cb78cd485957f8e107ec71a，37,884,585字节。原生720×1280/25fps/2103帧/84.12秒及AAC payload不变，全解码与新首中尾画面通过；三点对编码前参考的SSIM均高于旧CRF20。旧两处CRF20先SHA核备份到Trash再原子替换，raw/声音模型不动。前述GLM仍绑定原e11媒体及未变规则/ASS，不冒称新像素经过GLM视听审核；新媒体实测另见成长项目media-verification-hq.json。未扩大为全局导出策略或新增方法变更。
