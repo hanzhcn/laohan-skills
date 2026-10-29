@@ -246,3 +246,10 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 - 远端非交互 shell 无 python3；launch_voice.py 是唯一受控入口（receipt 进程组绑定，超时 SIGKILL 整组）
 - **campplus说话人相似度仅作A/B辅助比较**（底模自带campplus.onnx，fbank80→onnx→余弦；本次8段参考跨5源）。它不证明自然度、错漏字或真实听感，不能代替项目约定的模型验收、本期整轨听审及成片接受；历史具名委派的裁决只按其原范围引用，不自动批准新WAV。
 - 转写污染教训：spoken文本导出要精确锚定“英文口播”标题后的引用块，避免文档说明混入TTS。本次ASR回转识别到了此类污染，不保证覆盖所有污染；仍须按当前授权逐段核对音文并完成本期验收。
+
+### 整稿合成执行判例（2026-10-29 EP02 实战，KB78769）
+- **CosyVoice 长段偶发丢尾句**（EP02 实锤：55 词段丢末句 "they stop studying"，脚本 chunk 校验不拦——只验非空不验内容）。**合成后必须跑词级 ASR 与稿 diff 核缺句**（数字格式差异 $8/eight 属正常，整句缺失必须修）——此步为固定步骤不省略
+- **同输入重跑无效（同 seed 确定性重放）**：EP02 重跑同 binding 输出逐毫秒相同、同样丢句。丢句修复=**改输入拆段**（丢尾句的长段按句拆成两段），不是重跑
+- **改 spoken.txt 的 SHA 三联动**：spoken 变 → binding 的 `spoken.sha256` + weigui json 的 `spoken_sha256` + binding 的 `script_review_evidence.sha256`（weigui 文件内容变了）三处必须同步更新，漏一处即 `path/SHA mismatch` STOP
+- 入口判例重申：服务器合成走 `launch_voice.py synth --binding X --out Y --run`（直接跑 synth-kb78769.py 会 STOP）；预检（无 --run）先过再真跑
+- 上传后远端 SHA 回读核对一次再启动（传输损坏当场发现）
