@@ -23,25 +23,32 @@
 ```
 
 - 音乐服务于本期情绪，可用无歌词、节奏克制的候选作起点；不强迫每段换曲/加音效。先核来源、可用范围与必要署名。抖音站内音乐不能自动授权下载后跨平台用；对标抽取的混合音轨仅供分析，不把别人的人声一并混进本片。
-- 先测人声/候选混音的整体响度与真峰值，再调增益/必要控峰；平均低但峰值已高时，不能直接整体加大。不把固定LUFS、增益百分比或LRA数值当全项目硬门。
+- 先在同一区间、同一声道布局分别测人声、音乐和duck后的音乐，再测候选混音的整体响度/真峰值。音乐起始增益可按`G = 人声LUFS - 本期选定差值 - 音乐LUFS`估算（G单位dB），随后复测duck后实际差值；差值按本片目标与试听确定，不设全项目固定值。平均低但峰值已高时，不能直接整体加大；也不能把整轨LUFS合格当音乐可听的证明。
+- 不直接沿用旧`volume=0.10`再叠强duck：百分比会受原曲响度影响，压低会再次衰减。先校准，再选择本期duck强度；适度dry/wet混合可避免音乐被持续压没。记录相同声道下的处理前后差值，不能把mono/stereo间的响度差冒作改善。用户明确“听不见”时，该试听判REVISE并重调；没有实际音频输入/听审能力仍明确待听，不改用模型赞成或峰值PASS代签。
 - 先让人声清楚，音乐在人声时压低（可用sidechaincompress），停顿适度回升；重音、尾字和呼吸不能被盖。音乐首尾淡入淡出，结尾不多拖一段；检查压低回升是否抽动、循环是否突兀。需要连续试听，未实听明确待验。
 - 音乐处理只作用音乐支路；主轨可按本期测量做不改变时序的增益/控峰。禁止通过`amix`默认自动归一让人声整体偷偷变小；显式`normalize=0`后留峰值余量并测最终输出。
 - 保留干声原文件/SHA/采样数、raw身份/时钟、音乐来源/SHA/片段、滤镜、最终混音与成片SHA。混音AAC是新派生，不能要求它和干声逐样本一致；核的是人声来源、时间不漂、首末词/字幕/嘴型仍对应。仅换BGM不因AAC变化重算口型/词锚。
 
 ## 已实跑的本机18秒混音示例
 
-下面验证的是后期滤镜和时钟。输入须为**已经音画对齐且同起点**的18秒样段，先用ffprobe核BGM至少18秒，另存输出；不用于把错位输入各自归零。短于18秒的音乐会提前结束且淡出可能不完整或失效，不能凭命令返回0登记通过。示例值只是试听起点，不是已接受风格/通用响度目标。正式全片把时长和淡出位置改为本期实际值；从raw同一次烧ASS与混音，避免反复重编码。仅改音乐时可直接复制视频流。
+下面验证的是后期滤镜和时钟。输入须**已经音画对齐且同起点**，可以是长底片，命令取开头约18秒；先用ffprobe核BGM选段至少18秒，另存输出，不用于把错位输入各自归零。复制视频流时B帧可能使容器终点多出少数帧，记录实测时长/帧数，不冒精确18秒或450帧。短音乐会提前结束且淡出可能不完整，不能凭返回0登记通过。`MUSIC_GAIN_DB`须先按本期分轨测量校准，`DUCK_MIX`为本期选定的0–1压缩湿声比例；不内置10%默认值。其余参数也是试听起点，不是已接受风格/通用目标。正式全片改为本期时长与淡出位置；从raw同次烧ASS与混音，避免反复重编码，仅改音乐可复制视频流。
 
 ```bash
 (
 set -e
 FFMPEG=/opt/homebrew/opt/ffmpeg@7/bin/ffmpeg
-# CLIP_FILE=已对齐的18秒干声样段，BGM_FILE=来源可核且至少18秒的音乐
-# OUTPUT_FILE=全新MP4
-: "${CLIP_FILE:?缺样段}" "${BGM_FILE:?缺音乐}" "${OUTPUT_FILE:?缺新输出}"
+# CLIP_FILE=已对齐干声底片，BGM_FILE=来源可核且至少18秒的选段
+# OUTPUT_FILE=全新MP4；MUSIC_GAIN_DB=本期校准dB增益；DUCK_MIX=本期0到1湿声比例
+: "${CLIP_FILE:?缺底片}" "${BGM_FILE:?缺音乐}" "${OUTPUT_FILE:?缺新输出}" "${MUSIC_GAIN_DB:?先校准音乐增益}" "${DUCK_MIX:?先选择duck强度}"
 if [ -e "$OUTPUT_FILE" ]; then echo '输出已存在，请另存新候选' >&2; exit 1; fi
+python3 - "$MUSIC_GAIN_DB" "$DUCK_MIX" <<'PY'
+import math, sys
+gain, wet = map(float, sys.argv[1:])
+if not math.isfinite(gain) or not math.isfinite(wet) or not 0 <= wet <= 1:
+    raise SystemExit("增益须为有限数值，duck湿声比例须在0到1之间")
+PY
 "$FFMPEG" -nostdin -n -i "$CLIP_FILE" -i "$BGM_FILE" \
-  -filter_complex "[0:a]asplit=2[voice][key];[1:a]atrim=duration=18,asetpts=PTS-STARTPTS,volume=0.10,afade=t=in:d=0.8,afade=t=out:st=16.8:d=1.2[music];[music][key]sidechaincompress=threshold=0.03:ratio=5:attack=30:release=350[duck];[voice][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-18:TP=-1.5:LRA=9:print_format=json[mix]" \
+  -filter_complex "[0:a]atrim=duration=18,aformat=sample_rates=48000:channel_layouts=stereo,asplit=2[voice][key];[1:a]atrim=duration=18,asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=${MUSIC_GAIN_DB}dB,afade=t=in:d=0.8,afade=t=out:st=16.8:d=1.2[music];[music][key]sidechaincompress=threshold=0.08:ratio=2:attack=30:release=350:mix=${DUCK_MIX}[duck];[voice][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-18:TP=-1.5:LRA=9:print_format=json[mix]" \
   -map 0:v:0 -map "[mix]" -c:v copy -c:a aac -b:a 192k -ar 48000 \
   -t 18 -movflags +faststart "$OUTPUT_FILE"
 )
