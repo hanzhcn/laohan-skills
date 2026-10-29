@@ -1,0 +1,43 @@
+{
+  "status": "APPROVE_METHOD_CODE_SCRIPT_SCOPE",
+  "candidate": "cc119a48af9b6668b43447f473993af51f99ba37",
+  "source_candidate": "a6715a94659e196dc74f6af67fd7973f661f76b0",
+  "transport": "VALIDATED end_turn full business verdict; max/128000/1800, glm-5.3,187.396s",
+  "first_call": "Valid transport but incomplete prelude, rejected; one corrected full-material static-review call completed",
+  "findings": [
+    {
+      "id": "LOW1",
+      "decision": "retain external actual-frame/PTS/duration/pixel check after EVERY assemble; full_decode in assembly.json never independently signs actual frame-clock acceptance; EP04 actual passed and EP05 actual passed"
+    },
+    {
+      "id": "LOW2",
+      "decision": "no change to already tested copy this batch; actual GPU/core/raw/master formats must be yuv420p and per-frame identity checked; format drift stops lossless claim. Pinning in a future tested source change is backlog, not ignored."
+    },
+    {
+      "id": "INFO1",
+      "decision": "lossless names refer verified specific decoded YUV420p stages, not entire source/GPU process"
+    },
+    {
+      "id": "INFO2",
+      "decision": "root recomputes spoken/source/binding SHA per WAV; static reviewer did not run hashing"
+    },
+    {
+      "id": "INFO3",
+      "decision": "EP07 preview subject implicit acceptable, English full question retained"
+    },
+    {
+      "id": "INFO4",
+      "decision": "final per-episode decoded AAC/video start0 and payload QA remains required and independently logged"
+    }
+  ],
+  "reviewer_transcription_corrections": [
+    "Body commit typo does not match actual identity: metadata and prompt bind cc119a48af9b6668b43447f473993af51f99ba37, not edited raw reply",
+    "A5 means clean/reference/cycle/chunks exact pixels at defined25fps, not every original30fps frame kept"
+  ],
+  "not_signed": [
+    "subjective continuous hearing",
+    "continuous phoneme/seam acceptance",
+    "platform published/accepted"
+  ],
+  "at_utc": "2026-10-29T21:55:17.816853+00:00"
+}

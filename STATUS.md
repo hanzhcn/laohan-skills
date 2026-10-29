@@ -2,9 +2,9 @@
 
 ## 当前任务
 
-### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（进行中）
+### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（已完成，成片继续）
 
-owner/writer=root；main基线8b9c183a；只改laowai/yinse的明确持续配音委派与本次已证实的短片/字幕/远端无损组装经验。用户已要求后续不再让其听英文，负责人自主检查、裁决和修正；不自动批准成片接受/平台发布，不把ASR或客户端转写冒听感。依本次制作实证补方法、对抗复核、精确commit/push；项目成片仍由成长仓同批卡登记。
+owner/writer=root；main，源实现00de029/a6715a9。持续配音委派、短片原生576、实际墨迹/新glyph目录/短帧差、四处显式25fps CFR/CRF0与实际解码时钟检查已补，未放宽成片/发布接受。EP04真实13准备视频及9core+2whole860帧/全PTS/像素和54帧压缩反例已核。GLM-5.3 max/128000/1800完整静态APPROVE方法/代码/06/07稿（187.396s），首个275.065s只开场白未冒通过；2LOW按外部逐集门/格式范围处置，未重复长审。有效回执/逐项裁决见 docs/handoff/LAOWAI_BATCH_LESSONS_20261030.md；成长仓5片制作、未听/未接受/未发布由其同批STATUS继续记。技能源commit/push在本批完成，未变保护/代码不另返工。
 
 ### LAOWAI-QUALITY-CENTER-LESSONS-20261030 — 规则与模板修订完成
 
