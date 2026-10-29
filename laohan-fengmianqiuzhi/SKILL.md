@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianqiuzhi
-version: 1.21.1
+version: 1.21.2
 description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用秋芝03KV视觉系统，选择1个语义最匹配的场景模板，只生成同一方案的3:4、4:3、16:9三张真实尺寸封面。Use when 用户说“生成封面提示词”“做封面”“封面”“封面图”“封面词”或工作流进入⑥。
 ---
 
@@ -17,7 +17,7 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用�
 - 人物参考固定为本期`05-封面/reference/jeffrey-reference.jpg`，作为image reference传给生图模型。
 - 完整读取`references/douyin-cover-study.md`的秋芝部分、`references/qiuzhi-template-library.md`和`samples/baseline-cover-03-kv-prompt.txt`。
 - 不在prompt中写“模仿某博主风格”，只使用公开样本中可观察的版式规律。
-- 不拆成无字底图、贴头合成、排字脚本或评分器。整图生成失败或逐张复核不通过时只修正原prompt重新生成（image-use无seed控制，每次生成自然随机），每个尺寸最多重采2次。
+- 不拆成无字底图、贴头合成、排字脚本或评分器。整图生成失败或逐张复核不通过时先修正原prompt重新生成（image-use无seed控制，每次生成自然随机），每个尺寸最多重采2次；重复出现同一构图偏差后停止盲抽，按下述「有界构图恢复」诊断，不降低质量阈值。
 
 ## 1. 提炼唯一视觉主张
 
@@ -94,9 +94,27 @@ image-use "<该比例完整prompt>" \
 - 服务端按请求比例就近出档（实测3:4→1086×1448、4:3→1448×1086、16:9→1672×941），像素不达硬尺寸时用magick重采样对齐：比例偏差≤0.1%时允许像素对齐（如1672×941等比只得1919×1080，差1px，对齐到1920×1080的变形0.05%视觉不可感知），偏差>0.1%说明服务端档位与目标比例不符，该张拒收走重采；不裁切、不扩边，不把比例不符的图冒充目标比例。在manifest记录原始尺寸、比例偏差与重采样后尺寸，采样后复核锐度。
 - 429/额度类错误不循环重试，如实报错停下；stall/timeout按image-use错误表处理（调`--timeout`/`--stall-timeout`后重试一次），技术性重试与prompt重采共用每尺寸2次上限。
 
+### 有界构图恢复（已有宿主原生编辑能力时）
+
+仅当整图的身份、主标题/事实文字、主题和主物件已正确，且同一人物占比/位置或标题组安全边距偏差已在两次整图中重复出现时适用。保留原图、prompt、实测比例和失败理由；不得把换脸、错字、事实或风格问题包装成几何恢复，也不绕过429或新增付费。
+
+宿主已有原生`image_gen`编辑能力时，可在现有生图授权内对该尺寸做**一次**受控编辑：将已经查看的原图作为唯一编辑目标，只等比缩放/移动**整个人物**或移动**完整标题组**并说明锚点，保留真实身份、标题字面内容、主物件、画布及其余设计；禁止只缩头、贴头、手工合成人物、裁切或扩边。同一次编辑可清除主物件表面未请求、无语义的伪字/数字装饰，但不能改标题、事实文字或删除水印、来源及AI生成标记；此附带修复也须单独留证。工具要求的参考传递按当前宿主文档执行，不假定任意宿主支持本机路径。此步骤是修复已定位的构图错误，不追加随机整图候选，也不把新工具能力推成所有宿主可用。
+
+编辑产物先落QA目录；重新逐张核对全部验收项，特别是16%—26%头部、48%—72%人物、脸部照片质感、文字逐字一致及三尺寸同方案。编辑失败、出现身份/文字/风格漂移或原生工具不可用时，保留失败并将该尺寸记为BLOCKED，继续不依赖它的工作；任一尺寸BLOCKED，三尺寸封面整体不能标为完成或发布就绪。不伪造通过、不无限换工具重试。复核通过后才晋升为发布封面；原图保留作来源证据。生成/编辑工具自动写入或改变来源元数据时如实登记，不主动剥除。
+
+来源按实际执行器记录：CLI产物保留其saved line；原生工具产物保留实际调用参数、输入/输出SHA及工具提供的元数据，工具未报告的model/quality明确填UNREPORTED。不得用CLI的model或quality替原生编辑签名。`cover-manifest.json`的每个size单独记录实际provider与生成/编辑链；混合执行器时顶层填mixed，并保留最终像素对齐记录。
+
+### 本人照片质感恢复（与几何问题分开诊断）
+
+整图生成或几何编辑后，若独立复核证实**头部本身**塑料化、年龄/眼形/脸型偏离本人，而文字、主题和几何已正确，先保留REVISE与原图，定位为身份/材质问题；不得签为几何通过，也不得把3D衣服本身误判为脸部失败。尤其横版全身Q版会诱导娃娃脸，单写“photoreal face”不证明已经保真。
+
+在已有本人封面授权和宿主原生编辑能力内，该尺寸允许**一次**定向照片质感恢复：同时传已查看的当前封面与本期真实身份照片，前者是唯一编辑目标、后者仅作本人身份参考；锁定头部位置/占比与画布，恢复自然成年面部结构、眼镜/胡须/痣和真实皮肤/发丝，不美化成陌生人，不手工贴头、不换成他人身份，不改主标题、主物件或来源标记。这是单独记录的身份质感修复，不冒称前次几何编辑已合格。它与一次几何恢复各自最多一次，故每尺寸原生修复总计最多两次；与原整图最多两次重采共同计数，不因换文件名/换模型/新revision清零。
+
+修复先落QA并按全套门重新复核，保留目标/身份参考/实际调用/输出SHA与元数据变化；不能因“恢复本人”字样就接受。若仍不像本人、照片感不达标、文字/比例漂移或工具不可用，该尺寸BLOCKED，整套不得标为完成或发布就绪；停止该尺寸，不再添加第三种恢复分支继续抽图，不新增付费或绕过429。
+
 ## 5. 逐张复核
 
-每张生成后都放大复核，任一为假即修改该尺寸原prompt并重生：
+每张生成或编辑后都放大复核，任一为假即按该尺寸剩余重采次数或上述有界构图恢复处理；两者均用尽则记BLOCKED，不降低标准：
 
 `exactTitle`／`samePerson`／`singlePerson`／`faceProminent`／`expressiveAction`／`expressionContrast`／`heroObjectClear`／`compositionIntegrated`／`thumbnailLegible`／`safeAtTargetRatio`／`noExtraText`／`noWatermark`。
 
@@ -106,7 +124,7 @@ gpt-image对人物有放大倾向（实测头部占比可达33%—35%，高于pr
 
 ## 6. 输出
 
-写入`05-封面/cover-prompts.md`：
+写入`05-封面/cover-prompts.md`（如使用有界构图恢复，同文件补原图、定位理由、编辑指令与QA/晋升证据）：
 
 ```markdown
 ---
@@ -148,6 +166,6 @@ default_publish_candidate: cover-qiuzhi-3x4
 <完整生成提示词>
 ```
 
-同时写`05-封面/cover-manifest.json`，`schema_version`为2，声明`skill_version`、`visual_system`、`selected_template`、reference/script SHA、三张`sizes`的文件名/尺寸/SHA/req/resp和`texts`。不得声明不存在的9:16母版或rank。`req`记录完整生成命令与prompt哈希，`resp`记录image-use saved line实际`model`/`size`/`quality`/`tokens`及magick等比重采样记录（如有）。`image_provider`填`image-use/codex/gpt-image-2-codex`。
+同时写`05-封面/cover-manifest.json`，`schema_version`为2，声明`skill_version`、`visual_system`、`selected_template`、reference/script SHA、三张`sizes`的文件名/尺寸/SHA/req/resp和`texts`。不得声明不存在的9:16母版或rank。`req`记录完整生成命令与prompt哈希，`resp`记录实际执行器返回的`model`/`size`/`quality`/`tokens`及magick等比重采样记录（如有）；原生编辑按上节记录。仅全部由CLI生成时`image_provider`填`image-use/codex/gpt-image-2-codex`，不得为混合或未报告的执行器冒填该值。
 
 不要宣称复制任何账号的CTR或独特风格。这里只借鉴公开封面中可观察的通用版式规律。

@@ -2,6 +2,14 @@
 
 ## 当前任务
 
+### C03-COVER-GEOMETRY-RECOVERY-20261029 — 技能定点修复已复核，Git收口中
+
+owner/writer=C03制作窗口Codex/root；main，基线8890cc21c961d19079f4fbafecb6e7706e5abec5，接手工作树干净。fengmianqiuzhi1.21.2补每尺寸最多一次几何恢复/一次本人照片质感恢复（两项总计≤2），原整图重采预算不清零；真实provider/输入输出SHA与UNREPORTED边界。免费DeepSeek三轮独立对抗复核skillAPPROVE，原S5图像仍BLOCKED（照片脸不达标），未以方法通过冒图通过或追加第三恢复分支。C03代理另选实质不同真人摄影×利润账本方向，三图已独立APPROVE_FOR_COVER_USE；边距错坐标经AE0像素尺反证被独立撤回，旧图/原REVISE保留。视频registry1.21.2与三物理尺寸/七用途已同步；未冒所有宿主可编辑、Jeffrey逐图接受或实际已发布。证据=视频C03工程qa/cover-*与publish/05-封面/cover-manifest-photo-ledger.json。剩余=本任务精确正常提交push及Git回读，媒体制作/双平台发布由视频C03卡继续，不扩张技能默认发布权限。
+
+### C03-MOTION-EXECUTION-RECOVERY-20261029 — Motion实证方法修复已复核，Git收口中
+
+owner/writer=同一C03 Codex/root，main同基线；只改laohan-motion1.1.4与full-chain。实证修正：长JSON截断需本期真实Node临时PATH包装+preload（helper环境白名单不传NODE_OPTIONS）；发布段回指本期授权/项目发布真源；MK按公开render positional prepared-project，不强加poster-kit两参数，输出遵守instance内限制。视频共同guard仍核当前plan review摘要↔origin与两文件字节，原source/direct/plan/preview/异模型门保持，poster-kit硬门保持。GLM5.3 max/128000/1800两批方法/执行器与一批完整guard对抗审查均真实有效APPROVE（CLI HTTP UNVERIFIED_CLI）；29项回归、原失败/恢复与真实当前原包样段render回执在视频C03 qa/resume-20261029。9样段builder7项原REVISE已修、实测负例/恢复与9份旧r2脚本SHA不变已核；不把静态审批冒成片审美。剩余=正常提交push，两平台/全片QA按视频C03继续，不创建新episode、不改客户端默认或扩大费用。
+
 ### VOICE-REUSE-PROTECTION-20261029 — 已完成规则修正与归档保护
 
 owner/writer=本会话 Codex root；独立 worktree `/Users/hanzhmacbookair/Documents/.worktrees/laohan-skills-voice-reuse-20261029`，任务分支 `task/voice-reuse-protection-20261029`，基线 `9a163aaf8cc01fe6c41eb84c31022121c6255e83`。仅修 laohan-laowai/yinse 的先复用后首建分流、长期资产与临时产物清理边界，并核成长项目当前权重/参考备份；不训练、不删除真实资产、不发布。风险为误删可复用依赖或误触发重训；验证使用临时夹具检验现有 guard 的模型/参考保护及父目录拦截，按真实文件核 SHA，并由 GLM 优先作跨模型对抗复核。审查单次采用通道默认满配/1800秒，不降档、不隐藏回退；失败留回执，继续无依赖工作。完成条件为两技能和项目保留规则一致、当前资产可追溯、针对性检查与独立复核有真实终态；GPU加载/新稿出片不在本轮验收范围。

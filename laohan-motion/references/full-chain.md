@@ -64,6 +64,7 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 - 独立`kind=pilot`记录：提供`director_parent`（本期正式编排回执path/SHA）+`source_excerpt`（真实完整声音的逐样本片段：原文件路径/SHA、start_sample/end_sample，入口实际核PCM）。
 - **样段自己的完整登记链：direct→plan→（prepare/preview官方命令）→pilot**——只给父编排回执直接跑pilot会被拒（DIRECTOR_RECORD_REQUIRED→SUCCESSFUL_BOUND_PLAN_REQUIRED）。
 - 复用父编排正文、核同模板/分支与原始声音；父编排不要求已有plan或pilot审核（避免首单循环）；**父编排新revision后样段须重新登记**。
+- 原包若限制operation输出必须在instance内，显式用`instance/qa/`（共同pilot门已有此允许目录）；正式片也先渲染instance内，再按SHA一致复制deliveries，不放宽原包路径保护。
 - 样段另做真实声学对齐/字幕/正式plan/preview；输出仅允许本期`qa/`或原包`instance/qa/`，不能称整片交付。
 - 样段按实际短片时钟编排；不能给全长时间轴加范围后假定字段自动换轴。
 
@@ -87,6 +88,7 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 ```sh
 python3 motion/tools/production-guard.py --record 本期/production.json --stage render -- node ... render ...
 ```
+- motion-kit按当前guide用`render <prepared-project> --out ... --workflow motion-kit`，不强加poster-kit的`--plan/--preview-review`。guard仍核项目路径与当前plan的review.inputsSha256↔origin.planInputsSha256，旧参数若传须匹配；原包继续核reviewed预览/素材。其它分支按PIPELINE/公开契约。
 - 核对来源回执/编排revision/plan成功回执/pilot_review请求与样段字节；新素材/声音/契约/编排变化先新revision再plan；新plan用新官方输出路径，旧输出/失败保留。
 
 ### 6g delivery
@@ -112,6 +114,6 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 ## 常见失败处置
 
 - **guard拒绝（BUSY/revision过期/绑定缺失）**：按报错补对应环节，不改JSON补时、不倒填历史。
-- **Node长JSON输出截断**：给该次Motion命令及子进程显式继承`NODE_OPTIONS="--require <绝对路径>/motion/assets/runtimes/node-stdio-overlay/blocking-stdio.cjs"`；只在本次命令环境设置，不全局注入。
+- **Node长JSON输出截断**：按PIPELINE现行stdio入口实核；helper可能过滤`NODE_OPTIONS`，须将已核真实Node与原有blocking-stdio preload做成本期临时PATH包装，并保留本次变量设置，不能仅凭设变量冒称后代已加载。只影响本次Motion命令，不全局注入模型CLI，不改原包/helper；同输入实测恢复后才登记通过。
 - **视觉工具失败**：负责人核替代观看/异模型通道；已知额度耗尽不盲试；仍无法实际观看→登记UNVERIFIED并停受影响定稿/整片渲染，继续不依赖它的工作；不以静帧或特批冒称动态通过。
 - **工具拒绝多字幕槽**：若原包公开合同能唯一确定消费关系，保留原输入沿官方校验并核真实消费槽，记录工具未核范围；不能确定先补核受影响输入，不删槽/换分支求绿。

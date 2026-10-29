@@ -1,12 +1,12 @@
 ---
 name: laohan-motion
-version: "1.1.2"
+version: "1.1.4"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
 # laohan-motion · 数字人×Motion模板制作入口
 
-本skill是Motion正式路线的制作编排入口，**不是方法真源**。方法、门与合同只认视频项目内的现行文件；本skill与项目真源冲突时，以项目真源为准，并按laohan-skillcreator流程回本仓修订skill。本文对齐2026-10-28版PIPELINE/V4/DH-ROUTE；听感门等会演进的语义以真源现行文本为准，不从本skill复述。
+本skill是Motion正式路线的制作编排入口，**不是方法真源**。方法、门与合同只认视频项目内的现行文件；本skill与项目真源冲突时，以项目真源为准，并按laohan-skillcreator流程回本仓修订skill。本文对齐当前PIPELINE/V4/DH-ROUTE；听感门等会演进的语义以真源现行文本为准，不从本skill复述。
 
 项目根固定：`/Users/hanzhmacbookair/Documents/laohanvideo`（下文相对路径均从此起算）。
 
@@ -19,7 +19,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 - 历史AST、双renderer对照、恢复历史episode → laohan-donghua。
 - 选题与写稿（未锁定稿）→ laohan-xuanti / laohan-chuangzuo；本skill从锁定稿起接。
 - 声音模型训练（复刻博主音色）→ laohan-yinse；v3-05是老韩已训音色模型，其每期WAV由项目侧产出。
-- 发布与运营（⑫—⑭）→ 两路共用，按四平台发布规格；Jeffrey手动点击发布。
+- 发布与运营（⑫—⑭）→ 两路共用，授权、目标平台及最终点击方只认生产合同、四平台发布规格与本期明确指令，不在本skill另写永久手动/自动政策。
 
 ## 开工必读（漂移自检，每次执行）
 
@@ -92,6 +92,10 @@ PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
 
 顺序硬约束：正式plan必须引用direct登记的当前revision；pilot在review-brief之前完成样段自己的登记链；真实plan/preview+实际样段齐备后先review-brief生成完整复核任务，异模型复核通过才完整render；render/delivery重核全部bindings。变化分两类：**新素材/声音/契约/编排变化→先新revision再plan**；**参数调整→不强制新revision，但必须重新plan/预览/复核**。旧回执不补签。
 
+MK渲染只按本包公开命令传`render <prepared-project>`；不要把poster-kit的`--plan/--preview-review`强加给新版MK。共同入口核prepared project路径、当前plan审阅摘要与origin的planInputsSha256一致，再由原包核预览/素材字节；具体红字和其它分支见PIPELINE的argv表。
+
+执行环境也须实核：`PATH`前缀可能改变实际Node/Python版本，不能用终端先前的`node --version`替本次命令签名。长JSON解析失败先按PIPELINE的stdio入口诊断；helper可能隔离`NODE_OPTIONS`，不能只设该变量就声称后代已加载修复。使用本期已核真实Node的临时PATH包装与该变量配合，原包/helper不改，保留同输入的红→绿证据；不把截断当文稿容量上限。
+
 ## 模板全库选型（正式片direct前置，强制）
 
 四步：**全库刷新→候选比较→按需取得并验证→确认或重选**。`production.json`提供`template_selection`指向本期`template-selection.json`（schema=`laohan.motion-template-selection/1`）。要点：从本稿提取必须完成的视觉任务→全catalog轻量筛2—4个入围候选（本地与库外同池，各带"本稿哪段需要什么→模板哪项能力承担→依据→待验证"理由；**新模板无画像不得直接淘汰，也不强制最终选库外**）；选中不在本地按官方流程下载验签登记current-release（**作者免费公开分发模板包视为已有下载授权（2026-10-28 Jeffrey指令）；付费或需新凭证的包仍先取得明确授权**）；同族复用必须写`reuse_comparison`与最强异族备选比较；否决项记`rejections`理由（同版本同分支且无新证据不重复尝试已否决项；下载失败与表达不匹配分开记录；候选耗尽回到文案端重新计划）。不从本机已装包惯性重复；刷新是轻量catalog级动作，不重做全库深度审计。字段细节见PIPELINE「模板全库选型」节。
@@ -108,7 +112,7 @@ PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
 
 ## 红线
 
-- **不自动发布**；发布=Jeffrey手动点击。Motion期发布预填按现行实践：工程`deliveries/accepted-final.json`登记+真实Chrome预填+页面回读。
+- **无授权不发布**；Motion期按现行实践登记`deliveries/accepted-final.json`并用真实Chrome预填/页面回读。是否代理终选、最终点击与目标平台以生产合同及本期实际授权为准；仅预填授权不能冒充发布授权，本期例外不外延到其它期或平台。
 - `motion/assets/`、`motion/baselines/`、`motion/runs/`、`motion/projects/`、`motion/deliveries/`均不入git（证据靠STATUS登记+工程目录本机留证）；原包只读、不私改、不手拆保护核心。
 - 凭据零入档；Motion标识疑似泄露按合同§一处置（停调用、记录、账号持有人官网撤销），不擅自换Key。
 - 线上产品代码不动；产品侧只读；服务器成片回传本地并登记SHA后，同批删该任务chunk与preprocess缓存（批量删非本任务产物先跨模型复核）。
