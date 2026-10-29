@@ -124,7 +124,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`language_review`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
-- `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题、选择理由、标题与介绍证据、视频介绍结构与SHA，以及每次必带的 `#AI新星计划`。
+- `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题（**主推与候选均≤20字**，2026-10-29 Jeffrey 定）、选择理由、标题与介绍证据、视频介绍结构与SHA，以及按目标账号定的标签（**抖音标签≤5个**）。
 - Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#老韩AI`，哔哩哔哩标签固定包含 `老韩AI`。
 
 字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；Episode未出现 `PASS chuangzuo script contract schema=4` 时不得声称②完成。
@@ -298,7 +298,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 第一行 `# 标题`（≤30字，模式A「动词+工具/场景+结果」，模式B「主题句+情绪句」）
 - 正文只写Jeffrey真正要说的话。禁止插入`[B-Roll]`、`[字幕]`、`[画面]`、镜头、转场、特效、Remotion包名、时长、位置或其他导演/实现提示；这些只能在`创作决策.json.visual_anchors`中保留抽象理解任务，并由后续导演阶段决定表达。
 - 正文承诺观众资源时，只口播资源用途和取得位置；资源本体独立写入`12-发布/观众资源/<资源名>.md`，不能附在口播稿末尾。资源必须完整填写推荐值并提示“这是推荐起点，请按自己的项目判断并修改”。
-- **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，并且每次必须包含抖音活动标签 `#AI新星计划`；这一区域不进入口播、TTS、内容单位或段落审计
+- **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，**抖音标签上限5个**；标签按目标账号区分（2026-10-29 Jeffrey 定）：老韩AI主号（laohanvideo）必带 `#AI新星计划`，**其他账号（如老外数字人号）不带**，以项目合同为准；标题≤20字；这一区域不进入口播、TTS、内容单位或段落审计
 - **视频介绍SEO/GEO规则（2026-09-17）**：核心搜索词前置在前55字折叠线内（题材词+动作词）；介绍必须总结整篇骨架（案例/方法/增量/资源）不能只抓一点；关键词在标题/介绍前段/话题标签三处命中；实体词+一个真实互动问号（GEO利于AI搜索引用）；120—200字，只保留一个问号
 - 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
 
@@ -368,7 +368,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 主推标题有3个候选、至少2条正文证据和非空选择理由，最终稿只保留选中的1个
 - 标题承诺能被正文兑现；观点型突出可信证据与反常结果，教程型突出搜索词、动作和具体结果
 - 视频介绍按当前内容类型完成五段信息结构，数字、功能和结果不超出正文事实边界
-- 视频介绍只保留1个互动问题，并且标签原样包含 `#AI新星计划`
+- 视频介绍只保留1个互动问题，标签为按账号区分后的原样集合（老韩AI含 `#AI新星计划`，其他账号按项目合同，抖音≤5个）
 
 ## Step 5.5：Sepia中文非虚构定稿
 
@@ -388,7 +388,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 1. 普通独立写作时口播稿写入 `output/script-YYYY-MM-DD.md`，并保留同basename`.humanizer-input.md`；传入已验证系列单期资料包时，口播草稿与同basename `.decision.json` 写入 `script-pool/<series-id>/`，不伪造humanizer正式门；Episode 模式写入 `episodes/<slug>/01-口播稿.md`并保留`02-创作工作稿/humanizer-input.md`。Episode正文承诺观众资源时，资源独立写入`episodes/<slug>/12-发布/观众资源/`，不得塞回口播稿。
 2. 普通独立写作也必须写同basename的 `.decision.json` 和 `.tts.aiff`；系列资料包草稿不得伪造TTS或正式完成证据，使用`series-draft-v1`并绑定packet SHA；Episode 模式写 `02-创作工作稿/创作决策.json` 与 `tts-read-aloud.aiff`。
 3. 用本机 `say` 完整机械试读并用 `ffprobe` 记录TTS音频时长；TTS音频、正文有效口播文本和决策JSON必须互相绑定SHA，但该时长只能作为口播时长估算，不能称为真人实测。
-4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，视频介绍必须带 `#AI新星计划`。
+4. 在正文后写入非口播的抖音发布信息，主推标题和视频介绍都必须非空，标签按目标账号（老韩AI带 `#AI新星计划`，其他账号按项目合同，抖音≤5个）。
 5. Episode 模式按 `references/multi-platform-publish-contract.md` 同步写 `12-发布/多平台发布内容.md`；四个平台分别选择切入点、标题、介绍/正文和话题，视频号独立短标题不超过16字，所有事实仍受当前口播稿与审核边界约束；三端话题必须带 `#老韩AI`，B站标签必须带 `老韩AI`。存在观众资源时，四个平台还必须绑定同一资源并登记实际交付位置。
 6. 按 `references/creation-contract.md` 运行 `scripts/check-script-contract.mjs`。系列资料包草稿使用`--series-draft <packet.json>`；没有对应机械PASS不得交付，即使PASS也只算草稿，不算②完成。
 
