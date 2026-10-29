@@ -1,0 +1,25 @@
+[Script Info]
+Title: Six-second layout example; replace canvas/text/times/positions before production
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: TitleZH,PingFang SC,46,&H00FFFFFF,&H00FFFFFF,&H10101010,&H80000000,-1,0,0,0,100,100,0,0,1,1.4,0.8,8,40,120,150,1
+Style: TitleEN,Arial,28,&H00E3E3E3,&H00E3E3E3,&H18101010,&H80000000,0,0,0,0,100,100,0,0,1,1.0,0.7,8,40,120,210,1
+Style: ZH,PingFang SC,56,&H002DE8F7,&H002DE8F7,&H10101010,&H80000000,-1,0,0,0,100,100,0,0,1,1.4,0.8,2,40,120,410,1
+Style: EN,Arial,34,&H00E3E3E3,&H00E3E3E3,&H18101010,&H80000000,0,0,0,0,100,100,0,0,1,1.0,0.7,8,40,120,877,1
+Style: AI,PingFang SC,24,&H20FFFFFF,&H20FFFFFF,&H80000000,&H90000000,0,0,0,0,100,100,0,0,1,0.7,0.6,7,40,40,300,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 1,0:00:00.00,0:00:06.00,TitleZH,,0,0,0,,{\an8\pos(320,150)}孩子的家务课
+Dialogue: 1,0:00:00.00,0:00:06.00,TitleEN,,0,0,0,,{\an8\pos(320,210)}Kids & Chores
+Dialogue: 0,0:00:00.00,0:00:03.00,ZH,,0,0,0,,{\an2\pos(320,870)\q2}家务是家庭责任
+Dialogue: 0,0:00:00.00,0:00:03.00,EN,,0,0,0,,{\an8\pos(320,877)\q2}Chores are a family responsibility.
+Dialogue: 0,0:00:03.00,0:00:06.00,ZH,,0,0,0,,{\an2\pos(320,870)\q2}先从适龄的小事开始
+Dialogue: 0,0:00:03.00,0:00:06.00,EN,,0,0,0,,{\an8\pos(320,877)\q2}Start with age-appropriate tasks.
+Dialogue: 2,0:00:00.00,0:00:06.00,AI,,0,0,0,,AI生成
