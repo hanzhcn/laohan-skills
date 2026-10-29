@@ -7,3 +7,5 @@ owner/writer=成长项目Codex root，仅laohan-laowai/SKILL.md、references/epi
 现有远端synth实际无GPU正例与五个负例完成；主项目提供七阶段全量映射、实际口型23块/25分11秒统计、历史复审11份/41.09分钟及有边界的下期35–50分钟排程目标。完整证据只维护于`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/handoff/FLOW_AUDIT_CLOSEOUT_20261029/`，不复制另一份状态或声称新SLA已经端到端实测。
 
 本轮不启用远端旧训练/自动清理链，不再为当前复用出片追加其第三轮复审；旧NOT_APPROVED保留。新博主/明确重训或自动清理需求才重新审查完整迁移，不能把未部署代码当执行通过。独立异模型对抗复核及精确提交/push信息在主项目同目录reviews/closeout.json。
+
+GLM-5.3 max/128000/1800实际513.693秒、CLI success/end_turn完整，源候选7e68643519d03a5e103755fd6afcfcfbae83ce78／项目4cbc6dd8ecec26457f7d2e52c6f5da002099e0fa获APPROVE_METHOD_SCOPE，11项静态对抗无阻断。3项LOW/nitpick在项目storage policy、状态措辞及本源laowai⑤.4作事实/限制澄清；不新增权限、运行入口或门裁剪，不为此机械重审未变实现。报告与逐项裁决由成长项目归档，HTTP为UNVERIFIED_CLI；不冒模型亲自实测或声音/发布接受。
