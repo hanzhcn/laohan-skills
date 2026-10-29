@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### LAOWAI-QUALITY-CENTER-LESSONS-20261030 — 规则与模板定点修订
+
+owner/writer=root；main，接手0c4bb94工作树干净；仅laohan-laowai及相关参考/ASS模板。固化成长系列最高保真交付与全画面居中，补齐EP02磁盘预检、并行字幕/文案、Gemini客户端、远端assemble与计时经验；不改EP02成片或共享same-voice工具/模型。完成条件为针对性真实小样和拒绝情境、GLM默认满配独立对抗复核、精确提交push和宿主同源核对。审查采用通道最高档/默认总预算，不以提速降配；无新GPU/发布外发。业务素材盘点与历史证据写成长项目本任务handoff，源仓只存技能修订回执。
+
 ### EP02-FONT-GEMINI-20261030 — 已完成
 
 owner/writer=root；main；字号候选fecb6c9、原生客户端候选deb004d。本轮固定成长系列720画布中文52/标题72（英文29/34）、意群预拆/证据SHA绑定；双引擎Gemini完整新回复判据、本地客户端4 Argon高的实际发送/取回/清暂存流程。54cue实际全字形/18px间距/叠字2382px、4生成拒绝/错SHA及6前置拒绝路径已核；最终ASS/媒体未因guard新增而重烧，声模/口型无重复。GLM-5.3 max/128000/1800完整346.609秒及增量123.219秒VALIDATED/end_turn/APPROVE；首轮错误字体前提已实证裁决，F1–F7修复或留范围，末轮低风险不触Enter/Send澄清按其原意见补入。Gemini4本地完整三平台稿已融合/违规，业务桌面/飞书原件与回下载SHA已核，不代签平台发布/用户听感接受。源码与完整回执见docs/handoff/EP02_FONT_GEMINI_20261030.md；提交push终态在成长项目同名handoff/source-closeout.json。

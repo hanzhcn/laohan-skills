@@ -39,9 +39,9 @@
 
 ## Skill 维护
 
-- `laohan-skillcreator` v2.2 先区分 `CREATE|AUDIT|SURGICAL_FIX|OPTIMIZE|UPSTREAM_REFRESH`。明确错误和原版恢复默认走最小修复，不强加评分、blind judge 或全量 held-out；只有效果优化或复杂/高影响创建才冻结 baseline 并做 held-out。修改该 Skill 自身或更新方法时先运行 `bash laohan-skillcreator/scripts/check-upstreams.sh`，只选择性吸收上游有效变化并更新来源 commit。
+- `laohan-skillcreator` 按宿主实际已加载的当前SKILL.md，先区分 `CREATE|AUDIT|SURGICAL_FIX|OPTIMIZE|UPSTREAM_REFRESH`。明确错误和原版恢复默认走最小修复，不强加评分、blind judge 或全量 held-out；只有效果优化或复杂/高影响创建才冻结 baseline 并做 held-out。治理技能已不在本业务仓相对目录；修改该 Skill 自身或更新方法时从已加载技能的真实目录运行 `scripts/check-upstreams.sh`，只选择性吸收上游有效变化并更新来源 commit，不恢复旧相对路径。
 - 失败分支、checkpoint、反例和危险黑名单必须与 skill 的真实失败面/副作用成比例；不为静态分加假人工 gate、不可能 fallback 或无关危险操作。
-- 创建或优化 skill 不隐含 install/package/push/publish 授权。runtime profile 先选 `portable|local`；运行 `bash laohan-skillcreator/scripts/test-redlight-scan.sh` 验证扫描器，字面专属路径只作 warning，由人工判断 capability branch；个人绝对路径仍 fatal。portable 声称还要在每个宣称支持的宿主实测，未测标 `UNVERIFIED`。
+- 创建或优化 skill 不隐含 install/package/push/publish 授权。runtime profile 先选 `portable|local`；从已加载laohan-skillcreator的真实目录运行 `scripts/test-redlight-scan.sh` 验证扫描器，字面专属路径只作 warning，由人工判断 capability branch；个人绝对路径仍 fatal。portable 声称还要在每个宣称支持的宿主实测，未测标 `UNVERIFIED`。
 - `laohan-shencha` v1.4 先选 `TECH_CLAIMS|CONTENT_CLAIMS`，再选 `AUDIT_ONLY|VERIFY_AND_FIX`。普通“审查/核验”默认只出证据，不自动改文件；只有明确修复授权或工作流合同才修改，且不得借事实核验压缩文风、模板和创作方法。
 
 当前方法论真源：

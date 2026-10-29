@@ -82,7 +82,7 @@ DH-ROUTE一B步骤2的“听感默认通过”仅属Motion项目授权，不适�
 
 默认只生成已选速度的一版正式候选；没有选档则保持原速，不自动生成1.05/1.10全片对照。确需倍率按本期确认，先查上游是否已应用speed，记录来源与累计倍率，只在一个明确阶段应用一次。下面仅用于音画已对齐且同起点的输入，不用各自归零掩盖原有偏移；它是派生示例，不是免测的同步保证：
 ```bash
-ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)/<S>[v];[0:a]asetpts=PTS-STARTPTS,atempo=<S>[a]" -map "[v]" -map "[a]" -fps_mode vfr -enc_time_base:v filter -c:v libx264 -crf 22 -c:a aac -b:a 128k <加速版>.mp4
+ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)/<S>[v];[0:a]asetpts=PTS-STARTPTS,atempo=<S>[a]" -map "[v]" -map "[a]" -fps_mode vfr -enc_time_base:v filter -c:v libx264 -preset slow -crf 14 -c:a aac -b:a 128k <加速发布衍生>.mp4
 # S 常用 1.05（微紧凑）/1.10（抖音节奏），音高不变；首期 Jeffrey 选档后每期固定
 # 输出帧率策略还须满足本期交付合同；需要CFR时另核帧取整与首尾偏移，不把vfr当平台通用要求
 # 单独atempo声音而不调整画面会破坏原唇音时钟，不用来冒充同因子派生
@@ -92,6 +92,7 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ### ⑥ 后期
 
+- **成长系列画质与居中固定要求**：新制作先读[最高保真与全画面居中](references/quality-and-centering.md)。画质优先于时间/体积；严格最清晰须可核的无损后期母版，兼容有损MP4不冒签；四轨以全画面W/2为排版中轴，同时核实际字形，不能为右侧UI整体左移。新参数不自动追改用户要求保留的旧片。
 - 字幕：**中文大在上、英文小在下**（同屏成对；英文口播，中文主读、英文辅读）
 - 字幕先看本期实际画面再排：按语义切短句；字体/颜色/底条是本期设计选择，未获接受的样式不得写成通用“美观公式”。只改字幕时，用本期已核无字幕底片本机另存新候选，直接复用原音轨及口型时钟；保留旧片、原音轨、模型与回滚资产，不重复训练/口型、不进入模型清理。
 - 有用户视觉参考时，先拆字形/字重、中英字号比例、颜色对比、成组行距、意群切换与画面留白，再放到本期相同画面比较；不照搬参考的低字幕位置、翻译错误或不适合本场景的配色。动态效果须实际看时间序列，抽帧不足时明确未知。安全与可读通过不代表美观已接受，最终看实际样片与用户反馈。
@@ -223,7 +224,7 @@ docs/
 ### EP02 制作提速判例（2026-10-29，同条件下期目标 35-40 分钟）
 - **★回迁一律远端 assemble（最大坑 25 分钟的解法）**：GPU 块产物单块 300-400MB 共约 5GB，scp 回 Mac 单线程约 1MB/s 要 80 分钟、4 路并发仍 25+ 分钟。正确做法：`scp motion/tools/same-voice-local.py 到服务器 → 远端 venv python 跑 assemble（纯 ffmpeg 拼接无 GPU 依赖）→ 只回传 116MB 成品目录`，全程约 4 分钟。本机已传的部分块可中途弃用不清理服务器（服务器 outputs 按清理纪律另收）
 - scp 花括号多源（`host:path/{a,b,c}`）经命令 substitution 组装会静默失败且 `2>/dev/null` 吞错——多源传输用 `xargs -P 4 -I{} scp host:path/{} dest/` 显式路径；rsync 多 source 加尾斜杠在部分版本直接打 usage，别依赖
-- **渲染一次链**：`-vf "delogo=右上,delogo=底部,ass=字幕.ass"` 一次重编码（crf17），不再分"烧字幕+delogo"两代；delogo 必须在 ass 前（水印清除在原帧域，字幕最后叠）
+- **渲染一次链**：本例历史使用`-vf "delogo=右上,delogo=底部,ass=字幕.ass"`一次CRF17编码；CRF17已被2026-10-30最高保真要求取代，不是新片默认。现按[画质方法](references/quality-and-centering.md)一次滤镜得到无损后期母版，再派生兼容MP4，不再分"烧字幕+delogo"两代；仅确有标识才清标，必要delogo在ass前。
 - **字幕与 GPU 并行**：词锚（合成后 ASR 的 words.json）+对照表生成 cue 与 GPU 推理同时进行，GPU 完成时字幕已就绪；cue 生成时直接防重叠（句 start=上句 end），不要事后修
 - GPU 推理节奏参考：约 75s/块（16 块 89.96s 成片用 20.5 分钟）；块完成数用 `outputs/ | grep -c chunk.*attempt` 监控
 - 丢句/SHA 联动/合成入口判例见 laohan-yinse 整稿合成执行判例节（2026-10-29 同日沉淀）
