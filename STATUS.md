@@ -2,10 +2,6 @@
 
 ## 当前任务
 
-### LAOWAI-FEISHU-FILE-DELIVERY-20261029
-
-owner/writer=root；main，基线`f544f6f1f5567fbacf493a593d74ceda5a625038`。成长EP01飞书交付实跑发现：正式片38,850,428字节超过机器人上传30MB限制，既有脚本附件失败仍可能exit0；本轮已用同一会话的飞书客户端本地文件发送，API回读post.files及回下载SHA完全匹配。仅把已核限制、原文件后备与附件成功判断补入laohan-laowai交付节，不改混音、训练、权限、发布或共享脚本。低风险定点修复，针对真实回执/原脚本检查和单次GLM跨模型对抗复核后精确提交push；GLM使用通道满配/1800秒，无新费用点、失败不冒完成。证据=成长项目`docs/handoff/EP01_BGM_FULL_FEISHU_20261029/`。
-
 ### C03-COVER-GEOMETRY-RECOVERY-20261029 — 技能定点修复已交付
 
 owner/writer=C03制作窗口Codex/root；main，基线8890cc21c961d19079f4fbafecb6e7706e5abec5，接手工作树干净。fengmianqiuzhi1.21.2补每尺寸最多一次几何恢复/一次本人照片质感恢复（两项总计≤2），原整图重采预算不清零；真实provider/输入输出SHA与UNREPORTED边界。免费DeepSeek三轮独立对抗复核skillAPPROVE，原S5图像仍BLOCKED（照片脸不达标），未以方法通过冒图通过或追加第三恢复分支。C03代理另选实质不同真人摄影×利润账本方向，三图已独立APPROVE_FOR_COVER_USE；边距错坐标经AE0像素尺反证被独立撤回，旧图/原REVISE保留。视频registry1.21.2与三物理尺寸/七用途已同步；未冒所有宿主可编辑、Jeffrey逐图接受或实际已发布。证据=视频C03工程qa/cover-*与publish/05-封面/cover-manifest-photo-ledger.json。本次接续核实：上述技能已由8c3bab3正常提交push；媒体制作/双平台发布由视频C03卡登记，不扩张技能默认发布权限。
@@ -61,6 +57,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-10-29·LAOWAI-FEISHU-FILE-DELIVERY-20261029 定点修复完成。** owner/writer=root；实现`9880b5dbd286c6a86cd55505c83d47e6f1bed99e`，只补laohan-laowai交付节两条：机器人30MB限制与同一获准会话的客户端原文件后备、脚本附件catch后exit0及原生post.files识别。真实38,850,428字节完整片通过客户端发送一次，API回读并回下载SHA一致；共享脚本/原画质/模型/收件与发布授权未改。GLM-5.3 max/128000/1800一次87.784秒VALIDATED/end_turn，五项静态对抗PASS无finding，两观察留证无需修改；不是独立听审或手机接受。回执=[交付方法修正](docs/handoff/LAOWAI_FEISHU_FILE_DELIVERY_20261029.md)，完整媒体/发送/模型证据见成长项目本轮handoff。源技能已正常提交push，回执与最终Git状态在同目录closeout核对。
 
 **2026-10-29·C03-DIRECTOR-SKILL-20261029 导演入口补强。** root唯一writer，隔离基线e039e502。laohan-motion1.1.5把V4整段构思、模板版本/分支真实能力、素材/人物/动作编舞及表现力核对明确放回登记/复核入口；原命令、声学前置、全库选型、共同门和授权未变，无新审美配额。GLM-5.3 max/128000/1800实际298.457秒/end_turn/VALIDATED，APPROVE_DOC_SCOPE，13项对抗与六文字情境完成，F1/F2非阻塞逐项核实，F3确认无循环。四输入SHA复算一致、diff检查通过；不是新片/E2E/A-B提升。原Token片保持NEEDS_REWORK_USER_FEEDBACK，旧导演要求并未删除，执行与效果把关责任不转嫁skill。回执=[导演入口补强](docs/handoff/MOTION_DIRECTOR_ROUTING_FIX_20261029.md)，最终Git见视频本机director-diagnosis-20261029/closeout.json；仅精确提交本任务，不收其它窗口WIP、不新安装或发表。
 
