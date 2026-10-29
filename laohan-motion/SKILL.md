@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "1.1.4"
+version: "1.1.5"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
@@ -54,8 +54,12 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 | 3 | 基础形象（合格素材复用优先；确需新素材走`motion/tools/dh-generate-clean.mjs`） | 本地/产品服务器 | 人物素材 |
 | 4 | 同声口型（WAV驱动，`same-voice-local.py`分块+`run-same-voice-remote.py`推理） | pro6000-a GPU，Mac调度 | 口型分块+清单SHA |
 | 5 | 画面拼接（唯一入口`same-voice-local.py assemble`，拒绝手搓ffmpeg拼接） | Mac | 完整人物画面，原WAV为唯一主声 |
-| 6 | 导演与模板（声学对齐→全库选型→production-guard门链→plan/pilot/复核/render） | Mac本地 | 官方工程+参数+回执 |
+| 6 | 导演与模板（模板/分支验证→整段构思与编舞→声学绑定及production-guard门链） | Mac本地 | 官方工程+参数+回执 |
 | 7 | 混音与交付（check-delivery带--video→Jeffrey实际听看接受） | Mac | 成片+accepted-final登记 |
+
+## 导演执行（先于字段登记）
+
+第6步按V4“直接使用模板”“从实际效果认识模板”完成整段构思、人物/主辅关系、素材与动作编舞，再登记；具体落点见 `references/full-chain.md` 第6b节。选中模板名不等于选中分支已经保留其表现力。技术排障、可读性修复和门链通过分别留证，不能代替“本期关键内容被怎样讲清”的实际效果判断。
 
 ## 门链（命令形态；字段与argv细节以PIPELINE为准）
 
