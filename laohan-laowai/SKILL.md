@@ -13,6 +13,8 @@ description: 老外博主数字人全流程总控（含 laohan-yinse）。同一
 
 **先分流再执行**：按稳定的博主/形象身份查项目声音资产登记。同一博主后续视频默认复用同一个已选模型版本；换集数、稿件、服装、场景或参考风格不等于新博主，也不触发重新训练。已有形象素材先核本期适用性，不强制重下载整套训练素材。新博主缺模型才从①/②首建；有备份但运行目录缺失时恢复组装，不重新训练。详细分流与依赖核对见 yinse 第0步。
 
+**每集最短路径**：定稿/违规与事实核对 → 既有模型和参考身份检查 → 新稿整轨WAV及音文/听感检查 → 适用clean形象的same-voice → 一次组装/后期 → 连续有声审片及交付。训练数据清洗、多ASR训练校对、模型A/B/稳定性、参考池建设属于首建或具名变更，不每集重跑；字幕单改不回到训练/口型。具体改动影响、并行准备与复核合批见[按改动执行](references/episode-execution.md)。它是已有入口的操作方法，不是自动路由器或跳门授权。
+
 ### ① 博主选型与资料包
 
 - 选型标准：教育者可信度 > 第一视角口播形态（talking head，非 vlog/skit/旁白）> 数据 > 类型差异
@@ -69,11 +71,11 @@ DH-ROUTE是Jeffrey/Motion项目的方法；本项目借用同声工具、时钟�
 
 ### ⑤.4 音频听审卡点（2026-10-28 补录）
 
-⑤ 的 prepare/推理启动前，最终 WAV 必须已过 Jeffrey 整轨听审（听感不过→回 yinse 第 7 步调整重合成，不进推理浪费 GPU）。
+⑤ 的 prepare/推理启动前，最终 WAV 必须已过本期整轨音文与听感检查，默认由Jeffrey听审；只有明确委派涵盖该项时才按yinse“验收角色与委派”执行并如实记受托人、实际有声检查及限制。源素材校对或模型选型的委派不自动覆盖新WAV。听感不过→回yinse第7步，不进推理浪费GPU。
 
 ### ⑤.5 成片统一加速（老方法既有项，2026-10-28 补录——别漏）
 
-倍率按本期确认；未选档不自动套1.05/1.10。先查Motion交付链或其他上游是否已应用speed，记录来源与累计倍率，只在一个明确阶段应用一次。下面仅用于音画已对齐且同起点的输入，不用各自归零掩盖原有偏移；它是派生示例，不是免测的同步保证：
+默认只生成已选速度的一版正式候选；没有选档则保持原速，不自动生成1.05/1.10全片对照。确需倍率按本期确认，先查上游是否已应用speed，记录来源与累计倍率，只在一个明确阶段应用一次。下面仅用于音画已对齐且同起点的输入，不用各自归零掩盖原有偏移；它是派生示例，不是免测的同步保证：
 ```bash
 ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)/<S>[v];[0:a]asetpts=PTS-STARTPTS,atempo=<S>[a]" -map "[v]" -map "[a]" -fps_mode vfr -enc_time_base:v filter -c:v libx264 -crf 22 -c:a aac -b:a 128k <加速版>.mp4
 # S 常用 1.05（微紧凑）/1.10（抖音节奏），音高不变；首期 Jeffrey 选档后每期固定
@@ -101,7 +103,7 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ## 完成证据（四道质量门，源自 Jeffrey 声音方法 v2.2，缺一不可）
 
-① **听感门**：本期最终WAV绑定SHA且Jeffrey整轨听审通过，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。
+① **听感门**：本期最终WAV绑定SHA并完成上述真实整轨音文/听感检查，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝，可同一次成片有声审片核字幕/标题；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。
 
 ## 声音绑定与登记纪律（DH-ROUTE §五，2026-10-28 补录）
 
@@ -171,24 +173,25 @@ docs/
 
 ### 素材判定（Qwen听感不可信，用信号法）
 - **Qwen2.5-Omni-3B 的 music/reverb 判断不可用**（校准集实测：加明显合成音乐报"no music"、自然声全报 echo uncertain）——语言模型听感≠声学仪器，只当第三路 ASR 参考
-- **BGM 判定信号法三步**（numpy+soundfile 即可，判据透明）：①源级停顿残留（帧RMS低于floor*1.5且speech-20dB 的帧）②最深停顿 dBFS 接近干净底噪(-49~-60)=否定恒定BGM；③响停顿(>-38dBFS且≥0.3s)总数<1s=否定间歇BGM。残留高但无节拍=高增益词隙尾音，不是音乐
+- **停顿RMS只作筛查线索**：源级停顿残留、最深停顿dBFS、响停顿数量帮助定位疑段；本次阈值不能证明全段无BGM，音乐可能只在语音期间出现，残留无节拍也不能判定必是词隙尾音。结合实际有声检查与已校准能力逐段裁决；不确定则保留PENDING/弃段，不以信号阈值或ASR多数票冒作声学接受。
 - 转写终稿=Whisper基准+双ASR词级diff+语境裁决（SenseVoice 分词伪影 navaro/fuckinguck 系统性不采；W 把 spaces 听成 's faces 这类靠 S+Q 2:1 纠）
 - 孤立环境声(0.3-0.4s)直接弃段不微裁——总量够时弃用优于精修
 
 ### 训练（pro6000-a）
 - 入口必须 `launch_voice.py pipeline --run --timeout 3600`（直接 pipeline --run 会被 STOP）；远端 python 用绝对路径 `/root/autodl-tmp/cosyvoice-train/venv/bin/python`（非交互 PATH 无 python3）
 - **首次组装须区分训练checkpoint与推理权重**：训练件含 epoch/step 时另存剥离副本，并登记两份SHA；不原地覆盖训练原件。已有可用推理包直接复用，不为每期重复剥离/新建模型。
-- retention 已接线（train-kb78769.sh: single_worker→train_with_retention→train.py）；60段555s 14epoch 实测约70分钟（GPU被抢时会拖30倍）
+- 训练retention必须核实际部署链`single_worker→train_with_retention→train.py`，源码有实现不代表远端已接。本期首跑旧链未接中间层；不把本机修复候选写成远端成功执行。
+- 耗时纠正：本期60段555s/14epoch成功流水收据为334.84秒（含特征等准备），日志Epoch0训练到Epoch13验证约284.44秒；先前“约70分钟”不是该成功训练的实测，应撤回。排障/等待另计，不能据单次结果固定下次预算。
 - 同任务避免重复训练：先核其他工作线的实际任务与资源归属。campplus speaker embedding相似度仅作A/B辅助比较，不替代Jeffrey盲听、本期整轨听审和成片接受，也不因相似度高自动批准模型或新WAV。
 
 ### 口型（same-voice）
 - 本次180帧分块触发RAM门，120帧配置完成23块；仅作本期输入/负载的参考，下期重新核几何与资源，不能保证一次跑通。
 - 本次曾处理 sample.pkl/file cache；这些是处置记录，不是通用清理授权。缓存仅在任务终结、无恢复/组装消费者且有释放证据时按项处理；共享生产机不自动制造大内存压力或清全局缓存绕过RAM门。
-- resume 每批次限一次（attempt==1）；再挂=全新命名空间+`--start-chunk/--end-chunk` 有限范围，assemble 用 `--additional-outputs`
+- 同一范围仅按README恢复一次且不延长原截止；再次失败不能靠新目录重试同一失败块。真实生产基线改变时，只有旧执行者退出、生产空闲、root显式登记尚未计算的独立有限阶段等README条件全部满足才可新建阶段；保留原STOP与次数，assemble仅接纳真实成功块。
 - assemble 前上传三件套别漏：manifest.json + inputs/voiceover.wav + chunks/（scp 多文件+tail 截断会漏看错误，传完 find 数文件数）
 
 ### 字幕与成片（Mac 本地）
-- **brew ffmpeg 9 无 libass**（subtitles/ass/drawte 全被砍），远端 AutoDL ffmpeg 也没有；`brew install ffmpeg@7`（keg-only，用全路径 `/opt/homebrew/opt/ffmpeg@7/bin/ffmpeg`）
+- 本次本机ffmpeg 9和远端现有ffmpeg缺libass；已用本机ffmpeg@7完整路径渲染。下次先核现有`-filters`里的ass/subtitles，不每集安装或把本机结果推广成所有ffmpeg 9均不支持。
 - zsh 坑：滤镜参数含 `=` 用引号包整串（`-vf 'subtitles=/path'`）；`-vsync` 已废弃改 `-fps_mode vfr`
 - **字幕时间轴用全局词流对齐**：whisper word_timestamps 词流 × 文案句表（逐句中英对照）做 SequenceMatcher 全局对齐——单锚点 fallback 会连锁错位（thirteen 被识成 13 就脱轨出 7 秒 gap）
 - 首期黄字黑底v2仍被Jeffrey否决且字幕偏低；该样式不是已接受模板。后续按⑥的短句/实际字形边界/抖音遮挡检查试排，不固定套用该配色与MarginV；若长句溢为三行或中英相撞，须重新分句与复核时轴，不能仅缩字塞满底部。
@@ -196,5 +199,5 @@ docs/
 - AI 视觉质检会误读形近字（十岁→七岁），对照原文复核再信
 
 ### 交付
-- 成片推飞书：`node ~/.local/share/github-digest/push-feishu.mjs "文本" 附件.mp4`（单附件，多版分多条）
+- 用户明确要求飞书交付时才调用既有入口：`node ~/.local/share/github-digest/push-feishu.mjs "文本" 附件.mp4`（单附件）；默认只发指定正式候选，不自动多版本或抖音发布。
 - 每期结束后按「清理临时产物，保护长期声音资产」节逐项处理本地/远端临时产物；先保护模型与参考依赖，输出仍有验收/恢复用途时保留。
