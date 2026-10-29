@@ -205,7 +205,7 @@ docs/
 
 ### 字幕与成片（Mac 本地）
 - 本次本机ffmpeg 9和远端现有ffmpeg缺libass；已用本机ffmpeg@7完整路径渲染。下次先核现有`-filters`里的ass/subtitles，不每集安装或把本机结果推广成所有ffmpeg 9均不支持。
-- zsh 坑：滤镜参数含 `=` 用引号包整串（`-vf 'subtitles=/path'`）；`-vsync` 已废弃改 `-fps_mode vfr`
+- zsh 滤镜参数含 `=` 时用引号包整串（`-vf 'subtitles=/path'`）。same-voice输出需显式25fps CFR：本机用`-r 25 -fps_mode cfr`，远端旧FFmpeg用已实测的`-r 25 -vsync cfr`；不能因弃用提示改VFR。四处时钟/实际解码与反例见[短片制作判例](references/episode-execution.md#短片连续制作的新判例2026-10-30)。
 - **字幕时间轴用全局词流对齐**：whisper word_timestamps 词流 × 文案句表（逐句中英对照）做 SequenceMatcher 全局对齐——单锚点 fallback 会连锁错位（thirteen 被识成 13 就脱轨出 7 秒 gap）
 - 首期黄字黑底v2仍被Jeffrey否决且字幕偏低；该样式不是已接受模板。后续按⑥的短句/实际字形边界/抖音遮挡检查试排，不固定套用该配色与MarginV；若长句溢为三行或中英相撞，须重新分句与复核时轴，不能仅缩字塞满底部。
 - 加速是 `setpts=PTS/SP`（`SP*PTS`是减速反方向）；Jeffrey 本期定**原速**为标准，加速档出对比不默认
