@@ -1,10 +1,18 @@
 # 抖音下载方法
 
-抖音反爬极强，yt-dlp/Jina/web_fetch/纯 HTTP 全部无效。2026-08 反爬升级后格局：短链→video_id 的重定向仍有效（curl 即可），但 video_id→播放地址的所有纯 HTTP 通道全部关闭（死路清单见文末踩坑记录）。单视频下载当前首选：**Playwright 渲染 + 抓 aweme/detail API 响应**。opencli 仍可用（search/user-videos，内部维护签名），但没有单视频 resolve 命令。
+单视频先查当前`opencli douyin detail --help`，有该命令就用它；2026-10-29本机2.0.2已核可接短链/链接/ID，返回作品信息与play_url。下载失败再按下方浏览器分支，不把历史“没有单条resolve”或旧SSR方法当当前事实。抖音不走yt-dlp；短链HTTP重定向仍能取ID，不泛称所有HTTP都无效。
 
 ## 下载视频
 
-### 第 1 步：短链解析拿 video_id（仍有效，curl 即可）
+### 第 1 步：优先已有detail入口
+
+```bash
+opencli douyin detail <短链/链接/ID> --window background -f json
+```
+
+核返回的aweme_id/作者/时长对应用户给的作品，再立即下载临时play_url，失败不得把JSON错误保存成MP4。页面预导航超时，即使doctor全绿也不证明内容已取得；转第2/3步。旧版本缺命令可直接用浏览器分支，不为取一条视频强制升级或全量更新skills。
+
+### 第 2 步：必要时短链解析拿video_id
 
 从分享口令正则提取短链（`https?://v\.douyin\.com/[\w]+/`），带移动端 UA 请求，302 落地 URL 路径里的数字即 video_id：
 
@@ -20,15 +28,23 @@ curl -sL -o /dev/null -w '%{url_effective}' \
 Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1
 ```
 
-### 第 2 步：Playwright 抓包拿播放地址（当前首选）
+### 第 3 步：明确绑定已登录浏览器取实际媒体
+
+优先新建本任务tab打开canonical作品页，核可见作者/标题/时长。播放器已加载时读实际`video.currentSrc`，使用宿主的media download能力或curl立即下载。2026-10-29此分支已取得Eleanor作品`7701720177322684539`完整50.48秒/720×1280源片，ffmpeg全片解码成功。**浏览器返回只有画面/视频地址，不等于已听BGM。**
+
+多浏览器/profile并存时，必须把tabID和真实浏览器实例绑定。若列表有tab但操作连续报NO_TAB，转实例归属诊断，不拿另一浏览器的ID反复操作；不重启用户共享浏览器/daemon、不关他人tab。huashu不可明确绑定时，使用宿主提供的等效浏览器控制，按其真实文档取媒体，不猜API。
+
+播放器源不可得时，按宿主现有网络能力抓aweme/detail响应：
 
 1. Playwright（ECC Playwright MCP `browser_navigate`）打开 `https://www.iesdouyin.com/share/video/{video_id}/`，页面自动跳转到 `www.douyin.com/video/{video_id}` 并渲染
 2. 页面自己调用 `https://www.douyin.com/aweme/v1/web/aweme/detail/?aweme_id={video_id}`——签名（a_bogus/msToken）由浏览器自动计算，无需关心
 3. 从 network 抓该请求的响应体（`browser_network_requests` 过滤 `aweme/detail` → `browser_network_request` 取 `response-body`）
-4. JSON 路径：`aweme_detail.video.play_addr.url_list[0]` → 单文件 1080p mp4 CDN 直链；`bit_rate` 数组含多码率备选
+4. JSON 路径：`aweme_detail.video.play_addr.url_list[0]` → CDN直链；`bit_rate`数组含多码率备选。实际清晰度/编码以下载后的ffprobe为准，不保证都是1080p
 5. curl 带 `Referer: https://www.douyin.com/` 下载，**拿到立即下载**——CDN 直链带签名时效（约几小时）
 
 备选取法：页面 network 里 douyinvod.com 的 `media-video-avc1` + `media-audio-und-mp4a` 是分离流（206 请求），下载两段后 `ffmpeg -i video.mp4 -i audio.mp4 -c copy out.mp4` 合并。
+
+下载后记录稳定作品URL/ID、时间、源文件SHA/流信息，ffmpeg完整解码。临时CDN签名与无关账号信息不入Git。对标原片保留标题/字幕供研究；项目要求的clean另存并登记裁剪边界，不能把学习片自动改成当前形象/训练素材。
 
 ### ~~旧方法：移动端 UA + iesdouyin SSR~~（已失效，2026-08-26 验证）
 
@@ -60,105 +76,21 @@ python3 -m venv .venv
 - 不用 PyTorch `whisper --device mps`：本机 M1 Pro 实测 FP16 产生 NaN；FP32 虽可运行但两条 6 分钟视频 30 分钟仍未完成。
 - `whisper-cli + small` 只用于快速预跑；最终 benchmark transcript 必须记录真实 engine/model。
 
-转录优先用硅基流动 API（免费、秒级返回），失败降级到本地 whisper：
+对标拆稿沿上面的MLX高精度分支，先复用已有环境/模型缓存，不每条新建环境或重下模型。2026-10-29已验证本机缓存可由`uv run --offline --with mlx-whisper python`加载未量化large-v3（`HF_HUB_OFFLINE=1`，显式传已核snapshot路径）；这是本机可达实例，不保证别的机器也有缓存。输出记录engine/model/设置/源SHA，ASR草稿对照烧录字幕，不能把转写当听感/音乐分析或精确停顿真值。
+
+其他ASR仅按本次已授权受控入口使用，不source交互shell、不把Bearer密钥放进可见命令行或日志；缺配置只报告受影响范围，不以空转录登记成功。日常低精度预跑与正式对标转录分别标注。
+
+## 批量下载博主视频
 
 ```bash
-# 第1选：硅基流动 SenseVoiceSmall（免费，中文优化）
-source ~/.zshrc 2>/dev/null
-curl -s -X POST "https://api.siliconflow.cn/v1/audio/transcriptions" \
-  -H "Authorization: Bearer $SILICONFLOW_API_KEY" \
-  -F "model=FunAudioLLM/SenseVoiceSmall" \
-  -F "file=@output.mp3" | python3 -c "import sys,json; print(json.load(sys.stdin).get('text',''))"
-
-# 第2选：whisper-cli（快，本地）
-whisper-cli -m /opt/homebrew/share/whisper.cpp/ggml-small.bin -f output.mp3 -l zh
-
-# 第3选：Python whisper（准，本地，慢）
-python3 -c "
-import whisper
-model = whisper.load_model('small')
-result = model.transcribe('output.mp3', language='zh')
-print(result['text'])
-"
+opencli douyin user-videos <sec_uid> --limit 20 --with_comments false -f json
 ```
 
-## 批量下载博主视频（完整流程）
+使用项目已有受控批量入口，逐条核aweme_id/作者和临时play_url，再立即下载、提取PCM音频并沿上面ASR分支转录；每步必须检查返回码及实际文件，失败保留条目和原因，不能把空转录或下载错误记成功。文件存在只证明缓存存在，仍核源身份/完整解码，不以固定字节大小判视频有效。不要复制旧版含语法错误、未初始化failed或明文Bearer argv的示例脚本。
 
-实测用于拉斐尔2077 benchmark 样本采集，opencli 获取 play_url → curl 下载 → ffmpeg 提取音频 → whisper 转录，一体化 Python 脚本：
-
-```bash
-# 1. 获取视频列表（含 play_url CDN 临时链接）
-opencli douyin user-videos {sec_uid} --limit 20 --with_comments false -f json > /tmp/videos.json
-
-# 2. 批量下载+音频提取+转录
-python3 << 'PYEOF'
-import json, subprocess, os
-
-data = json.load(open('/tmp/videos.json'))
-out_dir = '/tmp/douyin_videos'  # 改成目标目录
-os.makedirs(out_dir, exist_ok=True)
-
-for i, v in enumerate(data):
-    aweme_id = v['aweme_id']
-    play_url = v.get('play_url', '')
-    title = v.get('title', '')[:40]
-    vdir = f'{out_dir}/video-{i+1:02d}'
-    os.makedirs(vdir, exist_ok=True)
-
-    # 下载视频（CDN 链接有时效，获取后立即下载；每步检查返回码，失败记录不中断批次）
-    mp4 = f'{vdir}/source.mp4'
-    if not os.path.exists(mp4) or os.path.getsize(mp4) < 10000:
-        print(f'[{i+1}] 下载: {title}...')
-        r = subprocess.run(['curl', '-sfL', '-o', mp4, play_url], timeout=60, capture_output=True)
-        if r.returncode != 0 or not os.path.exists(mp4) or os.path.getsize(mp4) < 10000:
-            failed.append(f'video-{i+1:02d}: 下载失败(rc={r.returncode})'); continue
-    else:
-        print(f'[{i+1}] 已存在，跳过'))
-
-    # 提取音频
-    wav = f'{vdir}/audio.wav'
-    if not os.path.exists(wav):
-        subprocess.run(['ffmpeg', '-y', '-i', mp4, '-vn', '-acodec', 'pcm_s16le', wav],
-                       capture_output=True, timeout=30)
-
-    # 转录（优先硅基流动 API，降级 whisper-cli；结果写入 transcript.md）
-    # ⚠️ 异常必须脱敏捕获：TimeoutExpired 的默认栈会带完整 argv（含 Bearer key），禁止裸抛
-    transcript = f'{vdir}/transcript.md'
-    if not os.path.exists(transcript) or os.path.getsize(transcript) < 10:
-        text = ''
-        # 第1选：硅基流动 SenseVoiceSmall（免费，中文优化）
-        try:
-            sf = subprocess.run(
-                ['curl', '-sS', '-X', 'POST',
-                 'https://api.siliconflow.cn/v1/audio/transcriptions',
-                 '-H', f'Authorization: Bearer {os.environ.get("SILICONFLOW_API_KEY","")}',
-                 '-F', 'model=FunAudioLLM/SenseVoiceSmall',
-                 '-F', f'file=@{wav}'],
-                capture_output=True, text=True, timeout=120)
-            text = json.loads(sf.stdout).get('text', '') if sf.stdout else ''
-        except subprocess.TimeoutExpired:
-            print(f'[{i+1}] ASR API 超时(120s)，转 whisper-cli')
-        except Exception as e:
-            print(f'[{i+1}] ASR API 异常: {type(e).__name__}')  # 只打类型不打栈（防泄 key）
-        if not text:
-            # 第2选：whisper-cli（本地）
-            try:
-                w = subprocess.run(
-                    ['whisper-cli', '-m', '/opt/homebrew/share/whisper.cpp/ggml-small.bin',
-                     '-f', wav, '-l', 'zh', '--no-timestamps'],
-                    capture_output=True, text=True, timeout=120)
-                text = w.stdout
-            except subprocess.TimeoutExpired:
-                print(f'[{i+1}] whisper-cli 超时'); text = ''
-        open(transcript, 'w').write(text)
-PYEOF
-```
-
-关键点：
-- `play_url` 是 CDN 临时链接，有时效（约几分钟），获取后必须立即下载
-- 不是手动走 iesdouyin 方法——opencli 内部已经做了同样的 API 调用，直接返回 play_url
-- 音频用 `pcm_s16le`（WAV）格式，whisper 兼容性最好
-- ⚠️ **返回条数 ≠ 博主作品总数**（2026-09-19 实测坑）：柱子哥TzFilm 接口只回 17 条（<20 上限，看似"第一页到头"），主页"作品 95"——漏了 78 条。返回数 < limit 不能当全部，全量以主页"作品 N"计数为准，用下一节方法补齐
+- 返回条数不等于博主作品总数；主页计数与分页另核。2026-09-19曾出现主页95条但列表仅17条，不能把不足limit当已取全。
+- 当前sec_uid与实际作者必须对应；旧值/接口降级可能返回自己账号数据，错人时停止，不能按数量继续。
+- 临时CDN地址有时效；稳定ID/作品URL入档，签名URL不作为永久来源。
 
 ## 批量采集博主封面（2026-09-19 实测 95 条采到 89 张）
 

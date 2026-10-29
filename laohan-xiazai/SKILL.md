@@ -1,7 +1,7 @@
 ---
 name: laohan-xiazai
 description: 从互联网拿内容一站式——视频下载、音频提取+转文字、字幕下载、评论采集、博主数据、网页抓取、搜索聚合、跨平台发布与数据分析，覆盖 30+ 平台（抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博/Reddit/HackerNews/即刻/知识星球/雪球/贴吧/头条/Twitter等），按降级链自动选择最优工具。Use when 用户说"下载""下个视频""帮我抓""抓一下""爬""爬取""读一下""读这个链接""看看这个网址""转文字""转录""听写字幕""评论""看看评论""抓评论""博主数据""博主更新""up主""谁谁最近发了什么""封面""发抖音""发小红书""定时发布""草稿""账号数据""粉丝数""给我截图""网页正文""这个页面讲了啥"，或给出任意 URL / 短链接 / BV号 / 视频号链接 / 公众号文章链接 要求获取内容，或提到抖音/TikTok/YouTube/B站/小红书/知乎/公众号/视频号/微博 等具体平台名要求下内容、搜内容、读评论、抓数据，以及任何涉及从互联网拿内容的操作。优先按降级链选工具：搜索走 anysearch→opencli→agent-reach；下载按平台路由；抓取走 Scrapling→browser-use→web-access；浏览器操作（登录态页面/JS 渲染/多步交互/跨站搬运）优先 huashu-chrome MCP（2026-10-21 起，真登录态+效果证据，替代 chrome-devtools MCP）。纯技术查证/搜教程心得类搜索（不带平台名、不取内容）让位 laohan-sousuo（Jeffrey 2026-10-02 拍板）。
-version: "1.6.1"
+version: "1.6.2"
 ---
 
 # 从互联网拿内容
@@ -43,44 +43,20 @@ version: "1.6.1"
 - 需要登录才能访问且用户未登录 → 告诉用户先登录对应平台，huashu-chrome / web-access 可以用已登录的 Chrome
 - 下载付费内容/会员内容 → 不处理侵权场景
 
-## 前置检查（定期更新，命令报错时必做）
+## 前置检查（先用现有工具，不自动更新）
 
-> opencli 高频发版（每周 2-3 次），但**不需要每次使用都更新**——定期（如每周）更新，或命令报错/找不到新命令时再更新即可。
+先读当前命令能力与连接状态；命令缺失/超时不等于应升级全套工具。定点升级只有实际版本缺能力且符合本次范围时才做，不执行`npx skills update -g -y`更新全部技能。
 
-### 第1步：更新 opencli（npm 包）
-```bash
-npm update -g @jackwener/opencli
-```
-
-### 第2步：更新 opencli skills（npx 管理）
-```bash
-npx skills update -g -y   # 注意：会更新锁文件里全部已装 skill，不止 opencli 的 4 个
-```
-opencli 自带 4 个辅助 skill，随 opencli 仓库更新但独立于 npm 包。必须单独更新：
-- **opencli-usage**：查命令总览，不确定有什么命令时用
-- **opencli-autofix**：命令失败时自动诊断修复（SELECTOR 错误、页面结构变化等）
-- **opencli-browser**：浏览器自动化操作
-- **opencli-adapter-author**：写新的 opencli 适配器
-
-### 第3步：查最新命令比对文档
 ```bash
 opencli <platform> --help
-```
-opencli 经常加新命令（如 4 月加了 bilibili download、xiaohongshu download），SKILL 文档可能滞后。**发现新命令时更新对应 reference 文件。**
-
-### 第4步：检查 Browser Bridge
-```bash
 opencli doctor
 ```
-3 项全绿（Daemon + Extension + Connectivity）才能用 Cookie 命令。失败时排障：
-1. `opencli doctor` 看哪项失败
-2. daemon 没跑 → `opencli daemon restart`（opencli 自带 daemon 管理，**不要用 launchctl**——opencli 不提供 LaunchAgent）
-3. daemon 在跑但扩展未连 → 让用户 `chrome://extensions/` 关开 OpenCLI 扩展
-4. 都 OK 还连不上 → `opencli daemon stop` 后再跑任意 `opencli <命令>` 触发 daemon 自启
+
+发现新命令时修对应reference。doctor绿只证明其检查项；预导航超时、tab列表存在但操作报NO_TAB时，先核浏览器实例/profile与真实tab归属，不循环重试、不重启共享daemon/扩展或关闭他人tab。优先切到宿主已提供且能明确绑定浏览器的等效控制入口，只新建本任务tab；实际不可达再报告缺项。
 
 ### 命令失败时的处理
 
-1. 先用 **opencli-autofix** skill 诊断：`OPENCLI_DIAGNOSTIC=1` 重跑失败命令
+1. 先读失败阶段与当前help/doctor；选择器或适配器问题再按 **opencli-autofix** 定点诊断，不对同一超时盲目重跑
 2. 修复成功 → 更新 reference 文件记录正确方法
 3. 修复失败 → 按降级链切换方法
 
@@ -130,7 +106,7 @@ opencli doctor
 
 | 平台 | 第1选 | 第2选 | 第3选 | 最终兜底 |
 |------|-------|-------|-------|---------|
-| 抖音 | `opencli douyin detail <短链/ID>`（≥2.0 新命令，单视频全解含下载地址；旧版本先 `npm update -g @jackwener/opencli`） | 短链解析 + Playwright 抓 aweme/detail | douyin-session（评论） | Scrapling stealthy |
+| 抖音 | 当前help有`opencli douyin detail <短链/ID>`则优先（≥2.0；单视频信息/播放地址） | 短链解析 + 明确绑定的已登录浏览器读video.currentSrc或抓aweme/detail | douyin-session（评论） | Scrapling stealthy |
 | TikTok | tikwm API | `yt-dlp` | `opencli tiktok`（需 Browser Bridge） | — |
 | YouTube | `yt-dlp`（需 `--cookies-from-browser chrome`） | `opencli youtube transcript`（字幕） | — | — |
 | B站 | `opencli bilibili download`（需 Browser Bridge） | Jina Reader | — | — |
