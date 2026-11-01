@@ -179,6 +179,7 @@ docs/
 - `--expected-checkpoint-sha256`是batch-state.json文件本身SHA；内存增量或生产活动保护触发时不提高阈值、不盲重试、不清全局缓存。
 - 该SHA在服务器只读运行`sha256sum <本次实验绝对目录>/outputs/batch-state.json`取得；不是模型权重的checkpoint SHA，也不是manifest SHA。保留原STOP文件不改字节，runner会再次核同一文件与真实成功回执
 - **分块断点**：从真实batch-state读成功范围。仅已成功0—16块、未算第17块时，零基左闭右开`--start-chunk 17 --end-chunk 18`才表示18块中的最后一块；它不另授恢复/续时权限。按README核原预算/范围/恢复或显式新有限阶段条件；assemble用`--additional-outputs`合并，消费旧STOP的成功前缀还必须显式`--include-verified-stopped-prefix`，逐块核成功退出回执/SHA/几何/帧数，失败块不接纳
+- **2026-11-02 判例：算力机不可达时的正确动作**。pro6000-a SSH 失败时禁止乱试其他服务器（gpu5090/ECS 均非本项目算力机）和本地重组推理环境（绕过 binding/voice-asset/guard 资产保护合同，Jeffrey 定性严重错误）。正确顺序：①grep 本 skill 与 ~/.ssh/config 确认真源主机名 ②真源主机也连不上 → 报告 BLOCKED 等负责人，不降级到本地/他机。经验：机器 ICMP 通但 SSH 端口 refused = sshd 挂，重试无意义。
 
 ## kb78769 全链实战判例（2026-10-29 首期出片）
 
