@@ -1,0 +1,32 @@
+{
+  "scope": "ASR path factual correction and current producer provenance, not listening acceptance",
+  "actual_old_diff_path": "$HOME/Library/Caches/laohanvideo/whisper-alignment-env/bin/python",
+  "review_prompt_erratum": "prior review introduction incorrectly named an /opt/homebrew path; actual diff removes the above Library/Caches path. Original review input retained.",
+  "current_executable": "/Users/hanzhmacbookair/Documents/laohanvideo/.tools/whisper-align-env/bin/python",
+  "realpath_actual": "/Users/hanzhmacbookair/miniconda3/bin/python3.13",
+  "import_actual": {
+    "stable_whisper": "2.19.1",
+    "torch": "2.15.0",
+    "cuda_available": false,
+    "mps_available": true
+  },
+  "source_json": "/Users/hanzhmacbookair/Documents/laohanvideo/motion/projects/20261102-codex-hutong/qa/resume-codex-20261102/source-r8/source.json",
+  "producer_tool": "/Users/hanzhmacbookair/Documents/laohanvideo/motion/projects/20261102-codex-hutong/qa/resume-codex-20261102/source-r8/producer-tool.py",
+  "producer_sha256_recomputed": "b4e9c71d917e1c3ed0b66d8d6d232172c42d5812955926406edc0fc2c10b3e49",
+  "large_v3_cpu_literal_in_actual_producer": true,
+  "official_delta": "/Users/hanzhmacbookair/Documents/laohanvideo/motion/projects/20261102-yiren-10wan-zhangben/qa/resume-codex-20261102/asr-producer-vs-official-diff.txt",
+  "producer_is_wrapper": false,
+  "producer_detail": "Full source snapshot of align-source.py with token_step100->400 only. No fabricated timing. Original script remains unchanged. Actual phrase-level acoustic DTW consumed current voice5.",
+  "actual_asr_output_log": "/Users/hanzhmacbookair/Documents/laohanvideo/motion/projects/20261102-codex-hutong/qa/resume-codex-20261102/align-r8.log",
+  "old_path_clear_in_three_changed_active_entries": true,
+  "cross_machine_portability": "UNVERIFIED; current skill already declares fixed canonical path",
+  "DS_delta_review": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-xyv7ijwt/result.md",
+  "root_adjudication": {
+    "F5": "RESOLVED_TEXT_SCOPE; actual splice sound and visual review pending",
+    "ASR-02": "CONFIRMED prompt erratum, corrected here; actual docs diff unaffected",
+    "ASR-04": "Realpath/import/current provenance verified; existing real ASR run preserved",
+    "ASR-05": "Actual producer hardcodes large-v3/cpu, no engine downgrade",
+    "ASR-06": "Not a wrapper; actual source snapshot and one-line diff above; SHA matches source receipt"
+  },
+  "actual_listening": "UNVERIFIED"
+}

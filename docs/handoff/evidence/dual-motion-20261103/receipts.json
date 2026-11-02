@@ -1,0 +1,121 @@
+{
+  "schema": "dual-motion-surgery-evidence/1",
+  "scope": "ASR/cache factual entry fix; bounded native-editor one-pixel geometry rule; no renderer or production permission changes",
+  "reviews": [
+    {
+      "label": "asr-cache-glm",
+      "original_directory": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-otinqam4",
+      "raw_result": "docs/handoff/evidence/dual-motion-20261103/asr-cache-glm-result.md",
+      "raw_result_file_sha256": "937cc830b5c37be8968e743c21f297ea182295f893ebcbe6344d1a3dcafff9dc",
+      "metadata": {
+        "status": "VALIDATED",
+        "candidate": "f44a7724730bf8c24cdea742c1f32903d97c31f9",
+        "channel": "glm",
+        "model": "glm-5.3",
+        "provider_model": "glm-5.3",
+        "http_status": "UNVERIFIED_CLI",
+        "cli_exit_code": 0,
+        "provider_stop_reason": "end_turn",
+        "requested_effort": "max",
+        "requested_max_tokens": 128000,
+        "requested_stream": true,
+        "timeout_seconds": 1800,
+        "elapsed_seconds": 174.951,
+        "input_sha256": "0c31bf457b3032dca64c1016b7d25a11d5f6f499e81e20ce5b99b069028de54f",
+        "config_sha256": "d559dbce2f117592b31317dd3599c9f3a812dc38e972ea807de7f002785449f4",
+        "response_sha256": "0fb1ad6f80def9cdc8b8037282321318e0ba22a215e07bd4eefd9df37c6ed373",
+        "result_sha256": "1d254b69e199243ac1b6834a691f260a1c699cee5aedb09e03d8b586a95758d4",
+        "usage": {
+          "input_tokens": 19891,
+          "output_tokens": 10857
+        }
+      }
+    },
+    {
+      "label": "pixel-r3-glm",
+      "original_directory": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-140b4bt8",
+      "raw_result": "docs/handoff/evidence/dual-motion-20261103/pixel-r3-glm-result.md",
+      "raw_result_file_sha256": "e4fc3f135d4a5e5e9ca49f4d75167b45e4029a6b48683be252566789106512c8",
+      "metadata": {
+        "status": "VALIDATED",
+        "candidate": "f44a7724730bf8c24cdea742c1f32903d97c31f9",
+        "channel": "glm",
+        "model": "glm-5.3",
+        "provider_model": "glm-5.3",
+        "http_status": "UNVERIFIED_CLI",
+        "cli_exit_code": 0,
+        "provider_stop_reason": "end_turn",
+        "requested_effort": "max",
+        "requested_max_tokens": 128000,
+        "requested_stream": true,
+        "timeout_seconds": 1800,
+        "elapsed_seconds": 291.094,
+        "input_sha256": "1fec510c6163bd4b7d3a53d595095990754acd0a3b67ab49416685cef2b3c758",
+        "config_sha256": "d559dbce2f117592b31317dd3599c9f3a812dc38e972ea807de7f002785449f4",
+        "response_sha256": "c34d96a99e344696aebc80e1d4e8a9b9dd6988786ad5bba1828f707a38d05468",
+        "result_sha256": "42bcbca3a36cfb18be8d9ebc2d0b4d96b0877e60fc3f7f8dd025904e4d1666a2",
+        "usage": {
+          "input_tokens": 8080,
+          "output_tokens": 22492
+        }
+      }
+    },
+    {
+      "label": "pixel-r3-deepseek",
+      "original_directory": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-e1nly6jr",
+      "raw_result": "docs/handoff/evidence/dual-motion-20261103/pixel-r3-deepseek-result.md",
+      "raw_result_file_sha256": "493350ed02cfdca89f97c78e8109de385690228b151ba8d880d4f3e508db5750",
+      "metadata": {
+        "status": "VALIDATED",
+        "candidate": "f44a7724730bf8c24cdea742c1f32903d97c31f9",
+        "channel": "deepseek-official",
+        "model": "deepseek-flash",
+        "provider_model": "deepseek-flash",
+        "http_status": 200,
+        "provider_finish_reason": "stop",
+        "requested_max_tokens": 393216,
+        "requested_stream": true,
+        "timeout_seconds": 1800,
+        "elapsed_seconds": 211.277,
+        "input_sha256": "1fec510c6163bd4b7d3a53d595095990754acd0a3b67ab49416685cef2b3c758",
+        "config_sha256": "75aa7c488e2eae5c43c4714eb8c71b73898fb6013e6f33b5ed1364d56b33dae7",
+        "response_sha256": "3da30e7fc9353996f80b3cba73cde8a696782650ceeac6fa426239a35ec777ce",
+        "result_sha256": "26311dd428762292ca20e8e093d1b735826aa8dc76579613d4c21b14abb615f0",
+        "usage": {
+          "prompt_tokens": 7946,
+          "completion_tokens": 38086,
+          "total_tokens": 46032,
+          "reasoning_tokens": 36027
+        }
+      }
+    }
+  ],
+  "current_inputs": [
+    {
+      "path": "laohan-motion/SKILL.md",
+      "sha256": "cb319cc239de8cbe7d50fd4280b04643c97b239215dbd3d1099e414a59cd9250"
+    },
+    {
+      "path": "laohan-motion/references/full-chain.md",
+      "sha256": "d8ed6f6a0571e1cebaaad0cb1cdaca7743b02161cfed5b935876ac21940c814c"
+    },
+    {
+      "path": "laohan-fengmianqiuzhi/SKILL.md",
+      "sha256": "b22e5da42ba2eea386e12bd4db7b156e617a2da2f99b72bb0654f3c4deccfb67"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "1f4f2c54444aba5ed16acfc819c8d6a3df24d5215a6e59e3f7cda066b8309ed7"
+    }
+  ],
+  "video_pipeline": {
+    "path": "/Users/hanzhmacbookair/Documents/laohanvideo/motion/mastery/PIPELINE.md",
+    "sha256": "ac60fe6e4fd58089e4fe4dcfc60f58458cc96555341d5b232d792e38282da13a"
+  },
+  "status": "INDEPENDENT_REVIEW_COMPLETE_GIT_PENDING",
+  "unverified": [
+    "Other hosts and future package versions",
+    "automatic enforcement of native-edit identity",
+    "new review of unchanged renderer or audio paths"
+  ]
+}

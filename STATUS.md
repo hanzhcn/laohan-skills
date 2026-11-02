@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### DUAL-MOTION-SURGERY-20261102 — 双片制作中的现行入口及单像素判据小修
+
+owner/唯一writer=本制作窗口Codex/root；canonical/main，保留chuangzuo双引擎与laowai/Gemini入口他窗WIP，仅精确提交本任务。laohan-motion1.1.6/full-chain与视频PIPELINE改真实专用ASR解释器、MK公共cache参数位置和全新cache恢复事实；真实large-v3/CPU链和本期原包plan/preview成功，GLM otinqam4满配APPROVE_DOC_SCOPE，非所有机器或原包通验。封面1.21.3窄判据仅既有一次获准编辑内单轴1px漂移，输入来源等式/真实回执/输出未舍入≤0.12%均约束；不新增编辑授权/次数、不放宽最终硬尺寸/视觉。GLM140b4bt8与官方DSe1nly6jr最终满配APPROVE_TEXT_ONLY，旧REVISE保留，10项真实正负算例通过；六实际封面另经真实原尺寸独立图审，不以规则批准冒图批准。CLAUDE仅同步活版本引用1.21.3，AGENTS仍为同源指针。风险=失效命令/错误放宽几何；不改声音/口型/生产guard/平台发布或人耳与手机验收。下一动作=视频样段/全片制作后串行核runtime lock与针对检查，普通commit hook→两仓push；待真实提交前不标收尾完成。完整证据=视频两工程qa/resume-codex-20261102/；本任务handoff将绑定最终字节与Git实证。
+
 ### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（已完成，成片继续）
 
 owner/writer=root；main，源实现00de029/a6715a9。持续配音委派、短片原生576、实际墨迹/新glyph目录/短帧差、四处显式25fps CFR/CRF0与实际解码时钟检查已补，未放宽成片/发布接受。EP04真实13准备视频及9core+2whole860帧/全PTS/像素和54帧压缩反例已核。GLM-5.3 max/128000/1800完整静态APPROVE方法/代码/06/07稿（187.396s），首个275.065s只开场白未冒通过；2LOW按外部逐集门/格式范围处置，未重复长审。有效回执/逐项裁决见 docs/handoff/LAOWAI_BATCH_LESSONS_20261030.md；成长仓5片制作、未听/未接受/未发布由其同批STATUS继续记。技能源commit/push在本批完成，未变保护/代码不另返工。 后续新增AAC尾长/编码后峰值及内部PTS缺口判例已同批补入；从原PCM仅重混、实际逐帧音频PTS/有效尾包/新响度、video payload和时钟关联检查通过。GLM满配两次窄增量完整APPROVE，移交探针已补，原失败与误读逐项裁决保留。

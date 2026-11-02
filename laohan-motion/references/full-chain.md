@@ -39,7 +39,7 @@
 
 ### 6a 声学对齐（写参数前）
 ```sh
-"$HOME/Library/Caches/laohanvideo/whisper-alignment-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
+"/Users/hanzhmacbookair/Documents/laohanvideo/.tools/whisper-align-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
 ```
 - 本机解释器与导入预检命令按PIPELINE「共同制作入口」；默认python3不保证含stable_whisper，缺环境停止，不静默换引擎。回执绑定声音、未经改写的声学记录、发音稿和生产工具快照。
 - `--phrases`给保留全文的语义短语、`--windows`给有真实来源的局部搜索区间；每个最终边界由实际音频注意力DTW产生，短语内没有逐字时钟，不冒称逐字扫色。
@@ -118,7 +118,7 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 
 - 已验WAV→同WAV驱动口型→分段裁核心帧合并：方法保持不变；已有同SHA素材重做视觉时复用配音和口型，不重跑服务器。
 - 诊断图放工程外（实例被预览哈希绑定，不能往内加图）。
-- 已验工程同版本按需复用；缓存必须匹配所选包/版本/分支；新包先doctor核现有匹配缓存，需要setup用全新路径（setup拒绝覆盖已存在缓存≠doctor失败）。
+- 已验工程同版本按需复用；缓存必须匹配所选包/版本/分支；新包先doctor核现有匹配缓存，需要setup用全新路径（setup拒绝覆盖已存在缓存≠doctor失败）。`--cache`位置、基名及doctor通过后preview仍报不匹配的恢复，按PIPELINE公开入口说明；doctor不代签预览成功。
 
 ## 常见失败处置
 

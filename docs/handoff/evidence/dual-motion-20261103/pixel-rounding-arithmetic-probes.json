@@ -1,0 +1,55 @@
+{
+  "scope": "calculation probes only; no new mandatory gate; actual files separately verified",
+  "results": [
+    {
+      "case": "valid-native-one-pixel",
+      "actual": true,
+      "expected": true
+    },
+    {
+      "case": "ds-wider-counterexample",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "2px",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "two-axes",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "low-resolution",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "missing-evidence",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "pre-resampled",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "unauthorised-editor",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "exhausted-budget",
+      "actual": false,
+      "expected": false
+    },
+    {
+      "case": "wrong-3x4",
+      "actual": false,
+      "expected": false
+    }
+  ]
+}

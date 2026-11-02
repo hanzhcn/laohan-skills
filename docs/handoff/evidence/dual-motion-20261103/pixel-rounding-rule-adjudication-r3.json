@@ -1,0 +1,46 @@
+{
+  "schema": "task-rule-adjudication/1",
+  "live_skill": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-fengmianqiuzhi/SKILL.md",
+  "old_sha256": "60b7aadad8177c29dab36e90c7703e91d5347ce0e58f1f31deae53d3ef6ee63f",
+  "new_sha256": "b22e5da42ba2eea386e12bd4db7b156e617a2da2f99b72bb0654f3c4deccfb67",
+  "changed_lines": [
+    3,
+    94
+  ],
+  "reviews": [
+    {
+      "channel": "glm",
+      "metadata": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-140b4bt8/metadata.json",
+      "actual_model": "glm-5.3",
+      "result": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-140b4bt8/result.md",
+      "result_sha256": "e4fc3f135d4a5e5e9ca49f4d75167b45e4029a6b48683be252566789106512c8",
+      "decision": "APPROVE_TEXT_ONLY",
+      "adjudication": "adopt exact r3; original r1/r2 REVISE preserved; real files and visual acceptance separate"
+    },
+    {
+      "channel": "deepseek-official",
+      "metadata": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-e1nly6jr/metadata.json",
+      "actual_model": "deepseek-flash",
+      "result": "/var/folders/q7/x8rpstpd5zvg84nh3ky54thr0000gn/T/model-review-e1nly6jr/result.md",
+      "result_sha256": "493350ed02cfdca89f97c78e8109de385690228b151ba8d880d4f3e508db5750",
+      "decision": "APPROVE_TEXT_ONLY",
+      "adjudication": "adopt exact r3; original r1/r2 REVISE preserved; real files and visual acceptance separate"
+    }
+  ],
+  "original_findings": [
+    {
+      "source": "DS r1",
+      "finding": "1px rule admits 0.2674%",
+      "decision": "FIXED by unrounded <=0.12% cap and explicit native evidence"
+    },
+    {
+      "source": "GLM r2",
+      "finding": "may add editing budget and evidence not compared",
+      "decision": "FIXED by exact authorized-recovery linkage, existing budget and input equality duty"
+    }
+  ],
+  "unverified": [
+    "Cross-host automatic enforcement",
+    "all future native image outputs"
+  ]
+}
