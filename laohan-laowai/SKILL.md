@@ -220,6 +220,10 @@ docs/
 - 驱动统一用 `docs/handoff/EP03_07_REDO_20261102/work/redrive.sh`（校验 runner 终态、远端/本地块数、逐块 SHA、assemble 退出码、post 后 final mtime+时长）；旧 `recover*/finish*` 脚本已归档 `work/archive-20261102/`，不得再作为入口。
 - 任何模型/会话按以下入口重放，不要凭记忆手搓命令（脚本自身无密钥，环境变量可覆盖）：`redrive.sh <EP>` 重跑 GPU；`post-one.sh <EP> <DUR>` 出片；`tools/build-pubpk.py` 构建发布包；`tools/publish-feishu.sh` 一键交付（先 `--dry-run`）；`tools/ensure-janitor.sh` 幂等恢复 janitor。成功判据写在脚本内（终态/块数/SHA/时长/`ok:true`），失败必须非 0。
 - 容器重启持久化：pro6000-a 无 systemd（offline）、无 crontab、supervisord 配置已不存在，janitor 不能注册开机自启；重启后跑一次 `tools/ensure-janitor.sh`（redrive 也会自动 ensure）。
+- 并发保护：`redrive.sh` 在 runner 外持远端 `/tmp/laohan-redrive-ep<EP>.lock`（flock -n），同 EP 第二个实例直接退出 3；不要把脚本回退成"先 pgrep 再启动"的 check-then-act 写法。
+- 媒体入库门：`scripts/project-policy.py` 的 commit 门拒绝已跟踪 `.mp4/.mov/.mkv/.m4a`（staged mp4 实测拒绝）；大媒体只在本地/云盘。
+- `tools/ensure-janitor.sh` 默认把 `laohan-janitor.py`/`laohan-janitor-loop.sh` 部署到 `/root` 并核 sha（`DEPLOY=0` 跳过）；容器重启后即使 `/root` 脚本丢失也能恢复。
+- 第四轮 GLM 复审闭环证据：`docs/handoff/EP03_07_REDO_20261102/review/`（glm-review-*.md、adjudication-20261102.md）；改这些脚本前先读裁决文档的残余 P3/UNVERIFIED 清单。
 
 ### 交付
 - 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见仓库 `docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
