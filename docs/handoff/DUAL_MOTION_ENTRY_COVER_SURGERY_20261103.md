@@ -8,4 +8,14 @@ laohan-fengmianqiuzhi1.21.3仅为既有一次获准的宿主原生恢复编辑�
 
 原答、实际参数/终态摘要、输入SHA和逐项裁决见[evidence/dual-motion-20261103/receipts.json](evidence/dual-motion-20261103/receipts.json)。GLM HTTP为UNVERIFIED_CLI，官方DS为HTTP200/stop，均VALIDATED；不把CLI回执伪写HTTP200。实现方为GPT，复审不同家族，未用guiji。
 
-范围外：不新装/发布skill，不改原包/渲染器/保护核、声学模型或平台发表权限；不新增听感/手机通过声明。保留chuangzuo双引擎及laowai/Gemini他窗WIP。普通hook、精确提交/push及视频runtime lock终态将在本回执追加；当前Git仍PENDING。
+范围外：不新装/发布skill，不改原包/渲染器/保护核、声学模型或平台发表权限；不新增听感/手机通过声明。保留chuangzuo双引擎及laowai/Gemini他窗WIP。源实现e83d2fad559cac08cf427656685853ea7e4fde2c已真实普通commit并push；本仓未配置core.hooksPath且默认pre-commit不存在，未绕hook、不冒hook通过。视频项目官方606锁与30执行器版本已真实检查通过，最终两仓fresh Git在视频本期final-closeout.json。
+
+## 2026-11-03 收口
+
+本期两片已完成当前9动态样段、原生整片、完整编码与技术QA、最终官方DS真实时序帧对抗复核及共同delivery，干净包/桌面/本人交付已闭合；本仓不放媒体或私有交付链接。听感默认授权不冒实际人耳，物理手机与本人看片接受未验。没有新安装或平台发表，源实现与末轮状态归档为精确文件普通提交，不收他窗三项WIP、不丢历史installer stash。
+
+### 收口前当前卡原文
+
+### DUAL-MOTION-SURGERY-20261102 — 双片制作中的现行入口及单像素判据小修
+
+owner/唯一writer=本制作窗口Codex/root；canonical/main，保留chuangzuo双引擎与laowai/Gemini入口他窗WIP，仅精确提交本任务。laohan-motion1.1.6/full-chain与视频PIPELINE改真实专用ASR解释器、MK公共cache参数位置和全新cache恢复事实；真实large-v3/CPU链和本期原包plan/preview成功，GLM otinqam4满配APPROVE_DOC_SCOPE，非所有机器或原包通验。封面1.21.3窄判据仅既有一次获准编辑内单轴1px漂移，输入来源等式/真实回执/输出未舍入≤0.12%均约束；不新增编辑授权/次数、不放宽最终硬尺寸/视觉。GLM140b4bt8与官方DSe1nly6jr最终满配APPROVE_TEXT_ONLY，旧REVISE保留，10项真实正负算例通过；六实际封面另经真实原尺寸独立图审，不以规则批准冒图批准。CLAUDE仅同步活版本引用1.21.3，AGENTS仍为同源指针。风险=失效命令/错误放宽几何；不改声音/口型/生产guard/平台发布或人耳与手机验收。下一动作=视频样段/全片制作后串行核runtime lock与针对检查，普通commit hook→两仓push；待真实提交前不标收尾完成。完整证据=视频两工程qa/resume-codex-20261102/；本任务handoff将绑定最终字节与Git实证。

@@ -2,10 +2,6 @@
 
 ## 当前任务
 
-### DUAL-MOTION-SURGERY-20261102 — 双片制作中的现行入口及单像素判据小修
-
-owner/唯一writer=本制作窗口Codex/root；canonical/main，保留chuangzuo双引擎与laowai/Gemini入口他窗WIP，仅精确提交本任务。laohan-motion1.1.6/full-chain与视频PIPELINE改真实专用ASR解释器、MK公共cache参数位置和全新cache恢复事实；真实large-v3/CPU链和本期原包plan/preview成功，GLM otinqam4满配APPROVE_DOC_SCOPE，非所有机器或原包通验。封面1.21.3窄判据仅既有一次获准编辑内单轴1px漂移，输入来源等式/真实回执/输出未舍入≤0.12%均约束；不新增编辑授权/次数、不放宽最终硬尺寸/视觉。GLM140b4bt8与官方DSe1nly6jr最终满配APPROVE_TEXT_ONLY，旧REVISE保留，10项真实正负算例通过；六实际封面另经真实原尺寸独立图审，不以规则批准冒图批准。CLAUDE仅同步活版本引用1.21.3，AGENTS仍为同源指针。风险=失效命令/错误放宽几何；不改声音/口型/生产guard/平台发布或人耳与手机验收。下一动作=视频样段/全片制作后串行核runtime lock与针对检查，普通commit hook→两仓push；待真实提交前不标收尾完成。完整证据=视频两工程qa/resume-codex-20261102/；本任务handoff将绑定最终字节与Git实证。
-
 ### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（已完成，成片继续）
 
 owner/writer=root；main，源实现00de029/a6715a9。持续配音委派、短片原生576、实际墨迹/新glyph目录/短帧差、四处显式25fps CFR/CRF0与实际解码时钟检查已补，未放宽成片/发布接受。EP04真实13准备视频及9core+2whole860帧/全PTS/像素和54帧压缩反例已核。GLM-5.3 max/128000/1800完整静态APPROVE方法/代码/06/07稿（187.396s），首个275.065s只开场白未冒通过；2LOW按外部逐集门/格式范围处置，未重复长审。有效回执/逐项裁决见 docs/handoff/LAOWAI_BATCH_LESSONS_20261030.md；成长仓5片制作、未听/未接受/未发布由其同批STATUS继续记。技能源commit/push在本批完成，未变保护/代码不另返工。 后续新增AAC尾长/编码后峰值及内部PTS缺口判例已同批补入；从原PCM仅重混、实际逐帧音频PTS/有效尾包/新响度、video payload和时钟关联检查通过。GLM满配两次窄增量完整APPROVE，移交探针已补，原失败与误读逐项裁决保留。
@@ -73,6 +69,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-11-03·DUAL-MOTION-SURGERY-20261102 双片中的方法窄修已交付。** laohan-motion1.1.6/full-chain真实ASR解释器/cache位置与新cache恢复、封面1.21.3既有授权内单轴1px判据及CLAUDE活版本引用同批。GLM otinqam4、140b4bt8与官方DSe1nly6jr满配对抗闭合，10正负算例与六封面实际图审分开，真实两片共同render/delivery与本人交付完成，不冒所有机器/耳听/手机/本人接受。源实现e83d2fad559cac08cf427656685853ea7e4fde2c普通commit/push；本仓无pre-commit未冒hook通过。视频源登记与606运行锁已实对齐检查。当前正式代码与最终Git见[方法回执](docs/handoff/DUAL_MOTION_ENTRY_COVER_SURGERY_20261103.md)；三项他窗Gemini/老外WIP与08-10历史installer stash保留。
 
 **2026-10-29·LAOWAI-FEISHU-FILE-DELIVERY-20261029 定点修复完成。** owner/writer=root；实现`9880b5dbd286c6a86cd55505c83d47e6f1bed99e`，只补laohan-laowai交付节两条：机器人30MB限制与同一获准会话的客户端原文件后备、脚本附件catch后exit0及原生post.files识别。真实38,850,428字节完整片通过客户端发送一次，API回读并回下载SHA一致；共享脚本/原画质/模型/收件与发布授权未改。GLM-5.3 max/128000/1800一次87.784秒VALIDATED/end_turn，五项静态对抗PASS无finding，两观察留证无需修改；不是独立听审或手机接受。回执=[交付方法修正](docs/handoff/LAOWAI_FEISHU_FILE_DELIVERY_20261029.md)，完整媒体/发送/模型证据见成长项目本轮handoff。源技能已正常提交push，回执与最终Git状态在同目录closeout核对。
 
