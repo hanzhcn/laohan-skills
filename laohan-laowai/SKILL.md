@@ -212,9 +212,18 @@ docs/
 - 加速是 `setpts=PTS/SP`（`SP*PTS`是减速反方向）；Jeffrey 本期定**原速**为标准，加速档出对比不默认
 - AI 视觉质检会误读形近字（十岁→七岁），对照原文复核再信
 
+### 同卡守卫、resume 与冗余清理（2026-11-02 实证）
+- 守卫不是 GPU 锁：启动时记录 GPU compute-apps 的 pid 基线，之后出现任何非本任务 CUDA 进程 → 本任务父进程收到 `STOP_UNKNOWN_CUDA_PID` 并中止；两个窗口同时跑，先启动者被顶掉（EP04 实测被 yiren-c26b 顶掉）。开工前先 `nvidia-smi --query-compute-apps` 确认除常驻 tbdub/cv3 外无任务；命中后先确认冲突方停手，不要立刻 resume 浪费唯一一次恢复。
+- resume 只允许一次：仅 `attempt==1` 且 `status∈(RUNNING,STOP_NO_AUTOMATIC_RETRY)`；resume 写 attempt=2。`--expected-checkpoint-sha256` 取 `sha256(batch-state.json)`。production log 基线变化会被 `STOP_PRODUCTION_LOG_CHANGED` 拒（EP07 实测），此时走 fresh：旧 outputs `mv` 到 `/dev/shm/stage-20261102/epXX-...`，不 rm。
+- `/dev/shm` 计入 cgroup `memory.current`：守卫比较启动时 `memory_baseline` 与 current（BUDGET=20GiB）及剩余（RAM_FLOOR=12GiB）。shm 残留 20G+ 会让下一期一启动即 `STOP_CONTAINER_INCREMENT_20_GIB` / `STOP_CGROUP_RAM_AT_OR_BELOW_12_GIB`；跑新任务前先清 shm 残留，run 期间不要做大文件 move。
+- 清理走服务器 janitor，不在本机裸 rm：`/root/laohan-janitor.py`（allowlist：`/dev/shm/stage-*` 超 24h、`/root/attic-*` 超 14d；episode outputs 只接受显式 `--purge-outputs` 且 batch-state 完成态），`/root/laohan-janitor-loop.sh` 每 30 分钟跑一次，日志 `/root/laohan-janitor.log`。本机执行 rm 会被 shadow-auditor（enforce）拦截，旧产物一律 mv。
+- 驱动统一用 `docs/handoff/EP03_07_REDO_20261102/work/redrive.sh`（校验 runner 终态、远端/本地块数、逐块 SHA、assemble 退出码、post 后 final mtime+时长）；旧 `recover*/finish*` 脚本已归档 `work/archive-20261102/`，不得再作为入口。
+- 任何模型/会话按以下入口重放，不要凭记忆手搓命令（脚本自身无密钥，环境变量可覆盖）：`redrive.sh <EP>` 重跑 GPU；`post-one.sh <EP> <DUR>` 出片；`tools/build-pubpk.py` 构建发布包；`tools/publish-feishu.sh` 一键交付（先 `--dry-run`）；`tools/ensure-janitor.sh` 幂等恢复 janitor。成功判据写在脚本内（终态/块数/SHA/时长/`ok:true`），失败必须非 0。
+- 容器重启持久化：pro6000-a 无 systemd（offline）、无 crontab、supervisord 配置已不存在，janitor 不能注册开机自启；重启后跑一次 `tools/ensure-janitor.sh`（redrive 也会自动 ensure）。
+
 ### 交付
-- 用户明确要求飞书交付时才调用既有入口：`node ~/.local/share/github-digest/push-feishu.mjs "文本" 附件.mp4`（单附件）；默认只发指定正式候选，不自动多版本或抖音发布。
-- 先核当期附件大小与入口限制：[机器人文件上传](https://open.feishu.cn/document/server-docs/im-v1/file/create)当前上限30MB。超过时可在已登录飞书客户端的同一获准收件会话按本地文件/原文件发送，保留正式片画质；不能为套接口限制把压缩版冒作原文件。客户端不可用则明确交付阻塞，不擅自扩大收件人或公开文件。
+- 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见仓库 `docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
+- 大文件（视频/母版/发布包）只走云盘：`lark-cli drive +create-folder` / `+upload --parent-token ...`，文件夹链接用 markdown 发到目标会话。IM API 实测上限：zip 100MB、mp4 47MB 被拒（code 234006）；客户端手动上传可发大附件但只能人工，仅兜底。发布包结构对齐桌面 `EPxx-多平台发布包/`，构建脚本示例 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py`；交付后按 manifest 回下载核 SHA。
 - 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。
 - 每期结束后按「清理临时产物，保护长期声音资产」节逐项处理本地/远端临时产物；先保护模型与参考依赖，输出仍有验收/恢复用途时保留。
 
