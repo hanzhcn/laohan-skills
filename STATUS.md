@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### CC-UPGRADE-ENTRY-20261104 — 原生升级入口验收小修（复核中）
+
+owner/writer=root；工作目录 `/tmp/cc-upgrade-20261104-mlmapsyg/skill-worktree`，分支 `task/cc-upgrade-verification-20261104`，基线 `403a4d42d617c36681df3a84145ffddcfcf13e90`。CC 已按 Jeffrey“升级吧”从2.1.314升至2.1.317，官方签名/实际入口版本/帮助启动及设置字节不变已验，CD0.166.0保持。只修laohan-gengxin更新后按真实入口验收的漏项，不更新其他工具、不自动删除包装脚本或改配置。风险是原生更新器exit0但旧独立入口未替换导致误报；完成条件为原反例/恢复证据、GLM满配独立对抗复核、源技能与本机同源入口及提交push核实。GLM采用现有已授权通道、max/128000/1800秒；失败保留草稿和回执，不激活未审语义。下一步：补最小方法条款并复核，随后写入近期流水及handoff。
+
 ### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（已完成，成片继续）
 
 owner/writer=root；main，源实现00de029/a6715a9。持续配音委派、短片原生576、实际墨迹/新glyph目录/短帧差、四处显式25fps CFR/CRF0与实际解码时钟检查已补，未放宽成片/发布接受。EP04真实13准备视频及9core+2whole860帧/全PTS/像素和54帧压缩反例已核。GLM-5.3 max/128000/1800完整静态APPROVE方法/代码/06/07稿（187.396s），首个275.065s只开场白未冒通过；2LOW按外部逐集门/格式范围处置，未重复长审。有效回执/逐项裁决见 docs/handoff/LAOWAI_BATCH_LESSONS_20261030.md；成长仓5片制作、未听/未接受/未发布由其同批STATUS继续记。技能源commit/push在本批完成，未变保护/代码不另返工。 后续新增AAC尾长/编码后峰值及内部PTS缺口判例已同批补入；从原PCM仅重混、实际逐帧音频PTS/有效尾包/新响度、video payload和时钟关联检查通过。GLM满配两次窄增量完整APPROVE，移交探针已补，原失败与误读逐项裁决保留。
