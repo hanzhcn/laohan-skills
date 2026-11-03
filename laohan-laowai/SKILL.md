@@ -21,6 +21,8 @@ description: 老外博主数字人全流程总控（含 laohan-yinse）。同一
 
 **每集最短路径**：定稿/违规与事实核对 → 既有模型和参考身份检查 → 新稿整轨WAV及音文/听感检查 → 适用clean形象的same-voice → 一次组装/后期 → 连续有声审片及交付。训练数据清洗、多ASR训练校对、模型A/B/稳定性、参考池建设属于首建或具名变更，不每集重跑；字幕单改不回到训练/口型。具体改动影响、并行准备与复核合批见[按改动执行](references/episode-execution.md)。它是已有入口的操作方法，不是自动路由器或跳门授权。
 
+**教育账号稿件先过自然讨论检查**：人设服务本题，不每条报姓名/地区/三娃/履历；不要把自然分享年龄、零花钱数额改成模板“扣1/扣2”。不编评论、亲历和效果来补叙事，不凑90秒或300词。具体使用边界和独立任务包见[教育账号文案](references/education-copy.md)，项目合同与最新反馈优先，不改变既定人设。
+
 **有对标或表现力反馈时**：先按[表现力与BGM方法](references/performance-bgm.md)拆出时间点证据，写清本期冲突/转折/情绪，再选同一形象适用素材和既有声音参考。常驻标题、逐句字幕及音乐一起放入一个代表性短样，不新增每环节复审或多版全片。未改风格时复用已定设计；学习对标不等于换人设、复制事实或重训。
 
 ### ① 博主选型与资料包
@@ -100,10 +102,11 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ### ⑥ 后期
 
-- **默认入口**：`bash docs/handoff/EP03_07_REDO_20261102/post-one.sh <EP> <DUR>`。输入：`work/EPxx/same-voice-candidate.mp4/same-voice-candidate.mp4`、项目根 `subtitles-epXX.ass`、`work/EPxx/voice-raw.wav`、`assets/bgm/easy-lemon-kevin-macleod-USUAN1200076.mp3`；输出 `final/EPxx/epXX-mix.wav` / `epXX-master-crf0.mp4` / `epXX-final.mp4`。手搓 ffmpeg 只作故障回退，且必须显式 25fps CFR、`-t` 截断到时长上限、产出 CRF0 母版；不要另起一套与脚本不一致的流程。
+- **默认入口**：当前批次 `post-one.sh <EP> <DUR>`（从 `docs/handoff/EP03_07_REDO_20261102/post-one.sh` 读取已修实现，新批次复制并记录来源）。输入均相对该批次：`work/EPxx/same-voice-candidate.mp4/same-voice-candidate.mp4`、`EPxx/subtitles.ass`、`work/EPxx/voice-raw.wav`；另需本期 `EPxx/` 的 cue/字形与输入绑定。BGM按项目既有资源。输出 `final/EPxx/` 的混音/母版/发布版。出片前必须调用本项目 `scripts/episode-caption-qa.py --verify-only` 核实际烧录输入；具体参数按当前 `--help` 和[字幕方法](references/subtitle-validation.md)。缺本期证据拒绝，禁止手搓ffmpeg绕过；必要故障回退仍须同一硬门、25fps CFR与无损母版。
 - **成长系列画质与居中固定要求**：新制作先读[最高保真与全画面居中](references/quality-and-centering.md)。画质优先于时间/体积；严格最清晰须可核的无损后期母版，兼容有损MP4不冒签；四轨以全画面W/2为排版中轴，同时核实际字形，不能为右侧UI整体左移。新参数不自动追改用户要求保留的旧片。
 - 字幕：**中文大在上、英文小在下**（同屏成对；英文口播，中文主读、英文辅读）
-- 字幕先看本期实际画面再排：按语义切短句；字体/颜色/底条是本期设计选择，未获接受的样式不得写成通用“美观公式”。只改字幕时，用本期已核无字幕底片本机另存新候选，直接复用原音轨及口型时钟；保留旧片、原音轨、模型与回滚资产，不重复训练/口型、不进入模型清理。
+- 字幕先看本期实际画面再排：按语义切短句；字体/颜色/底条是本期设计选择，未获接受的样式不得写成通用“美观公式”。只改字幕时，从本期已核无字底片另存新候选并复用原音轨/口型。内容实质改稿则重新生成当期WAV与口型。模型/原始输入按资产合同保护；用户明确要求删除的错误交付副本在新版验证后按清单移除，不继续混在当前交付位置。
+- **生成→出片→建包三处同门**：按[字幕校验方法](references/subtitle-validation.md)执行最终WAV绑定、全局词序不回溯、不失配假补、双语同窗、逐句不重叠及真实字形边界。旧ASS、错音轨、旧字形报告或缺字幕都应非0拒绝；不是加一段文字规范就算接线完成。
 - 有用户视觉参考时，先拆字形/字重、中英字号比例、颜色对比、成组行距、意群切换与画面留白，再放到本期相同画面比较；不照搬参考的低字幕位置、翻译错误或不适合本场景的配色。动态效果须实际看时间序列，抽帧不足时明确未知。安全与可读通过不代表美观已接受，最终看实际样片与用户反馈。
 - 主题标题、开场钩子与逐句字幕分轨：形式先读项目方法与本期决定；已选常驻时，顶部短双语主题标题覆盖全片，下方双语字幕跟口播逐句切换，不能拿3秒开场提示代替。项目未指定时按实际内容/留白试排，不替所有账号统一默认。标题概括整条内容，不增加未经核实的身份、履历或事实，不替换原话字幕；无空间先换适用素材或做布局小样，需改变已定形式时留明原因回到本期决定，不自行取消常驻要求。完整步骤、教程及ASS样例见[标题与字幕方法](references/title-subtitle-layout.md)。
 - **抖音遮挡检查**：整块字幕须避开底部标题/文案/账号/导航与右侧互动栏，并避开人物嘴部；按字形、描边、阴影及底条/背景框（如有）的完整视觉边界检查。同屏中英之间也检查实际字形间距，只测合并外框不能证明内部不叠字。分别实看中文/英文最长实际条目、各自多行条（如有）及不同背景，不能只核MarginV或首帧；没有多行记不适用，不为检查强造两行，三行过密/相撞/超界时先重分句再测。优先核当前平台/剪辑器的实际预览；只能用自定遮挡模拟时，标明模拟尺寸与假设，不能把经验像素说成官方通用安全区或保证所有机型不挡。字幕样片仍交Jeffrey接受。
@@ -113,16 +116,17 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 ### ⑦ 发布与复盘
 
 - 抖音账号注册、养号与发布时间由Jeffrey主导；不把“养号2–3天”当平台硬规定或流量保证。账号装修按本期已确认人设，不自动搬用旧专家履历。
-- **成品交付规范（2026-10-29 Jeffrey 定，EP01 起固定；2026-11-02 补齐）**：每期成品=桌面一个文件夹（`EPxx-多平台发布包/`），固定 6+1 项：① 发布版 mp4（`EPxx-<标题>-发布版.mp4`）② 无损母版 mp4（CRF0，`EPxx-<标题>-无损母版.mp4`）③ 抖音文案 txt ④ 视频号文案 txt ⑤ 小红书文案 txt（三平台各自差异化标题/介绍/标签）⑥ 发布说明 txt（文件路径/SHA/时长/分辨率）+ `manifest.json`（逐文件 sha256/size）。构建用 `docs/handoff/<批次>/tools/build-pubpk.py --eps 03-07 --titles '<标题JSON>'`，交付后按 manifest 回下载核 SHA。Jeffrey 用完即删整个文件夹，不影响项目原件；项目内同 SHA 留档。过程文件不散放桌面。
-- **发布文案规范（2026-10-29 Jeffrey 定）**：抖音、小红书标题≤20字（视频号用平台自己的短标题，不套 20 字限）；抖音标签≤5个；**不带 `#AI新星计划`**（那是老韩AI主号的标签，本系列账号不带）；视频号/小红书标题与介绍按平台调性差异化（视频号平实家庭向、小红书第一人称+emoji+分点+文末多tag）；用 CC BY BGM 时文案末尾带署名行。
-- **双引擎文案（发布前必做；定义=独立成稿后融合，不是让 Gemini 审本地稿）**：先独立写三平台版；再用**同一任务包**（不含本地初稿、片段或结构摘要）让 Gemini 出一套独立稿；保留双方原稿、逐项取舍与融合确稿（`gemini-draft.md` / `fusion.md` / `dual_engine_contract.json`），最后对融合确稿与标题重跑 weigui。渠道顺序：① 已登录 `gemini.google.com/app`「老外文案」会话（Pro/最高档；huashu-chrome / ego-browser / kimi-webbridge 或宿主原生输入）→ ② 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开；记录实际模型，不冒签 gemini.google.com）→ ④ 三通道全不可用才 `SKIPPED`+`skip_reason`。终态只有 FUSED 或 SKIPPED，"必需"指必须尝试三通道，不是必须伪造成功。任务包模板见[三平台标题/文案任务包](references/title-copy-review.md)，方法真源 `docs/ops/gemini-review.md`。
+- **成品交付规范（2026-11-04 Jeffrey 精简，取代旧6+1项）**：每期 `EPxx-多平台发布包.zip` 严格四文件：`成片.mp4`、`抖音.txt`、`视频号.txt`、`小红书.txt`。无损母版仍按质量合同在项目内保留；manifest/说明/审核/过程文件只进内部证据区，不进用户包。现有构建入口 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py --src <当前批次> --eps 03,04 --titles <JSON文件>`，先看当前help，不把JSON字面量当文件。建包前核字幕与当前final绑定，回下载按内部清单核SHA。桌面仅可选中转，已被取代的错误本地/云盘交付按明确授权和精确清单删除，线上作品另核发布指令。
+- **发布文案规范（2026-10-29 Jeffrey 定，2026-11-04 更新段落格式）**：抖音、小红书标题≤20字（视频号用平台自己的短标题，不套 20 字限）；抖音标签≤5个；**不带 `#AI新星计划`**（那是老韩AI主号的标签，本系列账号不带）；视频号平实家庭向、小红书表达生活化，正文均按自然段分开，不强制emoji或分点；用 CC BY BGM 时文案末尾独立署名。
+- **可复制的发布文案**：标题、介绍、标签分别独立分区并真实换行；介绍按自然段分开，段间空行，不把整段塞在“介绍：”后。删除音色模型/声音复刻/配音流程/“声音与口型”等制作介绍；必要平台身份声明与BGM版权署名单独处理，不由此变更平台开关或许可。
+- **双引擎文案（发布前必做；定义=独立成稿后融合，不是让 Gemini 审本地稿）**：先独立写完整英文口播、中文表达与三平台标题/介绍/标签；再用**同一任务包**（不含本地初稿、片段或结构摘要）让 Gemini 出一套独立稿；保留双方原稿、逐项取舍与融合确稿（`gemini-draft.md` / `fusion.md` / `dual_engine_contract.json`），最后对融合确稿与标题重跑 weigui。渠道顺序：① 已登录 `gemini.google.com/app`「老外文案」会话（Pro/最高档；huashu-chrome / ego-browser / kimi-webbridge 或宿主原生输入）→ ② 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ `https://aistudio.google.com/prompts/new_chat`（记录实际模型，不冒签 gemini.google.com）→ ④ 三通道全不可用记录`BLOCKED_GEMINI`并停在草稿，不进入配音/口型。Jeffrey 2026-11-04明确本项目所有文章必须Gemini全文参与，只有完整口播/中文表达/三平台标题介绍标签均取得并融合才算FUSED；不能用SKIPPED或仅审标题绕过。任务包约束见[教育账号文案](references/education-copy.md)，方法真源 `docs/ops/gemini-review.md`。
 - **Gemini 真实完成判据**：先核当前会话、准确草稿和既有消息，发送后必须取得本次新回复完整正文并留档；新气泡、草稿清空和"正在输入"只算在途；气泡消失、草稿恢复或报错记失败；HTTP200/"已点击"不算完成。通道动作无效时按渠道顺序降级，不重复轰炸同一通道、不扩大外发对象/内容。网页提交退回草稿或客户端专属问题时，按[Gemini客户端实证方法](references/gemini-client.md)操作：完整草稿上核指定模型/最高档，取得完整回复与 SHA。
 - 数据：opencli douyin stats/videos 拉取；10 条内决策点（引流款 vs 人设款占比调整）
 - 发布前单独核：目标账号身份/登录态就绪、当前项目片内AI标识的允许/禁止要求与平台声明分别已核、当前候选的发布批准明确。只记账号标识/就绪结论，不归档凭据；缺项只阻发布，不把内容接受冒作发布许可，也不阻无关素材准备
 
 ## 完成证据（四道质量门，源自 Jeffrey 声音方法 v2.2，缺一不可）
 
-① **听感门**：本期最终WAV绑定SHA并完成上述真实整轨音文/听感检查，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝，可同一次成片有声审片核字幕/标题；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。**发布前另有标题/文案门**：双引擎（FUSED，或如实 SKIPPED 并说明）+ 融合稿与标题 weigui CLEAR，缺一不放行发布。
+① **听感门**：本期最终WAV绑定SHA并完成上述真实整轨音文/听感检查，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝，可同一次成片有声审片核字幕/标题；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。**发布前另有标题/文案门**：双引擎（本项目必须Gemini全文参与并FUSED）+ 融合稿与标题 weigui CLEAR，缺一不放行发布。
 
 ## 声音绑定与登记纪律（DH-ROUTE §五，2026-10-28 补录）
 
@@ -213,7 +217,7 @@ docs/
 ### 字幕与成片（Mac 本地）
 - 本次本机ffmpeg 9和远端现有ffmpeg缺libass；已用本机ffmpeg@7完整路径渲染。下次先核现有`-filters`里的ass/subtitles，不每集安装或把本机结果推广成所有ffmpeg 9均不支持。
 - zsh 滤镜参数含 `=` 时用引号包整串（`-vf 'subtitles=/path'`）。same-voice输出需显式25fps CFR：本机用`-r 25 -fps_mode cfr`，远端旧FFmpeg用已实测的`-r 25 -vsync cfr`；不能因弃用提示改VFR。四处时钟/实际解码与反例见[短片制作判例](references/episode-execution.md#短片连续制作的新判例2026-10-30)。
-- **字幕时间轴用全局词流对齐**：whisper word_timestamps 词流 × 文案句表（逐句中英对照）做 SequenceMatcher 全局对齐——单锚点 fallback 会连锁错位（thirteen 被识成 13 就脱轨出 7 秒 gap）
+- **字幕时间轴用最终WAV的全局词流对齐**：先统一数字/专名并核全稿，词索引只能向前且不能跨句复用。失配回到对齐/补核，不按邻句时间自动假补；更不能对连续失配句复用同一窗口。具体硬门见[字幕校验方法](references/subtitle-validation.md)。
 - 首期黄字黑底v2仍被Jeffrey否决且字幕偏低；该样式不是已接受模板。后续按⑥的短句/实际字形边界/抖音遮挡检查试排，不固定套用该配色与MarginV；若长句溢为三行或中英相撞，须重新分句与复核时轴，不能仅缩字塞满底部。
 - 加速是 `setpts=PTS/SP`（`SP*PTS`是减速反方向）；Jeffrey 本期定**原速**为标准，加速档出对比不默认
 - AI 视觉质检会误读形近字（十岁→七岁），对照原文复核再信
@@ -232,7 +236,7 @@ docs/
 - 第四轮 GLM 复审闭环证据：`docs/handoff/EP03_07_REDO_20261102/review/`（glm-review-*.md、adjudication-20261102.md）；改这些脚本前先读裁决文档的残余 P3/UNVERIFIED 清单。
 
 ### 交付
-- 标题/文案双引擎（发布前必做）：重要口播稿及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用才 SKIPPED 并写实际原因（"简单/时间紧"不算）。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
+- 标题/文案双引擎（发布前必做）：所有新写/重写口播/中文表达及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用记录BLOCKED_GEMINI，停在草稿，不进入配音/口型。所有新写/重写文章均须完整英文口播、中文表达和三平台标题/介绍/标签的Gemini原稿及逐项融合，不能只审标题。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
 - 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
 - 大文件（视频/母版/发布包）只走云盘：`lark-cli drive +create-folder` / `+upload --parent-token ...`，文件夹链接用 markdown 发到目标会话。IM API 实测上限：zip 100MB、mp4 47MB 被拒（code 234006）；客户端手动上传可发大附件但只能人工，仅兜底。发布包结构对齐桌面 `EPxx-多平台发布包/`，构建脚本示例 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py`；交付后按 manifest 回下载核 SHA。
 - 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。
@@ -248,7 +252,7 @@ docs/
 - **★回迁一律远端 assemble（最大坑 25 分钟的解法）**：GPU 块产物单块 300-400MB 共约 5GB，scp 回 Mac 单线程约 1MB/s 要 80 分钟、4 路并发仍 25+ 分钟。正确做法：`scp motion/tools/same-voice-local.py 到服务器 → 远端 venv python 跑 assemble（纯 ffmpeg 拼接无 GPU 依赖）→ 只回传必要成品目录`（该次约116MB/4分钟，大小与耗时按当期实测，不固定为新片门槛）。本机已传的部分块可中途弃用不清理服务器（服务器 outputs 按清理纪律另收）
 - scp 花括号多源（`host:path/{a,b,c}`）经命令 substitution 组装会静默失败且 `2>/dev/null` 吞错——多源传输用 `xargs -P 4 -I{} scp host:path/{} dest/` 显式路径；rsync 多 source 加尾斜杠在部分版本直接打 usage，别依赖
 - **渲染一次链**：本例历史使用`-vf "delogo=右上,delogo=底部,ass=字幕.ass"`一次CRF17编码；CRF17已被2026-10-30最高保真要求取代，不是新片默认。现按[画质方法](references/quality-and-centering.md)一次滤镜得到无损后期母版，再派生兼容MP4，不再分"烧字幕+delogo"两代；仅确有标识才清标，必要delogo在ass前。
-- **字幕与 GPU 并行**：词锚（合成后 ASR 的 words.json）+对照表生成 cue 与 GPU 推理同时进行，GPU 完成时字幕已就绪；cue 生成时直接防重叠（句 start=上句 end），不要事后修
+- **字幕与 GPU 并行**：最终WAV词锚与意群表生成cue可与GPU并行，但先核词锚内容、时间与WAV绑定，cue必须不重叠；不能靠强行令下一句start等于上句end掩盖错误对齐。后期和建包仍执行相同校验，不把“字幕准备完成”当成验收。
 - GPU 推理节奏参考：约 75s/块（16 块 89.96s 成片用 20.5 分钟）；块完成数用 `outputs/ | grep -c chunk.*attempt` 监控
 - 丢句/SHA 联动/合成入口判例见 laohan-yinse 整稿合成执行判例节（2026-10-29 同日沉淀）
 
