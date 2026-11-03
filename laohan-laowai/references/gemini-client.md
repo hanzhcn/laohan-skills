@@ -1,6 +1,15 @@
-# Gemini 文案客户端后备（2026-10-30实证）
+# Gemini 文案客户端后备（2026-10-30实证；2026-11-02 补通道顺序）
 
 适用：网页已按huashu检查仍提交后退回草稿，且本轮已有同一Gemini目标/文案的发送授权。Jeffrey本例明确要求用本地客户端与Gemini4，不能把历史可达当新任务授权；不绕验证码/登录或新增费用，不扩收件人。
+
+## 通道顺序（2026-11-02 更新）
+
+1. 首选已登录网页 `gemini.google.com/app`（浏览 automation 用 huashu-chrome/ego-browser/kimi-webbridge 等）；登录失效、输入框异常、提交后回低档且无法恢复 → 判客观不可用。
+2. 换桌面 `Gemini.app`（`/Applications/Gemini.app`）——下面 1–5 步即该 App 的实证流程。
+3. App 也不可用 → 浏览器打开 `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）粘贴同一任务包；记录实际模型/档位。AI Studio 与网页 Pro 不等价，不得冒签同一通道。
+4. 三通道全不可用才 `SKIPPED` + 实际错误原因；「这题简单/时间紧」不构成跳过理由。
+
+项目真源：仓库 [`docs/ops/gemini-review.md`](/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md)（渠道记录字段、任务包、融合与验收）。
 
 1. 用宿主原生应用自动化选中Gemini客户端，核窗口为既有「老外文案」会话，先查是否已有本期消息/生成，防止重复发送；本期同份提示词文件先留档，先自稿后第二引擎。
 2. 在完整草稿填好后再开模型菜单。本例界面为“4 Argon、复杂任务”，思考等级为“低/中/高”，选择“高、超级详尽”，发送前核显示“Argon 高”。本例空草稿选高后粘贴，曾回到低档，因此填稿前的一次设置不足。型号/档位按当前UI与用户决定核，不盲用历史编号、不静默降档。

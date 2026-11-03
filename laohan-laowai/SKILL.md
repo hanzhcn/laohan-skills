@@ -9,6 +9,12 @@ description: 老外博主数字人全流程总控（含 laohan-yinse）。同一
 
 **用选定形象、专属音色与教育/文化内容制作数字人口播**。本skill是七阶段总控，本机/服务器CLI自动化，不走网页向导；确需基础素材时才按项目授权调用产品API。首个Deborah/海思博士案例是历史实例，当前形象/稿件/接受状态以各项目STATUS为准；用户当前指令和项目合同优先于本skill。
 
+## 0. 前置（项目根与索引）
+
+- 本项目根固定为 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang`（下文记 `$PROJECT_ROOT`）；执行本 skill 前 `cd $PROJECT_ROOT` 或全程用绝对路径。**不要**在 `~/Documents/laohanvideo` 根执行本项目命令——那是 Motion 项目，仅借用其 `motion/tools/` 工具。
+- 先读 `$PROJECT_ROOT/AGENTS.md` 与 `$PROJECT_ROOT/docs/INDEX.md`；文中 `assets/...`、`docs/...`、`subtitles-epXX.ass` 等相对路径均相对项目根解析。
+- 预检：`test -f docs/INDEX.md` 失败即停并报缺项，不猜路径、不换项目根。
+
 ## 七阶段流程
 
 **先分流再执行**：按稳定的博主/形象身份查项目声音资产登记。同一博主后续视频默认复用同一个已选模型版本；换集数、稿件、服装、场景或参考风格不等于新博主，也不触发重新训练。已有形象素材先核本期适用性，不强制重下载整套训练素材。新博主缺模型才从①/②首建；有备份但运行目录缺失时恢复组装，不重新训练。详细分流与依赖核对见 yinse 第0步。
@@ -94,6 +100,7 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ### ⑥ 后期
 
+- **默认入口**：`bash docs/handoff/EP03_07_REDO_20261102/post-one.sh <EP> <DUR>`。输入：`work/EPxx/same-voice-candidate.mp4/same-voice-candidate.mp4`、项目根 `subtitles-epXX.ass`、`work/EPxx/voice-raw.wav`、`assets/bgm/easy-lemon-kevin-macleod-USUAN1200076.mp3`；输出 `final/EPxx/epXX-mix.wav` / `epXX-master-crf0.mp4` / `epXX-final.mp4`。手搓 ffmpeg 只作故障回退，且必须显式 25fps CFR、`-t` 截断到时长上限、产出 CRF0 母版；不要另起一套与脚本不一致的流程。
 - **成长系列画质与居中固定要求**：新制作先读[最高保真与全画面居中](references/quality-and-centering.md)。画质优先于时间/体积；严格最清晰须可核的无损后期母版，兼容有损MP4不冒签；四轨以全画面W/2为排版中轴，同时核实际字形，不能为右侧UI整体左移。新参数不自动追改用户要求保留的旧片。
 - 字幕：**中文大在上、英文小在下**（同屏成对；英文口播，中文主读、英文辅读）
 - 字幕先看本期实际画面再排：按语义切短句；字体/颜色/底条是本期设计选择，未获接受的样式不得写成通用“美观公式”。只改字幕时，用本期已核无字幕底片本机另存新候选，直接复用原音轨及口型时钟；保留旧片、原音轨、模型与回滚资产，不重复训练/口型、不进入模型清理。
@@ -106,17 +113,16 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 ### ⑦ 发布与复盘
 
 - 抖音账号注册、养号与发布时间由Jeffrey主导；不把“养号2–3天”当平台硬规定或流量保证。账号装修按本期已确认人设，不自动搬用旧专家履历。
-- **成品交付规范（2026-10-29 Jeffrey 定，EP01 起固定）**：每期成品=桌面一个文件夹（`EPxx-多平台发布包/`），内含：成片视频副本 + 三平台发布文案（抖音/视频号/小红书**各自差异化**的标题、介绍、标签）+ 说明txt（视频路径/SHA）。Jeffrey 用完即删整个文件夹，不影响项目原件；项目内同 SHA 留档。过程文件不散放桌面。
-- **发布文案规范（2026-10-29 Jeffrey 定）**：标题≤20字；抖音标签≤5个；**不带 `#AI新星计划`**（那是老韩AI主号的标签，本系列账号不带）；视频号/小红书标题与介绍按平台调性差异化（视频号平实家庭向、小红书第一人称+emoji+分点+文末多tag）；用 CC BY BGM 时文案末尾带署名行。
-- **双引擎文案**：先独立写三平台版，再把同份提示词经 huashu-chrome 发到 Gemini「老外文案」既有会话，保留双方原稿、逐项取舍和融合确稿，最后对当前确稿做违规扫描。Gemini 稿是必需输入，不能以旧回复、自稿或发送动作代替。
-- **Gemini 真实完成判据**：先核当前会话、准确草稿和既有消息，发送后必须取得本次新回复完整正文并留档；看到新用户气泡、草稿清空和“正在输入”只算在途。若随后气泡消失、草稿恢复或报错，记失败；HTTP200/“已点击”都不算完成。已在生成时不重复发送。huashu 动作无效时，现有会话与同份文本授权内可用宿主原生输入；仍失败则留 PENDING 并请用户处理实际卡点，不臆称已恢复，不扩大外发对象/内容。
-- 网页提交退回草稿而用户指定本地客户端时，按[Gemini客户端实证方法](references/gemini-client.md)操作：完整草稿上再核指定模型/最高档，取得本期完整回复与SHA，不沿用“填稿前已选高”或浏览器剪贴板接口的空结果。
+- **成品交付规范（2026-10-29 Jeffrey 定，EP01 起固定；2026-11-02 补齐）**：每期成品=桌面一个文件夹（`EPxx-多平台发布包/`），固定 6+1 项：① 发布版 mp4（`EPxx-<标题>-发布版.mp4`）② 无损母版 mp4（CRF0，`EPxx-<标题>-无损母版.mp4`）③ 抖音文案 txt ④ 视频号文案 txt ⑤ 小红书文案 txt（三平台各自差异化标题/介绍/标签）⑥ 发布说明 txt（文件路径/SHA/时长/分辨率）+ `manifest.json`（逐文件 sha256/size）。构建用 `docs/handoff/<批次>/tools/build-pubpk.py --eps 03-07 --titles '<标题JSON>'`，交付后按 manifest 回下载核 SHA。Jeffrey 用完即删整个文件夹，不影响项目原件；项目内同 SHA 留档。过程文件不散放桌面。
+- **发布文案规范（2026-10-29 Jeffrey 定）**：抖音、小红书标题≤20字（视频号用平台自己的短标题，不套 20 字限）；抖音标签≤5个；**不带 `#AI新星计划`**（那是老韩AI主号的标签，本系列账号不带）；视频号/小红书标题与介绍按平台调性差异化（视频号平实家庭向、小红书第一人称+emoji+分点+文末多tag）；用 CC BY BGM 时文案末尾带署名行。
+- **双引擎文案（发布前必做；定义=独立成稿后融合，不是让 Gemini 审本地稿）**：先独立写三平台版；再用**同一任务包**（不含本地初稿、片段或结构摘要）让 Gemini 出一套独立稿；保留双方原稿、逐项取舍与融合确稿（`gemini-draft.md` / `fusion.md` / `dual_engine_contract.json`），最后对融合确稿与标题重跑 weigui。渠道顺序：① 已登录 `gemini.google.com/app`「老外文案」会话（Pro/最高档；huashu-chrome / ego-browser / kimi-webbridge 或宿主原生输入）→ ② 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开；记录实际模型，不冒签 gemini.google.com）→ ④ 三通道全不可用才 `SKIPPED`+`skip_reason`。终态只有 FUSED 或 SKIPPED，"必需"指必须尝试三通道，不是必须伪造成功。任务包模板见[三平台标题/文案任务包](references/title-copy-review.md)，方法真源 `docs/ops/gemini-review.md`。
+- **Gemini 真实完成判据**：先核当前会话、准确草稿和既有消息，发送后必须取得本次新回复完整正文并留档；新气泡、草稿清空和"正在输入"只算在途；气泡消失、草稿恢复或报错记失败；HTTP200/"已点击"不算完成。通道动作无效时按渠道顺序降级，不重复轰炸同一通道、不扩大外发对象/内容。网页提交退回草稿或客户端专属问题时，按[Gemini客户端实证方法](references/gemini-client.md)操作：完整草稿上核指定模型/最高档，取得完整回复与 SHA。
 - 数据：opencli douyin stats/videos 拉取；10 条内决策点（引流款 vs 人设款占比调整）
 - 发布前单独核：目标账号身份/登录态就绪、当前项目片内AI标识的允许/禁止要求与平台声明分别已核、当前候选的发布批准明确。只记账号标识/就绪结论，不归档凭据；缺项只阻发布，不把内容接受冒作发布许可，也不阻无关素材准备
 
 ## 完成证据（四道质量门，源自 Jeffrey 声音方法 v2.2，缺一不可）
 
-① **听感门**：本期最终WAV绑定SHA并完成上述真实整轨音文/听感检查，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝，可同一次成片有声审片核字幕/标题；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。
+① **听感门**：本期最终WAV绑定SHA并完成上述真实整轨音文/听感检查，之后才做口型；② **唇音同步门**：连续播放复看口型、节奏与接缝，可同一次成片有声审片核字幕/标题；③ **机械门**：帧数/时钟一致、ffmpeg完整解码无错误、响度实测，ffprobe只负责元数据；④ **成片接受门**：Jeffrey看片明确接受。候选可在技术检查后交看片，发布批准另按项目合同处理，不把机械绿、候选交付或片子接受冒作已发布。**发布前另有标题/文案门**：双引擎（FUSED，或如实 SKIPPED 并说明）+ 融合稿与标题 weigui CLEAR，缺一不放行发布。
 
 ## 声音绑定与登记纪律（DH-ROUTE §五，2026-10-28 补录）
 
@@ -214,11 +220,11 @@ docs/
 
 ### 同卡守卫、resume 与冗余清理（2026-11-02 实证）
 - 守卫不是 GPU 锁：启动时记录 GPU compute-apps 的 pid 基线，之后出现任何非本任务 CUDA 进程 → 本任务父进程收到 `STOP_UNKNOWN_CUDA_PID` 并中止；两个窗口同时跑，先启动者被顶掉（EP04 实测被 yiren-c26b 顶掉）。开工前先 `nvidia-smi --query-compute-apps` 确认除常驻 tbdub/cv3 外无任务；命中后先确认冲突方停手，不要立刻 resume 浪费唯一一次恢复。
-- resume 只允许一次：仅 `attempt==1` 且 `status∈(RUNNING,STOP_NO_AUTOMATIC_RETRY)`；resume 写 attempt=2。`--expected-checkpoint-sha256` 取 `sha256(batch-state.json)`。production log 基线变化会被 `STOP_PRODUCTION_LOG_CHANGED` 拒（EP07 实测），此时走 fresh：旧 outputs `mv` 到 `/dev/shm/stage-20261102/epXX-...`，不 rm。
+- resume 只允许一次：仅 `attempt==1` 且 `status=STOP_NO_AUTOMATIC_RETRY` 才 resume，resume 写 attempt=2；**`RUNNING` 一律不 resume**（会撞活 runner），确认无本任务 runner 后只允许 `--mode fresh`。`--expected-checkpoint-sha256` 取 `sha256(batch-state.json)`。production log 基线变化会被 `STOP_PRODUCTION_LOG_CHANGED` 拒（EP07 实测），此时走 fresh：旧 outputs `mv` 到 `/dev/shm/stage-20261102/epXX-...`，不 rm。
 - `/dev/shm` 计入 cgroup `memory.current`：守卫比较启动时 `memory_baseline` 与 current（BUDGET=20GiB）及剩余（RAM_FLOOR=12GiB）。shm 残留 20G+ 会让下一期一启动即 `STOP_CONTAINER_INCREMENT_20_GIB` / `STOP_CGROUP_RAM_AT_OR_BELOW_12_GIB`；跑新任务前先清 shm 残留，run 期间不要做大文件 move。
 - 清理走服务器 janitor，不在本机裸 rm：`/root/laohan-janitor.py`（allowlist：`/dev/shm/stage-*` 超 24h、`/root/attic-*` 超 14d；episode outputs 只接受显式 `--purge-outputs` 且 batch-state 完成态），`/root/laohan-janitor-loop.sh` 每 30 分钟跑一次，日志 `/root/laohan-janitor.log`。本机执行 rm 会被 shadow-auditor（enforce）拦截，旧产物一律 mv。
 - 驱动统一用 `docs/handoff/EP03_07_REDO_20261102/work/redrive.sh`（校验 runner 终态、远端/本地块数、逐块 SHA、assemble 退出码、post 后 final mtime+时长）；旧 `recover*/finish*` 脚本已归档 `work/archive-20261102/`，不得再作为入口。
-- 任何模型/会话按以下入口重放，不要凭记忆手搓命令（脚本自身无密钥，环境变量可覆盖）：`redrive.sh <EP>` 重跑 GPU；`post-one.sh <EP> <DUR>` 出片；`tools/build-pubpk.py` 构建发布包；`tools/publish-feishu.sh` 一键交付（先 `--dry-run`）；`tools/ensure-janitor.sh` 幂等恢复 janitor。成功判据写在脚本内（终态/块数/SHA/时长/`ok:true`），失败必须非 0。
+- 任何模型/会话按以下入口重放，不要凭记忆手搓命令（脚本自身无密钥，环境变量可覆盖；路径相对批次根 `docs/handoff/EP03_07_REDO_20261102/`）：`redrive.sh <EP>` 重跑 GPU（内置 EP03–07 时长，EP>07 必须传 `--dur`）；`post-one.sh <EP> <DUR>` 出片；`tools/build-pubpk.py --eps … --titles …` 构建发布包（默认 EP03–07）；`tools/publish-feishu.sh` 一键交付（先 `--dry-run`）；`tools/ensure-janitor.sh` 幂等恢复 janitor。**这些是 EP03-07 批次工具，不是项目根通用入口**；新一期复制到新批次目录并显式传参。成功判据写在脚本内（终态/块数/SHA/时长/`ok:true`），失败必须非 0。
 - 容器重启自启（三层自愈）：pro6000-a 无 systemd（offline）、无 crontab、supervisord 配置已不存在；① 平台启动钩子 `/init/bin/customer.cmd.sh` 末尾调用 `/root/laohan-janitor-anchor.sh`（幂等）拉起 loop，2026-11-02 实测停 loop 后重跑钩子拉起 64305、二次运行仍 1 实例；② `/root/.ssh/rc` 在任意 ssh 连接时后台幂等 anchor（静默、不阻塞）；③ `/etc/profile.d/zz-laohan-janitor.sh` 在登录 shell 时 anchor。停 loop 后仅一次 ssh 即拉起（66157），连续 5 次连接仍 1 实例。若平台重建 `/init` 或 `/root` 脚本丢失，跑一次 `tools/ensure-janitor.sh`（redrive 也会自动 ensure）；残余：重启后无任何连接时不自动清理（也无任务在跑）。
 - 并发保护：`redrive.sh` 在 runner 外持远端 `/tmp/laohan-redrive-ep<EP>.lock`（flock -n），同 EP 第二个实例直接退出 3；不要把脚本回退成"先 pgrep 再启动"的 check-then-act 写法。
 - 媒体入库门：`scripts/project-policy.py` 的 commit 门拒绝已跟踪 `.mp4/.mov/.mkv/.m4a`（staged mp4 实测拒绝）；大媒体只在本地/云盘。
@@ -226,7 +232,8 @@ docs/
 - 第四轮 GLM 复审闭环证据：`docs/handoff/EP03_07_REDO_20261102/review/`（glm-review-*.md、adjudication-20261102.md）；改这些脚本前先读裁决文档的残余 P3/UNVERIFIED 清单。
 
 ### 交付
-- 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见仓库 `docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
+- 标题/文案双引擎（发布前必做）：重要口播稿及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用才 SKIPPED 并写实际原因（"简单/时间紧"不算）。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
+- 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
 - 大文件（视频/母版/发布包）只走云盘：`lark-cli drive +create-folder` / `+upload --parent-token ...`，文件夹链接用 markdown 发到目标会话。IM API 实测上限：zip 100MB、mp4 47MB 被拒（code 234006）；客户端手动上传可发大附件但只能人工，仅兜底。发布包结构对齐桌面 `EPxx-多平台发布包/`，构建脚本示例 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py`；交付后按 manifest 回下载核 SHA。
 - 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。
 - 每期结束后按「清理临时产物，保护长期声音资产」节逐项处理本地/远端临时产物；先保护模型与参考依赖，输出仍有验收/恢复用途时保留。

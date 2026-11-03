@@ -8,9 +8,9 @@
 
 双引擎的价值 = 两个模型在同一证据约束下**独立**成稿，盲比出真差异。**任务包不得包含本地初稿，哪怕片段或结构摘要**——喂了即锚定，对照价值归零。融合只在两稿都完成后进行。
 
-## 通道操作（huashu-chrome MCP）
+## 通道操作与降级顺序（huashu-chrome MCP → 桌面 Gemini APP → AI Studio）
 
-1. 扩展在线（snapshot 直接试即可）；不在线 → 走「降级」
+1. 扩展在线（snapshot 直接试即可）；不在线 → 不要卡住，按本节末尾「降级」顺序换通道（网页 → Gemini APP → AI Studio new_chat）
 2. 开 tab → `gemini.google.com/app` → 侧栏点「**老韩文案**」会话（Jeffrey 2026-10-29 钉死：**本会话单一用途——只跑双引擎口播稿对照这一件事**，问答/查证/闲聊/其他项目任何内容都不发进来；「老外文案」是老外数字人项目专用，**勿混**）
 3. 会话不存在时：新建会话，先用下方任务包第 1、2 段（角色背景+账号定位）初始化发一条，之后固定复用该会话
 4. 模型选择器切 **Pro 级思考档**（正式写作不降档）
@@ -78,7 +78,8 @@
 
 ## 降级（不阻塞交付，但不得主观跳过）
 
-- 通道**客观**不可用（扩展离线/登录失效/站点异常）→ `dual_engine_contract.status=SKIPPED` + `skip_reason`（实际错误信息）；单引擎初稿继续 Step 5-7，交付时明确说明本期未做双引擎对照
+- 通道**客观**不可用（扩展离线/登录失效/站点异常）→ 先换通道，不要直接放弃：桌面 `Gemini.app`（`/Applications/Gemini.app`）用同一任务包；App 也不可用 → 浏览器打开 `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）粘贴同一任务包，并记录实际模型与档位（AI Studio 与 gemini.google.com 不等价，不得冒签同一通道）
+- 三通道全部客观不可用 → `dual_engine_contract.status=SKIPPED` + `skip_reason`（实际错误信息）；单引擎初稿继续 Step 5-7，交付时明确说明本期未做双引擎对照
 - 「这题简单/时间紧」不是跳过理由；SKIPPED 不得事后改称 FUSED
 
 ## 重跑规则与范围边界
