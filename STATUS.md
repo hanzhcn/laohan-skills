@@ -70,7 +70,7 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
-**2026-11-04·LAOWAI-SUBTITLE-CONTENT-PACKAGE-20261104 方法修复完成。** root唯一writer；成长系列全文Gemini硬门、自然人设/单一讨论、四文件交付、双语同窗/前向词锚/真实libass字形与生成→出片→建包同门已接实际入口。音文差异先焦段核对，精确PCM定点补录，CFR全帧验证和输入冻结方法由本轮真实失败与五期音文闭合支撑；04已完整走通媒体/建包出口。GLM满配代码两轮、全文、两次增量均真实有效，全部阻断逐项闭合；76测试通过（skip1），未把ASR或模型意见冒充听感/手机/用户接受。方法源精确提交push，业务05/07媒体与交付仍由成长项目本任务STATUS管理，不把方法完成冒五期成片接受。源与证据见[方法回执](docs/handoff/LAOWAI_REBUILD_HARD_GATES_20261104.md)。
+**2026-11-04·LAOWAI-SUBTITLE-CONTENT-PACKAGE-20261104 方法修复完成。** root唯一writer；成长系列全文Gemini硬门、自然人设/单一讨论、四文件交付、双语同窗/前向词锚/真实libass字形与生成→出片→建包同门已接实际入口。音文差异先焦段核对，精确PCM定点补录，CFR全帧验证和输入冻结方法由本轮真实失败与五期音文闭合支撑；04已完整走通媒体/建包出口。GLM满配代码两轮、全文、两次增量均真实有效，全部阻断逐项闭合；76测试通过（skip1），未把ASR或模型意见冒充听感/手机/用户接受。方法源精确提交push，业务05/07媒体与交付仍由成长项目本任务STATUS管理，不把方法完成冒五期成片接受。源与证据见[方法回执](docs/handoff/LAOWAI_REBUILD_HARD_GATES_20261104.md)。后续五期技术候选、云盘11文件全回读与旧13云盘/42本地copy清理均已真实完成；版本候选/受控前台调用经验已补，用户接受与平台发布仍由成长项目独立记账。
 
 **2026-11-04·CC-UPGRADE-ENTRY-20261104 已升级并补齐方法。** root唯一writer；CC2.1.314→2.1.317实际入口、官方签名、--help及doctor已验，settings.json字节不变；CD0.166.0保持。laohan-gengxin1.0.1修更新器exit0但旧独立入口未变的误报，保留包装脚本/配置保护。GLM-5.3 max/128000/1800实际149.092秒VALIDATED/end_turn，8项静态对抗/真实安装反例分开，无finding，两观察按边界保留。源077783c0933979219adaaac1331dc6a71bd49aed已审核后集成push，agents/claude同源；完整证据和未测范围见[升级回执](docs/handoff/CC_UPGRADE_ENTRY_20261104.md)。本轮记录交付与隔离工作区回收以实际Git检查收口，不冒所有宿主/业务全链或用户接受。
 

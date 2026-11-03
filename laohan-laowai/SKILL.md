@@ -239,7 +239,7 @@ docs/
 - 标题/文案双引擎（发布前必做）：所有新写/重写口播/中文表达及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用记录BLOCKED_GEMINI，停在草稿，不进入配音/口型。所有新写/重写文章均须完整英文口播、中文表达和三平台标题/介绍/标签的Gemini原稿及逐项融合，不能只审标题。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
 - 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
 - 大文件（视频/母版/发布包）只走云盘：`lark-cli drive +create-folder` / `+upload --parent-token ...`，文件夹链接用 markdown 发到目标会话。IM API 实测上限：zip 100MB、mp4 47MB 被拒（code 234006）；客户端手动上传可发大附件但只能人工，仅兜底。发布包结构对齐桌面 `EPxx-多平台发布包/`，构建脚本示例 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py`；交付后按 manifest 回下载核 SHA。
-- 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。
+- 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。CLI1.0.40的`--markdown -`是字面短横线，必须用参数数组传入MD全文；发送后mget核当前文件夹URL、完整文件名、chat与sender，不能只凭message_id。正文错误只修该消息步骤，不重建云盘或重复上传。
 - 每期结束后按「清理临时产物，保护长期声音资产」节逐项处理本地/远端临时产物；先保护模型与参考依赖，输出仍有验收/恢复用途时保留。
 
 ### 成片AI标识：按真实文件定位（EP01纠正）
