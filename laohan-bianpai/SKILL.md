@@ -1,12 +1,14 @@
 ---
 name: laohan-bianpai
-version: "1.25.0"
+version: "1.25.1"
 description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
 ---
 
 # 真人口播编排器
 
 编排器只根据 episode 里的真实文件路由。它不把聊天结论当完成，也不在脚本内 programmatic 调用其他 skill；宿主 Agent 读取唯一路由后执行对应 skill，再重跑 bianpai。
+
+⑫发布准备先读共享`laohan-fabu`的视频分流，再用视频项目`node scripts/video-publish.mjs`统一doctor/prepare/start/status入口。执行器是“老韩多平台发布预填”专用Chrome扩展（`extensions/douyin-release-prefill/`，四平台共用），实际合同读项目`docs/四平台发布规格.md`与扩展README。默认填写、上传视频及三尺寸封面，停在发布按钮前；仅检查或只做子动作不能自行扩成完整上传。huashu-chrome是观察/诊断工具，不是该插件；真实失败保留具体状态并修对应适配。发布事实登记与⑬/⑭交`laohan-yunying`，不能让运营skill代做上传或填表。
 
 ①额外验证 `screening_summary` 的 signals→longlist→短名单链路。抖音平台数据真实尝试后仍不可用时允许 `UNAVAILABLE`，不单独阻塞；discovery、PRIMARY 和其余①合同仍必须通过。
 
@@ -61,16 +63,16 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 - schema 2 的①必须同时有 signals、至少两个真正不同的 candidates、source health、抖音 JSON+Markdown 与最终选题；同一事件的观点/教程变体只要受众任务、标题承诺和内容路径不同即可分别计数。每个候选都必须登记 `creator_fit`，唯一 SELECTED 还必须锁定可成立的 Jeffrey 个人依据、独特判断、why-now、lane、小白合同、PRIMARY+PLATFORM_SIGNAL claim map，以及 `ALIGNED` 或有差异化解释的 `ADJACENT` 平台语义。教程型 lane 的 SELECTED 候选还必须绑定 `tutorial_proof`：`status: VERIFIED`、本机真实执行产物的 `evidence_path` 与 `evidence_sha256`、`version_boundary` 与 `recovery` 方法，对应 CLAUDE.md 第13条“教程写成确定步骤前仍须本机真实执行、版本边界和恢复方法”。编排器只验证这些字段存在和来源一致，不根据创意风格、模板或分数淘汰候选。③只对明确未解决高风险阻断；ruleset 过期只要求在报告中警告并安排复核。
 - 标准新期①必须通过`laohan-xuanti` schema 4 validator（3.3.0+五步法合同），证明数据层达人库全池与自频道已扫描、候选通过假阳性过滤、`topic_kind`、tension与`packaging_assessment`收藏三问，AI自主定题（AUTO_SELECTED）；Jeffrey否决必须退回扫描。新期②必须使用 `laohan-chuangzuo` schema 4，并实际通过其 `scripts/check-script-contract.mjs`，证明选题SHA与个人表达池取材绑定、钩子兑现包装承诺；原有内容单位、原创增量、可视化锚点、逐段SHA、人味、自然稿长和本机TTS合同继续有效。旧episode按其 executor lock 继续验证冻结合同，不静默迁移。
 - ⑤必须同时验证 `04-事实主张.json`；直接来源支持写 `SUPPORTED`，实现推导写 `INFERRED + inference_note`，后者不能充当 PROOF beat。`PASS` 只表示机械合同通过，不代表编排器独立确认内容优秀。
-- ⑥固定读取项目 `assets/identity/jeffrey-cover-reference.jpg`，并使用新期自动复制的 `05-封面/reference/jeffrey-reference.jpg`。`reference_mode` 只允许 `REQUIRED`；项目真源、本期副本与 config SHA 必须一致。完成合同为：绑定当前稿和本期 reference 的 `cover-prompts.md`、01/02/03三张真实9:16排序候选，以及默认01同一视觉主张分别重新构图生成的3张共享真实尺寸封面：3:4复用到抖音竖版、视频号个人主页和小红书，4:3复用到抖音横版、视频号分享和B站首页推荐，16:9用于B站个人空间，共映射7个发布入口。任何一张缺失、比例错误、不可解码或由简单裁切冒充都不通过；provider request、review和 `selected-cover.json` 不是硬门槛。
-- 封面延后仅用于提示词、三张候选或三张共享发布封面尚未完成时的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐完整合同后 `--require final|full` 才通过⑥。
+- ⑥参考身份、秋芝03KV单方案及三尺寸/七用途按视频项目`docs/四平台发布规格.md`和当前封面skill执行；新期不生成排序候选或额外9:16母版，旧期仅按其冻结合同兼容。三张封面须绑定本期来源、真实尺寸及SHA，不能用简单裁切冒充；provider request、review和`selected-cover.json`仍不是新增硬门槛。
+- 封面延后仅用于提示词、当前单方案三尺寸封面（旧期按其冻结候选合同）尚未完成的临时时序调整。`--require production` 可接受有效的本期延后授权；补齐完整合同后 `--require final|full` 才通过⑥。
 - V5.1制作前必须在同一个`09-导演/director-state.md`同时满足`director_draft: COMPLETED`和两处`director_review: COMPLETED`。初稿的`PENDING`只能路由最终复审，不能进入⑧。
 - 已存在pending candidate的V5.1兼容迁移是一次性历史例外：只承认迁移记录冻结的candidate与director-state，不允许借兼容字段跳过新episode的D1/D2。默认状态是`JEFFREY_REVIEW`；只有当前episode完整绑定`FULL_PIPELINE_TO_PUBLISH + AGENT_PROXY`时，Codex完成全片QA后才可代理选择并继续。Jeffrey无需掌握Remotion技术。
 - CODEX_DIRECT 的 direct brief 必须绑定当前 clean/SRT、柱子哥 production learning profile、3—5 个当前样本和 2—4 个本期学习目标，且不能包含 renderer 实现细节。
 - ⑩不能因 stock 无结果放行；⑪不能因 candidate 存在写 final.mp4，必须有完整观看 QA。默认由 Jeffrey 看过并接受；仅当前 episode 预先记录 Jeffrey 本人、ISO时间和原话的 `final_selection_contract.mode=AGENT_PROXY` 时，Codex可在完整QA后代为选择，并写 `selection_mode=AGENT_PROXY` 的审阅记录。
-- ⑫默认不自动发布。只有当前episode用输入记录SHA绑定Jeffrey本人、ISO时间和原话的`FULL_PIPELINE_TO_PUBLISH`授权，并同时覆盖`USE_DEFAULT_QIUZHI_COVER_SET`、`AGENT_PROXY_FINAL_SELECTION`、`FOUR_PLATFORM_AUTO_PUBLISH`和`SCHEDULE_T_PLUS_N_RETRO`四项scope时，才可从最终口播稿与真人原片继续到四平台发布回执；封面默认使用秋芝03KV单方案的3张共享尺寸成品，热点失败按非阻断策略继续。评论回复与方法论升级仍不自动执行。
+- ⑫默认不自动发布。只有当前episode用输入记录SHA绑定Jeffrey本人、ISO时间和原话的`FULL_PIPELINE_TO_PUBLISH`授权，并同时覆盖`USE_DEFAULT_QIUZHI_COVER_SET`、`AGENT_PROXY_FINAL_SELECTION`、`FOUR_PLATFORM_AUTO_PUBLISH`和`SCHEDULE_T_PLUS_N_RETRO`四项scope时，才可从最终口播稿与真人原片继续到四平台发布回执；封面及热点按项目`docs/四平台发布规格.md`，热点未真实绑定必须停在最终按钮前。评论回复与方法论升级仍不自动执行。
 - 有产物但未满足 gate 时，报告 BLOCKED，不算完成；JSON 损坏也必须报告 BLOCKED，不输出 stack trace。
 - 普通 `check` 只检查已有输入并明确输出 INCOMPLETE；只有 `--require production|final|full` 可作为阶段验收。
-- ⑫—⑭由 `laohan-yunying` 处理；默认发布、评论回复和数据纠正都必须有对应的人工确认或来源证据。当前episode具备完整`FULL_PIPELINE_TO_PUBLISH`授权时，四平台发布可由该本期授权替代逐次人工确认，但仍必须取得平台真实回执；不能把预留目录当完成。
+- ⑫的上传/填表走上述专用扩展，发布事实登记与⑬—⑭由`laohan-yunying`处理；默认发布、评论回复和数据纠正都必须有对应的人工确认或来源证据。当前episode具备完整`FULL_PIPELINE_TO_PUBLISH`授权时，四平台发布可由该本期授权替代逐次人工确认，但仍必须取得平台真实回执；不能把预留目录当完成。
 
 ## 不适用
 
