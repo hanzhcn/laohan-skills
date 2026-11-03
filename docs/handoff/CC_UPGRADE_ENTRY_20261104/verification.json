@@ -1,0 +1,46 @@
+{
+  "candidate": "077783c0933979219adaaac1331dc6a71bd49aed",
+  "source_sha256": "18b2649de491f804d98714e78c5980dd2bfbc63c04917e2f1767d933724fbd69",
+  "source_commit_pushed": true,
+  "bridges": [
+    {
+      "entry": "/Users/hanzhmacbookair/.agents/skills/laohan-gengxin/SKILL.md",
+      "exists": true,
+      "resolved": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-gengxin/SKILL.md",
+      "source_matches": true
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.claude/skills/laohan-gengxin/SKILL.md",
+      "exists": true,
+      "resolved": "/Users/hanzhmacbookair/Documents/laohan-skills/laohan-gengxin/SKILL.md",
+      "source_matches": true
+    },
+    {
+      "entry": "/Users/hanzhmacbookair/.codex/skills/laohan-gengxin/SKILL.md",
+      "exists": false
+    }
+  ],
+  "doctor": {
+    "current_native_version": "2.1.317",
+    "search": "OK (bundled)",
+    "installation": "No installation issues found",
+    "last_update_attempt_note": "2026-06-13 historical failure, not the current upgrade",
+    "auto_updates": "disabled as before"
+  },
+  "review": {
+    "model": "glm-5.3",
+    "status": "VALIDATED",
+    "stop_reason": "end_turn",
+    "requested_effort": "max",
+    "requested_max_tokens": 128000,
+    "elapsed_seconds": 149.092,
+    "finding_count": 0,
+    "adversarial_scope": "8 static counterexamples; one grounded in the actual unchanged-entry update failure"
+  },
+  "scope_unverified": [
+    "other tools and operating systems",
+    "third-party wrapper replacement",
+    "normal project hooks/MCP/business requests",
+    "new process adoption in already running app sessions"
+  ]
+}
