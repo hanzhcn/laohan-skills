@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "1.1.6"
+version: "1.1.7"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
@@ -35,6 +35,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 8. `docs/视频生产入口与适配.md`「Motion正式路线接入」节 — 交接点/目录规范/分流/门豁免
 9. `docs/HARNESS_COMPATIBILITY.md` — 跨宿主读取与实测范围（不把另一模型已读当自己已读）
 10. `STATUS.md` 当前任务区 — 本期状态与在途工程；**开工先查 `motion/projects/` 是否已有同期在途工程（如最新日期目录），有则续接，不另起**
+11. `motion/mastery/QUALITY-SCORECARD-20261104.md` — 质量尺子与三道门（阿杜实测阈值；对标只拆阿杜）
 
 ## 输入契约
 
@@ -60,6 +61,16 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 ## 导演执行（先于字段登记）
 
 第6步按V4“直接使用模板”“从实际效果认识模板”完成整段构思、人物/主辅关系、素材与动作编舞，再登记；具体落点见 `references/full-chain.md` 第6b节。选中模板名不等于选中分支已经保留其表现力。技术排障、可读性修复和门链通过分别留证，不能代替“本期关键内容被怎样讲清”的实际效果判断。
+
+## 质量尺子与三道门（2026-11-04，制作流程强制）
+
+真源=`motion/mastery/QUALITY-SCORECARD-20261104.md`；尺子工具=`motion/tools/score-timeline.py`（advisory，不接 production-guard，末行打印 `ADVISORY_ONLY_NOT_A_GATE`）。对标只拆阿杜（motion 模板作者），不拆柱子哥；粗糙主因是切点之间画面静止，不是切得勤。
+
+- **A 选型能力实证**：每个候选在 direct 前先出 8—15s 真实样段，必须在一个镜头内完成一次完整讲解动作（元素逐个进入＋一次强调变化＋数字滚动或素材替换）；只证明控件能跑、靠多切卡或叠加层凑效果均不算证明；不通过换候选或换分支，不硬用。
+- **B 方案节拍**：plan 前跑 `python3 motion/tools/score-timeline.py --stage plan --timeline 本期/inputs/timeline-rN.json --out 本期/qa/scorecard/<revision>.json`；硬线=单段/全片最长无变化间隔≤5.0s、每分钟有效变化≥60、静止占比≤35%；段>12s 必须在方案写≥3 个元素变化点。不达标回导演改方案，不靠渲染后解释。
+- **C 审美前置**：机器门通过后、交 Jeffrey 前，自己看每段首/中/尾原尺寸帧＋1 倍速全片＋与阿杜同类段并排；证据帧与结论写进同一 scorecard 的 `human_review`，`verdict` 为空不许交；看不出也写清看了什么、剩什么风险。
+- 留档：同一 revision 一个 JSON，`selection → delivery → outcome` 三阶段追加（交付阶段加 `--video` 出实测）；`motion/projects/` 按项目 .gitignore 不入 Git。
+- 工具配对纪律：timeline 必须取自本期 production 记录的 `params`；工具比对成片时长差 >1s 报 `TIMELINE_VIDEO_DURATION_MISMATCH` 时先换 timeline，不解释成"成片剪掉了"。
 
 ## 门链（命令形态；字段与argv细节以PIPELINE为准）
 
