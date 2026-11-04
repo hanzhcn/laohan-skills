@@ -247,10 +247,7 @@ web-access 与 huashu-chrome 都连用户日常 Chrome（登录态共享）；hu
 | 工具 | 场景 | 说明 |
 |------|------|------|
 | anysearch | 实时搜索+垂直领域+批量并行+URL全文提取 | 16 个垂直领域（股票/CVE/DOI/法律/学术等；Stock/CVE/DOI 是触发标识符非 domain），`~/.agents/skills/anysearch/`，`/anysearch` |
-| smart-search | opencli 搜索路由 | 基于 opencli 的智能搜索，覆盖社交/技术/新闻/购物，`~/.agents/skills/smart-search/` |
-| web-search | 通用网页搜索 | DuckDuckGo API，轻量搜索，`~/.agents/skills/web-search/` |
-| multi-search-engine | agent-reach + Jina 都搜不到时 | 17 搜索引擎聚合对比，`~/.agents/skills/multi-search-engine/` |
-| baidu-search | 中文内容搜索 | 百度 AI 搜索，中文场景优于通用引擎，`~/.agents/skills/baidu-search/` |
+<!-- 2026-11-05 体检修正：smart-search/web-search/multi-search-engine/baidu-search 四个 skill 已不存在（openclaw 导入后已清理），删除失效行，搜索统一走下方优先级链 -->
 
 **搜索优先级**：通用搜索/事实查询/垂直领域 → **anysearch**（最轻最快）→ opencli（平台结构化数据）→ agent-reach（opencli 未覆盖的平台兜底）。
 
