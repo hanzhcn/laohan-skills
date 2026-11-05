@@ -78,7 +78,7 @@
 
 ## 降级（先执行项目更严格的合同）
 
-- **成长系列专属覆盖（Jeffrey 2026-11-04）**：完整英文口播、中文表达与全部三平台标题/介绍/标签必须 Gemini 参与并逐项融合。三通道全部失败记 `BLOCKED_GEMINI`，停在草稿，禁止进入配音/口型；下方通用 `SKIPPED` 分支不适用于该项目。任务包/证据真源为成长项目 `docs/ops/gemini-review.md`，本手册的老韩品牌开场、四平台和桌面包结构也不转移到成长项目。
+- **成长系列专属覆盖（Jeffrey 2026-11-04）**：完整英文口播、中文表达与全部三平台标题/介绍/标签必须 Gemini 参与并逐项融合。三通道全部失败记 `BLOCKED_GEMINI`，停在草稿，禁止进入配音/口型；下方通用 `SKIPPED` 分支不适用于该项目。任务包/证据真源为成长项目 `docs/ops/gemini-review.md`，本手册的老韩品牌开场、四平台和桌面包结构也不转移到成长项目。**成长系列引擎分工写死（Jeffrey 2026-11-05，恢复 EP01/02 模式）：初稿与融合定稿固定由 GLM（铁柱）执行，Codex 不作该系列写稿/融合引擎；结尾恢复"下期预告+柔和评论问题"双件套、扣1/扣2 永久禁用、人设露出强度由写稿 GLM 定——细则以项目 `docs/ops/gemini-review.md`/`content-strategy.md` 为真源。**
 
 - 通道**客观**不可用（扩展离线/登录失效/站点异常）→ 先换通道，不要直接放弃：桌面 `Gemini.app`（`/Applications/Gemini.app`）用同一任务包；App 也不可用 → 浏览器打开 `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）粘贴同一任务包，并记录实际模型与档位（AI Studio 与 gemini.google.com 不等价，不得冒签同一通道）
 - 三通道全部客观不可用 → `dual_engine_contract.status=SKIPPED` + `skip_reason`（实际错误信息）；单引擎初稿继续 Step 5-7，交付时明确说明本期未做双引擎对照
