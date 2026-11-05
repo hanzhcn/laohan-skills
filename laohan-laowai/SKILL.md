@@ -102,11 +102,12 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ### ⑥ 后期
 
-- **默认入口**：当前批次 `post-one.sh <EP> <DUR>`（从 `docs/handoff/EP03_07_REDO_20261102/post-one.sh` 读取已修实现，新批次复制并记录来源）。输入均相对该批次：`work/EPxx/same-voice-candidate.mp4/same-voice-candidate.mp4`、`EPxx/subtitles.ass`、`work/EPxx/voice-raw.wav`；另需本期 `EPxx/` 的 cue/字形与输入绑定。BGM按项目既有资源。输出 `final/EPxx/` 的混音/母版/发布版。出片前必须调用本项目 `scripts/episode-caption-qa.py --verify-only` 核实际烧录输入；具体参数按当前 `--help` 和[字幕方法](references/subtitle-validation.md)。缺本期证据拒绝，禁止手搓ffmpeg绕过；必要故障回退仍须同一硬门、25fps CFR与无损母版。
+- **默认入口**：当前批次 `post-one.sh <EP> <DUR>`（成长项目新批次从 `docs/handoff/EP05_ANGER_20261105/post-one.sh` 读取已修实现：ffmpeg-full 与同一语义/字形门；旧11-02入口只作历史）。输入均相对该批次：`work/EPxx/same-voice-candidate.mp4/same-voice-candidate.mp4`、`EPxx/subtitles.ass`、`work/EPxx/voice-raw.wav`；另需本期 `EPxx/` 的 cue/字形与输入绑定。BGM按项目既有资源。输出 `final/EPxx/` 的混音/母版/发布版。出片前必须调用本项目 `scripts/episode-caption-qa.py --verify-only` 核实际烧录输入；具体参数按当前 `--help` 和[字幕方法](references/subtitle-validation.md)。缺本期证据拒绝，禁止手搓ffmpeg绕过；必要故障回退仍须同一硬门、25fps CFR与无损母版。
 - **成长系列画质与居中固定要求**：新制作先读[最高保真与全画面居中](references/quality-and-centering.md)。画质优先于时间/体积；严格最清晰须可核的无损后期母版，兼容有损MP4不冒签；四轨以全画面W/2为排版中轴，同时核实际字形，不能为右侧UI整体左移。新参数不自动追改用户要求保留的旧片。
 - 字幕：**中文大在上、英文小在下**（同屏成对；英文口播，中文主读、英文辅读）
 - 字幕先看本期实际画面再排：按语义切短句；字体/颜色/底条是本期设计选择，未获接受的样式不得写成通用“美观公式”。只改字幕时，从本期已核无字底片另存新候选并复用原音轨/口型。内容实质改稿则重新生成当期WAV与口型。模型/原始输入按资产合同保护；用户明确要求删除的错误交付副本在新版验证后按清单移除，不继续混在当前交付位置。
 - **生成→出片→建包三处同门**：按[字幕校验方法](references/subtitle-validation.md)执行最终WAV绑定、全局词序不回溯、不失配假补、双语同窗、逐句不重叠及真实字形边界。旧ASS、错音轨、旧字形报告或缺字幕都应非0拒绝；不是加一段文字规范就算接线完成。
+- **成长系列断句硬门（Jeffrey 2026-11-05）**：每屏必须完整表达一个意思，禁止按字数/时长机械截成半句话；条件、否定、转折、动作对象和固定词组不得跨屏拆散。长句先按完整分句重组，必要时同屏换行并留足空间，不缩字。生成/出片/建包同门核当前WAV/稿件/双语表绑定的全量独立语义回执；缺、漏、未决、旧回执或残句均拒绝。真实方法与反例见上方字幕校验方法。
 - 有用户视觉参考时，先拆字形/字重、中英字号比例、颜色对比、成组行距、意群切换与画面留白，再放到本期相同画面比较；不照搬参考的低字幕位置、翻译错误或不适合本场景的配色。动态效果须实际看时间序列，抽帧不足时明确未知。安全与可读通过不代表美观已接受，最终看实际样片与用户反馈。
 - 主题标题、开场钩子与逐句字幕分轨：形式先读项目方法与本期决定；已选常驻时，顶部短双语主题标题覆盖全片，下方双语字幕跟口播逐句切换，不能拿3秒开场提示代替。项目未指定时按实际内容/留白试排，不替所有账号统一默认。标题概括整条内容，不增加未经核实的身份、履历或事实，不替换原话字幕；无空间先换适用素材或做布局小样，需改变已定形式时留明原因回到本期决定，不自行取消常驻要求。完整步骤、教程及ASS样例见[标题与字幕方法](references/title-subtitle-layout.md)。
 - **抖音遮挡检查**：整块字幕须避开底部标题/文案/账号/导航与右侧互动栏，并避开人物嘴部；按字形、描边、阴影及底条/背景框（如有）的完整视觉边界检查。同屏中英之间也检查实际字形间距，只测合并外框不能证明内部不叠字。分别实看中文/英文最长实际条目、各自多行条（如有）及不同背景，不能只核MarginV或首帧；没有多行记不适用，不为检查强造两行，三行过密/相撞/超界时先重分句再测。优先核当前平台/剪辑器的实际预览；只能用自定遮挡模拟时，标明模拟尺寸与假设，不能把经验像素说成官方通用安全区或保证所有机型不挡。字幕样片仍交Jeffrey接受。
@@ -116,7 +117,7 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 ### ⑦ 发布与复盘
 
 - 抖音账号注册、养号与发布时间由Jeffrey主导；不把“养号2–3天”当平台硬规定或流量保证。账号装修按本期已确认人设，不自动搬用旧专家履历。
-- **成品交付规范（2026-11-04 Jeffrey 精简；2026-11-05 扩封面）**：每期 `EPxx-多平台发布包.zip` 严格五文件：`成片.mp4`、**`封面.jpg`（编号大字模板，Jeffrey 2026-11-05 钉死；版式/选帧/质检/工具路径真源=成长项目 `docs/ops/cover-spec.md`，编号对外永远干净序号）**、`抖音.txt`、`视频号.txt`、`小红书.txt`。无损母版仍按质量合同在项目内保留；manifest/说明/审核/过程文件只进内部证据区，不进用户包。现有构建入口 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py --src <当前批次> --eps 03,04 --titles <JSON文件>`，先看当前help，不把JSON字面量当文件。建包前核字幕与当前final绑定，回下载按内部清单核SHA。桌面仅可选中转，已被取代的错误本地/云盘交付按明确授权和精确清单删除，线上作品另核发布指令。
+- **成品交付规范（2026-11-04 Jeffrey 精简；2026-11-05 扩封面）**：每期 `EPxx-多平台发布包.zip` 严格五文件：`成片.mp4`、**`封面.jpg`（编号大字模板，3:4的720×960；必须复用成长项目已有 `scripts/make-cover.py`，不另造重复排版脚本；规格/选帧/质检真源=`docs/ops/cover-spec.md`，编号永远干净序号）**、`抖音.txt`、`视频号.txt`、`小红书.txt`。无损母版仍按质量合同在项目内保留；manifest/说明/审核/过程文件只进内部证据区，不进用户包。五文件构建入口 `docs/handoff/EP05_ANGER_20261105/tools/build-pubpk.py --src <当前批次> --eps 05 --titles <JSON文件>`，先看当前help，不把JSON字面量当文件；11-02脚本保留历史四文件行为，新五文件批次不得走旧默认建包/verify-existing绕门。建包前核字幕/当前final/封面审阅绑定，回下载按内部清单核SHA。桌面仅可选中转，已被取代的错误本地/云盘交付按明确授权和精确清单删除，线上作品另核发布指令。
 - **发布文案规范（2026-10-29 Jeffrey 定，2026-11-04 更新段落格式）**：抖音、小红书标题≤20字（视频号用平台自己的短标题，不套 20 字限）；抖音标签≤5个；**不带 `#AI新星计划`**（那是老韩AI主号的标签，本系列账号不带）；视频号平实家庭向、小红书表达生活化，正文均按自然段分开，不强制emoji或分点；用 CC BY BGM 时文案末尾独立署名。
 - **可复制的发布文案**：标题、介绍、标签分别独立分区并真实换行；介绍按自然段分开，段间空行，不把整段塞在“介绍：”后。删除音色模型/声音复刻/配音流程/“声音与口型”等制作介绍；必要平台身份声明与BGM版权署名单独处理，不由此变更平台开关或许可。
 - **双引擎文案（发布前必做；定义=独立成稿后融合，不是让 Gemini 审本地稿）**：先独立写完整英文口播、中文表达与三平台标题/介绍/标签；再用**同一任务包**（不含本地初稿、片段或结构摘要）让 Gemini 出一套独立稿；保留双方原稿、逐项取舍与融合确稿（`gemini-draft.md` / `fusion.md` / `dual_engine_contract.json`），最后对融合确稿与标题重跑 weigui。渠道顺序：① 已登录 `gemini.google.com/app`「老外文案」会话（Pro/最高档；huashu-chrome / ego-browser / kimi-webbridge 或宿主原生输入）→ ② 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ `https://aistudio.google.com/prompts/new_chat`（记录实际模型，不冒签 gemini.google.com）→ ④ 三通道全不可用记录`BLOCKED_GEMINI`并停在草稿，不进入配音/口型。Jeffrey 2026-11-04明确本项目所有文章必须Gemini全文参与，只有完整口播/中文表达/三平台标题介绍标签均取得并融合才算FUSED；不能用SKIPPED或仅审标题绕过。任务包约束见[教育账号文案](references/education-copy.md)，方法真源 `docs/ops/gemini-review.md`。
@@ -237,8 +238,8 @@ docs/
 
 ### 交付
 - 标题/文案双引擎（发布前必做）：所有新写/重写口播/中文表达及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用记录BLOCKED_GEMINI，停在草稿，不进入配音/口型。所有新写/重写文章均须完整英文口播、中文表达和三平台标题/介绍/标签的Gemini原稿及逐项融合，不能只审标题。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
-- 飞书交付统一走 lark-cli（appId `cli_aa69cc1d03f8dcfb`），以**用户身份**发（2026-11-02 已授权 `im:message.send_as_user`）；目标会话「github每日推送」`chat_id=oc_6a5b224a3370d166774567930a9d4601`。完整命令、身份/授权、云盘流程与坑见 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/feishu-delivery.md`。禁止再用 GUI 逐条点附件（慢、只能完成单文件，发没发出去也难核实）。
-- 大文件（视频/母版/发布包）只走云盘：`lark-cli drive +create-folder` / `+upload --parent-token ...`，文件夹链接用 markdown 发到目标会话。IM API 实测上限：zip 100MB、mp4 47MB 被拒（code 234006）；客户端手动上传可发大附件但只能人工，仅兜底。发布包结构对齐桌面 `EPxx-多平台发布包/`，构建脚本示例 `docs/handoff/EP03_07_REDO_20261102/tools/build-pubpk.py`；交付后按 manifest 回下载核 SHA。
+- **飞书通知统一「老韩AI通知」**（Jeffrey 2026-11-05再次明确）：固定 `--profile laohan-notify --as bot`，AppId=`cli_aa3c149d3bf8dcc0`，chat=`oc_6a5b224a3370d166774567930a9d4601`；发送后核chat/sender确为该bot，旧「github每日推送」仅历史名，不恢复旧应用、不切全局默认profile。个人云盘另显式 `laohan-assistant --as user`，不能将通知误发为助手用户身份。当前上传/大附件/回下载方法只维护于成长项目 `docs/ops/feishu-delivery.md`。
+- 大文件交付按项目现行飞书方法：用户要求聊天附件时，先用实际可达的CLI或已登录客户端发送原文件，不能据IM接口上限改成“只能云盘”。客户端附件可由当前宿主受控操作，发后核实际清单并回下载；客户端不可用或用户指定云盘时，再用 `drive +create-folder/+upload` 后备。成长项目具体路径与真实判例只维护于上方 `docs/ops/feishu-delivery.md`，不降低正式画质以凑附件限制。
 - 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。CLI1.0.40的`--markdown -`是字面短横线，必须用参数数组传入MD全文；发送后mget核当前文件夹URL、完整文件名、chat与sender，不能只凭message_id。正文错误只修该消息步骤，不重建云盘或重复上传。
 - 每期结束后按「清理临时产物，保护长期声音资产」节逐项处理本地/远端临时产物；先保护模型与参考依赖，输出仍有验收/恢复用途时保留。
 

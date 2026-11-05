@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
+
+owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
+
 ### LAOWAI-BATCH-DELEGATION-20261030 — 五条连续制作经验小修（已完成，成片继续）
 
 owner/writer=root；main，源实现00de029/a6715a9。持续配音委派、短片原生576、实际墨迹/新glyph目录/短帧差、四处显式25fps CFR/CRF0与实际解码时钟检查已补，未放宽成片/发布接受。EP04真实13准备视频及9core+2whole860帧/全PTS/像素和54帧压缩反例已核。GLM-5.3 max/128000/1800完整静态APPROVE方法/代码/06/07稿（187.396s），首个275.065s只开场白未冒通过；2LOW按外部逐集门/格式范围处置，未重复长审。有效回执/逐项裁决见 docs/handoff/LAOWAI_BATCH_LESSONS_20261030.md；成长仓5片制作、未听/未接受/未发布由其同批STATUS继续记。技能源commit/push在本批完成，未变保护/代码不另返工。 后续新增AAC尾长/编码后峰值及内部PTS缺口判例已同批补入；从原PCM仅重混、实际逐帧音频PTS/有效尾包/新响度、video payload和时钟关联检查通过。GLM满配两次窄增量完整APPROVE，移交探针已补，原失败与误读逐项裁决保留。

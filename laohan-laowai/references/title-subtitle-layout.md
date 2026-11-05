@@ -21,7 +21,7 @@ Jeffrey反馈原版汉字偏小并要求固定。720×1280、当前PingFang SC/A
 
 选择依据：[CapCut官方字幕指南](https://www.capcut.com/resource/caption-style)要求手机可读、保留主体与界面空间；[官方字号说明](https://www.capcut.com/help/font-units-in-capcut)说明软件字号不是通用像素，建议导出实测；[TikTok官方](https://ads.tiktok.com/resources/help/article/tiktok-auction-in-feed-ads?lang=en)说明安全区随画幅、文案和附加组件变化。这些资料没有给本项目统一数字，上述数值是本项目实测起点，不称官方推荐字号或抖音实机保证。[libass开发者说明](https://github.com/libass/libass/issues/644)也表明ASS字号与CSS em不同；不得用“全角字步进必等于字号”否定真实渲染。
 
-生成cue前按完整意群切分：中文>14个非空白字符预拆；数字与单位、姓名与年龄不拆断；不留孤立的“的/房租”等尾巴；中文对应同窗英文的意思。中英从同一个起止窗口生成，start≥上一end，禁止事后只推一层。英文两行在单词边界换行，涉及姓名、数字或短语时人工核查。整句过宽先重拆，不把汉字缩回小字。
+生成cue前先按完整意思组织每屏，再核字数：中文>14个非空白字符时只能在完整分句边界重组，不能为了长度留下半句话；数字与单位、姓名与年龄、否定/条件/转折/动作对象和固定词组不得拆散。不留孤立的“把孩子的/因为/当孩子生气时”等残尾。中文对应同窗英文；中英从同一个起止窗口生成，start≥上一end，禁止事后只推一层。英文在单词和意群边界同屏换行；成长系列长屏可最多三行，并为其整体上移对白区32px（720画幅ZH锚点838/EN851），仍须真实字形与手机模拟通过，不缩字或左移。不把完整意思等同于每条都要正式书面句，口语短答和动作指令可用。逐条独立语义回执与真实出口硬门见[字幕共同校验](subtitle-validation.md)。
 
 验收仍跑全部cue字形/内部叠字/最长和多行条，逐轨报告相对全画面中轴的锚点与墨迹偏差，再看含四角的全幅五点以及360×640手机尺寸预览。绑定ASS SHA到生成计划、字形报告与渲染输入，过期报告必须拒绝。字号或断句改动只重做后期和受影响检查，不重算口型。当前样式仍交Jeffrey看片，不预签美观接受。
 
@@ -30,7 +30,7 @@ Jeffrey反馈原版汉字偏小并要求固定。720×1280、当前PingFang SC/A
 从本期项目目录执行，先按[最高保真母版入口](quality-and-centering.md#母版入口与核对)，以`VIDEO_FILTER="ass=$ASS_FILE"`或本期确需的清标+ASS链生成并核对母版；字幕只烧这一次。下面是从带字母版派生兼容MP4，不能当严格无损交付。滤镜中的ASS路径不含冒号、单引号或反斜杠；有这些字符先在本期后期目录另存安全文件名，不拼接不可信表达式。FFmpeg须实际有ass/libass/libx264能力；本机当前入口为：
 
 ```bash
-FFMPEG=/opt/homebrew/opt/ffmpeg@7/bin/ffmpeg
+FFMPEG=/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg
 # MASTER_FILE=本期已核的最高保真带字母版绝对路径
 # OUTPUT_FILE=全新候选MP4绝对路径
 : "${MASTER_FILE:?先设置本期已核母版路径}" "${OUTPUT_FILE:?先设置全新输出路径}"
