@@ -2,10 +2,6 @@
 
 ## 当前任务
 
-### GEMINI-DUAL-CREATION-20261107 — 选题与全部文案双引擎规则修订中
-
-owner/writer=Codex root；main精确串行，基线d5faf5ebbcfb58910852f5aa41146f6822d296e6。按Jeffrey明确要求，为laohanvideo补共同选题与全部创作文案各出一版、负责人融合、Gemini不可跳过的项目覆盖；其它项目作者合同保持。方案GLM满配REVISE已逐项裁决，xuanti3.8.1/chuangzuo3.12.1/fengmianqiuzhi1.21.4/motion1.1.8及共享方法已修。视频现有registry只登记前三项；motion技能与dual-engine-gemini方法未在现行运行锁覆盖，凭本仓Git及本轮审核SHA留证，不冒锁已保护。最终结果首审正文可签收，R2对覆盖边界澄清和单行测试版本同步APPROVE_DOC_SCOPE；修复后direct专项exit0。不改validator、不调用真实创作、不冒称自动硬门。正式记录与最终Git见视频项目`docs/handoff/GEMINI_DUAL_CREATION_20261107.md`。下一动作=视频稳定版正常提交门、两仓精确提交push与状态收口。
-
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
@@ -77,6 +73,9 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-11-07·GEMINI-DUAL-CREATION-20261107 老韩AI双引擎规则完成。** xuanti3.8.1/chuangzuo3.12.1/fengmianqiuzhi1.21.4/motion1.1.8承接共同选题与全部观众创作文字独立双稿，负责人融合；禁止Gemini失败时SKIPPED，成长系列作者条款未变。GLM满配方案/结果对抗逐项闭合，末次APPROVE_DOC_SCOPE；源f9f75e4802289d46cc8378e1e1c6f1d5d7f2e6bd已提交push，视频对应普通hook87/87稳定全实跑。未改validator、不冒自动硬门；Motion技能与dual-engine方法不在视频当前锁覆盖，真实入口/Git与审核SHA留证。本仓无pre-commit，未冒hook通过；最终状态登记与fresh远端在视频`docs/handoff/GEMINI_DUAL_CREATION_20261107.md`所指closeout.json核验。未执行本期Gemini创作或生产媒体。
+
 
 **2026-11-06·LAOWAI-CAPTION-READABILITY-20261106 方法与真实门修正完成。** owner/writer=Codex root；main，基线571c497424a7096931ddbb07b202044983d49db9。laohan-laowai主入口/4方法文件保留中文标点，把中文自然度/必要标点/双语对应合入原一次完整断句审阅；14字只计内容，实际libass光学校正不放宽字形/中轴，prepare/record纯本地、三个出口复用同一回执，不增加每期模型轮次。44字幕主体测试+3导入增量、4package输入、真实16秒post→build→verify正反链通过；同模型独立代码对抗及GLM-5.3满配R1/R2均APPROVE，F1/N1精确修复复验，无生产fixture旁路。旧69项媒体/WAV/ASS/JPEG未改、不重出视频。源文件精确提交push，实际Git回读由成长项目同任务source-closeout.json记录；不冒所有宿主自动触发/新片内容或用户接受。详见[方法回执](docs/handoff/LAOWAI_CAPTION_READABILITY_20261106.md)。
 
