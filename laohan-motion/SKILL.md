@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "1.1.7"
+version: "1.1.8"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
@@ -39,6 +39,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 
 ## 输入契约
 
+- **全部创作文字**：按本项目生产合同§二及`../laohan-chuangzuo/references/dual-engine-gemini.md`「laohanvideo项目覆盖」核选题与文案双引擎；制作中新增/改写画面讲解、标签或封面文字同样须双方各稿、负责人融合后使用，不能借导演阶段单写。字幕忠实派生自融合定稿，不另改词；原始证据/真实界面不改写。此为流程纪律，不冒称production-guard已校验Gemini参与。
 - **锁定口播稿**：script-pool或episode候选经Jeffrey接受/锁定；未锁定→先回xuanti/chuangzuo链，不代写代锁。
 - **显示稿与发音稿分开**：标识符按原名显示；`laohan-*`标识符按`pronunciations.json`中文读音（如laohan-sousuo读"老韩搜索"），未知项报未定，不按拉丁字母拼读。
 - **交付要求只认delivery-requirements.json**：手机反馈、竖屏人物源、模板portrait能力都不是变更授权；只有Jeffrey明确新指令才更新该文件。

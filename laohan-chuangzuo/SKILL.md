@@ -1,12 +1,14 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 产出已核材料交接后写作）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.12.0"
+version: "3.12.1"
 ---
 
 # 统一创作引擎
 
 所有涉及口播稿写作统一调用本 skill。一份方法论，一个入口。
+
+**项目双引擎覆盖先读**：laohanvideo老韩AI新作执行`references/dual-engine-gemini.md`「laohanvideo项目覆盖」：选题也共同选择，全部对观众创作文案由Gemini与本地主执行者各出一版、负责人融合；本项目不允许下文通用SKIPPED，缺原答记BLOCKED_GEMINI。其它项目沿自身合同；成长系列既有作者分工不变。此为流程纪律，不能用validator的PASS替代双稿证据。
 
 ## 写作前材料交接
 
@@ -121,7 +123,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `01-口播稿.md`正文只允许Jeffrey真正口播的文字，禁止B-Roll、字幕、镜头、转场、特效或Remotion执行提示；正文承诺模板、清单、提示词、命令或其他可复制资源时，必须独立写入`12-发布/观众资源/`，完整填写推荐值，并由`audience_resource_contract`绑定文件SHA及四平台交付方式；
 - `human_voice_contract` 必须登记真实作者语域；设备可为空，禁止数量配额；`structure_contract` 在分层时绑定连续的 `1、2、3……`；
 - `duration_contract.mode=CONTENT_DETERMINED`、`padding_for_duration=PROHIBITED`，并绑定本机 `say` 生成的TTS机械试读音频、SHA和 `ffprobe` 实测时长；TTS只用于检查5秒锚点、拗口句和自然时长，是可重建的内部QA代理，不是正式口播音轨，不进入视频或Remotion，也不能替代Jeffrey真人试拍后的节奏判断；
-- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`，`step_4_5` 为 `COMPLETED` 或 `SKIPPED`（Gemini 通道客观不可用，附实际原因；validator 暂不强制该键），不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
+- `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`；`step_4_5` 的完成/失败按双引擎方法的项目覆盖登记，laohanvideo不得SKIPPED，未完成不得签COMPLETED；仅无强制覆盖的项目可按通用降级记录实际原因（validator 暂不强制该键）。不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`language_review`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
 - `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题（**主推与候选均≤20字**，2026-10-29 Jeffrey 定）、选择理由、标题与介绍证据、视频介绍结构与SHA，以及按目标账号定的标签（**抖音标签≤5个**）。
@@ -321,8 +323,8 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 2. **证据约束**：任务包逐条列已核数字并声明「只能用这些」；Gemini 稿取回后逐项核对（数字对证据、口径一致、元话术、时效词、开场句式/口头禅/禁用词、全文完整），EP02/C03 实锤过数字混用与元话术残留；事实硬伤修不了的该处弃用，不因稿好放行编造
 3. **全包逐元素择优融合**（不拼接）：正文选底版逐段吸收强元素；四平台文案按平台逐项对照择优；融合后三重重核——数字证据（平台标题/介绍证据必须出现在融合后正文）、四平台字数/标签数量限制、四标题四介绍互异
 4. **落盘与登记**：Gemini 原稿不改写落盘（Episode `02-创作工作稿/gemini-draft.md`；独立 `output/gemini-draft-YYYY-MM-DD.md`）；决策 JSON 登记 `dual_engine_contract`（字段见 creation-contract.md，fusion_table 正文与四平台分开登记）
-5. **降级**：通道客观不可用（扩展离线/登录失效）时 `status=SKIPPED`+实际原因，单引擎初稿继续 Step 5-7 并在交付时说明；「这题简单/时间紧」不是跳过理由，SKIPPED 不得冒称 FUSED
-6. **终稿确认**：完整确定版（正文+四平台全套）+双稿差异要点+对照表随 Step 7 交付呈 Jeffrey，按既有验收点确认，不新增流程内阻断门
+5. **失败分流**：先执行方法真源的项目覆盖；laohanvideo及其它已要求Gemini强制参与的项目记BLOCKED_GEMINI，不得单稿锁定/供制作/交付。只有未要求强制的项目，才允许通道客观不可用时按通用降级记SKIPPED+实际原因；「这题简单/时间紧」不是跳过理由
+6. **终稿确认**：完整确定版（正文+四平台全套）+双稿差异要点+对照表随 Step 7 交付呈 Jeffrey，按既有验收点确认；项目覆盖中的缺稿停止纪律照常，不增加重复人工审批
 
 重跑规则：全新选题首轮必跑；Step 4 实质改稿且融合基础仍在 → 只对受影响部分重对照并说明；选题论点变了整轮重跑；纯错字/标点修复不重跑。
 
@@ -517,7 +519,7 @@ Episode 模式禁止读取或写入共享 `output/`。
 | 硅基流动 API Key | 语音转文字（Pre-A，优先） | 注册 siliconflow.cn |
 | whisper.cpp | 本地语音转文字（Pre-A，备选） | `brew install whisper.cpp` |
 | nlm CLI + poppler | NotebookLM 幻灯片（Post-A） | `pip install notebooklm-mcp-cli && brew install poppler` |
-| huashu-chrome MCP + gemini.google.com 登录态 | 双引擎对照（Step 4.5，「老韩文案」会话，Pro 账号） | Chrome 扩展 + Pro 登录；不可用时按降级规则 SKIPPED |
+| huashu-chrome MCP + gemini.google.com 登录态 | 双引擎对照（Step 4.5，「老韩文案」入口，Pro 账号） | Chrome 扩展 + Pro 登录；不可用先按项目覆盖分流，强制项目禁止SKIPPED |
 
 Pre-A/B 按需依赖，不使用对应模式时无需安装。
 

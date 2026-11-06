@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### GEMINI-DUAL-CREATION-20261107 — 选题与全部文案双引擎规则修订中
+
+owner/writer=Codex root；main精确串行，基线d5faf5ebbcfb58910852f5aa41146f6822d296e6。按Jeffrey明确要求，为laohanvideo补共同选题与全部创作文案各出一版、负责人融合、Gemini不可跳过的项目覆盖；其它项目作者合同保持。方案GLM满配REVISE已逐项裁决，xuanti3.8.1/chuangzuo3.12.1/fengmianqiuzhi1.21.4/motion1.1.8及共享方法已修。视频现有registry只登记前三项；motion技能与dual-engine-gemini方法未在现行运行锁覆盖，凭本仓Git及本轮审核SHA留证，不冒锁已保护。最终结果首审正文可签收，R2对覆盖边界澄清和单行测试版本同步APPROVE_DOC_SCOPE；修复后direct专项exit0。不改validator、不调用真实创作、不冒称自动硬门。正式记录与最终Git见视频项目`docs/handoff/GEMINI_DUAL_CREATION_20261107.md`。下一动作=视频稳定版正常提交门、两仓精确提交push与状态收口。
+
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。

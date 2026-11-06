@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.8.0
+version: 3.8.1
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -9,6 +9,8 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 # ①选题决策
 
 热点只用于发现，最终结果是一个可审计的生产决策：观众为什么现在想看、为什么选它、有什么可提炼的内容来源、材料与模板怎样兑现，以及发布后如何复盘。可制作和资料齐全不等于值得优先做，多模型票数不替代需求证据。具体方法与opportunity_case/selection_review字段单源见项目docs/老韩选题五步法.md。
+
+**项目双引擎入口**：laohanvideo老韩AI新作定题前必读`../laohan-chuangzuo/references/dual-engine-gemini.md`「laohanvideo项目覆盖」，按同一材料由Gemini与本地主执行者独立比较选题、负责人整合；本skill仍是唯一文件writer。缺Gemini真实原答不得定题或以机械PASS交②，禁止SKIPPED；其它项目按自身合同。共同作者不替代未参与者独立审核。
 
 ## 边界
 
@@ -108,7 +110,7 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 
 ### 5. AI自主定题（Jeffrey保留否决权）
 
-五步法全部通过后直接定题，不等待Jeffrey：
+五步法全部通过且项目要求的双引擎选择已完成后直接定题，不等待Jeffrey：
 
 - 按五步法完成机会论证：各平台最新/高表现、博主动态、小白/评论、自频道、时效和分享动因交叉；比较定位/日期/基线/拥挤与内容/材料/Motion条件。默认可写须需求EVIDENCED、同问题真实支持和selection_review接受；只有既有EXPERIMENTAL_ONE_OFF方向允许如实HYPOTHESIS试验。不得以资料齐全、自评高分或多数票补需求缺口；仍保留自由新角度与平台故障出路。取最优标AUTO_SELECTED，其余给真实取舍，证据不足重扫。
 - 写 schema 4 `00-选题.json`（含`auto_selection_rationale`）与`00-选题.md`后直接进入②。
