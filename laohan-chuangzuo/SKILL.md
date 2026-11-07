@@ -1,7 +1,7 @@
 ---
 name: laohan-chuangzuo
 description: 统一创作引擎，负责创作口播初稿（不含封面提示词，封面由 laohan-fengmianqiuzhi 独立产出；不含选题搜索，选题由工作流①前置用 laohan-xuanti/laohan-douyinsousuo 产出已核材料交接后写作）。支持录屏视频(音频提取→转录)、URL队列(抓取→整理)、结构化大纲、原始文本、自由主题五种输入。其他 skill 的写作环节统一调用本 skill。Use when 用户说"写口播稿""帮我写""录屏转口播""视频转口播稿""写一篇""根据链接改写""改写文档"。
-version: "3.12.3"
+version: "3.13.0"
 ---
 
 # 统一创作引擎
@@ -15,6 +15,12 @@ version: "3.12.3"
 先执行`references/creation-contract.md`的“选题→写作的创作交接”：真实源文/主稿论证、核心判断、承诺所需材料和独立材料审核齐全才写。大纲只可跳重复抽取，不能跳知识理解；五种输入共用判据。操作/效果承诺实跑前置，Sepia不补论证。普通独立/系列草稿同样检查，历史已录制输入不重创作。
 
 ## 核心理念
+
+**Motion分支先行**：laohanvideo Motion先进入`../laohan-motion/SKILL.md`绑定阶段；已接收写作任务的会话直接执行本skill，不递归新建。正式稿使用`script-pool/<任务>/formal/`及`check-script-contract.mjs --motion <formal目录> --base <项目根>`，布局/正式选题重验/四平台与资源见`references/creation-contract.md`的Motion正式内容入口。`--candidate`保持待选，不代正式通过；不伪建episode。双方原稿封存后，在本写作会话完成融合建议与六步法/Sepia审校；root最终裁决和锁稿，文字变化回本会话复验绑定。
+
+Motion研究原文、原视频与转录材料获取通过 `../laohan-xiazai/SKILL.md` 的当前平台路由；素材转录按视频项目现行large-v3方法及真实可达工具执行，不能从下方旧Pre-A/B示例推导免费、最快或最准。Motion跳过这些旧命令示例，源文保存在formal/02-创作工作稿并绑定SHA。
+
+Motion不加载旧`yuanchuang-method.md`与`camera-friendly.md`，也不启用下文镜头结构sidecar：前者的旧数据、强情绪/假亲历与开场例外不能替代当前五步/六步法，后者依赖的Motion适配器已退役。内容与抽象理解任务交导演，模板参数只在制作新会话按V4/PIPELINE决定；品牌开场与事实限制沿当前合同。下列Episode专属路径/原生模式不适用于Motion。
 
 一份方法论、一个入口——所有写作走同一个管线，避免不同入口产出质量参差不齐。素材先整理（Layer A/B）再写稿，确保口播稿建立在结构化理解之上，而非对原始素材的直接改写。
 
@@ -32,19 +38,19 @@ version: "3.12.3"
 - 翻译 → 直接翻译，不需要口播稿格式
 - 学术论文/技术文档写作 → 输出格式是口播稿，不适合正式文档
 
-## 知识来源（唯一正本，symlink 到 OpenClaw workspace）
+## 知识来源（本skill的references）
 
 - **写作规则**：`references/style.md`（恢复 2026-07-11 前实战版本）。其中开场、转场、修辞、标题公式和口头禅作为可选工具；按当前六步法判断适用性，不以数量/句长/禁词密度或旧稿节奏限制新题
-- **整理方法**：`references/skill.md` → `~/.openclaw/workspace-reviewer/knowledge/skill.md`（进宝 Layer A/B；材料完整不等于成稿全文照搬）
+- **整理方法**：`references/skill.md`（进宝 Layer A/B；材料完整不等于成稿全文照搬）
 - **转录方法**：`references/transcription.md`（音频提取 + 语音转文字三级降级）
-- **转译选题法**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-xuanti/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
-- **镜头友好模式**（可选扩展，默认关闭）：`references/camera-friendly.md`（四句式偏好 + 镜头结构 sidecar 契约；只在 Step 4 句式层叠加，不覆盖既有方法）
+- **转译选题法（Motion不加载）**：`references/yuanchuang-method.md`（转译选题法 + 角度库 + 标题公式 + 数据基准）。本 skill 不再自带热点搜索；此方法供工作流①前置阶段复用——①用 laohan-xuanti/laohan-douyinsousuo 出选题后，按本文件规则生成大纲再喂入本 skill 大纲模式
+- **镜头友好模式（Motion不适用）**（可选扩展，默认关闭）：`references/camera-friendly.md`（四句式偏好 + 镜头结构 sidecar 契约；只在 Step 4 句式层叠加，不覆盖既有方法）
 - **写作风格目录**：`references/styles/`（每份 .md 是一种写作结构框架，Step -1 明确选择依据）
 - **创作机械合同**：`references/creation-contract.md`（Episode schema 4的选题/表达池绑定、内容单位、逐段审计、人味、自然时长、TTS与validator；独立模式兼容schema 3，历史采访合同仅对旧schema 3选题生效）
 - **方法论真源**：项目`docs/老韩创作六步法.md`（定结构→选钩子三变体读选→铺内容含爆点分布/节奏锚点/情绪弧线→造记忆点含金句/评论区预设→HKRR自检→人味定稿+机械验收）；五波调研依据见`script-pool/口播稿方法论调研-2026-09-17.md`
 - **否稿改稿案例库**：`references/case-book.md`（Jeffrey 真实裁决按"为何这样改/换条件怎么办/哪些用法会错"组织；修稿与吸收否稿意见前先查库，条件吻合按案例判断走，新裁决由当轮登记）
 
-GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
+按当前安装的本skill与引用文件读取；旧OpenClaw路径不作执行入口，不以软链存在推断自动同步。
 
 ## 输入模式
 
@@ -83,11 +89,11 @@ GitHub 上是实体文件（拷贝），本地用 symlink 自动同步。
 ```
 STYLE_FILE = 检测顺序：
   1. <当前工作目录>/templates/style.md      ← 用户定制版（优先）
-  2. <skill安装目录>/references/style.md    ← 标准版（symlink 到 OpenClaw）
+  2. <skill安装目录>/references/style.md    ← 当前skill内标准版
 
 ACTIVE_STYLE_FILE = 通用风格时为 STYLE_FILE；教程型/其他风格时为 <skill安装目录>/references/styles/<选择>.md
 
-ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 标准版（symlink 到 OpenClaw）
+ORGANIZE_FILE = <skill安装目录>/references/skill.md  ← 当前skill内标准版
 
 OUTPUT_DIR = 普通独立写作时 <当前工作目录>/output/；已验证系列单期资料包的独立草稿写入 <项目>/script-pool/<series-id>/；Episode 模式时 episodes/<slug>/02-创作工作稿/
 ```
@@ -148,7 +154,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - [ ] Step 5.5: Sepia中文非虚构语言定稿与主张零增删改审计
 - [ ] Step 6: 通过/重试
 - [ ] Step 7: 输出口播初稿（封面提示词不在本 skill 范围，由独立 skill laohan-fengmianqiuzhi 在后续流程产出）
-- [ ] 镜头友好模式: [可选，默认关闭] 显式启用时句式叠加四偏好并产出镜头结构 sidecar（见下方专节与 references/camera-friendly.md）
+- [ ] 镜头友好模式（Motion跳过）: [可选，默认关闭] 显式启用时句式叠加四偏好并产出镜头结构 sidecar（见下方专节与 references/camera-friendly.md）
 - [ ] Post-A: [可选] NotebookLM 幻灯片
 
 ---
@@ -170,7 +176,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 请输入编号或名称。
 ```
 
-3. **独立写作等待用户选择**。Episode mode 按上面的可追溯自主选择执行。
+3. **普通独立写作等待用户选择**。Episode及Motion正式写作按上面的可追溯自主选择执行：结合本稿目的与作者语域选择，登记理由与风格文件SHA；用户未指定风格不单独停问，也不以NOT_APPLICABLE绕过适用合同。
 4. 用户选择后：
    - **通用**：直接使用 style.md 作为唯一规则，不加载额外风格文件
    - **教程型或其他**：完整读取对应的 `references/styles/<选择>.md`；教程优先保证具体操作、自然承接和跟做自检，不为五层外形增加铺垫或删步骤
@@ -303,23 +309,23 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 - 正文承诺观众资源时，只口播资源用途和取得位置；资源本体独立写入`12-发布/观众资源/<资源名>.md`，不能附在口播稿末尾。资源必须完整填写推荐值并提示“这是推荐起点，请按自己的项目判断并修改”。
 - **抖音发布信息**：口播正文后固定追加 `## 抖音发布信息`，下设 `### 主推标题` 和 `### 视频介绍`。视频介绍末尾附与本题相关的标签，**抖音标签上限5个**；标签按目标账号区分（2026-10-29 Jeffrey 定）：老韩AI主号（laohanvideo）必带 `#AI新星计划`，**其他账号（如老外数字人号）不带**，以项目合同为准；标题≤20字；这一区域不进入口播、TTS、内容单位或段落审计
 - **视频介绍SEO/GEO规则（2026-09-17）**：核心搜索词前置在前55字折叠线内（题材词+动作词）；介绍必须总结整篇骨架（案例/方法/增量/资源）不能只抓一点；关键词在标题/介绍前段/话题标签三处命中；实体词+一个真实互动问号（GEO利于AI搜索引用）；120—200字，只保留一个问号
-- 严格执行 `ACTIVE_STYLE_FILE` 的完整方法；原版模板是默认基线，不因重复使用就自动判坏
+- `ACTIVE_STYLE_FILE`提供可选表达工具，按本题清楚、自然和事实边界取舍；本期明确品牌/授权/六步法要求仍执行，不因重复使用就自动判坏
 
 **写稿时同步自检：**
 - 长短句服从解释和呼吸，不设短句比例或平均句长目标
 - 转场服务真实关系；教学允许“先、然后、接下来、最后”及“第一步/第二步”，用前一步结果承接下一步，不能因旧词表删断动作链
-- 标点：冒号→逗号，双引号→「」，「---」做句末停顿
+- 口播标点按朗读语义处理，冒号可改逗号、引用可用「」；不插入会被解析器忽略的独立「---」结构行。命令、URL、JSON、代码与观众资源保持原始可复制语法，不做标点替换
 - #19“是不是有点意思”按本题语气自然使用，不设次数
 - 按作者真实语域保留自然习惯，不凑结巴、语气词、自嘲或设备数量
 - 人味废话单独登记为 `VOICE_ONLY` 或具体人味设备；内容审计时排除它们，不能因为不增加事实就删除
 - 每个内容段必须绑定至少一个内容单位并写清新增信息；同一判断只换词、没有新增支撑/例子/推论/操作/边界时直接合并
-- 节奏按原版快慢交替：开头拉满→缓冲→加速→缓冲→结尾加速→减速
+- 节奏服从内容理解和口播呼吸，可平稳或快慢变化；不为固定曲线增加场景、反问或虚构经历
 
 ## Step 4.5：双引擎对照（网页 Gemini 出稿与全包融合）
 
-本地初稿完成后、质量检查之前，固定调用网页 Gemini「老韩文案」会话独立出一版**全部文案**（口播正文 + 抖音/视频号/小红书/B站四平台标题、标签、介绍等，符合各平台字数与数量限制），核对后全包融合成完整确定版；**Step 5 起全部质量门都跑融合终稿**。通道操作、任务包模板（含四平台限制）、核对清单、全包融合方法与桌面发布包规格的真源是 `references/dual-engine-gemini.md`，要点：
+本地初稿完成后、质量检查之前，通过Gemini「老韩文案」角色入口在本期本阶段真实新对话独立出一版**全部文案**（口播正文 + 抖音/视频号/小红书/B站四平台标题、标签、介绍等，符合各平台字数与数量限制），核对后全包融合成完整确定版；**Step 5 起全部质量门都跑融合终稿**。通道操作、任务包模板（含四平台限制）、核对清单、全包融合方法与桌面发布包规格的真源是 `references/dual-engine-gemini.md`，要点：
 
-1. **独立出全包**：任务包（背景/目的/已核证据/结构/风格/输出格式含四平台限制/红线）经 huashu-chrome 发 gemini.google.com「老韩文案」会话（Pro 思考档，勿混老外数字人项目的「老外文案」），**不得包含本地初稿**——喂了即锚定，对照价值归零
+1. **独立出全包**：任务包（背景/目的/已核证据/结构/风格/输出格式含四平台限制/红线）经 huashu-chrome 发 gemini.google.com「老韩文案」的新对话（Pro 思考档，勿混老外数字人项目的「老外文案」），**不得包含本地初稿**——喂了即锚定，对照价值归零
 2. **证据约束**：任务包逐条列已核数字并声明「只能用这些」；Gemini 稿取回后逐项核对（数字对证据、口径一致、元话术、时效词、开场句式/口头禅/禁用词、全文完整），EP02/C03 实锤过数字混用与元话术残留；事实硬伤修不了的该处弃用，不因稿好放行编造
 3. **全包逐元素择优融合**（不拼接）：正文选底版逐段吸收强元素；四平台文案按平台逐项对照择优；融合后三重重核——数字证据（平台标题/介绍证据必须出现在融合后正文）、四平台字数/标签数量限制、四标题四介绍互异
 4. **落盘与登记**：Gemini 原稿不改写落盘（Episode `02-创作工作稿/gemini-draft.md`；独立 `output/gemini-draft-YYYY-MM-DD.md`）；决策 JSON 登记 `dual_engine_contract`（字段见 creation-contract.md，fusion_table 正文与四平台分开登记）
@@ -438,7 +444,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 
 ---
 
-## 镜头友好模式（可选，默认关闭）
+## 镜头友好模式（非Motion，可选，默认关闭）
 
 **显式启用才生效**（用户点名「镜头友好」或 Episode 决策 JSON 登记 `camera_friendly: true`）；不启用时一切照旧，默认产出与既有全部合同不受影响。完整规则见 `references/camera-friendly.md`。
 
@@ -451,7 +457,7 @@ Episode模式从三处取材后直接写`大纲.md`：①当前选题（thesis�
 
 两条结构偏好：金句独立成段（与 quote_anchor 同句原句）；术语首现集中。
 
-产出：**正文照旧**（只含 Jeffrey 口播文字，零变化）+ 可选 sidecar `镜头结构.json`（Episode 模式 `02-创作工作稿/`；独立模式与口播稿同 basename）。sidecar 只含语义 role 提示（opening/point/contrast/list/quote/cta）与段落全文/SHA 绑定，**不含任何模板参数或视觉执行细节**（模板 props 归下游适配器产生并审阅）；不进正文、不进创作决策.json、不进 validator 校验范围。Sepia 或实质改稿后必须重出 sidecar（段落 SHA 会失配，下游按全文匹配、失配即拒绝）。
+产出：**正文照旧**（只含 Jeffrey 口播文字，零变化）+ 可选 sidecar `镜头结构.json`（Episode 模式 `02-创作工作稿/`；独立模式与口播稿同 basename）。sidecar 只含语义 role 提示（opening/point/contrast/list/quote/cta）与段落全文/SHA 绑定，**不含任何模板参数或视觉执行细节**（具体视觉实现归后续导演）；不进正文、不进创作决策.json、不进 validator 校验范围。Sepia 或实质改稿后必须重出 sidecar（段落 SHA 会失配，接收者按全文核对，不能冒称存在现役自动消费者）。
 
 ---
 
@@ -554,7 +560,7 @@ Pre-A/B 按需依赖，不使用对应模式时无需安装。
 - style.md和风格文件提供默认工具；事实纪律、当前六步法及本次用户目标优先，旧数量/固定情绪/节奏配额不恢复
 - **风格文件**（`references/styles/`）是完全自包含的写作规范，每次创作前必须选择一个风格。通用模式无额外文件，直接用 style.md；其他模式只读对应风格文件
 - skill.md 是唯一的整理方法来源，Layer A/B 规则以该文件为准
-- 转译选题法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）。本 skill 不自带热点搜索；该文件供工作流①前置阶段复用
+- 非Motion转译选题法详见 `references/yuanchuang-method.md`（转译案例+角度库+标题公式+数据基准）。本 skill 不自带热点搜索；该文件供工作流①前置阶段复用
 - 转录技术详见 `references/transcription.md`（音频提取+三级降级）
 - 二创原创表达与真实来源规则（style.md 第十节）：素材来自他人内容时执行；自由模式（原创主题）跳过
 - 本 skill 不负责选题搜索（那是工作流①阶段的职责，用 laohan-xuanti + laohan-douyinsousuo 出大纲后喂入）

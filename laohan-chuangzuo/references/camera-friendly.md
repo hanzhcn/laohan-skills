@@ -1,11 +1,13 @@
 # 镜头友好模式（laohan-chuangzuo 可选扩展，v1）
 
-> 定位：只在 Step 4 写稿句式层叠加**倾向性偏好**的可选模式，默认关闭。不覆盖六步法、style.md/风格文件、Step 5 六关、humanizer-zh 与任何既有合同；对既有方法只加不删不改（rules/skills.md「已验证方法不得因审计被压缩」）。
+> Motion已停用本页：回`../../laohan-motion/SKILL.md`，写作按当前五步/六步法与Sepia，制作按V4/PIPELINE；不得恢复本页旧适配器、旧数据或构造亲历的做法。此页不在Motion读取清单。
+
+> 定位：只在 Step 4 写稿句式层叠加**倾向性偏好**的可选模式，默认关闭。不覆盖六步法、style.md/风格文件、Step 5 六关、Sepia 与任何既有合同；对既有方法只加不删不改（rules/skills.md「已验证方法不得因审计被压缩」）。
 > 启用条件（满足其一）：用户显式点名「镜头友好」；Episode 模式在决策 JSON 登记 `camera_friendly: true`。不启用时一切照旧。
 
-## 为什么有这个模式
+## 适用边界
 
-下游 MotionGit 模板出片（`motion/adapters/mk-adapter.py`）按语义模式分镜：开场主张→title、术语强调→keyword、真实数值对比→vs、清单要点→checklist、金句→quote、互动收尾→cta。写稿句式靠近这些形态时，「稿件→镜头」的映射接近确定式，自动化出片的语义正确率显著提高（依据：`motion/HANDOFF-WORKFLOW-INTEGRATION.md` §三.2/§三.3，方案经 codex 四审 PASS）。
+Motion写作只交本期内容单位与抽象visual_anchors，具体模板/分支/参数在新制作会话按V4/PIPELINE决定。旧六控件自动映射和旧适配器已经退役，不能从历史批准恢复；本页非Motion的可选语义sidecar不具备自动分镜或原包执行能力。
 
 ## 四个句式偏好（倾向性，非硬规则）
 
@@ -37,9 +39,9 @@
 ```
 
 - `role` 是**语义提示**（opening 开场主张 / point 单要点 / contrast 对比 / list 清单 / quote 金句 / cta 互动收尾），不是模板控件名，更不是模板参数
-- `text` 必须与正文段落**逐字一致**；下游适配器按归一化全文匹配，失配即拒绝整个 sidecar 并报错，不模糊容错（codex 预审 F08：绑定用段落全文/SHA，不用前缀）
-- `script_sha256` 绑定最终口播正文；humanizer-zh（Step 5.5）或任何实质改稿后必须重出 sidecar（段落 SHA 会失配）
-- sidecar **不含** props、视觉参数、时间码、镜头语言——模板表达归适配器与导演阶段（与 SKILL.md「visual_anchors 只给抽象理解任务」同一边界）
+- `text` 必须与正文段落**逐字一致**；接收者须对照最终正文逐字核对；本页没有现役自动消费者，不能把文件存在冒称已机械验证或模板可执行
+- `script_sha256` 绑定最终口播正文；Sepia（Step 5.5）或任何实质改稿后必须重出 sidecar（段落 SHA 会失配）
+- sidecar **不含** props、视觉参数、时间码、镜头语言——模板表达归本期实际导演阶段（与 SKILL.md「visual_anchors 只给抽象理解任务」同一边界）
 - sidecar 不进正文、不进创作决策.json、不进 validator 校验范围（validator 零改动）
 
 ## 与既有步骤的关系

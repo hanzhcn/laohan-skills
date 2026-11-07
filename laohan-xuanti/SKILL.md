@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.8.2
+version: 3.9.0
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -22,6 +22,8 @@ allowed-tools: Bash(*), Read, Write, Glob, Grep
 - 教学、观点、解读、测评、对比、故事、案例、资源及混合形式均可，用opportunity_case.presentation_form自由描述；content_form是现有安全/执行lane，不是创意形式白名单。同事件不同任务/承诺/路径可参加比较；实际操作/效果承诺仍需实跑，不靠换形式标签豁免。
 
 ## 输入
+
+**Motion分支先行**：laohanvideo的Motion任务先由`../laohan-motion/SKILL.md`绑定阶段与新会话；已接收的选题会话直接执行本skill，不递归派发。待选研究使用`collect-topic-signals.mjs --workspace <研究目录>`（从项目根运行）与`check-topic-contract.mjs --workspace <研究目录> --base <项目根>`。共同定题后正式内容在`script-pool/<任务>/formal/`，沿同一五步法/来源/独立审阅，signals声明`workspace_kind=MOTION_FORMAL`、兼容字段`episode=formal`；最终运行`check-topic-contract.mjs --motion <formal目录> --base <项目根>`。正式字段及搬入后重新绑定要求见`../laohan-chuangzuo/references/creation-contract.md`的Motion正式内容入口。RESEARCH_READY不是正式完成；不创建episode-config、不调用原生编排。下列Episode输入和命令只适用于原生路线。
 
 Episode 模式必须读取：
 
@@ -130,13 +132,16 @@ node ~/Documents/laohan-skills/laohan-xuanti/scripts/collect-topic-signals.mjs \
 
 状态必须一致：OK 条数大于 0，EMPTY/FAILED/SKIPPED 条数为 0。至少一条 DISCOVERY 为 OK、一条 DOUYIN_SEARCH 有真实尝试记录、一条 PRIMARY_PROOF 为 OK；DOUYIN_SEARCH 可以 FAILED，但必须绑定本期抖音证据文件与原始错误。
 
-写 schema 4 `00-选题.json`，绑定AUTO_SELECTED候选与`auto_selection_rationale`。最后执行：
+写 schema 4 `00-选题.json`，绑定AUTO_SELECTED候选与`auto_selection_rationale`。最后按路线执行：
 
 ```bash
-node ~/Documents/laohan-skills/laohan-xuanti/scripts/check-topic-contract.mjs --episode episodes/<slug>
+# Motion正式内容；两个路径替换为本任务真实绝对路径
+node ~/.agents/skills/laohan-xuanti/scripts/check-topic-contract.mjs --motion <项目>/script-pool/<任务>/formal --base <项目>
+# 仅原生Remotion
+node ~/.agents/skills/laohan-xuanti/scripts/check-topic-contract.mjs --episode episodes/<slug>
 ```
 
-只有输出`PASS redian topic contract schema=4`才算①完成。
+正式①须输出`PASS redian topic contract schema=4`（Motion还须`phase=MOTION_FORMAL`）；候选`--workspace`的`RESEARCH_READY`只代表研究可用，不能当正式定题完成。
 
 - `schema_version: 4`、`selected_candidate_id`、非空 `rejected_candidate_ids`、非空 `auto_selection_rationale`。
 - 原样复制选中项的 `content_form`、`audience_level`、`audience_promise`、`creator_fit`、`assumed_prerequisites`、`jargon_to_explain`、`platform_query_intent`、`platform_alignment`、`content_gap`、`claim_evidence_map`、`opportunity_case`与`selection_review`。

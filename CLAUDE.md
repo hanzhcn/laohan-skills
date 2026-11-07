@@ -2,6 +2,10 @@
 
 # laohan-skills project rules
 
+## Motion任务先分流
+
+`laohanvideo`的MotionGit模板任务统一从 `laohan-motion/SKILL.md` 接续，选题、写作与制作按其真实阶段会话执行；下方“Talking-head video workflow”的episode、原生导演/renderer、旧当前期与历史技能名不作为Motion指令。Motion各阶段专业skill入口及适配边界只在laohan-motion维护，不创建原生episode补门，也不从本文件的历史生产叙述推断本期状态；任务状态以视频项目STATUS为准。
+
 ## Brand name
 
 - 对外品牌名统一为 `老韩AI`。所有口播稿、封面提示词、系列标签、安装器标题和后续生成内容不得再使用旧名“寒武纪AI”或“寒武纪说AI”。
@@ -10,7 +14,7 @@
 
 真人口播动画默认采用 CODEX_DIRECT + Remotion：
 
-- 新episode的导演预制默认调用`laohan-daoyan` v2.1.2：它只读取视频项目当前`method-v5.json`和`director-state-v5.md`。第一请求先从内容发散2—3个在视觉隐喻、空间组织、运动逻辑或素材角色上本质不同的完整方向，方向形成后才按需读取最小范围Plugin知识，再统一收敛；第二请求只做最终复审，对真正值得增强的位置内部发散2—3个本质不同的候选。非穷尽技术搜索地图只提醒搜索维度，不是必选清单，未入选候选不落盘。两请求都停在`WAITING_FOR_FOOTAGE`。完成时必须同步本期`_status.md`，并在最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`；不能用开始时PASS或干净Git代替episode准入。它不得剪辑、生成clean/SRT、写旧beat-sheet/EDL/motion-plan、实现Remotion或渲染。旧METHOD_LAB只在Jeffrey明确要求历史路线时读取`laohan-daoyan/references/method-lab-legacy.md`。
+- 新episode的导演预制默认调用`laohan-daoyan` v2.1.3：它只读取视频项目当前`method-v5.json`和`director-state-v5.md`。第一请求先从内容发散2—3个在视觉隐喻、空间组织、运动逻辑或素材角色上本质不同的完整方向，方向形成后才按需读取最小范围Plugin知识，再统一收敛；第二请求只做最终复审，对真正值得增强的位置内部发散2—3个本质不同的候选。非穷尽技术搜索地图只提醒搜索维度，不是必选清单，未入选候选不落盘。两请求都停在`WAITING_FOR_FOOTAGE`。完成时必须同步本期`_status.md`，并在最后一次写入后实时运行`bash scripts/check-episode-contract.sh episodes/<slug> config`；不能用开始时PASS或干净Git代替episode准入。它不得剪辑、生成clean/SRT、写旧beat-sheet/EDL/motion-plan、实现Remotion或渲染。旧METHOD_LAB只在Jeffrey明确要求历史路线时读取`laohan-daoyan/references/method-lab-legacy.md`。
 - ⑧—⑪由同一个 Codex 任务连续完成：完整观看原片并剪辑、写direct brief与按需source manifest、直接实现Remotion、渲染完整candidate并交Jeffrey观看。`laohan-donghua`、AST、双renderer与proposal/extension/seal只用于Jeffrey明确发起的METHOD_LAB或历史episode。
 - `laohan-sucai/SKILL.md`：⑩仅在 source manifest 有真实 PROOF/BROLL 请求时供应 provider/license/source/SHA 完整且 visually_verified 的本期素材；无请求标 not_applicable，不创建空素材任务。
 - `laohan-bianpai/SKILL.md`：全流程的唯一状态路由器；从 `laohanvideo` 根目录运行，按 artifact + mechanical gate 报告唯一下一步。⑫上传/预填经共享`laohan-fabu`路由到项目专用Chrome扩展和统一video-publish入口；发布事实与⑬/⑭交laohan-yunying。
@@ -33,9 +37,9 @@
 - dbskill 不再由 `npx --all` 更新：完整 vendor 在 `~/Documents/dbskill`，并由 workflow 的 `sync-content-vendors.sh` fast-forward 后受管 symlink 到 Claude/Codex 通用 skills。视频 workflow 只固定调用 dbs-script-flow/dbs-resonate，条件调用 hook/ai-check/spread；其余能力见项目 `docs/dbskill-编排映射.md`。
 - `laohan-daoyan` v2是V5导演预制的轻入口，不另建方法真源；实时config因registry/runtime漂移失败时必须报告阻断并停止，禁止手改lock。只有Jeffrey明确授权，才可由视频工作流的受控导演预制期迁移修复。V5仍为PILOT，真实本期candidate经Jeffrey验收前不得称为accepted或效果最优。⑩`laohan-sucai`按当前素材合同执行；`laohan-donghua`只保留METHOD_LAB历史兼容。
 - `laohan-xiazai` 的抖音下载只按其 `references/douyin.md`当前路由：单条优先当前help已有的`douyin detail`，失败时短链取ID→明确绑定的已登录浏览器取实际播放器源/aweme详情；博主批量才用user-videos。旧iesdouyin SSR不作默认后备，不为单条下载全量升级工具。抖音不走YouTube/yt-dlp。对标批量文字转录用MLX未量化large-v3；需要精确停顿/词级真值仍用whisper-timestamped large-v3，实际输入/执行入口按workflow现行合同读取，不把MLX当停顿真值，避免Torch MPS异常。
-- schema 2 的①由 `laohan-redian` 唯一主写 signals/candidates/source-health 与 `00-选题.*`；`laohan-douyinsousuo` 是可独立调用的 OpenCLI 只读取证 adapter，只写抖音证据，两者不合并、不做 programmatic skill-to-skill 调用。`screening_summary` 在同一个 candidates 文件内留下全部 signals→8—12 longlist（不足8个时全部）→短名单链路，不新增节点或第二套打分器。①至少比较两个候选，唯一 SELECTED 必须绑定 PRIMARY；平台可用时再绑定 PLATFORM_SIGNAL，平台预检/查询失败则 `platform_alignment` 与 `content_gap` 均可 `UNAVAILABLE`，不单独阻塞。历史 OpenCLI 1.8.6 记录中，`douyin search` 只有结果样本，`hashtag hot` 是全站热点，`hashtag search` 实测失败且 `hot --keyword` 不能可靠过滤，禁止反推搜索量、供给总量、增长或内容缺口。source health 仍覆盖 `DISCOVERY|DOUYIN_SEARCH|PRIMARY_PROOF` 并绑定本期结果 SHA；每个 metric key 都有正整数 T+N/DAY、方向、基线和抖音创作者中心来源。`opencli hackernews top` 是当前命令，禁止 `hackernews hot`。不得为①安装 TrendRadar/RSSHub/Obsei 或另一套浏览器/爬虫；外部项目只作设计参考。`laohan-fengmianqiuzhi` v1.21.5默认使用秋芝03KV视觉系统，从45套词典选择1个语义最匹配模板，只生成同一方案的3:4、4:3、16:9三张真实尺寸封面；不生成候选排名、额外9:16母版、排字脚本或评分流程。
+- schema 2 的①由 `laohan-xuanti` 唯一主写 signals/candidates/source-health 与 `00-选题.*`；`laohan-douyinsousuo` 是可独立调用的 OpenCLI 只读取证 adapter，只写抖音证据，两者不合并、不做 programmatic skill-to-skill 调用。`screening_summary` 在同一个 candidates 文件内留下全部 signals→8—12 longlist（不足8个时全部）→短名单链路，不新增节点或第二套打分器。①至少比较两个候选，唯一 SELECTED 必须绑定 PRIMARY；平台可用时再绑定 PLATFORM_SIGNAL，平台预检/查询失败则 `platform_alignment` 与 `content_gap` 均可 `UNAVAILABLE`，不单独阻塞。历史 OpenCLI 1.8.6 记录中，`douyin search` 只有结果样本，`hashtag hot` 是全站热点，`hashtag search` 实测失败且 `hot --keyword` 不能可靠过滤，禁止反推搜索量、供给总量、增长或内容缺口。source health 仍覆盖 `DISCOVERY|DOUYIN_SEARCH|PRIMARY_PROOF` 并绑定本期结果 SHA；每个 metric key 都有正整数 T+N/DAY、方向、基线和抖音创作者中心来源。`opencli hackernews top` 是当前命令，禁止 `hackernews hot`。不得为①安装 TrendRadar/RSSHub/Obsei 或另一套浏览器/爬虫；外部项目只作设计参考。`laohan-fengmianqiuzhi` v1.21.6默认使用秋芝03KV视觉系统，从45套词典选择1个语义最匹配模板，只生成同一方案的3:4、4:3、16:9三张真实尺寸封面；不生成候选排名、额外9:16母版、排字脚本或评分流程。
 - `laohan-chuangzuo` 当前方法以视频项目六步法与本skill为准：自然稿长、作者语域，无人味数量配额；Sepia融入共同六步创作。三稿与正式稿使用同一研究验收和content-units-v2创作检查，待选择只是交付阶段，旧轻合同退役；不冒充②完成或提前正式制作。
-- 上游 Cheat 的 prediction anatomy 现统一为所有 calibration 阶段都写 7 组件、bucket、概率、中枢与反事实；cold-start 只降低 Confidence、拉平分布。工作流 `AUTONOMOUS_RUN` 可用 `Review Mode: AUTONOMOUS_AGENT_PROXY`，但不得伪造 Jeffrey 确认或用户覆盖。旧 `2026-07-12-native-method-real-run` 已在拍摄前 SUPERSEDED；当前生产期 `2026-07-16-codex-direct-production` 已真实完成①（92条发现信号、30条OpenCLI抖音关键词证据、3个候选，选中C01），唯一下一步是②写稿。
+- 上游 Cheat 的 prediction anatomy 现统一为所有 calibration 阶段都写 7 组件、bucket、概率、中枢与反事实；cold-start 只降低 Confidence、拉平分布。工作流 `AUTONOMOUS_RUN` 可用 `Review Mode: AUTONOMOUS_AGENT_PROXY`，但不得伪造 Jeffrey 确认或用户覆盖。生产期与下一动作只从视频项目STATUS读取；不从技能仓历史示例恢复旧期。
 
 ## Skill 维护
 

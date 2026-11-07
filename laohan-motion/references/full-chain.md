@@ -1,18 +1,18 @@
 # 从选题交接到制作七步（执行参考）
 
-真源：`motion/mastery/DH-ROUTE.md` §一A—一C + §一B表格、`motion/mastery/PRODUCTION-METHOD-V4.md`、`motion/mastery/PIPELINE.md`。本文是执行浓缩，冲突时以真源为准。
+真源：`motion/mastery/DH-ROUTE.md` §一A—一D + §一B表格、`motion/mastery/PRODUCTION-METHOD-V4.md`、`motion/mastery/PIPELINE.md`。本文是执行浓缩，冲突时以真源为准。
 
 ## 前端接入：没有锁定稿也从本入口开始
 
 只作路由，不复制选题/创作方法：未选题→`laohan-xuanti/SKILL.md`及项目五步法；已有题未锁稿→`laohan-chuangzuo/SKILL.md`及六步法。两阶段均按`laohan-chuangzuo/references/dual-engine-gemini.md`本项目覆盖完成独立双稿及负责人融合，保留真实原答/通道/裁决；selection_review/material_review按项目原有前置完成，不能由共同作者Gemini代独立审阅。
 
-写作产物和研究留在项目接入规格指定位置，STATUS绑定本期任务及准确路径/SHA。下一步需要的显示稿、发音稿、事实/内容审校、双引擎与锁定记录齐全后接第1步；“直到成片”等本期明确授权内持续执行，不把负责人锁定冒作Jeffrey亲自接受。仅候选供选或停工时停在对应边界，不自行扩展。
+写作产物和研究留在项目接入规格指定位置，STATUS绑定本期任务及准确路径/SHA。正式内容经两skill的`--motion`入口通过，显示稿、事实/内容审校、双引擎与锁定记录齐全后接第1步；发音稿在制作侧确定性派生；“直到成片”等本期明确授权内持续执行，不把负责人锁定冒作Jeffrey亲自接受。仅候选供选或停工时停在对应边界，不自行扩展。
 
 人物来源、原片实看及工具可用性在昂贵生成前准备；并行与恢复只按[依赖调度表](execution-map.md)，不按本节编号把全部工作机械串行。
 
 选题、写作、制作使用不同的新会话，真实创建/监督/接收按[阶段交接](stage-handoff.md)；本表是制作会话内的连续执行链，不把每条命令再拆窗口。LOCAL/Gemini独立原稿和负责人融合职责保持。
 
-## 第1步 文案定稿
+## 第1步 接收锁稿与派生发音稿
 
 - 输入：按项目接入规范保存的本期完整融合稿，具备真实锁定记录与本期制作授权；来源可为script-pool或既有episode只读候选。不从文件名推导接受，不把“未锁稿”当成本skill的反触发。
 - 产出：冻结显示稿（正文仅口播，不夹导演提示）+ 发音稿（由`motion/mastery/pronunciations.json`替换标识符读音得到，全文必须匹配；残留未映射`laohan-*`在合成对齐前及计划入口报红）。
@@ -20,10 +20,10 @@
 
 ## 第2步 最终配音（v3-05）
 
-- 合成方法真源：`~/Documents/声音资产/Jeffrey/数字人专属音色融合方法.md`（含风格参考池/质量门/UNVERIFIED边界，**执行前必读**，按其适用部分执行；不复制固定权重或历史参数）。项目AGENTS.md同款指针。
-- 产出：整稿WAV，登记路径/SHA/采样数；听感门语义按`DH-ROUTE.md` §一B现行文本执行（2026-10-28起Jeffrey授权默认通过、明确反馈问题才回退重合成并重绑——以该文件现行版本为准）。
+- 先进入`laohan-yinse/SKILL.md`的Jeffrey×Motion分支，再读其指向的合成适用部分；不进入其它博主训练或已退役产品双TTS实验。
+- 产出：整稿WAV，登记路径/SHA/采样数；听感授权与反馈后的处理只认`DH-ROUTE.md`§一B/§五，不在此复制授权快照。
 - 执行位置：pro6000-a服务器GPU合成，Mac保存和试听。
-- 每期必有新WAV；用户明确授权先出候选时记本次授权及听审PENDING，不能登记为最终已验收。
+- 新稿必有本期WAV；同一已验WAV的视觉返修按输入与回执绑定复用，接受记录按DH-ROUTE，不伪填听过。
 - 产品默认声音引擎实测淘汰（AI感），产品音轨仅作对齐参考永不入成片。
 
 ## 第3步 基础形象
@@ -133,7 +133,7 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 - 质量尺子C：每段首/中/尾原尺寸帧、全片1倍速及阿杜同类段并排复看，向同revision评分卡追加delivery实测和真实`human_review`；`human_review.verdict`为空不交付。没有相应观察能力不能填“已看”，沿V4如实交接未验部分。selection→delivery→outcome三阶段证据保持，未发布不造作品ID/数据。
 - 交付实测命令：`python3 motion/tools/score-timeline.py --stage delivery --timeline 本期实际参数.json --video 本期实际成片.mp4 --out 本期/qa/scorecard/当前revision.json`；参数必须与该片production记录一致，时长错配先核输入。已有stage不可覆盖，遵守质量尺子的revision/原证据保留要求。
 - 制作授权内可交已完成必要检查的candidate，接受状态保留PENDING；不得为了“完成”自动登记accepted-final。
-- Jeffrey实际听看接受→登记工程`deliveries/accepted-final.json`；发布预填=真实Chrome预填+页面回读。
+- 接受按项目合同§七登记工程`deliveries/accepted-final.json`；发布预填沿`laohan-fabu`的视频分流，真实页面回读与发表授权分开。
 - 用户否决即在STATUS.md登记，原件保留为失败证据。
 
 ## 已验素材复用规则

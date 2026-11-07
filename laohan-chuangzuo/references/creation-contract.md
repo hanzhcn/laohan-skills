@@ -1,4 +1,4 @@
-# 创作机械合同 Episode schema 4 / 独立 schema 3 + 多平台发布内容 schema 1
+# 创作机械合同 Episode及Motion正式 schema 4 / 独立 schema 3
 
 本文件定义 `laohan-chuangzuo` 的可执行完成条件。风格负责怎么说，本合同负责是否真的完成；两者不能互相替代。
 
@@ -8,11 +8,26 @@
 
 独立模式继续兼容schema 3 / `content-units-v1`，不伪造Episode人工记录。
 
+## Motion正式内容入口
+
+Motion由`laohan-motion`调度，①②正式内容留在`<项目>/script-pool/<任务>/formal/`，不创建episode或提前创建制作工程。目录内复用`00-选题.*`及其signals/candidates/source-health/抖音证据、`01-口播稿.md`、`02-创作工作稿/`、`12-发布/多平台发布内容.md`与`12-发布/观众资源/`的现有文件布局；这里的`12-发布`是内容资料目录，不是原生编排阶段回执。锁稿后制作工程按Motion接入规格引用这份内容真源，交付包复制时核SHA。
+
+```sh
+node ~/.agents/skills/laohan-xuanti/scripts/check-topic-contract.mjs --motion script-pool/<任务>/formal --base <项目绝对路径>
+node ~/.agents/skills/laohan-chuangzuo/scripts/check-script-contract.mjs --motion script-pool/<任务>/formal --base <项目绝对路径>
+```
+
+①使用schema4候选及唯一AUTO_SELECTED，signals保留兼容字段`episode=formal`并声明`workspace_kind=MOTION_FORMAL`。②使用schema4/content-units-v2、`phase=FORMAL`，实际先重跑①，再执行同一材料/六步法/内容单位/Sepia/TTS/四平台与资源判据；不接受候选的`NOT_STAGE_2_COMPLETE`冒充正式完成。原始研究与原答保留，正式目录的路径、身份或材料变化须重绑并取得对应真实复核，不能只改SHA搬用批准。阶段间新会话及root最终融合锁定按laohan-motion，validator不自动证明Gemini参与、真实会话隔离或用户接受。
+
+方向研究的真源仍是`<项目>/script-pool/series-research/<系列>/series-research.json`与其声明的packet；正式内容内`02-创作工作稿/系列研究摘录.json`须与原packet同SHA。路径根使用显式`--base`，不能按formal目录向上两层猜项目。来源复核用同一`check-research-source-contract.mjs --motion <formal> --decision <决策>`；该入口只换目录名称，不放宽来源判据。候选`--workspace/--candidate`仍只表示待选，原生`--episode`及历史独立模式保持原合同。
+
+Motion自主扫描不声明方向研究的series/episode/packet绑定或`research_source_contract`；这些声明只有进入canonical方向研究并实际验证后才可消费，不能把被忽略的字段写成BOUND。合法自主扫描仍按共同材料交接合同核验来源。
+
 ## 系列研究来源绑定
 
 当`00-选题.json.direction_research.mode=USER_DIRECTION_RESEARCH`时，当前episode必须存在`02-创作工作稿/系列研究摘录.json`，且选题中的`series_id`、`episode_id`、相对路径和SHA与该文件一致。
 
-`创作决策.json.research_source_contract`必须登记`status=BOUND`、同一资料包路径与SHA、实际使用的`claim_id`，并以`content_unit_claim_map`逐项覆盖全部正文内容单位。来源单位使用`origin=SOURCE_PACKET`并绑定资料包claim；Jeffrey自己的新增判断使用`origin=JEFFREY_ORIGINAL`、空claim数组和非空`original_basis`。不得把`EDITORIAL_INFERENCE`改写成平台事实，也不得让没有来源或个人依据的内容单位进入正文。
+`创作决策.json.research_source_contract`必须登记`status=BOUND`、同一资料包路径与SHA、实际使用的`claim_id`，并以`content_unit_claim_map`逐项覆盖全部正文内容单位。来源单位使用`origin=SOURCE_PACKET`并绑定资料包claim；Motion正式稿的本人亲历先由真实FIRSTHAND_RECORD及论证单位登记进canonical系列研究包，再复制同SHA packet，以`origin=SOURCE_PACKET`、`usage_mode=FIRSTHAND`绑定`JEFFREY_FIRSTHAND`主张；编辑判断用`EDITORIAL_INFERENCE`和对应INFERENCE映射，不冒本人亲历。Motion不使用旧`JEFFREY_ORIGINAL`采访分支；新增主张回研究包及材料/选题复核重绑，不靠任意original_basis放行。历史Episode的`JEFFREY_ORIGINAL`仍按其原采访exchange合同兼容。不得把`EDITORIAL_INFERENCE`改写成平台事实，也不得让没有来源或个人依据的内容单位进入正文。
 
 独立写作使用已验证单期资料包时可以只生成`script-pool/<series-id>/`草稿；稿件必须带非口播的“来源与时间点”附录，决策使用`series-draft-v1`并标记`DRAFT / NOT_STAGE_2_COMPLETE`，绑定packet SHA与series research SHA。它不伪造Episode人工记录，也不能宣称②完成。
 

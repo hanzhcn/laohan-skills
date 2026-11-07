@@ -1,6 +1,6 @@
 ---
 name: laohan-weigui
-version: 1.4
+version: 1.4.1
 description: 抖音文案违规检测。扫描口播稿中的引流词、极限词、医疗/金融承诺、低质标记、低俗色情、引战谩骂等9类违规风险，输出结构化报告+替换建议。Use when 用户说"检测违规""检查文案""看看有没有违规词""会不会被限流""发之前帮我看看"或给出任何要发布到抖音的文案要求检查。
 ---
 
@@ -25,7 +25,7 @@ description: 抖音文案违规检测。扫描口播稿中的引流词、极限�
 
 接收文案来源（文件路径或直接文本），提取纯文本内容。
 
-- **scan.mjs 路径结构耦合（2026-11-02 判例）**：`scripts/scan.mjs` 按 laohanvideo 的 episodes 结构读取 `episodes/<slug>/01-口播稿.md`，直接传其他路径会 throw（`缺 01-口播稿.md`）。其他项目（如 laowai 的 docs/scripts/epXX-*.md 扁平结构）需先抽取中文文本拼到临时 `episodes/<slug>/01-口播稿.md` 结构（可用 /tmp 临时目录）再跑，不能直接传文件路径。
+- **scan.mjs真实输入**：位置参数是含`01-口播稿.md`的目录，不要求目录名为episodes。Motion直接运行`node ~/.agents/skills/laohan-weigui/scripts/scan.mjs <项目绝对路径>/script-pool/<任务>/formal`，不伪建episode。扁平稿先把真实全文复制到本任务临时目录的`01-口播稿.md`，核源SHA再传目录；直接传文件路径会报`缺 01-口播稿.md`。报告仍绑定实际扫描稿，机械词库不代全文语义判断。
 - **完成条件：** 拿到纯文本字符串
 - **如果无法获取文案内容 → 停下来，告诉用户需要提供文件路径或直接粘贴文本**
 
@@ -49,7 +49,7 @@ description: 抖音文案违规检测。扫描口播稿中的引流词、极限�
 
 ### 3. 输出报告
 
-当参数含 `--episode episodes/<slug>` 时，报告只能写入 `episodes/<slug>/02-违规报告.md`，并以以下 frontmatter 开头；`script_hash` 是该期 `01-口播稿.md` 的 SHA-256。任何改稿都必须重跑本步骤，不能复用旧报告。
+`scan.mjs`用上节的位置参数目录，只输出同目录的`02-违规扫描.json`（稿件SHA、规则版本与命中项）。执行者据此逐项核上下文、裁决风险，再生成`02-违规报告.md`：Motion为`script-pool/<任务>/formal/02-违规报告.md`，原生为`episodes/<slug>/02-违规报告.md`。扫描JSON不代替正式报告或人工风险判断。报告以以下frontmatter开头；`script_hash`是实际扫描的`01-口播稿.md`全文SHA-256。任何改稿都必须重跑扫描与判断，不能复用旧报告。
 
 ```markdown
 ---

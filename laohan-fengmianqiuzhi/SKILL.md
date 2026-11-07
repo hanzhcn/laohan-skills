@@ -1,6 +1,6 @@
 ---
 name: laohan-fengmianqiuzhi
-version: 1.21.5
+version: 1.21.6
 description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用秋芝03KV视觉系统，选择1个语义最匹配的场景模板，只生成同一方案的3:4、4:3、16:9三张真实尺寸封面。Use when 用户说“生成封面提示词”“做封面”“封面”“封面图”“封面词”或工作流进入⑥。
 ---
 
@@ -12,8 +12,8 @@ description: 根据真人AI口播稿和 Jeffrey 身份参考图，默认采用�
 
 ## 输入与边界
 
-- `episode-config.schema_version`为4；身份reference或稿件绑定不满足时停止，不自行改合同。
-- 读取当前`01-口播稿.md`、`12-发布/多平台发布内容.md`和锁定的抖音发布信息。
+- 先按项目STATUS绑定路线与真实锁定稿。原生Remotion要求`episode-config.schema_version`为4；MotionGit不需要episode-config、不创建episode，读取本工程绑定的锁稿与融合文案，以下`05-封面/`落在`motion/projects/<本期>/publish/05-封面/`；执行下方相对路径命令前，把cwd设为已核对的本期工程`publish/`绝对目录，或将输入/输出都改用该目录下的绝对路径，发布文字按本工程publish清单定位，不猜原生`12-发布`路径。身份reference或稿件绑定不满足时停止，不自行改合同。
+- 读取上述已绑定的本期口播稿、四平台融合文案和锁定的抖音发布信息；原生路径为`01-口播稿.md`和`12-发布/多平台发布内容.md`，Motion按formal内容真源与工程publish清单定位。
 - 人物参考固定为本期`05-封面/reference/jeffrey-reference.jpg`，作为image reference传给生图模型。
 - 完整读取`references/douyin-cover-study.md`的秋芝部分、`references/qiuzhi-template-library.md`和`samples/baseline-cover-03-kv-prompt.txt`。
 - 不在prompt中写“模仿某博主风格”，只使用公开样本中可观察的版式规律。

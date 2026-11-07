@@ -1,10 +1,12 @@
 ---
 name: laohan-daoyan
-version: "2.1.2"
-description: 老韩AI真人口播新episode的V5.1导演预制入口。分为导演初稿与一次最终复审，共用director-state.md并停在WAITING_FOR_FOOTAGE；不剪辑、不写Remotion、不渲染。METHOD_LAB仅在用户明确要求历史路线时使用。
+version: "2.1.3"
+description: 老韩AI原生Remotion新episode的V5.1导演预制入口。MotionGit导演先分流laohan-motion；原生路线分导演初稿与最终复审，停在WAITING_FOR_FOOTAGE。METHOD_LAB仅在用户明确要求历史路线时使用。
 ---
 
 # 老韩V5.1导演预制
+
+先按项目STATUS和本期任务识别路线。MotionGit模板的“导演、分镜、新建一期、返修”进入 `../laohan-motion/SKILL.md` 的当前制作阶段，再读项目V4/PIPELINE；不创建episode，不套下文V5.1轻量舞台或WAITING_FOR_FOOTAGE。已接收的制作会话继续执行，不递归派发。下文仅适用原生Remotion。
 
 本Skill是新episode默认导演预制入口，但不是另一套方法真源。当前方法只读取视频项目中的：
 

@@ -1,10 +1,14 @@
 ---
 name: laohan-bianpai
-version: "1.25.1"
-description: 真人口播工作流编排器。根据 episode 已落盘产物识别当前步骤、验证前置 gate，并给出唯一下一步与对应 skill；不替代创作、剪辑、发布或复盘。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证 episode、开始下一环节。
+version: "1.25.2"
+description: 原生Remotion口播工作流编排器。MotionGit模板任务先分流laohan-motion；原生路线根据episode产物识别当前步骤、验证前置gate并给出下一步skill。Use when 用户说工作流下一步、检查本期进度、编排这期视频、当前做到哪、验证episode、开始下一环节。
 ---
 
 # 真人口播编排器
+
+## 先识别路线
+
+先按项目STATUS绑定本期路线。数字人×MotionGit模板任务，无论未选题、未锁稿、在制或返修，都进入 `../laohan-motion/SKILL.md`；不执行下方episode命令，也不为缺episode创建一个。已由主会话派发的Motion阶段会话按该skill的stage-handoff直接接续，不递归再开同阶段窗口。只有原生Remotion任务使用下文编排；人物源方向或“数字人”三字不能替代路线选择。
 
 编排器只根据 episode 里的真实文件路由。它不把聊天结论当完成，也不在脚本内 programmatic 调用其他 skill；宿主 Agent 读取唯一路由后执行对应 skill，再重跑 bianpai。
 
@@ -76,9 +80,9 @@ node ~/Documents/laohan-skills/laohan-bianpai/scripts/bianpai.mjs check --episod
 
 ## 不适用
 
-- 数字人×Motion模板制作（2026-10-27正式路线）→ 不创建episode、不路由①—⑭/CODEX_DIRECT⑧—⑪剪辑链；锁定稿后分发制作入口skill `laohan-motion`（编排骨架+漂移自检），方法真源仍按项目 `docs/视频生产入口与适配.md`「Motion正式路线接入」节：制作读 `motion/mastery/DH-ROUTE.md` §一A—一C + `PRODUCTION-METHOD-V4.md` + `PIPELINE.md`，工程建 `motion/projects/<日期-slug>/`，制作门=production-guard门链+check-delivery；⑫—⑭发布/运营两路共用。原生Remotion路线的episode编排不受影响。
+- 数字人×MotionGit模板任务 → 按上方路线分流从任何阶段进入 `laohan-motion`，不能要求先锁稿；项目交接与门边界只读 `docs/视频生产入口与适配.md` 的Motion节。
 - 写口播稿、发布 → 使用对应专业skill。06与09使用 `codex-direct-production` executor；07、08各自独立且条件式创建。⑧不路由人工候选审批：不确定KEEP，事实冲突回上游。
-- 只有一个独立文案、没有 episode 目录 → 先创建 episode，不猜文件位置。
+- 已明确原生Remotion、只有一个独立文案且没有episode目录 → 按该路线创建episode；Motion不适用，不猜文件位置。
 
 ## 反模式
 

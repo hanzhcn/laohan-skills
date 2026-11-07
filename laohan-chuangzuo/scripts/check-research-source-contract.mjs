@@ -9,6 +9,7 @@ const option = (name) => {
   return index === -1 ? null : args[index + 1];
 };
 const episodeArg = option('--episode');
+const motionArg = option('--motion');
 const decisionArg = option('--decision');
 const fail = (message) => {
   console.error('BLOCKED research source contract: ' + message);
@@ -18,11 +19,11 @@ const nonEmpty = (value) => typeof value === 'string' && value.trim().length > 0
 const uniqueNonEmpty = (values) => Array.isArray(values) && values.length > 0 && values.every(nonEmpty) && new Set(values).size === values.length;
 const shaFile = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
 
-if (!episodeArg || !decisionArg) {
-  console.error('用法: check-research-source-contract.mjs --episode episodes/<slug> --decision <创作决策.json>');
+if (Boolean(episodeArg) === Boolean(motionArg) || !(episodeArg || motionArg) || (episodeArg || motionArg).startsWith('--') || !decisionArg || decisionArg.startsWith('--')) {
+  console.error('用法: check-research-source-contract.mjs (--episode <episode> | --motion <正式内容目录>) --decision <创作决策.json>');
   process.exit(2);
 }
-const episode = realpathSync(resolve(episodeArg));
+const episode = realpathSync(resolve(episodeArg || motionArg));
 const decisionPath = realpathSync(resolve(decisionArg));
 if (!decisionPath.startsWith(episode + '/')) fail('创作决策必须位于当前episode');
 const readJson = (path, label) => {
@@ -52,7 +53,7 @@ const claimIds = claims.map((claim) => claim?.claim_id);
 if (!uniqueNonEmpty(claimIds) || claims.some((claim) => !nonEmpty(claim?.claim) || !['SOURCE_SUMMARY', 'EDITORIAL_INFERENCE', 'JEFFREY_FIRSTHAND'].includes(claim?.evidence_type) || !Array.isArray(claim?.source_ids) || (claim.evidence_type === 'SOURCE_SUMMARY' && !claim.source_ids.length) || !nonEmpty(claim?.fact_boundary))) fail('系列研究摘录claims缺证据类型、来源或事实边界');
 const claimById = new Map(claims.map((claim) => [claim.claim_id, claim]));
 const interviewPath = join(episode, '02-创作工作稿/反向采访.json');
-const interview = existsSync(interviewPath) ? readJson(interviewPath, '反向采访.json') : null;
+const interview = !motionArg && existsSync(interviewPath) ? readJson(interviewPath, '反向采访.json') : null;
 const exchangeCount = Array.isArray(interview?.exchanges) ? interview.exchanges.length : 0;
 
 const decision = readJson(decisionPath, '创作决策.json');
@@ -74,6 +75,7 @@ for (const item of mapping) {
     if (item.usage_mode === 'FIRSTHAND' && evidenceTypes.some((type) => type !== 'JEFFREY_FIRSTHAND')) fail('FIRSTHAND内容单位只能绑定JEFFREY_FIRSTHAND主张');
   }
   if (item.origin === 'JEFFREY_ORIGINAL') {
+    if (motionArg) fail('Motion不使用旧JEFFREY_ORIGINAL采访分支；将真实本人记录登记到canonical packet后，以SOURCE_PACKET/FIRSTHAND绑定JEFFREY_FIRSTHAND主张');
     const indexes = item.interview_exchange_indexes;
     if (item.usage_mode !== 'FIRSTHAND' || ids.length || !nonEmpty(item.original_basis) || !Array.isArray(indexes) || !indexes.length || indexes.some((index) => !Number.isInteger(index) || index < 1 || index > exchangeCount)) fail('JEFFREY_ORIGINAL必须绑定反向采访中的真实exchange索引且不能伪造来源claim');
   }

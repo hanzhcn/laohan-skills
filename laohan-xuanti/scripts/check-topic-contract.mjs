@@ -8,22 +8,28 @@ import {verifyCreationHandoff, creationFraming, handoffHash} from './creation-ha
 const args = process.argv.slice(2);
 const episodeIndex = args.indexOf('--episode');
 const workspaceIndex = args.indexOf('--workspace');
+const motionIndex = args.indexOf('--motion');
 const workspaceMode = workspaceIndex !== -1;
-const directoryArg = args[(workspaceMode ? workspaceIndex : episodeIndex) + 1];
+const motionMode = motionIndex !== -1;
+const directoryArg = args[(motionMode ? motionIndex : workspaceMode ? workspaceIndex : episodeIndex) + 1];
 const baseIndex = args.indexOf('--base');
-if ((episodeIndex !== -1) === workspaceMode || !directoryArg || directoryArg.startsWith('--') || (workspaceMode && (baseIndex === -1 || !args[baseIndex + 1]))) {
-  console.error('用法: check-topic-contract.mjs --episode episodes/<slug> | --workspace <研究目录> --base <项目根>');
+if ((motionMode && (args.length !== 4 || args.filter((x) => x === '--motion').length !== 1 || args.filter((x) => x === '--base').length !== 1)) || [episodeIndex, workspaceIndex, motionIndex].filter((index) => index !== -1).length !== 1 || !directoryArg || directoryArg.startsWith('--') || ((workspaceMode || motionMode) && (baseIndex === -1 || !args[baseIndex + 1] || args[baseIndex + 1].startsWith('--')))) {
+  console.error('用法: check-topic-contract.mjs --episode episodes/<slug> | --workspace <研究目录> --base <项目根> | --motion <script-pool/任务/formal> --base <项目根>');
   process.exit(2);
 }
 const episode = resolve(directoryArg);
-if (!existsSync(episode) || !statSync(episode).isDirectory() || (!workspaceMode && basename(dirname(episode)) !== 'episodes')) {
+if (!existsSync(episode) || !statSync(episode).isDirectory() || (!workspaceMode && !motionMode && basename(dirname(episode)) !== 'episodes')) {
   console.error('BLOCKED topic contract: episode必须位于episodes/<slug>');
   process.exit(1);
 }
 const root = realpathSync(episode);
-const projectRoot = workspaceMode ? realpathSync(resolve(args[baseIndex + 1])) : realpathSync(dirname(dirname(root)));
-if (workspaceMode && !root.startsWith(projectRoot + '/')) {
+const projectRoot = workspaceMode || motionMode ? realpathSync(resolve(args[baseIndex + 1])) : realpathSync(dirname(dirname(root)));
+if ((workspaceMode || motionMode) && !root.startsWith(projectRoot + '/')) {
   console.error('BLOCKED topic contract: 研究目录必须位于指定项目根内');
+  process.exit(1);
+}
+if (motionMode && (basename(root) !== 'formal' || dirname(dirname(root)) !== join(projectRoot, 'script-pool') || basename(dirname(root)) === 'series-research')) {
+  console.error('BLOCKED topic contract: Motion正式目录必须是指定项目内script-pool/<任务>/formal，不创建episode');
   process.exit(1);
 }
 const target = (relative) => {
@@ -45,6 +51,7 @@ const signals = readJson('00-选题-signals.json');
 const sources = Array.isArray(signals.sources) ? signals.sources : [];
 if (signals.schema_version !== 3 || signals.episode !== basename(episode)) block('signals必须是当前episode的schema 3');
 if (workspaceMode && signals.workspace_kind !== 'CANDIDATE_RESEARCH') block('workspace必须绑定当前候选研究身份');
+if (motionMode && signals.workspace_kind !== 'MOTION_FORMAL') block('Motion正式选题必须绑定MOTION_FORMAL身份，不能用研究短名单冒充');
 const discoveryMode = signals.discovery_mode || 'AUTONOMOUS_SCAN';
 if (!['AUTONOMOUS_SCAN', 'USER_DIRECTION_RESEARCH'].includes(discoveryMode)) block('discovery_mode非法');
 let validatedDirectionResearch = null;
@@ -91,6 +98,7 @@ const candidates = readJson('00-选题-candidates.json');
 const items = Array.isArray(candidates.candidates) ? candidates.candidates : [];
 if (![3, 4].includes(candidates.schema_version) || items.length < 2 || new Set(items.map((item) => item?.id)).size !== items.length) block('candidates必须是schema 3（历史合同）或schema 4（五步法合同）且至少两个唯一候选');
 if (workspaceMode && (candidates.schema_version !== 4 || existsSync(target('00-选题.json')) || existsSync(target('00-选题.md')) || items.some((item) => !['SHORTLISTED', 'REJECTED'].includes(item.disposition)))) block('待选研究必须是schema4短名单，不得提前定题或冒充历史合同');
+if (motionMode && candidates.schema_version !== 4) block('Motion正式选题必须使用schema4');
 const readyForWriting = (item) => item.disposition === 'AUTO_SELECTED' || (workspaceMode && item.disposition === 'SHORTLISTED');
 
 const validateDirectionPackets = () => {
@@ -109,8 +117,9 @@ const validateDirectionPackets = () => {
     if (packet.schema_version !== 1 || packet.series_id !== direction.series_id || packet.episode_id !== direction.episode_id || packet.series_research_sha256 !== signals.direction_research.series_research_sha256 || !Array.isArray(packet.claims) || !packet.claims.length) block('系列研究摘录未绑定当前series、episode、series_research_sha256和可用claims');
     const sourceEpisode = validatedDirectionResearch?.episodes?.find((item) => item?.id === direction.episode_id);
     if (!sourceEpisode?.packet_path) block('系列研究真源中不存在当前episode资料包');
-    const canonicalPacketPath = realpathSync(join(dirname(realpathSync(resolve(dirname(dirname(root)), signals.direction_research.series_research_path))), sourceEpisode.packet_path));
-    if (!canonicalPacketPath.startsWith(realpathSync(join(dirname(dirname(root)), 'script-pool/series-research')) + '/') || shaFile(packetPath) !== shaFile(canonicalPacketPath)) block('episode系列研究摘录必须与已验证原始packet逐字节一致');
+    const canonicalRoot = motionMode ? projectRoot : dirname(dirname(root));
+    const canonicalPacketPath = realpathSync(join(dirname(realpathSync(resolve(canonicalRoot, signals.direction_research.series_research_path))), sourceEpisode.packet_path));
+    if (!canonicalPacketPath.startsWith(realpathSync(join(canonicalRoot, 'script-pool/series-research')) + '/') || shaFile(packetPath) !== shaFile(canonicalPacketPath)) block('episode系列研究摘录必须与已验证原始packet逐字节一致');
   }
 };
 
@@ -439,6 +448,8 @@ if (autoSelected.length === 1) {
   if (pa.title_clickable !== true || (pa.worth_collecting !== true && !['DECISION_SUPPORT', 'SHARE_FOR_RECOGNITION', 'TIMELY_ACTION'].includes(pa.value_basis))) block('AUTO_SELECTED候选必须有兑现标题的观众价值；观点/时效题可登记决策、共鸣分享或即时行动依据');
   if (!existsSync(target('00-选题.json')) || !existsSync(target('00-选题.md')) || statSync(target('00-选题.md')).size === 0) block('AI自主定题后必须生成最终选题JSON与Markdown');
   const topic = readJson('00-选题.json');
+  if (motionMode && ((topic.direction_research?.mode === 'USER_DIRECTION_RESEARCH') !== (discoveryMode === 'USER_DIRECTION_RESEARCH') || (topic.direction_research?.mode && !['USER_DIRECTION_RESEARCH', 'AUTONOMOUS_SCAN'].includes(topic.direction_research.mode)))) block('Motion选题与signals研究mode不一致；方向材料必须经canonical系列研究验证');
+  if (motionMode && discoveryMode !== 'USER_DIRECTION_RESEARCH' && topic.direction_research && ['series_id', 'episode_id', 'packet_path', 'packet_sha256'].some((key) => Object.hasOwn(topic.direction_research, key))) block('Motion自主扫描不得声明方向研究packet绑定；使用canonical方向研究路径或移除未消费声明');
   if (topic.schema_version !== 4 || topic.selected_candidate_id !== selected.id || !nonEmpty(topic.audience) || !nonEmpty(topic.thesis) || !nonEmpty(topic.auto_selection_rationale)) block('最终选题必须是schema 4并绑定AUTO_SELECTED候选与自主定题理由');
   if (!Array.isArray(topic.evidence) || !uniqueNonEmpty(topic.evidence.map((x) => x?.id)) || !topic.evidence.every((x) => validEvidence(x) && selected.evidence_ids.includes(x.id) && JSON.stringify(x) === JSON.stringify(evidenceById.get(x.id))) || !topic.evidence.some((x) => x.source_type === 'PRIMARY')) block('最终选题必须绑定所选候选的同字节PRIMARY来源');
   if (!Array.isArray(topic.claim_evidence_map) || [...topic.claim_evidence_map.flatMap((claim) => claim.evidence_ids || []), ...(selected.platform_alignment?.evidence_ids || []), ...(selected.content_gap?.evidence_ids || [])].some((id) => !topic.evidence.some((ev) => ev.id === id))) block('最终选题来源必须覆盖全部主张映射与平台/内容缺口引用');
@@ -467,4 +478,4 @@ if (!autoSelected.length) block('短名单审查不是正式①完成；必须�
 
 if (discoveryMode === 'USER_DIRECTION_RESEARCH') validateDirectionPackets();
 
-console.log(`PASS redian topic contract schema=4 selected=${autoSelected.length ? autoSelected[0].id : 'none'} mode=${discoveryMode}`);
+console.log(`PASS redian topic contract schema=4 selected=${autoSelected.length ? autoSelected[0].id : 'none'} mode=${discoveryMode}${motionMode ? ' phase=MOTION_FORMAL' : ''}`);

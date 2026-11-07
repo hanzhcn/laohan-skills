@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### MOTION-SKILL-ENTRY-HARDENING-20261107 — 最强模型复审与Motion入口去错
+
+owner/唯一writer=Codex Motion root；隔离分支codex/motion-skill-entry-20261107。用户本轮授权仅Motion路线：再次审核并修改、删除错误做法、尽量各阶段用现有skills执行，防止其它模型走错方法。基线video ac64aab893fed4368580b58bb1d4ee14e41dc8e8 / skills 3ce146510928ffacda1cdfab8f9b7ba85fd50dde；不改原生Remotion路线、不新制作/升级模板/购买/外发。范围=当前生效Motion入口与引用闭环、真实命令误导与执行角色；保留历史证据及原片、授权/真实来源/接受边界。GPT-6-Astra最高纯推理max做开始/结果深审，GLM跨家族对抗；若涉及验证/复用语义按全局再交DS。验收=有证据的删错/路由收敛、受影响真实正反例/引用校验、独立结果裁决、正常hook与两仓集成。证据根=canonical视频motion/baselines/references/motion-skill-entry-hardening-20261107/。当前=最终Astra三角色、GLM与官方DS对抗结果全部逐项裁决；DS末项既有Remotion提示标签漏合并已补，97.342秒创作回归及独立6项定点确认通过，未决阻断0。最终109源manifest7dde599c…，原REVISE/失败保留；制作/速度/质量仍未新片实测。下一步=待容量owner释放canonical main/STATUS后fresh吸收其已审M4依赖修复及容量状态，正常hook、两仓集成push和清理。未正常提交/激活，不冒工程完成；回执=docs/handoff/MOTION_SKILL_ENTRY_HARDENING_20261107.md与证据根review-closeout.json。
+
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
 
 owner/writer=当前Codex root；main，起点876ed0c40600d6d4e1fdea9580e19ac48d9cee07。本批仅laohan-yinse第7步及旧CLI例补齐当前kb78769正数容量预算和`--`分隔，不生成/训练/删除资产，不改接受或费用边界。真实launcher/synth的21项CPU正负例与模型/参考完整SHA已核。最终GLM完整材料覆盖本文件，1439.674s有效REVISE唯一HIGH在独立video缓存root；本技能文档无finding，已按不变CLI/声音源码独立裁决DOC_SCOPE_CLOSED，不以产品待修项阻塞Motion技能源集成。文档候选2cb0b1acf049a2573dbb97730886aa05e8fc67be；公共runtime仍PRODUCTION PENDING、由产品同任务继续，未冒声音新WAV/生产已验。视频官方锁检查614项changed0，无本文件锁条目，不抢Motion唯一锁writer。证据统一在laohanagent `docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/`及本仓DOC_SCOPE_RECEIPT；本段仅文档source闭环。

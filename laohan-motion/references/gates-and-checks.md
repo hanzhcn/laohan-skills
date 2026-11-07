@@ -1,10 +1,10 @@
 # 门链、检查器与分支要点
 
-真源：`motion/mastery/PIPELINE.md`、`motion/mastery/current-release.json`、`motion/mastery/DELIVERY-CHECK-SPEC.md`。本文是执行浓缩，冲突时以真源为准。
+真源：项目`docs/工作区生产合同.md`、`motion/mastery/PIPELINE.md`与本期所用`motion/mastery/current-release.json`。本文是执行索引，字段与命令以实际工具/当前规格为准；`DELIVERY-CHECK-SPEC.md`是历史实现证据，不提供当前状态或任务指令。
 
 ## production-guard 六个 stage
 
-边界：guard只前置检查plan/render；原包 `read/new/setup/doctor/prepare/preview` 保持官方命令原样执行、不经guard（给它们套guard会被STAGE_COMMAND_MISMATCH拒绝）。
+边界：guard的六个stage如下；其中执行原包命令的stage只封装plan/render（pilot也是原包render）；原包 `read/new/setup/doctor/prepare/preview` 保持官方命令原样执行、不经guard（给它们套guard会被STAGE_COMMAND_MISMATCH拒绝）。
 
 | stage | 前置 | 检查/动作 | 产出 |
 |---|---|---|---|
@@ -82,4 +82,4 @@ PATH="/opt/homebrew/bin:$PATH" python3 motion/tools/check-delivery.py \
 
 - 交接点：锁定稿→`motion/projects/<日期-slug>/`，登记稿件/声音/口型/导演/交付身份及SHA；交接记录落工程目录或STATUS对应任务区。
 - 豁免：new-episode/production-route/orchestrate-step/0—⑭回执/0号门/episode归档要求。
-- 共用门照常：发布信息+#AI新星计划、违规检测、候选接受与发布授权、远程算力产物纪律、Git纪律；⑫—⑭发布/运营两路共用。
+- 共用门照常：发布信息+#AI新星计划、违规检测、候选接受与发布授权、远程算力产物纪律、Git纪律；发布机制与真实回执共用；Motion观察按laohan-yunying的Motion分支交回STATUS，不冒原生⑬/⑭或Cheat完成。

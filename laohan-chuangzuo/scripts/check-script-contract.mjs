@@ -13,17 +13,19 @@ const option = (name) => {
   return index === -1 ? null : args[index + 1];
 };
 const episodeArg = option('--episode');
+const motionArg = option('--motion');
 const scriptArg = option('--script');
 const decisionArg = option('--decision');
 const baseArg = option('--base');
 const seriesDraftArg = option('--series-draft');
 const candidateMode = args.includes('--candidate');
-if (candidateMode && (episodeArg || seriesDraftArg)) throw new Error('候选模式不能冒充Episode或系列正式合同');
+if (candidateMode && (episodeArg || seriesDraftArg || motionArg)) throw new Error('候选模式不能冒充Episode或系列正式合同或Motion正式合同');
 
 const fail = (message) => {
   console.error('BLOCKED chuangzuo script contract: ' + message);
   process.exit(1);
 };
+if (args.includes('--motion') && (args.length !== 4 || args.filter((x) => x === '--motion').length !== 1 || args.filter((x) => x === '--base').length !== 1 || !motionArg || motionArg.startsWith('--') || !baseArg || baseArg.startsWith('--') || episodeArg || seriesDraftArg || scriptArg || decisionArg)) fail('Motion正式模式只接受--motion <script-pool/任务/formal> --base <项目根>，不可混用其它模式');
 const requireFile = (path, label) => {
   if (!existsSync(path) || !statSync(path).isFile() || statSync(path).size === 0) fail('缺非空 ' + label);
   return realpathSync(path);
@@ -52,8 +54,8 @@ const checkCreationBinding = (handoff, unitIds, visualAnchors = []) => {
 let base;
 let scriptPath;
 let decisionPath;
-if (episodeArg) {
-  base = resolve(episodeArg);
+if (episodeArg || motionArg) {
+  base = resolve(episodeArg || motionArg);
   scriptPath = join(base, '01-口播稿.md');
   decisionPath = join(base, '02-创作工作稿/创作决策.json');
 } else if (scriptArg && decisionArg) {
@@ -61,7 +63,7 @@ if (episodeArg) {
   scriptPath = resolve(scriptArg);
   decisionPath = resolve(decisionArg);
 } else {
-  console.error('用法: check-script-contract.mjs --episode episodes/<slug> | --script <script.md> --decision <decision.json> [--base <root>] [--series-draft <episode-packet.json>]');
+  console.error('用法: check-script-contract.mjs --episode episodes/<slug> | --motion <script-pool/任务/formal> --base <项目根> | --script <script.md> --decision <decision.json> [--base <root>] [--series-draft <episode-packet.json>]');
   process.exit(2);
 }
 
@@ -69,6 +71,8 @@ const baseReal = requireFile(scriptPath, '口播稿').startsWith(realpathSync(ba
 if (!baseReal || !requireFile(decisionPath, '创作决策.json').startsWith(baseReal + '/')) fail('稿件和决策必须位于指定根目录内');
 scriptPath = realpathSync(scriptPath);
 decisionPath = realpathSync(decisionPath);
+const motionProjectRoot = motionArg ? realpathSync(resolve(baseArg)) : null;
+if (motionArg && (basename(baseReal) !== 'formal' || dirname(dirname(baseReal)) !== join(motionProjectRoot, 'script-pool') || basename(dirname(baseReal)) === 'series-research')) fail('Motion正式目录必须是指定项目内script-pool/<任务>/formal，不创建episode');
 
 let decision;
 try {
@@ -76,8 +80,14 @@ try {
 } catch {
   fail('创作决策.json 不是合法 JSON');
 }
+if (motionArg) {
+  if (decision.phase !== 'FORMAL' || [decision.stage_completion, decision.stage_status, decision.status].some((value) => ['NOT_STAGE_2_COMPLETE', 'AWAITING_JEFFREY_SELECTION'].includes(value))) fail('Motion正式文案必须phase=FORMAL，待选稿不能冒充正式完成');
+  const topicValidator = resolve(import.meta.dirname, '../../laohan-xuanti/scripts/check-topic-contract.mjs');
+  const topicResult = spawnSync('node', [topicValidator, '--motion', baseReal, '--base', motionProjectRoot], {encoding: 'utf8'});
+  if (topicResult.status !== 0) fail((topicResult.stderr || topicResult.stdout || 'Motion正式选题验证失败').trim());
+}
 const script = readFileSync(scriptPath, 'utf8').replace(/\r\n/g, '\n');
-const title = script.match(/^#\s+(.+)$/m)?.[1]?.trim();
+const title = (motionArg ? script.split('\n')[0].match(/^#\s+(.+)$/) : script.match(/^#\s+(.+)$/m))?.[1]?.trim();
 if (!title) fail('稿件第一行必须是非空一级标题');
 
 if (seriesDraftArg) {
@@ -205,6 +215,9 @@ const titleLineEnd = script.indexOf('\n');
 const shootingNotesIndex = script.search(/^##\s+拍摄备注\s*$/m);
 const bodyEnd = candidateMode ? script.length : Math.min(publishHeading.index, shootingNotesIndex >= 0 ? shootingNotesIndex : publishHeading.index);
 const body = script.slice(titleLineEnd + 1, bodyEnd);
+if (motionArg && body.split('\n').some((line) => /^\s*(?:#{1,6}\s|>|---|```|~~~)/u.test(line))) fail('Motion口播正文不得含会被忽略的Markdown结构行；导演说明另放制作文件');
+if (motionArg && body.split('\n').some((line) => /^\s*(?:(?:[-*+]|\d+[.)])\s+)?[\[【（(]\s*(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示|导演备注)(?=[\s\]】）):：])/iu.test(line))) fail('Motion口播正文不得含括号式导演提示');
+if (motionArg && body.split('\n').some((line) => /^\s*(?:(?:[-*+]|\d+[.)])\s+)?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示|导演备注)[ \t]*[:：]/iu.test(line))) fail('Motion口播正文不得含独立导演标签');
 const forbiddenDirectorCue = body.split('\n').find((line) => /^\s*>?\s*(?:\[?(?:B[\s-]?Roll|字幕|画面|镜头|转场|动画|特效|Remotion|执行提示|镜头提示|动画提示|Remotion提示)[：:])/iu.test(line));
 if (forbiddenDirectorCue) fail('口播正文不得混入导演或Remotion提示: ' + forbiddenDirectorCue.trim());
 const paragraphs = body
@@ -234,7 +247,7 @@ if (!descriptionHashtags.includes('#AI新星计划')) fail('抖音视频介绍�
 if ((videoDescription.match(/[？?]/g) || []).length !== 1) fail('抖音视频介绍必须且只能包含一个明确互动问题');
 }
 
-if (episodeArg || candidateMode) {
+if (episodeArg || motionArg || candidateMode) {
   if (decision.schema_version !== 4 || decision.contract_version !== 'content-units-v2') fail('Episode创作决策必须使用 schema 4 / content-units-v2');
   const topicPath = candidateMode ? researchCandidatesPath : join(base, '00-选题.json');
   const outlinePath = candidateMode ? resolve(base, decision.outline_path || '') : join(base, '02-创作工作稿/大纲.md');
@@ -247,8 +260,9 @@ if (episodeArg || candidateMode) {
     fail('选题不是合法JSON');
   }
   if (topic.schema_version === 4) {
+    if (motionArg && (decision.topic_thesis !== topic.thesis || decision.audience !== topic.audience || decision.content_form !== topic.content_form || decision.hypothesis_id !== topic.experiment?.hypothesis_id || decision.hook_contract?.packaging_title_direction !== topic.packaging_assessment?.title_direction)) fail('Motion正式创作必须绑定当前选题的论点、受众、形态、假设与标题承诺');
     // The formal episode path consumes the same material contract, independently of --candidate.
-    creationHandoff = checkCreation(topic, candidateMode ? baseReal : realpathSync(resolve(base, '../..')), candidateMode ? resolve(base, decision.topic_research_contract.workspace_path) : baseReal);
+    creationHandoff = checkCreation(topic, candidateMode ? baseReal : motionProjectRoot || realpathSync(resolve(base, '../..')), candidateMode ? resolve(base, decision.topic_research_contract.workspace_path) : baseReal);
     // 2026-09-17五步法合同：AI自主定题，无采访/大纲确认门槛
     if (!candidateMode && (!nonEmpty(topic.selected_candidate_id) || !nonEmpty(topic.auto_selection_rationale))) fail('schema 4选题必须绑定AUTO_SELECTED候选与自主定题理由');
     if (candidateMode && decision.outline_sha256 !== shaFile(outlinePath)) fail('候选大纲必须绑定当前SHA');
@@ -360,9 +374,10 @@ if (episodeArg || candidateMode) {
     const hook = decision.hook_contract || {};
     if (decision.topic_sha256 !== shaFile(topicPath) || decision.interview_sha256 !== shaFile(interviewPath) || decision.outline_sha256 !== shaFile(outlinePath) || decision.outline_approval_sha256 !== shaFile(approvalPath) || hook.designed_after_outline_acceptance !== true || hook.outline_accepted_at !== approval.accepted_at) fail('历史schema 4必须绑定选题、采访、大纲、确认，并证明钩子在大纲确认后设计');
   }
+  if (motionArg && topic.direction_research?.mode !== 'USER_DIRECTION_RESEARCH' && decision.research_source_contract != null) fail('Motion自主扫描不得声明未消费的research_source_contract；方向packet须经canonical研究路径验证');
   if (topic.direction_research?.mode === 'USER_DIRECTION_RESEARCH') {
     const researchValidator = resolve(import.meta.dirname, 'check-research-source-contract.mjs');
-    const researchResult = spawnSync('node', [researchValidator, '--episode', base, '--decision', decisionPath], {encoding: 'utf8'});
+    const researchResult = spawnSync('node', [researchValidator, motionArg ? '--motion' : '--episode', base, '--decision', decisionPath], {encoding: 'utf8'});
     if (researchResult.status !== 0) fail((researchResult.stderr || researchResult.stdout || '系列研究来源绑定失败').trim());
   }
 } else if (decision.schema_version !== 3 || decision.contract_version !== 'content-units-v1') {
@@ -391,14 +406,14 @@ const descriptionEvidenceCorpus = `${paragraphs.join('\n')}\n${videoDescription}
 if (publish.description_evidence.some((evidence) => !descriptionEvidenceCorpus.includes(evidence))) fail('视频介绍证据必须来自正文或介绍');
 }
 
-if (episodeArg) {
+if (episodeArg || motionArg) {
   const multiPath = join(base, '12-发布/多平台发布内容.md');
   const multiReal = requireFile(multiPath, '多平台发布内容.md');
   if (!multiReal.startsWith(baseReal + '/')) fail('多平台发布内容必须位于指定episode内');
   const multi = readFileSync(multiPath, 'utf8').replace(/\r\n/g, '\n');
   if (!multi.includes(`- 源口播稿SHA256：${shaFile(scriptPath)}`)) fail('多平台发布内容未绑定当前口播稿SHA-256');
-  const headings = [...multi.matchAll(/^##\s+(抖音|视频号|小红书|哔哩哔哩)\s*$/gm)];
-  if (headings.length !== 4 || new Set(headings.map((item) => item[1])).size !== 4) fail('多平台发布内容必须且只能包含四个平台');
+  const headings = [...multi.matchAll(motionArg ? /^[ \t]*##[ \t]+([^\n]+?)[ \t]*$/gm : /^##\s+(抖音|视频号|小红书|哔哩哔哩)\s*$/gm)];
+  if (headings.length !== 4 || new Set(headings.map((item) => item[1])).size !== 4 || headings.some((item) => !['抖音', '视频号', '小红书', '哔哩哔哩'].includes(item[1]))) fail('多平台发布内容必须且只能包含四个平台');
   const blocks = new Map(headings.map((item, index) => [item[1], multi.slice(item.index + item[0].length, headings[index + 1]?.index ?? multi.length)]));
   const subsection = (platform, name) => {
     const block = blocks.get(platform) || '';
@@ -543,7 +558,7 @@ for (const device of voiceDevices) {
 }
 
 const languageReview = decision.language_review_contract;
-const expectedSnapshotPath = episodeArg
+const expectedSnapshotPath = episodeArg || motionArg
   ? '02-创作工作稿/humanizer-input.md'
   : relative(baseReal, join(dirname(scriptPath), basename(scriptPath, '.md') + (candidateMode ? '.sepia-input.md' : '.humanizer-input.md')));
 try { verifySepiaReview({review: languageReview, base, spoken: paragraphs.join('\n'), unitIds, snapshotPath: expectedSnapshotPath}); }

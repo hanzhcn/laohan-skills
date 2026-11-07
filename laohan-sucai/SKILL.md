@@ -1,10 +1,16 @@
 ---
 name: laohan-sucai
-version: "1.2.1-candidate"
+version: "1.2.2-candidate"
 description: B-roll 素材供应器。读取⑨导演的 source manifest，搜索、下载、抽帧并记录可授权现实素材；只有视觉复核通过的资产可交⑪动画生产。Use when 用户说配素材、找B-roll、补真实场景、下载素材、审核素材、进入⑩素材，或⑨导演将 beat 路由为 BROLL_STOCK。
 ---
 
 # B-roll 素材供应器
+
+MotionGit模板任务先进入 `../laohan-motion/SKILL.md` 的当前制作阶段，按项目V4“素材、速度与真实边界”和PIPELINE“当前契约与更新发现”使用所选包的素材槽及已授权检索/已有素材；下方episode source-manifest、PROOF登记和素材晋升命令不适配Motion。不得为调用本skill伪建episode或原生⑨/⑩回执；缺required素材按Motion现行方法回方案。已接收制作会话直接续接，不重新派发同阶段。
+
+Motion已批准的图库B-roll需求可复用现有脚本：把实际需求映射为 `broll_requests` 数组，每项保留 `beat_id/source_mode=BROLL_STOCK/visual_need/must_not_imply` 和所需 `query_terms`，保存本工程资产目录的请求文件。使用共享技能入口 `node ~/.agents/skills/laohan-sucai/scripts/sucai.mjs search --source <请求文件绝对路径> --out <本工程资产目录绝对路径>`，后续download/verify/report均使用这次输出清单；先实际视觉检查再记verify。最终采用文件按真实路径/SHA绑定本期 `director_assets` 与模板素材槽，不能把请求格式映射称作原生⑨通过。
+
+真实操作/产品PROOF、模板自带素材或templateApi需求回其原入口，不硬塞图库请求。Motion分支到资产交接结束，不执行下方原生晋升/登记命令；required素材缺失仍回方案。
 
 只为已经判定为 BROLL_STOCK 的现实场景找素材。它不决定动画、不把库存素材伪装成事实、不合成视频。V5默认采用“永久本地素材Top-K＋网络高权重多样性”策略：本地catalog负责快速复用，Pexels/Pixabay/Coverr仍并行提供新候选；只下载最终选择项。
 

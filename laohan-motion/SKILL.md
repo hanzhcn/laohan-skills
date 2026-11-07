@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "2.1.0"
+version: "2.2.0"
 description: 老韩数字人×Motion视频的端到端入口。承接一句创作需求或在制任务，串联共同选题、LOCAL/Gemini全部文案双稿融合、本人形象、v3-05配音、同声口型、模板导演、真实动态样段、异模型复核、渲染与候选交付；按依赖并行与已验输入恢复。用户说“做motion视频”“从选题到成片”“继续motion制作”“motion提速”或锁稿后选Motion时使用。仅原生Remotion、声音训练或单独发布不走本链。
 ---
 
@@ -25,7 +25,7 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 
 ## 阶段分会话，制作内部连续
 
-端到端任务默认由主会话统筹，①选题、②写作、③—⑦制作分别交给不同的新会话；不把同一会话换标题、换目录或按阶段读文件称为隔离。LOCAL指该阶段的本地作者，Gemini仍独立共同创作；主会话负责人root唯一负责融合定稿和锁定，写作会话只交完整原稿与证据，不自行锁稿。已有锁稿从新制作会话接入，同一制作会话连续完成模板学习、导演、样段和渲染，不逐命令开窗。
+端到端任务默认由主会话统筹，①选题、②写作、③—⑦制作分别交给不同的新会话；不把同一会话换标题、换目录或按阶段读文件称为隔离。LOCAL指该阶段的本地作者，Gemini仍独立共同创作；写作会话先封存双方原稿，再交融合建议稿、逐项取舍及六步法/Sepia审校证据。主会话负责人root保留唯一最终融合裁决与锁定权；root改变文字后，把受影响文本送回写作会话重新审校再锁定，不能拿建议稿的旧检查签新稿。写作劳动与制作分开，root仍接触内容，不宣称全链完全盲态。已有锁稿从新制作会话接入，同一制作会话连续完成模板学习、导演、样段和渲染，不逐命令开窗。
 
 主会话按[阶段交接](references/stage-handoff.md)实际创建、监督并回读接收回执，不能把提示词交给Jeffrey手工搬运。交接完整冻结产物与约束，不转抄历史聊天、废弃稿或作者自评；必读合同/STATUS及共享记忆的暴露如实登记。分会话减少无关上下文，不保证消除先入影响，也不替代独立复核。当前宿主无法创建新会话时明确受阻阶段，只做不依赖它的准备，不静默回到一窗全做。
 
@@ -37,8 +37,9 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 |---|---|
 | 开始/恢复 | 上述共同必读；`docs/视频生产入口与适配.md`的Motion与选题接入；`docs/文档真源与状态.md`；`docs/HARNESS_COMPATIBILITY.md`命中宿主；交付要求 |
 | ①选题、②写作 | `laohan-xuanti/SKILL.md`、`laohan-chuangzuo/SKILL.md`及其命中五步/六步方法；`../laohan-chuangzuo/references/dual-engine-gemini.md`本项目覆盖；四平台发布规格的文字约束 |
-| ③声音/人物、④口型 | `motion/mastery/DH-ROUTE.md`§一A—一D、`pronunciations.json`；`~/Documents/声音资产/Jeffrey/数字人专属音色融合方法.md`；分块工具说明及真实help |
+| ③声音/人物、④口型 | `laohan-yinse/SKILL.md`的Jeffrey×Motion分支，再读其指向的合成适用部分；`motion/mastery/DH-ROUTE.md`§一A—一D、`pronunciations.json`；分块工具说明及真实help |
 | ⑤模板/导演至⑦交付 | `motion/mastery/PRODUCTION-METHOD-V4.md`、`PIPELINE.md`、`current-release.json`、`QUALITY-SCORECARD-20261104.md`；先看当前模板实际演示/分支契约，按V4参考顺序形成初步方案后再查命中旧设计经验 |
+| 专业步骤 | ②违规读`laohan-weigui/SKILL.md`；④封面读`laohan-fengmianqiuzhi/SKILL.md`；⑥/⑦独立审核读`laohan-review/SKILL.md`；收尾读`laohan-shouwei/SKILL.md`；获得本期发布授权再读`laohan-fabu/SKILL.md` |
 | 具体命令/排障 | [制作执行细节](references/full-chain.md)、[门与字段](references/gates-and-checks.md)命中部分；仍以PIPELINE及本包argv为准 |
 
 ## 一条任务链
@@ -48,14 +49,18 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 | 节点 | 做什么 | 主要技能/工具 | 产物或边界 |
 |---|---|---|---|
 | ① 共同选题 | 实时研究、同一中立候选包，LOCAL/Gemini独立排序，主会话按原合同整合；独立选题/材料审阅照常 | xuanti、Gemini、现有topic检查 | 选题裁决、来源、材料交接；用户仅要候选时停在候选 |
-| ② 全部文案 | 写作会话交双方完整口播、标题、四平台正文/标签、封面及已知画面文字原稿和证据；主会话唯一融合，按六步法/Sepia/内容审校锁定，不由写作会话自行锁稿 | chuangzuo、双引擎方法、现有script检查 | 完整双原稿、逐项融合、显示稿/发音稿及锁定记录 |
-| ③ 真实输入 | 昂贵生成前实看唯一允许目录的本人原片；合成本期v3-05完整WAV，核发音与漏重词 | 合同§五、专属音色方法 | 原片路径/SHA、最终WAV路径/SHA/采样数；听感状态按DH-ROUTE |
-| ④ 口型与准备 | 最终WAV驱动现有分块runner；可并行本地声学对齐、模板研究和已融合封面制作 | same-voice-local、run-same-voice-remote、align-source、封面skill | 完整人物、接缝/时钟与词源；共享GPU和TTS输入串行 |
-| ⑤ 模板与导演 | 全库轻刷新、A能力实证、整段内容编舞；真实素材/时间齐后direct，B节拍预估后plan→preview→动态样段 | V4、PIPELINE、production-guard、score-timeline | 所选分支的真实表达、当前revision与样段；不靠快切凑动作 |
-| ⑥ 规划终点 | review-brief携完整目标/输入/实际动态，异模型对抗审后负责人裁决；通过才全片render | guard、独立复核通道 | 绑定本期样段的pilot_review与渲染回执 |
+| ② 全部文案 | 写作会话交双方全部原稿、融合建议稿与六步法/Sepia审校；主会话最终裁决，变更回写作侧复验后锁定 | laohan-chuangzuo、Sepia、laohan-weigui、双引擎方法与正式script检查 | 完整双原稿、逐项融合、显示稿与锁定记录 |
+| ③ 真实输入 | 昂贵生成前实看唯一允许目录的本人原片；合成本期v3-05完整WAV，核发音与漏重词 | laohan-yinse的Motion分支、合同§五、DH-ROUTE | 原片路径/SHA、最终WAV路径/SHA/采样数；听感状态按DH-ROUTE |
+| ④ 口型与准备 | 最终WAV驱动现有分块runner；可并行本地声学对齐、模板研究和已融合封面制作 | same-voice-local、run-same-voice-remote、align-source、laohan-fengmianqiuzhi | 完整人物、接缝/时钟与词源；共享GPU和TTS输入串行 |
+| ⑤ 模板与导演 | 全目录只读轻筛与版本核对、A能力实证、整段内容编舞；真实素材/时间齐后direct，B节拍预估后plan→preview→动态样段 | V4、PIPELINE、production-guard、score-timeline | 所选分支的真实表达、当前revision与样段；不靠快切凑动作 |
+| ⑥ 规划终点 | review-brief携完整目标/输入/实际动态，异模型对抗审后负责人裁决；通过才全片render | guard、laohan-review | 绑定本期样段的pilot_review与渲染回执 |
 | ⑦ 结果与交付 | 核实际MP4、C完整视觉复看和独立结果对抗；delivery/check-delivery后核三封面/四平台文案/字幕，交本地候选包 | guard、检查器、现有交付入口 | human_review有真实结论、工程deliveries+桌面副本/SHA；Jeffrey接受、发布另记 |
 
 首次完整执行按[依赖、恢复与计时](references/execution-map.md)调度，并按阶段交接留下真实会话身份；命令细节按full-chain，不能把本表当成已完成证据。
+
+①待选研究用xuanti的`--workspace`，②待选稿用chuangzuo的`--candidate`；两者不能冒正式完成。正式①②统一使用各自的`--motion script-pool/<任务>/formal --base <项目根>`，文件布局与共同判据见`../laohan-chuangzuo/references/creation-contract.md`的Motion正式内容入口。正式script会重跑正式topic；不伪建episode或回退schema3求绿。发音稿由制作侧按pronunciations从锁定显示稿确定性派生，已有版本先核全文一致；不另作一轮创作。
+
+制作所需视觉素材进入`laohan-sucai`的Motion分支；研究原文/原视频及转录走chuangzuo指向的xiazai与large-v3；现有`laohan-daoyan/laohan-bianpai`直入Motion时均回此路由，已接收的制作会话直接按V4执行，不递归派发。封面用`laohan-fengmianqiuzhi`，独立审核用`laohan-review`，收尾用`laohan-shouwei`；实际获本期发布授权后才进`laohan-fabu`。专业skill只承接其适用职责，不把原生episode命令套到Motion。
 
 ## 提速的执行约束
 

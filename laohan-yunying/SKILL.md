@@ -1,12 +1,20 @@
 ---
 name: laohan-yunying
-version: "1.3.1"
+version: "1.3.2"
 description: 抖音数据与评论编排器。读取 Jeffrey 手动发布后登记的作品记录，回收作品数据和评论洞察，并把真实数据交给 cheat-on-content 复盘。Use when 用户说抓作品数据、复盘评论、登记手动发布结果、进入⑬数据或⑭评论。
 ---
 
 # 抖音数据与评论编排器
 
 本 skill 不发布、不准备发布文案、不代替 Jeffrey 点击平台。它只登记人工确认或本机Chrome适配器已经验证的发布事实，保存数据和评论证据；`cheat-on-content` 是预测与复盘引擎。
+
+## Motion分支（先于下方原生episode工作流）
+
+Motion任务由 `../laohan-motion/SKILL.md` 接续：发布授权及真实平台回执按视频项目 `docs/四平台发布规格.md` 与冻结发布包核对，预填本身不算发布。不调用下方 `register-cheat-publish-evidence.mjs episodes/<slug>`，也不伪建episode、原生prediction或⑫—⑭完成记录。
+
+两平台数据观察只用已存在的 `python3 motion/tools/observe-published.py --record motion/projects/<slug>/qa/operations/publish-verification.json`。先取得真实抖音aweme_id、视频号objectId及各自发布时间；缺任一绑定则保持未启动，可保留已取得的单平台事实，不能补造第二平台。首次观察冻结目标，T+1/3/7从各自发布时间派生；缺数据保留失败，不能填0。兼容脚本仍转发canonical观察器，不能从worktree启动正式观察。
+
+本分支到真实观察记录和本任务STATUS交接即止。当前没有Motion到原生Cheat验收的完整适配，不宣称⑬/⑭完成；评论只读采集和新选题仍按已有明确任务接续，不自动回复、发布或重启过期调度。下方工作流仅供原生episode。
 
 ## 工作流
 
