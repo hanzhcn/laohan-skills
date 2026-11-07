@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "canonical_branch": "main",
+  "integration": "direct",
+  "source_line_limit": 1500
+}

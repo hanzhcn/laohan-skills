@@ -9,3 +9,6 @@ GLM-5.3[1m] max独立最终对抗复核APPROVE；反例覆盖漏平台、漏正�
 现役运行锁614文件/30执行器检查通过；视频87/87全实跑通过，输入稳定。未新增软件源码或服务部署，部署NOT_APPLICABLE。其它宿主未来自动触发、未来稿件质量和用户接受未由本轮证明。
 
 本次按main/direct明确授权正常提交并push；实际完整提交SHA、fresh canonical和清洁状态以视频工程qa/avatar-reselection-r1/final-closeout.json及skills-final-audit.txt为准。已审三文件保持冻结SHA，附本结果文档与STATUS，禁止混入媒体和凭据。
+
+
+收尾适配：两旧仓缺`.governance/project.json`使strict integration检查真实exit2；仅按已有main/direct和全局默认1500补四字段机器声明。GLM-5.3 max/128000/1800单次129.162秒VALIDATED/end_turn/APPROVE，A1—A6对抗原答保留；两仓未提交声明实测均拒绝“项目策略必须已经提交”，未以文件存在签通过。无审计/hook/全局规则变更。声明SHA `14e8cda59c07f84d2ab399e0657f362edcf859ff09e3efd306c996757fc70439`，实际正常提交及fresh严格审计以本期final-closeout.json为准。
