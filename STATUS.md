@@ -2,10 +2,6 @@
 
 ## 当前任务
 
-### MOTION-METHOD-DEEP-AUDIT-20261107 — Motion 2.1.0 制作方法与新会话修正
-
-owner/唯一writer=Codex Motion root；隔离分支codex/motion-method-20261107，基线876ed0c40600d6d4e1fdea9580e19ac48d9cee07。仅改laohan-motion默认阶段分会话、模板查新/读透与现有样段复用指针；原制作门/双稿/接受边界保留。真实新会话接收探针已核身份/SHA/nonce与缺授权拒绝，local扫描通过；GLM规划已裁决，结果GLM/DeepSeek交叉及owner消歧增量已通过，两仓正常集成进行中。完整证据见[本轮回执](docs/handoff/MOTION_METHOD_DEEP_AUDIT_20261107.md)；新片质量/速度与三阶段生产未测，不动其他声音技能在途提交。
-
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
 
 owner/writer=当前Codex root；main，起点876ed0c40600d6d4e1fdea9580e19ac48d9cee07。本批仅laohan-yinse第7步及旧CLI例补齐当前kb78769正数容量预算和`--`分隔，不生成/训练/删除资产，不改接受或费用边界。真实launcher/synth的21项CPU正负例与模型/参考完整SHA已核。最终GLM完整材料覆盖本文件，1439.674s有效REVISE唯一HIGH在独立video缓存root；本技能文档无finding，已按不变CLI/声音源码独立裁决DOC_SCOPE_CLOSED，不以产品待修项阻塞Motion技能源集成。文档候选2cb0b1acf049a2573dbb97730886aa05e8fc67be；公共runtime仍PRODUCTION PENDING、由产品同任务继续，未冒声音新WAV/生产已验。视频官方锁检查614项changed0，无本文件锁条目，不抢Motion唯一锁writer。证据统一在laohanagent `docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/`及本仓DOC_SCOPE_RECEIPT；本段仅文档source闭环。
@@ -82,6 +78,8 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
+**2026-11-07·MOTION-METHOD-DEEP-AUDIT-20261107 方法深审与2.1.0修正已交付。** 当前官网106展示条目/六冻结包均有公开新版已分层取证，未升级；历史六pilot108.36秒/123.2秒仅媒体覆盖，完整render elapsed未知，不虚报提速。选题/写作/制作真实分新会话、root唯一融合锁稿，制作内部连续；读透落到本稿状态/关系变化，A动作语义化且保留8—15秒/A-B-C/原门，合规样段沿原条件兼任。实际Paseo接收/SHA/nonce/无授权拒制已验，probe后增量仅静态；STATUS/记忆暴露明示。GLM规划及GLM/官方DS结果对抗、owner窄增量已逐条裁决，均仅方法批准；local/runtime/doc/reader与正常hook26/26实跑通过5.832秒。实现video5d6e9f8、skills f943169已正常push并各fresh严格集成exit0；3个子任务关闭归档、临时心跳dd182365删除且daemon回读不存在，共享监督保留。最终状态提交/清理Git见[本轮回执](docs/handoff/MOTION_METHOD_DEEP_AUDIT_20261107.md)及视频证据根closeout.json。无新片/新声音/口型/购买/平台外发，实际三阶段生产、提速及视觉改善未验，下次明确制作任务再按新法实际验证；旧待看片任务保持。
+
 **2026-11-07·MOTION-REFERENCE-ORDER-20261107 参考顺序修订已交付。** laohan-motion2.0.1与V4改为本期内容→当前模板演示/契约→初步方案→按问题查旧设计经验→本期动态验证；技术/安全经验仍前置，不强制换族/新颖。双入口/PIPELINE/评分解释/效果brief同步，原数字/报警/A-B-C/guard/Gemini/本人来源/接受边界保留。GLM规划203.528秒与官方DS结果326.864秒满配对抗完成，root逐项裁决；作者10及独立新增3情境仅文字推演。GLM完整结果失败、最小连通成功与Magpie无确认免费入口均留证。local/runtime/doc/状态/共享入口同源实查通过，正常hook docs-only26/26通过6.142秒，源实现视频b98609a、skills b8466d4已push且fresh严格集成exit0；最终状态Git见[回执](docs/handoff/MOTION_REFERENCE_ORDER_20261107.md)与视频证据根closeout.json。未诊断或重做旧片，实际影片质量/速度/跨宿主行为未验，无本轮临时监督或子agent。
 
 **2026-11-07·MOTION-END-TO-END-20261107 laohan-motion2.0已交付。** 现有入口贯通共同选题/全部Gemini双稿融合到本人数字人Motion候选；新增依赖调度/局部恢复/计时参考，入口按阶段加载。原质量门和授权不变，未新出片。local扫描红→绿、引用/状态检查、视频87/87完整实跑通过；GLM规划与结果对抗已裁决，结果APPROVE_METHOD_ONLY，不冒真实新片提速。实现cf62464与视频b6adbe5正常push且两仓fresh严格集成exit0；临时监督已删。回执=[方法与边界](docs/handoff/MOTION_END_TO_END_SKILL_20261107.md)，最终状态提交和Git以视频仓同任务closeout.json为准。
@@ -122,8 +120,9 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 **2026-10-23·统一研究创作补门与新三稿。** 同一选题研究与共同六步/Sepia/QA接通，旧轻合同退役；真实研究和三稿待选在视频项目，专项正负/恢复及独立复核完成，最终普通hook与两仓main事实见同任务unified-rebuild回执。
 
 
-**2026-10-21·Skill 维护任务流水。** 新建 AGENTS.md / STATUS.md，CLAUDE.md 仅补工程指针，原业务正文逐字保留；不改 episode 状态或安装/发布技能。
 
 ## 历史索引
+
+- [2026-11-07方法深审与旧流水轮转](docs/handoff/MOTION_METHOD_DEEP_AUDIT_20261107.md)：本轮回执及超限旧流水原字节。
 
 无；后续按需进入 docs/handoff/。
