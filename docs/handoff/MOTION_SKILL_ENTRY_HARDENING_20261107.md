@@ -50,7 +50,7 @@
 
 laohan-motion候选2.2.0：选题/写作/制作分别真实新会话；写作建议稿和审校在新窗，root保最终融合锁定。正式内容目录script-pool/<任务>/formal，两个--motion --base入口复用schema4/v2，script实际重验正式topic，不伪造episode。配音/素材/封面/违规/发布/收尾从对应skills入。
 
-验证状态与完整输出保存在canonical motion/baselines/references/motion-skill-entry-hardening-20261107/。实施自测已完成：正常全套87项实跑中85通过、2项因临时依赖环境失败；同字节源码在完整隔离环境重跑两项通过，原失败保留。三新会话接收/身份/输入SHA已核，制作额外全零SHA声明被拒。最终结果审核和逐项裁决已闭合，正常hook/集成仍待后续真实回执；详见下节，不提前登记工程完成。纯文件分流不保证所有模型遵守；新片质量/耗时、真实Gemini新对话与全阶段制作未验证。原质量阈值、A/B/C、8—15秒、Gemini、本人来源/最终WAV/guard及用户接受边界保留。无媒体清理/费用新增/平台外发。
+验证状态与完整输出保存在canonical motion/baselines/references/motion-skill-entry-hardening-20261107/。实施自测已完成：正常全套87项实跑中85通过、2项因临时依赖环境失败；同字节源码在完整隔离环境重跑两项通过，原失败保留。三新会话接收/身份/输入SHA已核，制作额外全零SHA声明被拒。最终结果审核和逐项裁决已闭合，正常hook/集成仍待后续真实回执；详见下节，不提前登记工程完成。纯文件分流不保证所有模型遵守；新片质量/耗时、真实Gemini新对话与全阶段制作未验证。原质量阈值、A/B/C、8—15秒、Gemini、本人来源/最终WAV/guard及用户接受边界保留。未清理生产原件、未新购买或平台外发；复审使用既有授权模型通道，未查询实际账单费用。
 
 ## 最终结果裁决与已验范围
 
@@ -59,3 +59,28 @@ laohan-motion候选2.2.0：选题/写作/制作分别真实新会话；写作建
 末轮GLM 266.515秒 APPROVE_CLOSURE；官方DS 242.262秒 REVISE_CLOSURE唯一D-1指出两新正则漏合并原有Remotion提示标签。已照原建议仅补该标签与4负例：新测试在旧实现真实红（落到DEFAULT_SIGNATURE，不能声称绕过全QA），修后创作整套97.342秒绿；独立Astra随后真实6次CLI核四具名cue拒绝与完整合法/恢复QA通过，APPROVE_D1。最终集合包含旧12项，原生/candidate逻辑未改。归属①原checker+回归，未再发无变化全包、未把DS原REVISE写成批准。完整root裁决见final-delta/adjudication.md、final-closure/adjudication.md及final-closure/d1/adjudication.md，最终源码冻结manifest=7dde599cb2dd02a9e29d1026d22a62ead5fa9d916ac007d7ae72b4e8db894a7b（109项，末次3文件变动）。
 
 新旧测试环境/候选各自留证；正常提交hook、fresh主干集成、共享skills生效与精确清理，以同证据根final-closeout.json实际终态为准，不能从上述审核或待提交源码推导已生效。三阶段探针只证明新会话身份、接收和输入绑定；STATUS/共享记忆仍有暴露。新片耗时/审美、Gemini完整业务流程和所有宿主自动防错未实测，不承诺保证。无限自然语言/未声明字段不机械穷举，归属③边界明确、成本与收益不相称；当前有限误导标签及已有来源/状态/平台合同均真实验证。
+
+## 正式集成与收尾
+
+2026-11-08：正常实现提交为video ea65faab872eb74aa98d9fc87af68e6f6f41d40a / skills 2ebc3e7da433aa9f2ff0bfacab5c8c503a177510，均已任务分支push、ff-only进入main并push，fresh严格集成检查各exit0。video正常hook87/87、ran87/reused0、665.214秒且stable_inputs=true；进程总耗时666.514秒包含提交步骤，不能当视频渲染耗时。准确吸收容量owner bd74ded与EP07规则改动，AGENTS/生产合同为无冲突合并，容量README与负测夹具逐字保留；runtime lock由官方工具更新，未手改SHA。未再重审这些已释放的独立源。
+
+现行共享agents/Claude入口真实指向canonical的2.2.0，同SHA；当前Codex技能清单直接发现agents路径。本轮首个可达断言误要求可选的.codex副本，已据实际发现机制纠正，不凭该目录缺失判安装坏、不增装副本；已有按能力核验纪律覆盖，归属③不另造门。canonical实际运行锁/注册检查通过，不推成所有宿主自动触发或真实影片验收。
+
+收尾对抗：真实未合入技能分支被严格集成入口拒绝，合入后两仓通过；任务source未审或仅推分支不能冒完成。本任务无开放PR，两个自有工作树/本地及远端任务分支、具名合并stash已删除；测试clone仅本任务所有，原diff/未跟踪回执先保留再移废纸篓，不声称释放物理空间。身份图是受控checkout的tracked文件且与保留canonical逐字一致，随工作树回收，未删原件。skills原08-10 installer恢复stash保持原SHA，属已知历史备份；其它生产/待看片任务未改接受状态。
+
+最终证据JSON为视频canonical下motion/baselines/references/motion-skill-entry-hardening-20261107/final-closeout.json，记录本次纯状态commit、fresh主干、默认/严格逐仓审计和heartbeat删除的实际终态；本段不预写后续命令结果。原检查失败/REVISE/阶段探针与109源快照保留，不把文件分流、回执SHA和模型批准当作质量或速度保证。
+
+## 封存执行卡原字节（只用于追溯）
+
+### MOTION-SKILL-ENTRY-HARDENING-20261107 — 最强模型复审与Motion入口去错
+
+owner/唯一writer=Codex Motion root；隔离分支codex/motion-skill-entry-20261107。用户本轮授权仅Motion路线：再次审核并修改、删除错误做法、尽量各阶段用现有skills执行，防止其它模型走错方法。基线video ac64aab893fed4368580b58bb1d4ee14e41dc8e8 / skills 3ce146510928ffacda1cdfab8f9b7ba85fd50dde；不改原生Remotion路线、不新制作/升级模板/购买/外发。范围=当前生效Motion入口与引用闭环、真实命令误导与执行角色；保留历史证据及原片、授权/真实来源/接受边界。GPT-6-Astra最高纯推理max做开始/结果深审，GLM跨家族对抗；若涉及验证/复用语义按全局再交DS。验收=有证据的删错/路由收敛、受影响真实正反例/引用校验、独立结果裁决、正常hook与两仓集成。证据根=canonical视频motion/baselines/references/motion-skill-entry-hardening-20261107/。当前=最终Astra三角色、GLM与官方DS对抗结果全部逐项裁决；DS末项既有Remotion提示标签漏合并已补，97.342秒创作回归及独立6项定点确认通过，未决阻断0。最终109源manifest7dde599c…，原REVISE/失败保留；制作/速度/质量仍未新片实测。下一步=待容量owner释放canonical main/STATUS后fresh吸收其已审M4依赖修复及容量状态，正常hook、两仓集成push和清理。未正常提交/激活，不冒工程完成；回执=docs/handoff/MOTION_SKILL_ENTRY_HARDENING_20261107.md与证据根review-closeout.json。
+
+
+## 本轮近期流水轮转原字节
+
+**2026-10-23·统一研究创作补门与新三稿。** 同一选题研究与共同六步/Sepia/QA接通，旧轻合同退役；真实研究和三稿待选在视频项目，专项正负/恢复及独立复核完成，最终普通hook与两仓main事实见同任务unified-rebuild回执。
+
+
+
+<!-- 归档段结束；上述历史段落原字节保留。 -->
