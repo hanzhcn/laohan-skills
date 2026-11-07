@@ -4,4 +4,4 @@
 
 laohan-motion 2.0.1承接视频项目V4的当前模板优先顺序，主入口/full-chain/execution-map不再先套旧设计经验；技术故障预防仍前置，相符风格可复用。原Gemini双稿、本人形象来源、动态A/B/C和独立复核/候选接受边界不改。运行时共享agents/claude三文件实际同源，未冒各宿主行为实测。
 
-完整规格、对抗复核、实际检查与未验范围：[视频项目回执](/Users/hanzhmacbookair/Documents/laohanvideo/docs/handoff/MOTION_REFERENCE_ORDER_20261107.md)。本机证据=`/Users/hanzhmacbookair/Documents/laohanvideo/motion/baselines/references/motion-reference-order-20261107/`，最终Git事实见closeout.json。GLM规划与官方DS结果对抗均完成，root逐项裁决；作者10/独立新增3情境仅文字推演，静态扫描与共享入口同源实查通过。Git正常提交与fresh集成收口仍在进行；没有启动影片制作。
+完整规格、对抗复核、实际检查与未验范围：[视频项目回执](/Users/hanzhmacbookair/Documents/laohanvideo/docs/handoff/MOTION_REFERENCE_ORDER_20261107.md)。本机证据=`/Users/hanzhmacbookair/Documents/laohanvideo/motion/baselines/references/motion-reference-order-20261107/`，最终Git事实见closeout.json。GLM规划与官方DS结果对抗均完成，root逐项裁决；作者10/独立新增3情境仅文字推演，静态扫描与共享入口同源实查通过。实现b8466d4e05a4e5a0e8d1ed2508214579e9b1bffd已正常提交push，fresh严格集成exit0；视频实现b98609a08d1ff650ed65b4282b0114f5136c65e0同样通过。最终状态归档提交与末次Git事实见closeout.json。历史安装器stash已查明保留，没有启动影片制作。

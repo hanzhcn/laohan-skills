@@ -2,13 +2,6 @@
 
 ## 当前任务
 
-### MOTION-REFERENCE-ORDER-20261107 — 当前模板优先、旧经验按需后查
-
-owner/唯一writer=Codex/root；视频main基线ca65f77、skills main基线87e0d9a，两仓既有串行精确提交。Jeffrey停止成片诊断，改为先处理旧参考造成设计惯性的风险。范围=V4参考顺序、laohan-motion承接、相关入口/评分解释/效果复核任务；不诊断或重做旧片、不改模板包/renderer/机械门/授权。验收=当前模板与本期内容优先、旧审美经验按问题后查、技术/安全经验不延迟、可复用相符参考且不强制新颖；原动态/A-B-C/Gemini/身份/接受边界保持。步骤=冻结→GLM规划对抗→定点修改→针对检查/情境→GLM结果对抗→正常提交push/fresh集成与归档。证据=视频仓motion/baselines/references/motion-reference-order-20261107；模型调用满配max/默认1800s，失败按合格通道处理、不无限重试。真实影片效果未测；惯性目前是待防范风险，不登记为旧片唯一根因。
-
-
-阶段检查点：方法与技能2.0.1正文已冻结；GLM规划203.528秒APPROVE_PLAN，官方DS结果326.864秒APPROVE_METHOD_ONLY，均满配且root逐项裁决。GLM结果失败与最小核验、Magpie无免费入口原证据保留。local/runtime/doc/reader/共享入口检查通过；作者10情境+独立新增3情境均为文字推演，不冒影片效果。下一动作=正常hook、两仓commit/push及fresh集成收口。
-
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
@@ -80,6 +73,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-11-07·MOTION-REFERENCE-ORDER-20261107 参考顺序修订已交付。** laohan-motion2.0.1与V4改为本期内容→当前模板演示/契约→初步方案→按问题查旧设计经验→本期动态验证；技术/安全经验仍前置，不强制换族/新颖。双入口/PIPELINE/评分解释/效果brief同步，原数字/报警/A-B-C/guard/Gemini/本人来源/接受边界保留。GLM规划203.528秒与官方DS结果326.864秒满配对抗完成，root逐项裁决；作者10及独立新增3情境仅文字推演。GLM完整结果失败、最小连通成功与Magpie无确认免费入口均留证。local/runtime/doc/状态/共享入口同源实查通过，正常hook docs-only26/26通过6.142秒，源实现视频b98609a、skills b8466d4已push且fresh严格集成exit0；最终状态Git见[回执](docs/handoff/MOTION_REFERENCE_ORDER_20261107.md)与视频证据根closeout.json。未诊断或重做旧片，实际影片质量/速度/跨宿主行为未验，无本轮临时监督或子agent。
 
 **2026-11-07·MOTION-END-TO-END-20261107 laohan-motion2.0已交付。** 现有入口贯通共同选题/全部Gemini双稿融合到本人数字人Motion候选；新增依赖调度/局部恢复/计时参考，入口按阶段加载。原质量门和授权不变，未新出片。local扫描红→绿、引用/状态检查、视频87/87完整实跑通过；GLM规划与结果对抗已裁决，结果APPROVE_METHOD_ONLY，不冒真实新片提速。实现cf62464与视频b6adbe5正常push且两仓fresh严格集成exit0；临时监督已删。回执=[方法与边界](docs/handoff/MOTION_END_TO_END_SKILL_20261107.md)，最终状态提交和Git以视频仓同任务closeout.json为准。
 
