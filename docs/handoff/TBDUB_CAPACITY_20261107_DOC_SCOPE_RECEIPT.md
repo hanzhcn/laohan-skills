@@ -1,0 +1,5 @@
+# 声音入口文档独立收口
+
+本仓2cb0b1acf049a2573dbb97730886aa05e8fc67be仅yinse第7步及旧CLI例/本任务STATUS。最终跨模型GLM包b87115b8bc50a1ac8db838ec88006702535ad6c24dfe8c59c2987caf1e2a2f26已含完整diff；glm-5.3 max/128000、1439.674s、end_turn/message_stop/CLI success，HTTP UNVERIFIED_CLI。总体REVISE的F1是video私有cache-root，与本文件CLI/storage-required-bytes语义无交集，F2/3/4/5/6/7均不要求改本文件。本文件源码和依赖声音argv/public check接口未改变，21项真实launcher→synth CPU正负例及原模型/参考完整SHA保持；主会话据此独立裁决DOC_SCOPE_CLOSED，真实runtime安装仍由laohanagent同任务处理。
+
+原审查完整报告/metadata与逐条裁决留在laohanagent docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/，不把REVISE冒全局APPROVE。当前文档source可正常同步已授权private main，Motion新方法在fresh canonical上接续；不改laohan-motion或video runtime-lock/STATUS。该技能无相应锁条目，官方614项检查changed0。无模型生成/训练/删除/新费用或生产接受，本文件只同步已实现参数而保留read-help/身份/声音验收边界。
