@@ -47,7 +47,7 @@ const normalizeArray = (payload) => {
 const normalizeItem = (sourceId, item, index) => {
   const title = String(item?.title ?? item?.name ?? item?.word ?? item?.desc ?? item?.question ?? '').trim();
   const fallbackUrl = sourceId === 'douyin-hot' && title ? `https://www.douyin.com/search/${encodeURIComponent(title)}` : '';
-  const url = String(item?.url ?? item?.link ?? item?.permalink ?? fallbackUrl).trim();
+  const url = String(item?.url ?? item?.link ?? item?.permalink ?? item?.links?.original ?? item?.links?.aihot ?? fallbackUrl).trim();
   return {
     id: stableId(sourceId, title, url, item?.id ?? item?.aweme_id),
     rank: Number.isInteger(item?.rank) ? item.rank : index + 1,
@@ -190,11 +190,11 @@ function collectPersonalExpressionPool() {
 }
 
 async function collectAihot() {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
-  const url = `https://aihot.virxact.com/api/public/items?mode=selected&since=${encodeURIComponent(since)}&take=100`;
+  // Current public contract: https://aihot.news/openapi-v1.json (2026-11-07).
+  const url = 'https://aihot.news/api/v1/items?mode=selected&window=24h&limit=100';
   const attemptedAt = nowIso();
   try {
-    const response = await fetch(url, {headers: {'User-Agent': 'laohan-xuanti/2.0'}, signal: AbortSignal.timeout(20000)});
+    const response = await fetch(url, {headers: {'User-Agent': 'aihot-api/2.0.0'}, signal: AbortSignal.timeout(20000)});
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     const results = normalizeArray(payload).map((item, index) => normalizeItem('aihot', item, index));

@@ -2,14 +2,6 @@
 
 ## 当前任务
 
-### AVATAR-SOURCE-ONLY-20261107 — 本人形象来源已固化，影片保持停工
-
-owner/writer=Codex root；main，基线a321c0a0ae12cd886d84f9da16701a269cc603b7。Jeffrey否决错误人物后指定下载目录“数字人形象用-原始真人拍摄-老韩”为唯一来源。laohan-motion1.1.9入口与full-chain承接视频生产合同§五，取消不限来源的旧素材/API兜底；停工不因补充目录自动解除。真实目录9视频/2标不用排除，7个仅来源候选、未实看片或启动制作；5项针对检查、两入口同源指针及GLM max/128000/1800满配315.71秒VALIDATED/end_turn/APPROVE_DOC_SCOPE完成，6项静态反例与实际盘点分开。N1/N2/N4按审核建议清旧措辞/补必读指针，N3无当前反例不造新解析器。原声学修复已有三角色及GLM结果复核；QA拼版窄修本次文意审核完成，不冒媒体验收。仅本Motion两文件与STATUS精确提交，其他技能在途改动保留；两仓正常提交push实际终态及完整审查/裁决见视频本期qa/avatar-source-rule-20261107/closeout.json。影片继续停工。
-
-### MOTION-NEW-AVATAR-20261107 — 出片故障修复结果已自验，独立收口待完成
-
-owner/writer=Codex root；main，基线a321c0a0ae12cd886d84f9da16701a269cc603b7。Jeffrey授权本期制作中发现速度/质量问题当轮修规则技能。AIHOT旧404已按官方接口修URL/嵌套链接，真实19条恢复；xuanti3.8.2补单源恢复、UTC和材料正文。chuangzuo3.12.2补AIStudio后台DOM渲染完成再取全文，不盲重发；motion1.1.9补真实声学窗容量、对齐不代念齐与遗漏句隔离修复；fengmianqiuzhi1.21.5补一个同根因产图前工具故障事件内，受影响尺寸各恢复一次首图，原完整图/原生修复限额与视觉阈值不变。image-use官方0.34.7升级后真实三尺寸恢复。三角色同模型源码结果对抗完成，浮点边界和恢复计次措辞两项finding已修并复验；跨模型GLM最终修复结果APPROVE_SCOPE已回读，原报告保留。Motion部分随AVATAR-SOURCE-ONLY收口，其它技能六文件因影片停工保留未提交，不收进来源规则提交。视频registry/运行锁已同步并check通过；不新增发布/费用权限。证据=视频motion/projects/20261107-new-avatar/research与qa/repair-*-review.md及封面manifest；不冒成片/未来宿主验证通过。
-
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
@@ -81,6 +73,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-11-07·MOTION-NEW-AVATAR 技能故障修复收口。** 本人形象唯一来源已由f272374提交push；本轮交付剩余已审六文件：xuanti3.8.2真实AIHOT接口与单源恢复、chuangzuo3.12.2完整Gemini正文恢复、fengmianqiuzhi1.21.5有界产图前协议修复、CLAUDE版本指针。三角色及GLM满配对抗已完成且逐项裁决，审核字节复算/语法/diff/现役614锁实际通过；正常Git终态见视频qa/avatar-reselection-r1/skills-closeout.json。仅方法交付，不冒影片完成；Jeffrey已明确恢复本期制作，最新人物/媒体只看视频STATUS。原卡及证据入口见[收口回执](docs/handoff/MOTION_NEW_AVATAR_SKILLS_20261107.md)。
 
 **2026-11-07·GEMINI-DUAL-CREATION-20261107 老韩AI双引擎规则完成。** xuanti3.8.1/chuangzuo3.12.1/fengmianqiuzhi1.21.4/motion1.1.8承接共同选题与全部观众创作文字独立双稿，负责人融合；禁止Gemini失败时SKIPPED，成长系列作者条款未变。GLM满配方案/结果对抗逐项闭合，末次APPROVE_DOC_SCOPE；源f9f75e4802289d46cc8378e1e1c6f1d5d7f2e6bd已提交push，视频对应普通hook87/87稳定全实跑。未改validator、不冒自动硬门；Motion技能与dual-engine方法不在视频当前锁覆盖，真实入口/Git与审核SHA留证。本仓无pre-commit，未冒hook通过；最终状态登记与fresh远端在视频`docs/handoff/GEMINI_DUAL_CREATION_20261107.md`所指closeout.json核验。未执行本期Gemini创作或生产媒体。
 

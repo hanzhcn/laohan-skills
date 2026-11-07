@@ -1,6 +1,6 @@
 ---
 name: laohan-xuanti
-version: 3.8.1
+version: 3.8.2
 description: 真人口播①选题决策主写者；按老韩选题五步法（扫爆款→剔假爆款→看重复→定角度→验收藏）执行：扫描数据层达人库与自频道异常倍数，过滤假阳性，判定单期/系列，提炼冲突角度并验证收藏价值后AI自主定题（Jeffrey保留否决权），核对小白受众承诺、抖音语义对齐和 PRIMARY 原始来源。Use when 用户说"抓热点""AI热点""找选题""选题""今天做什么""redian"，或 bianpai 路由到①；单独搜抖音时改用 laohan-douyinsousuo。
 argument-hint: [可选：--episode episodes/<slug>；或关键词]
 allowed-tools: Bash(*), Read, Write, Glob, Grep
@@ -36,6 +36,8 @@ Jeffrey给出的是软件、方法或系列方向时，先走`USER_DIRECTION_RES
 ## 工作流
 
 ### 1. 采集当前信号
+
+单一来源接口失效先核该来源现行官方协议并定点修复/重采，保留失败原件，再同步本期对应 signals 与 source-health 的真实数量、时间和 SHA；不重复抓取未受影响的全池。CLI 格式化日期须核实际时区，不能凭本机时区解释。交给材料/选题复核者的资料包须带齐实际用于判断的评论原句及来源；不能用截断的 Top3 摘要代替已引用的完整评论。
 
 先写`00-选题-signals.json.discovery_mode`：无方向为`AUTONOMOUS_SCAN`；Jeffrey已给方向为`USER_DIRECTION_RESEARCH`。后者把已通过`node scripts/check-series-research.mjs`的`series_research_path`与SHA写入`direction_research`，并把哔哩哔哩、小红书、抖音、知乎四路结果分别登记为signals来源。`DEMAND_VALIDATED`至少两个平台有真实需求信号；`EXPERIMENTAL_ONE_OFF`只按研究包内已验证的官方新事件、Jeffrey亲历或小众任务依据进入单期，不强制伪造两个平台热度。
 
