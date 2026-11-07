@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### DEVRULES-SKILLS-20261108 — 开发辅助技能统一查漏补缺
+
+owner/唯一writer=root；独立目录`/private/tmp/laohan-devskills-20261108`、分支`fix/devskills-20261108`，fresh基线`1c68081c2c0b034f5051561b3ff9442ab45946db`。用户已授权统一审核优化开发规则/技能；本仓仅核并修`laohan-chushicodex`、`laohan-shencha`、`laohan-sousuo`及直接测试，不改内容制作方法/生产/权限配置。已验=固定正文/源SHA、实际Codex诊断失败被吞0反例；未验=修复/回归/独立结果审核/安装。当前开始窗口Astra max+GLM对抗，主会话裁决后集中实施，只最终再复审。方案/监督/四决议落点统一见治理仓`docs/handoff/DEVRULES_SKILLS_20261108/PLAN.md`与heartbeat4613bd9e；沿现有已授权direct两仓分别集成与回读，不把单仓提交冒完成。
+
 
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
 

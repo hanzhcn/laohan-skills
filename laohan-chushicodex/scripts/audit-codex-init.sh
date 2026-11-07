@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# 只读采集 Codex 初始化基线；不联网、不写入、不读取配置中的密钥字段或转储完整环境。
-# 输出包含本机路径、codex doctor 摘要和 Git 工作树状态；分享前审阅输出。
+# 采集 Codex 初始化基线；不修改配置，doctor的网络探测按当前CLI与已有授权。
+# 仅列配置字段存在性；Doctor使用脱敏JSON，分享前仍审阅输出。
 set -u
+failures=0
 
 section() {
   printf '\n## %s\n' "$1"
@@ -13,8 +14,11 @@ run() {
   printf '\n### %s\n' "$label"
   if "$@"; then
     return 0
+  else
+    local rc=$?
+    printf '[check failed: exit=%s; audit incomplete]\n' "$rc" >&2
+    failures=$((failures + 1))
   fi
-  printf '[command returned non-zero; inspect the output above]\n'
   return 0
 }
 
@@ -26,19 +30,32 @@ else
   code_home=""
 fi
 
+if [ "$#" -gt 0 ]; then
+  if [ "$#" -ne 2 ] || [ "$1" != '--config-root' ] || [ ! -d "$2" ]; then
+    printf 'Usage: audit-codex-init.sh [--config-root <existing absolute directory>]\n' >&2
+    exit 2
+  fi
+  case "$2" in
+    /*) code_home="$2" ;;
+    *) printf 'ERROR: --config-root must be absolute\n' >&2; exit 2 ;;
+  esac
+fi
+
 section 'Codex executable'
 run 'codex --version' codex --version
-run 'codex doctor' codex doctor
+run 'codex --strict-config doctor --json' codex --strict-config doctor --json
 
 section 'Configuration files'
 if [ -n "$code_home" ]; then
-  printf 'CODEX_HOME: %s\n' "$code_home"
+  printf 'Config inventory root: %s (does not override the CLI runtime config)\n' "$code_home"
   for file in "$code_home/config.toml" "$code_home"/*.config.toml; do
     [ -f "$file" ] || continue
     printf '%s\n' "$file"
-    awk '
-      /^[[:space:]]*(approval_policy|sandbox_mode|model_reasoning_effort|web_search)[[:space:]]*=/ { print "  " $0; next }
-      /^\[projects\./ { print "  " $0; next }
+    run 'configuration field inventory' awk '
+      /^[[:space:]]*(approval_policy|sandbox_mode|model_reasoning_effort|web_search)[[:space:]]*=/ {
+        sub(/[[:space:]]*=.*/, " = <configured; inspect runtime>"); print "  " $0; next
+      }
+      /^\[projects\./ { print "  project trust entry present"; next }
     ' "$file"
   done
 else
@@ -58,7 +75,7 @@ if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
     [ -f "$file" ] && printf 'Found: %s\n' "$file"
   done
   printf 'Working tree:\n'
-  git -C "$git_root" status --short
+  run 'git status --short' git -C "$git_root" status --short
 else
   printf 'Project root: not a Git repository\n'
 fi
@@ -72,4 +89,8 @@ else
   printf 'Skipped: no Git project root\n'
 fi
 
-printf '\nAudit complete. Inspect findings before changing configuration.\n'
+if [ "$failures" -ne 0 ]; then
+  printf '\nAudit incomplete: %s required check(s) failed; see original exits above.\n' "$failures" >&2
+  exit 1
+fi
+printf '\nAudit collection complete; command exits passed, project acceptance remains separate.\n'
