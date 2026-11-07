@@ -74,6 +74,8 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
+**2026-11-07·MOTION-PLATFORM-COPY-LENGTH-20261107 修复与最终对抗复核完成。** root/main，laohan-chuangzuo3.12.3补本项目四平台正文约束传递和融合后逐项计数；旧251字拒绝，干净LOCAL/Gemini双稿融合169字，四稿146/149/169/148字实核。GLM满配对抗APPROVE，三冻结文件字节一致；614锁/30执行器与视频87/87实际通过，无新自动门或权限扩张。按明确main授权同批正常提交push，实际Git终态见[收口回执](docs/handoff/MOTION_PLATFORM_COPY_LENGTH_20261107_CLOSEOUT.md)所指final-closeout；未冒未来自动防漏或用户接受。
+
 **2026-11-07·MOTION-NEW-AVATAR 技能故障修复收口。** 本人形象唯一来源已由f272374提交push；本轮交付剩余已审六文件：xuanti3.8.2真实AIHOT接口与单源恢复、chuangzuo3.12.2完整Gemini正文恢复、fengmianqiuzhi1.21.5有界产图前协议修复、CLAUDE版本指针。三角色及GLM满配对抗已完成且逐项裁决，审核字节复算/语法/diff/现役614锁实际通过；正常Git终态见视频qa/avatar-reselection-r1/skills-closeout.json。仅方法交付，不冒影片完成；Jeffrey已明确恢复本期制作，最新人物/媒体只看视频STATUS。原卡及证据入口见[收口回执](docs/handoff/MOTION_NEW_AVATAR_SKILLS_20261107.md)。
 
 **2026-11-07·GEMINI-DUAL-CREATION-20261107 老韩AI双引擎规则完成。** xuanti3.8.1/chuangzuo3.12.1/fengmianqiuzhi1.21.4/motion1.1.8承接共同选题与全部观众创作文字独立双稿，负责人融合；禁止Gemini失败时SKIPPED，成长系列作者条款未变。GLM满配方案/结果对抗逐项闭合，末次APPROVE_DOC_SCOPE；源f9f75e4802289d46cc8378e1e1c6f1d5d7f2e6bd已提交push，视频对应普通hook87/87稳定全实跑。未改validator、不冒自动硬门；Motion技能与dual-engine方法不在视频当前锁覆盖，真实入口/Git与审核SHA留证。本仓无pre-commit，未冒hook通过；最终状态登记与fresh远端在视频`docs/handoff/GEMINI_DUAL_CREATION_20261107.md`所指closeout.json核验。未执行本期Gemini创作或生产媒体。
