@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "1.1.8"
+version: "1.1.9"
 description: 数字人×Motion模板视频制作总入口（路线④）。从锁定口播稿到成片交付的全链编排：配音→同声口型→拼接→全库模板选型→导演→production-guard门链→异模型复核→交付。Use when 用户说"创作motion视频""做motion片""motion制作""数字人motion路线""走motion模板"或锁定稿后选择数字人×Motion模板路线。
 ---
 
@@ -31,7 +31,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 4. `motion/mastery/delivery-requirements.json` — 用户画幅与质量要求真源（当前landscape 16:9；质量第一原则、无限用好模板是底线）
 5. `motion/mastery/current-release.json` — helper与模板包身份/SHA（当前helper 1.0.0-rc.32；包T01—T06，版本以该文件为准）
 6. `motion/mastery/pronunciations.json` — 发音表真源
-7. `docs/工作区生产合同.md` §一 — Motion边界与凭据红线
+7. `docs/工作区生产合同.md` §一、§五 — Motion边界、凭据红线与数字人唯一人物来源
 8. `docs/视频生产入口与适配.md`「Motion正式路线接入」节 — 交接点/目录规范/分流/门豁免
 9. `docs/HARNESS_COMPATIBILITY.md` — 跨宿主读取与实测范围（不把另一模型已读当自己已读）
 10. `STATUS.md` 当前任务区 — 本期状态与在途工程；**开工先查 `motion/projects/` 是否已有同期在途工程（如最新日期目录），有则续接，不另起**
@@ -39,6 +39,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 
 ## 输入契约
 
+- **人物来源先于素材复用**：严格按视频项目`docs/工作区生产合同.md`§五“老韩数字人形象唯一来源”选人，读取其中当前唯一目录与排除规则；不得用产品seed/公共库或其它目录人物兜底。实看原片人物、记录路径/SHA，工程内复制及口型派生必须追溯该原片；服装、场景变化不代替身份核对。用户已明确停工时，补充素材来源不自动解除停工。
 - **全部创作文字**：按本项目生产合同§二及`../laohan-chuangzuo/references/dual-engine-gemini.md`「laohanvideo项目覆盖」核选题与文案双引擎；制作中新增/改写画面讲解、标签或封面文字同样须双方各稿、负责人融合后使用，不能借导演阶段单写。字幕忠实派生自融合定稿，不另改词；原始证据/真实界面不改写。此为流程纪律，不冒称production-guard已校验Gemini参与。
 - **锁定口播稿**：script-pool或episode候选经Jeffrey接受/锁定；未锁定→先回xuanti/chuangzuo链，不代写代锁。
 - **显示稿与发音稿分开**：标识符按原名显示；`laohan-*`标识符按`pronunciations.json`中文读音（如laohan-sousuo读"老韩搜索"），未知项报未定，不按拉丁字母拼读。
@@ -53,7 +54,7 @@ description: 数字人×Motion模板视频制作总入口（路线④）。从�
 |---|------|---------|---------|
 | 1 | 文案定稿（锁定稿交接） | Mac | 冻结显示稿+发音稿 |
 | 2 | 最终配音（v3-05合成；合成方法真源=`~/Documents/声音资产/Jeffrey/数字人专属音色融合方法.md`，执行前必读；听感门按DH-ROUTE §一B现行文本执行） | pro6000-a服务器GPU，Mac保存试听 | 本期WAV+SHA+采样数登记 |
-| 3 | 基础形象（合格素材复用优先；确需新素材走`motion/tools/dh-generate-clean.mjs`） | 本地/产品服务器 | 人物素材 |
+| 3 | 基础形象（只按项目合同唯一来源选择本人原片，实看并绑定原片路径/SHA） | 本地指定目录 | 人物素材与来源记录 |
 | 4 | 同声口型（WAV驱动，`same-voice-local.py`分块+`run-same-voice-remote.py`推理） | pro6000-a GPU，Mac调度 | 口型分块+清单SHA |
 | 5 | 画面拼接（唯一入口`same-voice-local.py assemble`，拒绝手搓ffmpeg拼接） | Mac | 完整人物画面，原WAV为唯一主声 |
 | 6 | 导演与模板（模板/分支验证→整段构思与编舞→声学绑定及production-guard门链） | Mac本地 | 官方工程+参数+回执 |
