@@ -1,6 +1,6 @@
 ---
 name: laohan-motion
-version: "2.0.0"
+version: "2.0.1"
 description: 老韩数字人×Motion视频的端到端入口。承接一句创作需求或在制任务，串联共同选题、LOCAL/Gemini全部文案双稿融合、本人形象、v3-05配音、同声口型、模板导演、真实动态样段、异模型复核、渲染与候选交付；按依赖并行与已验输入恢复。用户说“做motion视频”“从选题到成片”“继续motion制作”“motion提速”或锁稿后选Motion时使用。仅原生Remotion、声音训练或单独发布不走本链。
 ---
 
@@ -32,7 +32,7 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 | 开始/恢复 | 上述共同必读；`docs/视频生产入口与适配.md`的Motion与选题接入；`docs/文档真源与状态.md`；`docs/HARNESS_COMPATIBILITY.md`命中宿主；交付要求 |
 | ①选题、②写作 | `laohan-xuanti/SKILL.md`、`laohan-chuangzuo/SKILL.md`及其命中五步/六步方法；`../laohan-chuangzuo/references/dual-engine-gemini.md`本项目覆盖；四平台发布规格的文字约束 |
 | ③声音/人物、④口型 | `motion/mastery/DH-ROUTE.md`§一A—一D、`pronunciations.json`；`~/Documents/声音资产/Jeffrey/数字人专属音色融合方法.md`；分块工具说明及真实help |
-| ⑤模板/导演至⑦交付 | `motion/mastery/PRODUCTION-METHOD-V4.md`、`PIPELINE.md`、`current-release.json`、`QUALITY-SCORECARD-20261104.md`；所选原包分支公开契约，命中效果复盘与动态参考 |
+| ⑤模板/导演至⑦交付 | `motion/mastery/PRODUCTION-METHOD-V4.md`、`PIPELINE.md`、`current-release.json`、`QUALITY-SCORECARD-20261104.md`；先看当前模板实际演示/分支契约，按V4参考顺序形成初步方案后再查命中旧设计经验 |
 | 具体命令/排障 | [制作执行细节](references/full-chain.md)、[门与字段](references/gates-and-checks.md)命中部分；仍以PIPELINE及本包argv为准 |
 
 ## 一条任务链
@@ -61,7 +61,7 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 
 ## 质量与门不能省
 
-- 模板选择必须落实“本段讲清什么→哪些对象/素材怎样持续变化”；对照所选版本/分支的真实动态、人物关系与原设计字幕，不能用控件清单、缩字、删槽或统一卡片代替表现力。全库轻筛不等于全库深审；每个入围候选的8—15秒能力样段及评分卡A/B/C仍按现行规格完成。
+- 模板选择按V4“本期内容→当前演示/契约→初步方案→按问题查旧经验→本期动态验证”；技术/安全经验仍前置，旧构图与动作不作默认骨架，相符复用不强制改新。落实“本段讲清什么→哪些对象/素材怎样持续变化”，对照所选版本/分支真实动态、人物关系与原设计字幕；控件清单、缩字、删槽或统一卡片不能代替表现力。全库轻筛不等于全库深审；每个入围候选的8—15秒能力样段及评分卡A/B/C仍按现行规格完成。
 - B在plan前用当前production.params执行`score-timeline.py --stage plan`，写明段内变化点与静止问题的实际修法；C在交付前实看每段首中尾原尺寸帧、1倍速全片和阿杜同类段，记录实际能力/未验边界，`human_review.verdict`为空不交。按同一revision保留selection→delivery→outcome，未发布不编outcome；命令及判据见full-chain与现行质量尺子。
 - 单段/全片最长无变化间隔≤5秒的要求与现行质量尺子保持；score-timeline是advisory，不冒新增机械门或审美保证。原尺寸/动态/连续复看各记真实范围，静帧不能代动态，工具误报回原媒体裁决。
 - 全部plan/render/delivery经production-guard，pilot有自己的direct/plan/preview；参数变化重plan/预览/复核，声音/素材/契约/编排变化先新revision。原包只读，官方read/new/setup/doctor/prepare/preview不用套guard。

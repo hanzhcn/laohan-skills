@@ -2,6 +2,13 @@
 
 ## 当前任务
 
+### MOTION-REFERENCE-ORDER-20261107 — 当前模板优先、旧经验按需后查
+
+owner/唯一writer=Codex/root；视频main基线ca65f77、skills main基线87e0d9a，两仓既有串行精确提交。Jeffrey停止成片诊断，改为先处理旧参考造成设计惯性的风险。范围=V4参考顺序、laohan-motion承接、相关入口/评分解释/效果复核任务；不诊断或重做旧片、不改模板包/renderer/机械门/授权。验收=当前模板与本期内容优先、旧审美经验按问题后查、技术/安全经验不延迟、可复用相符参考且不强制新颖；原动态/A-B-C/Gemini/身份/接受边界保持。步骤=冻结→GLM规划对抗→定点修改→针对检查/情境→GLM结果对抗→正常提交push/fresh集成与归档。证据=视频仓motion/baselines/references/motion-reference-order-20261107；模型调用满配max/默认1800s，失败按合格通道处理、不无限重试。真实影片效果未测；惯性目前是待防范风险，不登记为旧片唯一根因。
+
+
+阶段检查点：方法与技能2.0.1正文已冻结；GLM规划203.528秒APPROVE_PLAN，官方DS结果326.864秒APPROVE_METHOD_ONLY，均满配且root逐项裁决。GLM结果失败与最小核验、Magpie无免费入口原证据保留。local/runtime/doc/reader/共享入口检查通过；作者10情境+独立新增3情境均为文字推演，不冒影片效果。下一动作=正常hook、两仓commit/push及fresh集成收口。
+
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
