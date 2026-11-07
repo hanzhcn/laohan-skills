@@ -2,11 +2,6 @@
 
 ## 当前任务
 
-### DEVRULES-SKILLS-20261108 — 开发辅助技能已审，待集成读回
-
-owner/唯一writer=root；独立目录`/private/tmp/laohan-devskills-20261108`、分支`fix/devskills-20261108`，已审三技能源候选`c7c5787eb3dcd62d4752edff6d5f27cc3f3fcf43`。chushicodex/shencha/sousuo与直接脚本/模板/5项测试已完成方案和结果对抗；治理源最后D1亦闭合。正常合入fresh上游93d4d231a5ffddcb57db729b74ea1ae823ac2769仅保护TikTok下载参考，本轮源码/直接依赖未变，不重审业务文档；原候选仍祖先。下一动作=治理先行后本仓direct集成/远端同步，三实际共享入口读回；不把原5项换写成新实测，不改变制作/模型/费用/接受。统一结果与限制见治理仓docs/handoff/DEVRULES_SKILLS_20261108/。
-
-
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
 
 owner/writer=当前Codex root；main，起点876ed0c40600d6d4e1fdea9580e19ac48d9cee07。本批仅laohan-yinse第7步及旧CLI例补齐当前kb78769正数容量预算和`--`分隔，不生成/训练/删除资产，不改接受或费用边界。真实launcher/synth的21项CPU正负例与模型/参考完整SHA已核。最终GLM完整材料覆盖本文件，1439.674s有效REVISE唯一HIGH在独立video缓存root；本技能文档无finding，已按不变CLI/声音源码独立裁决DOC_SCOPE_CLOSED，不以产品待修项阻塞Motion技能源集成。文档候选2cb0b1acf049a2573dbb97730886aa05e8fc67be；公共runtime仍PRODUCTION PENDING、由产品同任务继续，未冒声音新WAV/生产已验。视频官方锁检查614项changed0，无本文件锁条目，不抢Motion唯一锁writer。证据统一在laohanagent `docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/`及本仓DOC_SCOPE_RECEIPT；本段仅文档source闭环。
@@ -83,6 +78,8 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
+**2026-11-08·DEVRULES-SKILLS-20261108 开发辅助技能优化已交付。** root唯一writer；chushicodex/shencha/sousuo及直接脚本/模板已审修，真实collector失败/隐私/恢复5项通过，治理四决议与最终Astra/GLM/官方DS对抗闭合。原审c7经正常上游合入进入main/push，TikTok他窗参考与其他制作/接受状态保留，三宿主既有入口同源读回；本任务WT/本地远端枝已清。不是内容制作/真实doctor/自然宿主验收。完整证据及最后纯meta Git见[本轮回执](docs/handoff/DEVRULES_DEVSKILLS_20261108.md)所指统一归档。
+
 **2026-11-08·MOTION-SKILL-ENTRY-HARDENING-20261107 技能入口去错与2.2.0已交付。** Motion从laohan-motion统一接续，专业技能先分流；正式topic/script共用--motion --base与schema4/v2，不伪建episode。退役adapter/假亲历/擅删开场等误导活文已取代并留历史；有限状态/来源/导演label/平台反例与视频计量真实正反恢复通过。Astra开始23项及三角色结果、GLM/官方DS对抗均逐项裁决，DS末项按原意见修并由Astra定点确认，原REVISE不改写。正常hook87/87全部实跑665.214秒、0复用、输入稳定；源视频ea65faa/skills2ebc3e7已正常合main/push，两仓fresh严格集成exit0。共享入口实际读回2.2.0；三阶段只证明真实新会话接收/身份/SHA，不冒全盲态、Gemini业务全链或新片提速/审美验收。自有工作树/两端任务枝/stash已精确清理，隔离测试副本已留delta后移废纸篓；原素材/旧候选/接受状态保留。最终状态提交、监督删除与逐仓审计只认[本轮回执](docs/handoff/MOTION_SKILL_ENTRY_HARDENING_20261107.md)及视频证据根final-closeout.json。未新制作、升级模板、购买或发表。
 
 **2026-11-07·MOTION-METHOD-DEEP-AUDIT-20261107 方法深审与2.1.0修正已交付。** 当前官网106展示条目/六冻结包均有公开新版已分层取证，未升级；历史六pilot108.36秒/123.2秒仅媒体覆盖，完整render elapsed未知，不虚报提速。选题/写作/制作真实分新会话、root唯一融合锁稿，制作内部连续；读透落到本稿状态/关系变化，A动作语义化且保留8—15秒/A-B-C/原门，合规样段沿原条件兼任。实际Paseo接收/SHA/nonce/无授权拒制已验，probe后增量仅静态；STATUS/记忆暴露明示。GLM规划及GLM/官方DS结果对抗、owner窄增量已逐条裁决，均仅方法批准；local/runtime/doc/reader与正常hook26/26实跑通过5.832秒。实现video5d6e9f8、skills f943169已正常push并各fresh严格集成exit0；3个子任务关闭归档、临时心跳dd182365删除且daemon回读不存在，共享监督保留。最终状态提交/清理Git见[本轮回执](docs/handoff/MOTION_METHOD_DEEP_AUDIT_20261107.md)及视频证据根closeout.json。无新片/新声音/口型/购买/平台外发，实际三阶段生产、提速及视觉改善未验，下次明确制作任务再按新法实际验证；旧待看片任务保持。
@@ -122,9 +119,9 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 **2026-10-23·选题传播依据与制作条件分开论证。** xuanti3.6.0保持单线、多维发现和自由形式，增加真实同问题响应/评论、传播取舍、内容来源与画面补采/模板依据及独立候选比较；原门保留。76项选题与完整84项实跑、正常提交复用验证及独立GPT/免费Step复核已完成；旧四稿保留比较，实际传播尚未验。最终Git以视频同任务closeout.json为准。
 
-**2026-10-23·四模型方法研究与统一创作交接完成。** 源文/论证/真实材料和独立材料审核进入同一xuanti→chuangzuo→Sepia，所有当前新写作消费者实际接入，旧材料原件保留不追填，无新增数量配额；独立复核、正负/恢复和完整84项及正常hook通过，实施已push。视频项目共同选题、四稿和两轮匿名评比分别留证，修订未追填旧分，后续待Jeffrey选稿。完整终态以视频STATUS与同任务closeout.json为准，非视频/传播验收。
-
 ## 历史索引
+
+- [本轮超限最旧流水原样归档](docs/handoff/DEVRULES_DEVSKILLS_20261108_STATUS_ARCHIVE.md)；本任务已交付，旧证据保留。
 
 - [2026-11-08 Motion技能入口去错与旧流水轮转](docs/handoff/MOTION_SKILL_ENTRY_HARDENING_20261107.md)：仅历史执行卡/超限流水原字节；现行方法读共享laohan-motion。
 

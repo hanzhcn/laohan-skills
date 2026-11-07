@@ -1,0 +1,9 @@
+# 开发辅助技能统一优化交付
+
+本轮仅laohan-chushicodex、laohan-shencha、laohan-sousuo及直接脚本/模板/测试。Codex采集器改真实strict doctor、保留子码并总体传播失败、清单隐私过滤；TECH声明按约定全量及匹配版本环境核验；已有授权不重复问、两轮失败转诊断、历史搜索/错误入口不冒当前行为。未修改内容制作节点或业务模型配置。
+
+已审原候选c7c5787eb3dcd62d4752edff6d5f27cc3f3fcf43；正常保留无关TikTok文档上游93d4d231a5ffddcb57db729b74ea1ae823ac2769，原审候选仍祖先。源集成候选41ef7a3591721597f5add63ff66dde81cad1cf0b已ff-only main/push，三技能与直接依赖/测试/环境未变，原5项/1.297s和独立5项保留原身份复用。全局四决议、最强Astra/GLM/官方DS结果对抗及逐条裁决统一在治理仓docs/handoff/DEVRULES_SKILLS_20261108，不另复制规则正文。
+
+三技能在agents/Codex/Claude原有路径已实际同源读回，无额外安装或恢复已卸载入口。本轮自身worktree、本地/远端任务分支已清；其他当前卡/制作/接受状态原样保留。真实doctor机器健康、自然宿主语义和业务生产未验，不从文件或5项stub推导。
+
+最后纯状态提交与fresh远端、对应Git/监督/归档完整事实以治理WRAPUP所指FINAL_CLOSEOUT.json为准；本仓无自定义pre-commit，本轮未宣称不存在的hook通过。文档/状态/回执是本批正常精确提交，不外发作品或改业务接受。
