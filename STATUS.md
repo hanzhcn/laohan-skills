@@ -2,9 +2,9 @@
 
 ## 当前任务
 
-### DEVRULES-SKILLS-20261108 — 开发辅助技能统一查漏补缺
+### DEVRULES-SKILLS-20261108 — 开发辅助技能已审，待集成读回
 
-owner/唯一writer=root；独立目录`/private/tmp/laohan-devskills-20261108`、分支`fix/devskills-20261108`，fresh基线`1c68081c2c0b034f5051561b3ff9442ab45946db`，实现tip`5fb5bf3`。本仓只改chushicodex/shencha/sousuo及直接测试/模板，未改内容制作节点/模型配置/生产。已验=Codex实际Bash入口5项、语法/diff/状态入口通过，完整诊断失败、隐私清单、恢复等已自审。当前最终结果窗口与治理源同批送Astra/GLM/官方DS，未独立批准/集成/激活。下一动作=结果裁决后正常direct提交push/集成与实际共享入口读回；治理源先行，不把单仓成功冒全任务完成。统一证据见治理仓`docs/handoff/DEVRULES_SKILLS_20261108/`。
+owner/唯一writer=root；独立目录`/private/tmp/laohan-devskills-20261108`、分支`fix/devskills-20261108`，已审三技能源候选`c7c5787eb3dcd62d4752edff6d5f27cc3f3fcf43`。chushicodex/shencha/sousuo与直接脚本/模板/5项测试已完成方案和结果对抗；治理源最后D1亦闭合。正常合入fresh上游93d4d231a5ffddcb57db729b74ea1ae823ac2769仅保护TikTok下载参考，本轮源码/直接依赖未变，不重审业务文档；原候选仍祖先。下一动作=治理先行后本仓direct集成/远端同步，三实际共享入口读回；不把原5项换写成新实测，不改变制作/模型/费用/接受。统一结果与限制见治理仓docs/handoff/DEVRULES_SKILLS_20261108/。
 
 
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
