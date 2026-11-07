@@ -1,10 +1,18 @@
-# 制作七步全链（细节参考）
+# 从选题交接到制作七步（执行参考）
 
 真源：`motion/mastery/DH-ROUTE.md` §一A—一C + §一B表格、`motion/mastery/PRODUCTION-METHOD-V4.md`、`motion/mastery/PIPELINE.md`。本文是执行浓缩，冲突时以真源为准。
 
+## 前端接入：没有锁定稿也从本入口开始
+
+只作路由，不复制选题/创作方法：未选题→`laohan-xuanti/SKILL.md`及项目五步法；已有题未锁稿→`laohan-chuangzuo/SKILL.md`及六步法。两阶段均按`laohan-chuangzuo/references/dual-engine-gemini.md`本项目覆盖完成独立双稿及负责人融合，保留真实原答/通道/裁决；selection_review/material_review按项目原有前置完成，不能由共同作者Gemini代独立审阅。
+
+写作产物和研究留在项目接入规格指定位置，STATUS绑定本期任务及准确路径/SHA。下一步需要的显示稿、发音稿、事实/内容审校、双引擎与锁定记录齐全后接第1步；“直到成片”等本期明确授权内持续执行，不把负责人锁定冒作Jeffrey亲自接受。仅候选供选或停工时停在对应边界，不自行扩展。
+
+人物来源、原片实看及工具可用性在昂贵生成前准备；并行与恢复只按[依赖调度表](execution-map.md)，不按本节编号把全部工作机械串行。
+
 ## 第1步 文案定稿
 
-- 输入：script-pool候选或episode候选，经Jeffrey接受/锁定。
+- 输入：按项目接入规范保存的本期完整融合稿，具备真实锁定记录与本期制作授权；来源可为script-pool或既有episode只读候选。不从文件名推导接受，不把“未锁稿”当成本skill的反触发。
 - 产出：冻结显示稿（正文仅口播，不夹导演提示）+ 发音稿（由`motion/mastery/pronunciations.json`替换标识符读音得到，全文必须匹配；残留未映射`laohan-*`在合成对齐前及计划入口报红）。
 - 模型辅助写作不冒充已验收；稿件改动使下游决策/事实/评分绑定失效，按实际输入重做。
 
@@ -39,7 +47,7 @@
 
 ### 6a 声学对齐（写参数前）
 ```sh
-"/Users/hanzhmacbookair/Documents/laohanvideo/.tools/whisper-align-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
+"$HOME/Documents/laohanvideo/.tools/whisper-align-env/bin/python" motion/tools/align-source.py --audio 实际候选声音.wav --spoken-script 发音稿.txt --out 全新词源目录
 ```
 - 本机解释器与导入预检命令按PIPELINE「共同制作入口」；默认python3不保证含stable_whisper，缺环境停止，不静默换引擎。回执绑定声音、未经改写的声学记录、发音稿和生产工具快照。
 - `--phrases`给保留全文的语义短语、`--windows`给有真实来源的局部搜索区间；每个最终边界由实际音频注意力DTW产生，短语内没有逐字时钟，不冒称逐字扫色。
@@ -62,6 +70,13 @@
 - 字幕设计选择：先比较原模板原生与组件分支的字幕排版/强调/语言能力并记录本片采用哪种（见SKILL"字幕设计选择纪律"），不能因接SRT方便用通用字幕层。
 
 ### 6c plan（官方命令经入口）
+
+先完成质量尺子B：在当前参数上运行下列预估，段内动作/最长静止不满足本期要求时回导演修方案，不靠渲后解释。source=`motion/mastery/QUALITY-SCORECARD-20261104.md`；按实际production.params取timeline，不能取目录最新文件，工具advisory不代替导演判断。
+
+```sh
+python3 motion/tools/score-timeline.py --stage plan --timeline 本期实际参数.json --out 本期/qa/scorecard/当前revision.json
+```
+
 ```sh
 python3 motion/tools/production-guard.py --record 本期/production.json --stage plan -- \
   node 已核helper.mjs run 实际.motion 原包plan其余参数
@@ -113,6 +128,9 @@ python3 motion/tools/production-guard.py --record 本期/production.json --stage
 - 最终混音消费原WAV、合法BGM和SFX；配乐须许可与来源明确（内置配乐/已认可曲目复用/本包官方选曲流程`music-prepare`按需）；返修已认可视频保留已认可配乐除非本次要求更换。**音乐归档三要素：曲目身份/许可、原曲与本期适配轨的SHA及处理关系（仅存WAV和曲名不足以证明来源）；限时选用引用和站上副本不当长期资产**。
 - plan前+交付前各跑一次`check-delivery.py`（交付前带`--video`；新制作必带`--source-record`/`--pronunciations`，否则发音稿一致性校验不执行），见gates参考。
 - 完整解码/帧数、首末词、原声与最终混音、字幕和人物时钟、实际字体/动效/配乐分别核查；连续播放/人耳能力如实记录。
+- 质量尺子C：每段首/中/尾原尺寸帧、全片1倍速及阿杜同类段并排复看，向同revision评分卡追加delivery实测和真实`human_review`；`human_review.verdict`为空不交付。没有相应观察能力不能填“已看”，沿V4如实交接未验部分。selection→delivery→outcome三阶段证据保持，未发布不造作品ID/数据。
+- 交付实测命令：`python3 motion/tools/score-timeline.py --stage delivery --timeline 本期实际参数.json --video 本期实际成片.mp4 --out 本期/qa/scorecard/当前revision.json`；参数必须与该片production记录一致，时长错配先核输入。已有stage不可覆盖，遵守质量尺子的revision/原证据保留要求。
+- 制作授权内可交已完成必要检查的candidate，接受状态保留PENDING；不得为了“完成”自动登记accepted-final。
 - Jeffrey实际听看接受→登记工程`deliveries/accepted-final.json`；发布预填=真实Chrome预填+页面回读。
 - 用户否决即在STATUS.md登记，原件保留为失败证据。
 

@@ -2,6 +2,12 @@
 
 ## 当前任务
 
+### MOTION-END-TO-END-20261107 — 方法与验证完成，Git收口中
+
+owner/唯一writer=Codex/root；main基线0d3530a，视频同任务基线9e458db。扩展既有laohan-motion到共同选题/双稿融合→本人形象/声音→Motion→候选交付；按阶段读取、安全并行、局部恢复和时间记录，不降质量/跳Gemini、不启动新片、不扩大授权。冻结基线→GLM规划对抗→修改→情境与真实引用检查→GLM结果对抗→正常commit/push；正式状态与证据由同一root维护，详细执行卡和本地证据在视频仓STATUS及motion/baselines/references/motion-end-to-end-20261107。实际新片耗时提升未验。
+
+检查点：2.0.0与两项reference完成；GLM规划对抗落实、结果APPROVE_METHOD_ONLY并逐项裁决；local扫描红→绿、引用/状态及视频完整87/87实跑通过。剩正常commit/push、fresh集成核验与状态归档；完整回执见docs/handoff/MOTION_END_TO_END_SKILL_20261107.md。
+
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
