@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### MOTION-METHOD-DEEP-AUDIT-20261107 — Motion 2.1.0 制作方法与新会话修正
+
+owner/唯一writer=Codex Motion root；隔离分支codex/motion-method-20261107，基线876ed0c40600d6d4e1fdea9580e19ac48d9cee07。仅改laohan-motion默认阶段分会话、模板查新/读透与现有样段复用指针；原制作门/双稿/接受边界保留。真实新会话接收探针已核身份/SHA/nonce与缺授权拒绝，local扫描通过；GLM规划已裁决，结果GLM/DeepSeek交叉及owner消歧增量已通过，两仓正常集成进行中。完整证据见[本轮回执](docs/handoff/MOTION_METHOD_DEEP_AUDIT_20261107.md)；新片质量/速度与三阶段生产未测，不动其他声音技能在途提交。
+
 ### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
 
 owner/writer=当前Codex root；main，起点876ed0c40600d6d4e1fdea9580e19ac48d9cee07。本批仅laohan-yinse第7步及旧CLI例补齐当前kb78769正数容量预算和`--`分隔，不生成/训练/删除资产，不改接受或费用边界。真实launcher/synth的21项CPU正负例与模型/参考完整SHA已核。最终GLM完整材料覆盖本文件，1439.674s有效REVISE唯一HIGH在独立video缓存root；本技能文档无finding，已按不变CLI/声音源码独立裁决DOC_SCOPE_CLOSED，不以产品待修项阻塞Motion技能源集成。文档候选2cb0b1acf049a2573dbb97730886aa05e8fc67be；公共runtime仍PRODUCTION PENDING、由产品同任务继续，未冒声音新WAV/生产已验。视频官方锁检查614项changed0，无本文件锁条目，不抢Motion唯一锁writer。证据统一在laohanagent `docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/`及本仓DOC_SCOPE_RECEIPT；本段仅文档source闭环。
