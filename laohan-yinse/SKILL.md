@@ -191,6 +191,8 @@ done
 
 ### 7. 整稿合成（交付给口型链的最终 WAV——laohan-laowai ⑤ 的输入契约）
 
+使用当前项目已核的受控启动器并先读其`--help`。已接共享容量门的kb78769入口在`--run`时必须显式给出本期正数新增峰值预算：`launch_voice.py synth --run --storage-required-bytes <字节> -- --binding <本期绝对路径> --out <全新WAV>`；不带`--run`仍可只读预检。预算包括新增输出/临时共存，未知/不足即STOP；实际synth在模型前和PCM落盘前调用公共check、保留20GiB。它是合作快照，不能替代生产活动门、依赖身份或听感验收；不为凑容量删声音模型/参考/原片，也不重新训练。其它启动器按其真实help与项目合同适配，不虚构同名参数。
+
 **本期文本绑定**：从当前项目STATUS/INDEX找到本期定稿，记录源稿路径/SHA及本期内容/事实/违规审阅状态，再仅导出口播正文为任务专属`spoken.txt`并记SHA；不得把Markdown标题、中文对照表或制作说明一起送TTS。远端任务脚本显式读取本次上传的`spoken.txt`绝对路径，传输后核同SHA；启动前回读本期源稿/口播导出/模型/参考绑定。旧`synth_ep01.py`和`ep01-script.txt`不因同名集数而成为默认输入。
 
 本节最终WAV是**纯人声主轨**：字幕词锚与same-voice都绑定它。音乐在口型后另混为交付音轨，单纯换音乐、duck/非时序电平处理不改干声身份，不据此重复TTS/ASR/口型；剪人声、改字或变速另按影响处理，混音仍须有声审片。
@@ -251,5 +253,5 @@ ffmpeg -y -i <整稿>.wav -ar 24000 -ac 1 -c:a pcm_s16le <整稿>-24k.wav
 - **CosyVoice 长段偶发丢尾句**（EP02 实锤：55 词段丢末句 "they stop studying"，脚本 chunk 校验不拦——只验非空不验内容）。**合成后必须跑词级 ASR 与稿 diff 核缺句**（数字格式差异 $8/eight 属正常，整句缺失必须修）——此步为固定步骤不省略
 - **同输入重跑无效（同 seed 确定性重放）**：EP02 重跑同 binding 输出逐毫秒相同、同样丢句。丢句修复=**改输入拆段**（丢尾句的长段按句拆成两段），不是重跑
 - **改 spoken.txt 的 SHA 三联动**：spoken 变 → binding 的 `spoken.sha256` + weigui json 的 `spoken_sha256` + binding 的 `script_review_evidence.sha256`（weigui 文件内容变了）三处必须同步更新，漏一处即 `path/SHA mismatch` STOP
-- 入口判例重申：服务器合成走 `launch_voice.py synth --binding X --out Y --run`（直接跑 synth-kb78769.py 会 STOP）；预检（无 --run）先过再真跑
+- 入口判例重申：服务器合成走第7步当前受控启动器及明确预算；旧不带预算/缺`--`分隔的示例已取代。直接跑synth-kb78769.py会STOP；预检（无--run）先过再真跑。
 - 上传后远端 SHA 回读核对一次再启动（传输损坏当场发现）

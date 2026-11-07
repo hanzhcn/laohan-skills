@@ -2,6 +2,10 @@
 
 ## 当前任务
 
+### TBDUB-CACHE-CAPACITY-20261107 — 声音入口说明同步中
+
+owner/writer=当前Codex root；main，起点876ed0c40600d6d4e1fdea9580e19ac48d9cee07。本批仅laohan-yinse第7步及旧CLI例补齐当前kb78769正数容量预算和`--`分隔，不生成/训练/删除资产，不改接受或费用边界。真实launcher/synth正负例由laowai同任务CPU测试覆盖；最终统一GLM对抗、精确提交push及视频runtime lock同步后收口。证据统一在laohanagent `docs/handoff/TBDUB_CAPACITY_IMPLEMENTATION_20261107/`，当前SOURCE PENDING FINAL REVIEW。
+
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
