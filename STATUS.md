@@ -2,12 +2,6 @@
 
 ## 当前任务
 
-### MOTION-END-TO-END-20261107 — 方法与验证完成，Git收口中
-
-owner/唯一writer=Codex/root；main基线0d3530a，视频同任务基线9e458db。扩展既有laohan-motion到共同选题/双稿融合→本人形象/声音→Motion→候选交付；按阶段读取、安全并行、局部恢复和时间记录，不降质量/跳Gemini、不启动新片、不扩大授权。冻结基线→GLM规划对抗→修改→情境与真实引用检查→GLM结果对抗→正常commit/push；正式状态与证据由同一root维护，详细执行卡和本地证据在视频仓STATUS及motion/baselines/references/motion-end-to-end-20261107。实际新片耗时提升未验。
-
-检查点：2.0.0与两项reference完成；GLM规划对抗落实、结果APPROVE_METHOD_ONLY并逐项裁决；local扫描红→绿、引用/状态及视频完整87/87实跑通过。剩正常commit/push、fresh集成核验与状态归档；完整回执见docs/handoff/MOTION_END_TO_END_SKILL_20261107.md。
-
 ### LAOWAI-SEMANTIC-CAPTION-20261105（断句与交付方法修复完成，2026-11-06）
 
 owner/writer=本轮Codex root；main（本仓明确direct）。完整意群/独立语义原调用绑定、字形/缺字与真实三出口、封面原脚本复用、老韩AI通知bot身份、EP05耗时根因及前置复用已固化；weigui补不支持--help的真实用法。实际43cue/媒体/五件飞书回下载、41项主回归+4项锁测试、两角色对抗、官方DS首审修复及GLM满配增量通过，证据与限制见[本轮回执](docs/handoff/LAOWAI_SEMANTIC_CAPTION_20261105.md)。源码本轮精确提交push；不冒平台发布/用户接受或下一集耗时提升已实测。
@@ -79,6 +73,8 @@ owner：Jeffrey / 当前Codex；main，起点93798dc0284b4e27cebd41593414163455f
 owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Documents/laohan-skills`，分支 main，起始候选 `fc6131be40cc41e5731c46b05a39325bbf40109d`。本批只补接续入口，业务内容保持；已验：reader --check PASS；本批精确提交/push 结果见执行回执；业务执行/安装/发布未验，无阻塞。下一步：收到具名 skill 任务后按 CLAUDE.md 业务合同执行。证据 `/tmp/pwf-devrules-conflict/fix_execution.md`。
 
 ## 近期流水
+
+**2026-11-07·MOTION-END-TO-END-20261107 laohan-motion2.0已交付。** 现有入口贯通共同选题/全部Gemini双稿融合到本人数字人Motion候选；新增依赖调度/局部恢复/计时参考，入口按阶段加载。原质量门和授权不变，未新出片。local扫描红→绿、引用/状态检查、视频87/87完整实跑通过；GLM规划与结果对抗已裁决，结果APPROVE_METHOD_ONLY，不冒真实新片提速。实现cf62464与视频b6adbe5正常push且两仓fresh严格集成exit0；临时监督已删。回执=[方法与边界](docs/handoff/MOTION_END_TO_END_SKILL_20261107.md)，最终状态提交和Git以视频仓同任务closeout.json为准。
 
 **2026-11-07·MOTION-PLATFORM-COPY-LENGTH-20261107 修复与最终对抗复核完成。** root/main，laohan-chuangzuo3.12.3补本项目四平台正文约束传递和融合后逐项计数；旧251字拒绝，干净LOCAL/Gemini双稿融合169字，四稿146/149/169/148字实核。GLM满配对抗APPROVE，三冻结文件字节一致；614锁/30执行器与视频87/87实际通过，无新自动门或权限扩张。按明确main授权同批正常提交push，实际Git终态见[收口回执](docs/handoff/MOTION_PLATFORM_COPY_LENGTH_20261107_CLOSEOUT.md)所指final-closeout；未冒未来自动防漏或用户接受。
 
