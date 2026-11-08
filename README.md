@@ -281,7 +281,6 @@ laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → lao
 | 🚀 **fabu** | 跨项目发布手册——多面依序/四同步/门禁核对 | "发布""直接发布""发预发" | 要上线时 |
 | 🧹 **shouwei** | 关窗前收尾审计——worktree/未 push/部署一致性/裸条文收账 | "收尾""检查收尾" | 每次关窗口前 |
 | 📋 **doccheck** | 文档六项机械体检（指针/条数/超长/孤儿/断链） | "文档体检""检查文档" | 文档多起来后定期 |
-| 🎫 **edu-guard** | GLM 额度守卫——定时查额度自动用重置卡 | "开守卫""还剩几张卡" | 额度管理（与"收尾"无关，纯撞名已改名） |
 
 **治理体系一句话总结**：学习规则(devrules)→初始化(chushihua)→接线(harness)→审查(review)→排查(paicha)→裁决(caijue)→交接(jiaojie)→发布(fabu)→收尾(shouwei)→文档(doccheck)——开发全流程每一步都有手册。
 

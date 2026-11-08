@@ -263,7 +263,6 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 | 🚀 **fabu** | Cross-project release manual: ordered surfaces / four syncs / gate checks | "发布" | When shipping |
 | 🧹 **shouwei** | Pre-close audit: worktrees / unpushed commits / deploy consistency | "收尾" | Before closing a window |
 | 📋 **doccheck** | Six mechanical doc checks (pointers / counts / length / orphans / broken links) | "文档体检" | Periodically as docs grow |
-| 🎫 **edu-guard** | GLM quota guard: check quota and apply reset cards on schedule | "开守卫" | Quota management |
 
 **In one line**: learn (devrules) → initialize (chushihua) → wire (harness) → review (review) → diagnose (paicha) → adjudicate (caijue) → hand off (jiaojie) → release (fabu) → wrap up (shouwei) → docs (doccheck).
 
