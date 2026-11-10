@@ -132,7 +132,7 @@ Episode schema 4 在原schema 3全部内容之外，至少增加：
 - `execution_steps` 逐项记录 `step_minus_1`、`step_0`、`step_2`—`step_7` 与新增`step_5_5`为 `COMPLETED`；`step_4_5` 的完成/失败按双引擎方法的项目覆盖登记，laohanvideo不得SKIPPED，未完成不得签COMPLETED；仅无强制覆盖的项目可按通用降级记录实际原因（validator 暂不强制该键）。不适用的 Pre-A/B、Step 1/1.5 写 `SKIPPED` 及理由；
 - `quality_checks` 在原六关之外增加 `semantic_redundancy`、`human_voice`、`language_review`、`dynamic_duration`、`structure_clarity`，全部为 `PASS`，另有非空 `read_aloud_note`；
 - 最终 `script_title`、`script_hash`、合法 `completed_at`。
-- `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题（**主推与候选均≤20字**，2026-10-29 Jeffrey 定）、选择理由、标题与介绍证据、视频介绍结构与SHA，以及按目标账号定的标签（**抖音标签≤5个**）。每个候选须过**外行3秒可读检验**：不依赖本系列前作上下文（"最高赞/偷一半/抄作业对象"类内部梗必须自带可自解释的主谓宾），压缩不得丢主语或宾语——没看过前作的读者只读标题就能说出视频讲什么（2026-11-10 Jeffrey 判例：EP08 标题「最高赞要给孩子发工资，我只偷走一半」连 owner 本人都要两轮追问才懂，判压缩过度失败；同批 titles.json 只落 1 候选无理由，3 候选合同执行违规一并记）。
+- `publish_copy_contract` 必须绑定3个标题候选、唯一主推标题（**主推与候选均≤20字**，2026-10-29 Jeffrey 定）、选择理由、标题与介绍证据、视频介绍结构与SHA，以及按目标账号定的标签（**抖音标签≤5个**）。每个候选须过**外行3秒可读检验**：不依赖本系列前作上下文（"最高赞/偷一半/抄作业对象"类内部梗必须自带可自解释的主谓宾），压缩不得丢主语或宾语——没看过前作的读者只读标题就能说出视频讲什么（2026-11-10 Jeffrey 判例：EP08 标题「最高赞要给孩子发工资，我只偷走一半」连 owner 本人都要两轮追问才懂，判压缩过度失败；同批 titles.json 只落 1 候选无理由，3 候选合同执行违规一并记）。**可读性优先于字数压缩（Jeffrey 2026-11-10 原话「以后不要弄之前那么短的，看不懂的效果很差」）**：接近 20 字上限但念着顺口就不要为短砍字；宁长勿短，砍字只砍修饰语、不砍主谓宾。
 - Episode 模式还必须读取 `references/multi-platform-publish-contract.md`，在同一轮创作中输出 `12-发布/多平台发布内容.md`。抖音、视频号、小红书、哔哩哔哩的标题、介绍/正文和话题必须按平台受众分别创作，不能复制口播稿或复用一份文案；视频号独立短标题不超过16字；抖音、视频号、小红书话题固定包含 `#老韩AI`，哔哩哔哩标签固定包含 `老韩AI`。
 
 字段和命令以 `references/creation-contract.md` 为准。Step 7 必须实际运行validator；Episode未出现 `PASS chuangzuo script contract schema=4` 时不得声称②完成。
