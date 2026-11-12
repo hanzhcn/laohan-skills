@@ -9,7 +9,7 @@
 3. App 也不可用 → 浏览器打开 `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）粘贴同一任务包；记录实际模型/档位。AI Studio 与网页 Pro 不等价，不得冒签同一通道。
 4. 成长项目按Jeffrey 2026-11-04硬要求：三通道全不可用记`BLOCKED_GEMINI`与真实原因，停在草稿，不以SKIPPED放行配音/口型；完整口播、中文表达和全部三平台标题介绍标签均须Gemini参与并逐项融合。
 
-项目真源：仓库 [`docs/ops/gemini-review.md`](/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md)（渠道记录字段、任务包、融合与验收）。
+项目真源：仓库 [`docs/ops/gemini-review.md`](/Users/hanzhmacbookair/Documents/laohan-laowai/docs/ops/gemini-review.md)（渠道记录字段、任务包、融合与验收）。
 
 1. 用宿主原生应用自动化选中Gemini客户端，核窗口为既有「老外文案」会话，先查是否已有本期消息/生成，防止重复发送；本期同份提示词文件先留档，先自稿后第二引擎。
 2. 在完整草稿填好后再开模型菜单。本例界面为“4 Argon、复杂任务”，思考等级为“低/中/高”，选择“高、超级详尽”，发送前核显示“Argon 高”。本例空草稿选高后粘贴，曾回到低档，因此填稿前的一次设置不足。型号/档位按当前UI与用户决定核，不盲用历史编号、不静默降档。

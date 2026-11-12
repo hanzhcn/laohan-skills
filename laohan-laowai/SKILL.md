@@ -11,7 +11,7 @@ description: 老外博主数字人全流程总控（含 laohan-yinse）。同一
 
 ## 0. 前置（项目根与索引）
 
-- 本项目根固定为 `/Users/hanzhmacbookair/Documents/laowai/1chengzhang`（下文记 `$PROJECT_ROOT`）；执行本 skill 前 `cd $PROJECT_ROOT` 或全程用绝对路径。**不要**在 `~/Documents/laohanvideo` 根执行本项目命令——那是 Motion 项目，仅借用其 `motion/tools/` 工具。
+- 当前活跃项目根固定为 `/Users/hanzhmacbookair/Documents/laohan-laowai`（艾米号，下文记 `$PROJECT_ROOT`；2026-11-12 核实修正——旧根 `laowai/1chengzhang` 已不存在，本 skill 早期版本围绕它建立，Deborah/海思博士历史实例的路径仅存档不指向）；执行本 skill 前 `cd $PROJECT_ROOT` 或全程用绝对路径。**不要**在 `~/Documents/laohanvideo` 根执行本项目命令——那是 Motion 项目，仅借用其 `motion/tools/` 工具。
 - 先读 `$PROJECT_ROOT/AGENTS.md` 与 `$PROJECT_ROOT/docs/INDEX.md`；文中 `assets/...`、`docs/...`、`subtitles-epXX.ass` 等相对路径均相对项目根解析。
 - 预检：`test -f docs/INDEX.md` 失败即停并报缺项，不猜路径、不换项目根。
 
@@ -242,7 +242,7 @@ docs/
 - 第四轮 GLM 复审闭环证据：`docs/handoff/EP03_07_REDO_20261102/review/`（glm-review-*.md、adjudication-20261102.md）；改这些脚本前先读裁决文档的残余 P3/UNVERIFIED 清单。
 
 ### 交付
-- 标题/文案双引擎（发布前必做）：所有新写/重写口播/中文表达及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用记录BLOCKED_GEMINI，停在草稿，不进入配音/口型。所有新写/重写文章均须完整英文口播、中文表达和三平台标题/介绍/标签的Gemini原稿及逐项融合，不能只审标题。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laowai/1chengzhang/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
+- 标题/文案双引擎（发布前必做）：所有新写/重写口播/中文表达及三平台标题/介绍/标签必须"本地稿 + Gemini 独立稿"各出一套再融合，融合后重跑 weigui；两稿不得互喂初稿。渠道按顺序：① 已登录 Chrome `gemini.google.com/app`「老外文案」会话（Pro/最高档，可用 huashu-chrome/ego-browser/kimi-webbridge 等）→ ② 网页不可用 → 桌面 `Gemini.app`（`/Applications/Gemini.app`）→ ③ App 不可用 → `https://aistudio.google.com/prompts/new_chat`（2026-11-02 实测可打开）→ ④ 全不可用记录BLOCKED_GEMINI，停在草稿，不进入配音/口型。所有新写/重写文章均须完整英文口播、中文表达和三平台标题/介绍/标签的Gemini原稿及逐项融合，不能只审标题。任务包/融合/落盘验收真源：`/Users/hanzhmacbookair/Documents/laohan-laowai/docs/ops/gemini-review.md`；本期 `gemini-draft.md`/`fusion.md` 与发布包一起留档。
 - **飞书通知统一「老韩AI通知」**（Jeffrey 2026-11-05再次明确）：固定 `--profile laohan-notify --as bot`，AppId=`cli_aa3c149d3bf8dcc0`，chat=`oc_6a5b224a3370d166774567930a9d4601`；发送后核chat/sender确为该bot，旧「github每日推送」仅历史名，不恢复旧应用、不切全局默认profile。个人云盘另显式 `laohan-assistant --as user`，不能将通知误发为助手用户身份。当前上传/大附件/回下载方法只维护于成长项目 `docs/ops/feishu-delivery.md`。
 - 大文件交付按项目现行飞书方法：用户要求聊天附件时，先用实际可达的CLI或已登录客户端发送原文件，不能据IM接口上限改成“只能云盘”。客户端附件可由当前宿主受控操作，发后核实际清单并回下载；客户端不可用或用户指定云盘时，再用 `drive +create-folder/+upload` 后备。成长项目具体路径与真实判例只维护于上方 `docs/ops/feishu-delivery.md`，不降低正式画质以凑附件限制。
 - 既有脚本附件失败仍可能exit0，须核实际附件成功，不能只看卡片或总退出码。客户端附件可能嵌在`post.files`，不能只筛`file`消息；绑定本期文件名/大小，能回下载时核SHA。状态不明先核消息，避免重复发送；发送成功不代签手机打开或听感接受。CLI1.0.40的`--markdown -`是字面短横线，必须用参数数组传入MD全文；发送后mget核当前文件夹URL、完整文件名、chat与sender，不能只凭message_id。正文错误只修该消息步骤，不重建云盘或重复上传。
