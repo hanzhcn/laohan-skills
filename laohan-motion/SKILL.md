@@ -80,7 +80,7 @@ description: 老韩数字人×Motion视频的端到端入口。承接一句创�
 
 ## 完成与不完成
 
-工程`motion/projects/<日期-slug>/`保留真实输入、director/production、原答、失败与有效QA；稿件真源按项目接入规范引用，媒体与凭据不入代码Git。候选及清单在工程`deliveries/`，桌面只是同SHA副本。
+工程`motion/projects/<日期-slug>/`保留真实输入、director/production、原答、失败与有效QA；稿件真源按项目接入规范引用，媒体与凭据不入代码Git。候选及清单在工程`deliveries/`，桌面只是同SHA副本，owner验收后由收尾清理（Jeffrey 2026-11-12：桌面只放单期发布包）。中间产物一律落工程目录——声音/配音/试听文件零放桌面（Jeffrey 2026-11-12：不听桌面音频，cage-p*.wav 判例）。
 
 “制作交付完成”=本期必需内容/来源/动态/独立复核与实际成片检查完整、候选包逐项回读、STATUS记清未验范围；不要求冒写Jeffrey接受。只有真实接受才登记accepted-final；无本期授权不上传、发布、回复或对外发送。缺必要环节只报实际阶段与下一动作，不以文件存在、机械PASS或模型赞成代签。
 
