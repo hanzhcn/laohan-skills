@@ -121,3 +121,7 @@
 - 纯错字/标点修复不重跑
 - **待选三稿模式（--candidate）**：通用流程只要求当阶段口播，不提前造发布信息（publish_copy=DEFERRED）；laohanvideo按项目覆盖对已写标题等全部创作文案双稿，四平台尚未生成的文本到正式轮再写，不能将DEFERRED当成已写文本的豁免
 - 桌面发布包只在正式交付时打（Episode 正式稿/正式发布交付）；随手小稿、草稿、待选稿不放桌面
+
+## 调用档位判例（Jeffrey 2026-11-13 指出）
+
+上文第 4 条「Pro 级思考档（正式写作不降档）**同样约束 AI Studio 降级通道**：AI Studio 的 thinking 档位选择器也必须手动切到页面最高档，不得留在默认档。判例：2026-11-13 HUANG-LIZHI ①选题走 AI Studio（Gemini 4 Argon）时留在默认 Medium 被 Jeffrey 指出；结论虽全票一致未返工，但此后任何 Gemini 文字任务（选题排序/全部文案）的实际档位写入当期 dual-engine-record，降级不降档。
