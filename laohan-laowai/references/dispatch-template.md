@@ -42,10 +42,11 @@ git 基线：main @ `{{SHA}}`（派发时 HEAD）。
 0. **开工前置义务（项目合同「数据补收事件驱动」）——写稿前必须先完成**：①线上实查（CDP9333 采集一轮即同时完成在架对账）②全量数据补收（按 `docs/ops/amy-data-readback.md` CDP9333 口径）。**补收清单真源=gap-analysis.json 各期 48h/7d 现值，不是 STATUS 待办队列快照**——STATUS 待办行更新滞后于实际回收（EP10 判例 2026-11-15：DISPATCH 沿用 STATUS 旧快照把已收的 EP08 48h 列为"立即补收"，制作窗口核实 gap-analysis 后落空，白耗核对工时；派发前必须对 gap-analysis 逐期核状态再写补收清单）；due 落在制作窗口期内的观测点写明「到点收」并给 due 时刻；Chrome157 playwright 补丁先验在位（丢了按 amy-data-readback.md 判例重打）；收完登记 gap-analysis.json 并 commit
 1. 字幕初稿每屏 **≤11 字**（字形安全框，EP08 为此多花 5 轮审阅）；**审阅 prompt 必须显式写"修法 ≤11 内容字"**——DS 会把字形门当软约束反复给 12-14 字修法（EP09 四轮不收敛实锤）
 2. 审阅通道：单模型 **4 轮不收敛即换通道**（DS R1-R5 漂移判例）；跨家族优先级 codex→Magpie免费→官方ds（实现方 GLM 不复审自己初稿）；全不可用按完成优先兜底条款（官方 ds 同模型绿灯）
-3. GPU same-voice 定式：`svc.sh stop worker tts tbdub` → 分片批跑（内存 20GiB 预算、块数按成片长度）→ `start` 恢复；SSH 命令一律 `> log 2>&1` 不用管道；失败残留 `rm -rf outputs` 全量重跑
+3. GPU same-voice 定式：`svc.sh stop worker tts tbdub` → 分片批跑（内存 20GiB 预算、块数按成片长度）→ `start` 恢复；SSH 命令一律 `> log 2>&1` 不用管道；失败残留 `rm -rf outputs` 全量重跑。**EP10 判例四则（2026-11-15）**：①`--max-input-frames`=每块上限帧数（≤300），不是总帧数；新素材（无 tbdub-cache 预处理缓存）首块 preprocess 页缓存叠加可致容器增量 20GiB 门（rss 未超也会拦）——缩块至 ~150 帧+单块批跑；内存水位高先 `posix_fadvise DONTNEED` 释放 pkl 页缓存（无特权，84→46.6GiB 实测；drop_caches 容器内被拦）②probe 试跑也须 SVC stop→跑→start 全序列（裸跑撞生产日志门）③**素材头身位移稳定性进 D3 判据**：人物动幅大（脸 bbox 块内位移>16%）触发 crop_mode=2 与其余块分歧，被 assemble 一致性门（LIPSYNC_BATCH_MISMATCH，2026-11-14 上线）拒拼——D3 除正脸/嘴/手外加多帧人物轮廓位置对比；换素材前可 probe 首尾 2 块实测 crop_mode 一致性再全链 ④launch_voice.py 用 sys.executable 转发——必须 cosyvoice-train/venv/bin/python 调用（tbdub python 缺 torchaudio）
 4. 封面一条命令三尺寸默认齐出（34/43/916），crop-y=240、crop-y-43=240；**916 一律带 --mask-916**（遮盖 y≤240 片内标题带防同文双写，EP09 判例②闭环 2026-11-12；crop 方案裁后仅剩 1040 高补回必变形故用遮盖）；zai 视觉审 4 项×3 尺寸；大字按 §4 统一策略
 5. 飞书交付双通道：≤25MB 消息直发（push-feishu.mjs 带附件）、>25MB 云盘 folder+链接；桌面发布包照放（~/Desktop/EP{{NN}}-发布包-日期/）
 6. 发布登记：gap-analysis.json 加 EP{{NN}} 行，published_at 待 Jeffrey 发布后登记（**登记发布时刻必须核实真实发布时间——创作者中心快照时间戳，禁止拿报告时刻冒充**，EP08 判例）；观测点 48h/7d 用 task-guard add 登记（带时区 offset，due=发布时刻+N，脚本用 ~/miniconda3/bin/python）
+7. **三标题拆行定稿须实测三道门**（EP10 判例 2026-11-15）：line1/line2/title_zh 字数达标≠能过——①title_zh 过 glyph err（墨迹中心容差 576 几何 1.6px；「月息1块」类字形天然右偏 2.0px 直接 FAIL 且 pos 自动居中不可调、手改 ASS 被 verify 拒）——穷举合法子串实测选 err≤容差者，必要时主推标题为 title_zh 让位换候选；②line1/line2 过 make-cover 硬校验（数字算字符数，「100块月息1块」8 字符超 7 上限）；③title_zh 与 line1 不同段不同文。标题候选登记时把三处拆行方案+实测 err 写进 title-candidates.json
 
 ## 6. 验收标准（可执行入口）
 
