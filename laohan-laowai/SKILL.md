@@ -120,7 +120,7 @@ ffmpeg -n -i <成片>.mp4 -filter_complex "[0:v]settb=AVTB,setpts=(PTS-STARTPTS)
 
 ### ⑦ 发布与复盘
 
-- **评分闭环（laohan-pingfen，2026-11-15 建）**：发布包建包前按 laohan-pingfen PREDICT 出预评分（`docs/ops/pingfen/predictions/EPxx.json`，immutable，逐维 rationale），build-pubpk 的 pingfen_gate 会核评分存在（缺则 WARN），交付消息附评分行；Jeffrey 发布登记后挂 48h/7d 观测点（prompt 内嵌 actual+calibrate 命令），数据到点 ACTUAL 实评→CALIBRATE 对比预测（档差≥2 强制归因，锚修正回测不退化才生效）。评分是预测与学习工具，不是交付门；低分显著风险（D 档+关键维 0 分）在交付消息显著提示。
+- **评分闭环（laohan-pingfen，2026-11-15 建）**：发布包建包前按 laohan-pingfen PREDICT 出预评分（`docs/ops/pingfen/predictions/EPxx.json`，immutable，逐维 rationale），build-pubpk 的 pingfen_gate 会核评分存在（缺则 WARN）。**交付三处必带评分（Jeffrey 2026-11-15 确认口径）**：①会话/窗口交付汇报含评分（总分/档位/最大风险）②飞书交付消息附评分行 ③**桌面发布包目录必含 `EPxx-评分.md`**（`pingfen.py report --prediction ... --out ~/Desktop/EPxx-发布包-日期/EPxx-评分.md`，人类可读评分卡；zip 五文件包结构不动）。Jeffrey 发布登记后挂 48h/7d 观测点（prompt 内嵌 actual+calibrate 命令），数据到点 ACTUAL 实评→CALIBRATE 对比预测（档差≥2 强制归因，锚修正回测不退化才生效）。评分是预测与学习工具，不是交付门；低分显著风险（D 档+关键维 0 分）在交付消息显著提示。
 - 抖音账号注册、养号与发布时间由Jeffrey主导；不把“养号2–3天”当平台硬规定或流量保证。账号装修按本期已确认人设，不自动搬用旧专家履历。
 - **发表/废弃后回收占用**：实际任一平台发表就永久锁定该版本造型；仅明确废弃且确认所有平台未发布的版本才能release。待接受/暂未发/旧文件仍在不等于废弃；同组其他版本还占用则不回库。只变更使用状态和保留历史，不因此删除原片/声音资产、撤回附件或删线上作品。真实发布回读与未知项处理按项目生命周期方法执行。
 - **成品交付规范（2026-11-04 Jeffrey 精简；2026-11-05 扩封面）**：每期 `EPxx-多平台发布包.zip` 严格五文件：`成片.mp4`、**`封面.jpg`（编号大字模板，3:4的720×960；必须复用成长项目已有 `scripts/make-cover.py`，不另造重复排版脚本；规格/选帧/质检真源=`docs/ops/cover-spec.md`，编号永远干净序号）**、`抖音.txt`、`视频号.txt`、`小红书.txt`。无损母版仍按质量合同在项目内保留；manifest/说明/审核/过程文件只进内部证据区，不进用户包。五文件构建入口 `docs/handoff/EP05_ANGER_20261105/tools/build-pubpk.py --src <当前批次> --eps 05 --titles <JSON文件>`，先看当前help，不把JSON字面量当文件；11-02脚本保留历史四文件行为，新五文件批次不得走旧默认建包/verify-existing绕门。建包前核字幕/当前final/封面审阅绑定，回下载按内部清单核SHA。桌面仅可选中转，已被取代的错误本地/云盘交付按明确授权和精确清单删除，线上作品另核发布指令。

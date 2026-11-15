@@ -60,6 +60,6 @@ description: 视频爆款评分与自校准闭环。发布前对成片发布包�
 
 ## 完成证据
 
-- PREDICT：predictions/<EP>.json 落盘 + 发布包含 score_report + 交付消息带评分行。
+- PREDICT：predictions/<EP>.json 落盘 + 桌面发布包含 EPxx-评分.md（report 子命令）+ 飞书交付消息带评分行 + 窗口汇报含评分。
 - ACTUAL：actuals/<EP>.json + 数据窗口与来源标注。
 - CALIBRATE：calibration-log.jsonl 追加记录（含 backtest 区分度结论）。

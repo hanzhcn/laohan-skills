@@ -229,6 +229,42 @@ def cmd_actual(args):
         print(f"actual {data['episode']}: score={total} grade={grade} ({data['window']}) -> {out}")
 
 
+# ---------- report ----------
+
+DIM_NAMES = {
+    "T1": "标题分派冲突力", "T2": "场景日常高频", "T3": "数字具体性", "T4": "外行3秒可读",
+    "F1": "转发对象明确", "F2": "可抄制度密度", "F3": "前5秒兑现标题",
+    "R1": "结尾双件套", "R2": "问题报数式", "Q1": "质量门达成",
+}
+
+
+def cmd_report(args):
+    pred = load_json(args.prediction)
+    if pred.get("mode") != "PREDICT":
+        die(f"not a PREDICT file: {args.prediction}")
+    dim_scores = pred.get("dimension_scores") or {}
+    rationale = pred.get("dimension_rationale") or {}
+    lines = [f"# {pred['episode']} 爆款预评分（laohan-pingfen {pred.get('rubric_version','?')}）", "",
+             f"**总分 {pred['total']}/100 · 档位 {pred['grade']}** · 评分时间 {pred.get('created_at','?')}（预测不可改）", ""]
+    if pred.get("predicted_plays_anchor"):
+        lines += [f"- 播放预期锚：{pred['predicted_plays_anchor']}", ""]
+    lines += ["| 维度 | 得分 | 一句话依据 |", "|---|---|---|"]
+    for k in ["T1", "T2", "T3", "T4", "F1", "F2", "F3", "R1", "R2", "Q1"]:
+        if k in dim_scores:
+            lines.append(f"| {DIM_NAMES[k]}（{k}） | {dim_scores[k]}/5 | {rationale.get(k, '—')} |")
+    if pred.get("env_risk"):
+        lines += ["", f"**⚠ 环境风险**：{pred['env_risk']}"]
+    if pred.get("notes"):
+        lines += ["", f"备注：{pred['notes']}"]
+    lines += ["", "---", "发布后 48h 出实际分、7d 终判并自动校准评分机制（档差≥2 强制归因）。"]
+    text = "\n".join(lines) + "\n"
+    if args.out:
+        Path(args.out).write_text(text, "utf-8")
+        print(f"report -> {args.out}")
+    else:
+        print(text)
+
+
 # ---------- calibrate / backtest ----------
 
 def spearman(xs, ys):
@@ -313,6 +349,7 @@ def main():
     s.add_argument("--out"); s.add_argument("--allow-missing", action="store_true"); s.add_argument("--stdout-only", action="store_true"); s.set_defaults(fn=cmd_score)
     a = sub.add_parser("actual"); a.add_argument("--data", required=True); a.add_argument("--baseline", required=True)
     a.add_argument("--out"); a.add_argument("--stdout-only", action="store_true"); a.set_defaults(fn=cmd_actual)
+    rp = sub.add_parser("report"); rp.add_argument("--prediction", required=True); rp.add_argument("--out"); rp.set_defaults(fn=cmd_report)
     c = sub.add_parser("calibrate"); c.add_argument("--predictions", default="predictions"); c.add_argument("--actuals", default="actuals"); c.add_argument("--created-at"); c.set_defaults(fn=cmd_calibrate)
     t = sub.add_parser("backtest"); t.add_argument("--data", required=True); t.add_argument("--expect-top", required=True); t.add_argument("--expect-bottom", required=True); t.add_argument("--tolerance", type=float, default=2.0); t.set_defaults(fn=cmd_backtest)
     args = ap.parse_args()
