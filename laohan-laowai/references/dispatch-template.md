@@ -39,6 +39,7 @@ git 基线：main @ `{{SHA}}`（派发时 HEAD）。
 
 ## 5. 流程硬规则（判例资产，照抄不重踩）
 
+0. **开工前置义务（项目合同「数据补收事件驱动」）——写稿前必须先完成**：①线上实查（CDP9333 采集一轮即同时完成在架对账）②全量数据补收（按 `docs/ops/amy-data-readback.md` CDP9333 口径）。**补收清单真源=gap-analysis.json 各期 48h/7d 现值，不是 STATUS 待办队列快照**——STATUS 待办行更新滞后于实际回收（EP10 判例 2026-11-15：DISPATCH 沿用 STATUS 旧快照把已收的 EP08 48h 列为"立即补收"，制作窗口核实 gap-analysis 后落空，白耗核对工时；派发前必须对 gap-analysis 逐期核状态再写补收清单）；due 落在制作窗口期内的观测点写明「到点收」并给 due 时刻；Chrome157 playwright 补丁先验在位（丢了按 amy-data-readback.md 判例重打）；收完登记 gap-analysis.json 并 commit
 1. 字幕初稿每屏 **≤11 字**（字形安全框，EP08 为此多花 5 轮审阅）；**审阅 prompt 必须显式写"修法 ≤11 内容字"**——DS 会把字形门当软约束反复给 12-14 字修法（EP09 四轮不收敛实锤）
 2. 审阅通道：单模型 **4 轮不收敛即换通道**（DS R1-R5 漂移判例）；跨家族优先级 codex→Magpie免费→官方ds（实现方 GLM 不复审自己初稿）；全不可用按完成优先兜底条款（官方 ds 同模型绿灯）
 3. GPU same-voice 定式：`svc.sh stop worker tts tbdub` → 分片批跑（内存 20GiB 预算、块数按成片长度）→ `start` 恢复；SSH 命令一律 `> log 2>&1` 不用管道；失败残留 `rm -rf outputs` 全量重跑
