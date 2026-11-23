@@ -70,6 +70,6 @@ git 基线：main @ `{{SHA}}`（派发时 HEAD）。
 ## 8. 控制面
 
 - cwd：`/Users/hanzhmacbookair/Documents/laohan-laowai`
-- 模型：claude/glm-5.3[1m]，modeId=bypassPermissions，thinkingOptionId=max（一次定死不改）
+- 模型：claude/glm-5.4，modeId=bypassPermissions，thinkingOptionId=max（一次定死不改；主力模型以 duomoxing.md 为准）
 - 费用：仅既有 key（智谱/GPU 生产）；外发：飞书交付通道既有授权；新付费点停问 Jeffrey
 - 回执格式：四态首行 + 关键产物路径 + 留证清单 + 未完成/未知项

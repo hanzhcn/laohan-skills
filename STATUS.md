@@ -78,6 +78,8 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
+**2026-11-23·CC-DEFAULT-GLM54-20261123 默认模型落点全量对齐 glm-5.4（跨仓治理任务，本仓仅派发模板一行）。** Jeffrey 报「CC 默认还不是 GLM5.4，检查后都改为 5.4」触发；本仓只改 `laohan-laowai/references/dispatch-template.md` 的模型行（claude/glm-5.3[1m]→claude/glm-5.4，并注明主力以 duomoxing.md 为准），未改方法、脚本、CLI 或其他模板。主力默认落点、审计门脚本 `model-default-audit.py`、规则真源与两腿复审回执统一归治理仓 `~/.agents/docs/handoff/2026-11-23-cc-default-glm54/`。未发布、未安装 skills、未新制作。
+
 **2026-11-08·DEVRULES-SKILLS-20261108 开发辅助技能优化已交付。** root唯一writer；chushicodex/shencha/sousuo及直接脚本/模板已审修，真实collector失败/隐私/恢复5项通过，治理四决议与最终Astra/GLM/官方DS对抗闭合。原审c7经正常上游合入进入main/push，TikTok他窗参考与其他制作/接受状态保留，三宿主既有入口同源读回；本任务WT/本地远端枝已清。不是内容制作/真实doctor/自然宿主验收。完整证据及最后纯meta Git见[本轮回执](docs/handoff/DEVRULES_DEVSKILLS_20261108.md)所指统一归档。
 
 **2026-11-08·MOTION-SKILL-ENTRY-HARDENING-20261107 技能入口去错与2.2.0已交付。** Motion从laohan-motion统一接续，专业技能先分流；正式topic/script共用--motion --base与schema4/v2，不伪建episode。退役adapter/假亲历/擅删开场等误导活文已取代并留历史；有限状态/来源/导演label/平台反例与视频计量真实正反恢复通过。Astra开始23项及三角色结果、GLM/官方DS对抗均逐项裁决，DS末项按原意见修并由Astra定点确认，原REVISE不改写。正常hook87/87全部实跑665.214秒、0复用、输入稳定；源视频ea65faa/skills2ebc3e7已正常合main/push，两仓fresh严格集成exit0。共享入口实际读回2.2.0；三阶段只证明真实新会话接收/身份/SHA，不冒全盲态、Gemini业务全链或新片提速/审美验收。自有工作树/两端任务枝/stash已精确清理，隔离测试副本已留delta后移废纸篓；原素材/旧候选/接受状态保留。最终状态提交、监督删除与逐仓审计只认[本轮回执](docs/handoff/MOTION_SKILL_ENTRY_HARDENING_20261107.md)及视频证据根final-closeout.json。未新制作、升级模板、购买或发表。
