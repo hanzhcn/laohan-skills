@@ -1,7 +1,7 @@
 ---
 name: laohan-douyinsousuo
 description: 抖音关键词搜索与结构化取证 adapter，只使用已安装且已登录的 OpenCLI；独立回答搜索请求，或为真人口播①写本期抖音证据，不决定最终选题。Use when 用户说"抖音搜索""搜一下抖音""抖音上搜""抖音关于""抖音上有什么""douyin搜索"，或 bianpai/选题流程要求抖音关键词验证。
-version: "3.3.0"
+version: "3.3.1"
 ---
 
 # 抖音搜索
@@ -40,8 +40,10 @@ node ~/Documents/laohan-skills/laohan-douyinsousuo/scripts/search-evidence.mjs \
 独立单查询可直接执行：
 
 ```bash
-opencli douyin search "$QUERY" --limit "$LIMIT" -f json
+opencli douyin search "$QUERY" --limit "$LIMIT" -f json --trace retain-on-failure
 ```
+
+包装器对平台侧瞬时失败自带退避重试（最多 3 次，间隔 30 秒、60 秒，`DOUYIN_SEARCH_BACKOFF_MS` 可覆盖）并在每次失败时保留 trace 现场；直接执行 opencli 时按下方「3. 失败降级」第 0 步的间隔人工重试，不要立即连发。
 
 结果必须是 JSON 数组，并逐条保留 OpenCLI 返回的 `rank`、`desc`、`author`、`url`、`aweme_id`、发布时间及可用互动字段。稳定 id 优先使用 `aweme_id` 或 URL 中的 `/video/<id>`；两者都没有时才用 `sha256(url + desc)[:12]`。排名不得参与稳定 id；不要按缺失字段重排，也不要把 OpenCLI 的结果顺序描述成“按点赞排行”。
 
@@ -49,7 +51,8 @@ opencli douyin search "$QUERY" --limit "$LIMIT" -f json
 
 按顺序执行，成功即停：
 
-1. 同一命令加 `--trace retain-on-failure`，使用 OpenCLI autofix 修复现有 adapter；总尝试最多 3 次。
+0. **先分类再动手**（2026-11-23 判例）：`COMMAND_EXEC` 且 message 含 `did not render result cards within the timeout`（或 `Execution context was destroyed` 一类导航期错误）= **平台侧瞬时降级**——已登录的搜索页没在适配器 15 秒内渲染出结果卡，不是 adapter 缺陷；`opencli doctor` 正常时不要去改适配器。判据：同命令稍后重放即恢复。处置=**退避重试**：间隔 ≥30 秒再试，总尝试 ≤3 次。立即连发无效——判例：23:47:58–23:49:05 两次（间隔 23 秒）全败，20 分钟后同命令重放 4 次全成功（单次 10–14 秒，doctor 全绿，非并发非关键词）。包装器已内置此逻辑；直接执行 opencli 时照此间隔重试。
+1. 仅当失败**可稳定复现**（退避重试与换关键词都失败）时，同一命令加 `--trace retain-on-failure` 取现场，使用 OpenCLI autofix 修复现有 adapter；总尝试最多 3 次。瞬时错误不适用本步。
 2. 若 `opencli doctor` 仍正常但 adapter 持续失败，使用 `opencli browser douyin-search bind` 绑定用户当前已登录的抖音标签页，仅做读取和取证。执行浏览器降级前说明会操作当前标签页。
 3. 仍失败则记录失败层级和原始错误。episode 模式标记平台数据 `UNAVAILABLE` 并返回证据文件，不把它升级为①的卡点；独立搜索请求报告本次未取得结果。不得临时安装 DrissionPage、Playwright、浏览器或自制爬虫。
 
@@ -83,16 +86,17 @@ Episode JSON 最小合同：
   },
   "queries": [{
     "query": "关键词",
-    "command": "opencli douyin search ... -f json",
+    "command": "opencli douyin search ... -f json --trace retain-on-failure",
     "attempted_at": "ISO-8601",
     "status": "OK|EMPTY_OR_FIELD_UNAVAILABLE|FAILED",
     "result_count": 1,
+    "attempts": [{"attempt": 1, "attempted_at": "ISO-8601", "duration_ms": 18638, "exit_status": 0}],
     "results": [{"id":"稳定id","rank":1,"desc":"原字段","author":"原字段","url":"https://..."}]
   }]
 }
 ```
 
-`OK` 必须 `result_count > 0` 且等于 results 长度；`EMPTY_OR_FIELD_UNAVAILABLE` 必须为 0 和空数组；FAILED 必须为 0、空数组并有 `error`。全部查询 FAILED 或预检失败时写 `availability_status: UNAVAILABLE`，仍完成 episode 证据落盘；①不得据此推断平台没有需求。
+`OK` 必须 `result_count > 0` 且等于 results 长度；`EMPTY_OR_FIELD_UNAVAILABLE` 必须为 0 和空数组；FAILED 必须为 0、空数组并有 `error`。`attempts` 如实记录每次尝试（时刻、耗时、退出码、失败原因、trace 目录）：瞬时错误重试后恢复时 `attempts.length > 1` 且 `status=OK`，不得省略；登录缺失（77）、桥接断开（69）、协议失败只有 1 次尝试、不重试。全部查询 FAILED 或预检失败时写 `availability_status: UNAVAILABLE`，仍完成 episode 证据落盘；①不得据此推断平台没有需求。
 
 `executor.availability_status`表示本次搜索至少取得一个有效终态（可含合法空结果），不表示有市场需求；预检可达性单独看doctor_status/logged_in。成功退出0却无JSON是协议失败，退出66是明确合法空结果；查询值不得是`-f`或`--limit`等选项。workspace与episode使用同一规则，失败覆盖当前文件如实表示最近尝试，当前下游按研究目录及文件SHA绑定，不把旧成功静默当新证据。
 

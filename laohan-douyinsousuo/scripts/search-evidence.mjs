@@ -20,6 +20,29 @@ if (!existsSync(episode) || !statSync(episode).isDirectory() || (episodeArg && !
 
 const run = (commandArgs, timeout = 90000) => spawnSync('opencli', commandArgs, {encoding: 'utf8', timeout, maxBuffer: 16 * 1024 * 1024});
 const processError = (result, fallback) => String(result.error?.code || result.error?.message || result.stderr || result.stdout || result.signal || fallback || `exit ${result.status}`).trim();
+// 2026-11-23 判例：COMMAND_EXEC「did not render result cards within the timeout」是平台侧瞬时降级
+// （同命令 20 分钟后重放 4 次全成功、doctor 全绿），不是 adapter 缺陷——退避重试，不改适配器、不直接判失败。
+// 退出码 69（桥接）、77（登录）与协议失败不是瞬时错误，不重试。
+const TRANSIENT_ATTEMPT_MAX = 3;
+const DEFAULT_BACKOFF_MS = ['30000', '60000'];
+const TRANSIENT_ERROR = /did not render result cards within the timeout|Execution context was destroyed|Cannot find context with specified id|Navigation timeout|page\.evaluate.*timeout/i;
+const transientError = (text) => !/\b(AUTH_REQUIRED|BROWSER_CONNECT)\b/.test(text) && TRANSIENT_ERROR.test(text);
+const backoffPlan = () => (process.env.DOUYIN_SEARCH_BACKOFF_MS ?? DEFAULT_BACKOFF_MS.join(',')).split(',').map((item) => Math.max(0, Number(item) || 0));
+const sleep = (ms) => { if (ms > 0) spawnSync('sleep', [String(Math.ceil(ms / 1000))]); };
+const traceDirOf = (result) => String(result.stderr || '').match(/OpenCLI trace artifact:\s*(\S+)/)?.[1] || null;
+// 失败信封可能在 stdout（JSON）也可能在 stderr（trace 模式下的错误信封），判定时两路合看。
+const failureText = (result) => `${String(result.stderr || '')}\n${String(result.stdout || '')}`;
+// 失败原因取法：stdout 的失败信封（ok:false）优先，其次 stderr 去掉 trace 路径行后的错误信封，保证记录里有真实原因。
+const failureReason = (result) => {
+  const stdout = String(result.stdout || '').trim();
+  if (stdout.startsWith('{')) {
+    try {
+      const payload = JSON.parse(stdout);
+      if (payload?.ok === false) return `OpenCLI返回失败终态: ${typeof payload.error === 'string' ? payload.error : payload.error?.message || payload.error?.code || '未提供原因'}`;
+    } catch {}
+  }
+  return String(result.stderr || '').split('\n').filter((line) => !/OpenCLI trace artifact:/.test(line)).join('\n').trim() || stdout || processError(result);
+};
 const unwrap = (payload) => {
   if (payload?.ok === false) throw new Error('OpenCLI返回失败终态: ' + (typeof payload.error === 'string' ? payload.error : payload.error?.message || payload.error?.code || '未提供原因'));
   return payload?.ok === true ? payload.data : payload;
@@ -46,15 +69,28 @@ const sha = (value) => createHash('sha256').update(value).digest('hex');
 const records = [];
 for (const query of queries) {
   const attemptedAt = new Date().toISOString();
-  const commandArgs = ['douyin', 'search', query, '--limit', String(limit), '-f', 'json'];
+  const commandArgs = ['douyin', 'search', query, '--limit', String(limit), '-f', 'json', '--trace', 'retain-on-failure'];
   const command = ['opencli', ...commandArgs.map((item) => /\s/.test(item) ? JSON.stringify(item) : item)].join(' ');
   if (!preflightAvailable) {
-    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `OpenCLI 预检不可用: ${preflightErrors.join(' | ')}`, results: []});
+    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `OpenCLI 预检不可用: ${preflightErrors.join(' | ')}`, results: [], attempts: []});
     continue;
   }
-  const result = run(commandArgs);
+  // 失败时保留 trace 现场；瞬时错误按退避重试，成功、合法空结果或非瞬时错误立即结束。
+  const backoff = backoffPlan();
+  const attempts = [];
+  let result;
+  for (let attempt = 1; ; attempt += 1) {
+    const startedAt = Date.now();
+    result = run(commandArgs);
+    const failed = ![0, 66].includes(result.status);
+    const error = failed ? failureReason(result) : '';
+    const traceDir = traceDirOf(result);
+    attempts.push({attempt, attempted_at: new Date(startedAt).toISOString(), duration_ms: Date.now() - startedAt, exit_status: result.status, ...(error ? {error} : {}), ...(traceDir ? {trace_dir: traceDir} : {})});
+    if (!failed || !transientError(failureText(result)) || attempt >= TRANSIENT_ATTEMPT_MAX) break;
+    sleep(backoff[Math.min(attempt - 1, backoff.length - 1)]);
+  }
   if (![0, 66].includes(result.status)) {
-    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: processError(result), results: []});
+    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: failureReason(result), results: [], attempts});
     continue;
   }
   try {
@@ -91,9 +127,9 @@ for (const query of queries) {
         }
       };
     });
-    records.push({query, command, attempted_at: attemptedAt, status: normalized.length ? 'OK' : 'EMPTY_OR_FIELD_UNAVAILABLE', result_count: normalized.length, results: normalized});
+    records.push({query, command, attempted_at: attemptedAt, status: normalized.length ? 'OK' : 'EMPTY_OR_FIELD_UNAVAILABLE', result_count: normalized.length, results: normalized, attempts});
   } catch (error) {
-    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `${error instanceof SyntaxError ? 'JSON解析失败' : 'OpenCLI协议失败'}: ${error.message}`, results: []});
+    records.push({query, command, attempted_at: attemptedAt, status: 'FAILED', result_count: 0, error: `${error instanceof SyntaxError ? 'JSON解析失败' : 'OpenCLI协议失败'}: ${error.message}`, results: [], attempts});
   }
 }
 
