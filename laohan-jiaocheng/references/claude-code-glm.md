@@ -53,9 +53,15 @@ https://open.bigmodel.cn/api/anthropic
 | `ANTHROPIC_BASE_URL` | API 端点地址，智谱的 Anthropic 兼容接口 |
 | `ANTHROPIC_AUTH_TOKEN` | 智谱 API Key（不是 `ANTHROPIC_API_KEY`，Claude Code 通过变量名区分认证方式） |
 | `ANTHROPIC_DEFAULT_*_MODEL` | 将 opus/sonnet/haiku 别名映射到指定模型 |
-| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | 自动压缩窗口；使用 `[1m]` 后缀开启 1M 上下文时设为 `1000000` |
+| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | 自动压缩窗口，按模型取值：`glm-5.4` 用 `512000`，glm-5.3 系与 `glm-5.2` 用 `1000000`（模型上下文都是 1M，`CLAUDE_CODE_MAX_CONTEXT_TOKENS` 仍为 `1000000`）。该环境变量是全局的，会压过逐模型设置，逐模型写法见「模型切换」节 |
 
 > `glm-5.2[1m]` 的 `[1m]` 后缀用于开启 GLM 1M 上下文；若 Claude Code 提示模型不存在，先升级到最新版本。`glm-4.7` 作为 Haiku 档位承担轻量任务。
+
+> 压缩窗口按模型取值：GLM-5.4 的上下文窗口是 1M，但通过 GLM Coding Plan 使用 GLM-5.4 时，智谱官方建议把客户端上下文窗口设为 `512000` tokens（原话是「建议」，为获得更好的编码效果）；glm-5.3 系与 `glm-5.2` 仍用 `1000000`。自动压缩在窗口减约 33K 处触发：1M 窗口约 967K，512K 窗口约 479K。
+
+> 口径来源：智谱官方安装器 `@z_ai/coding-helper` 0.2.1（2026-11-23 发布）的模型表——`glm-5.4` 对应 512000，其余模型回退 1000000，并固定 `CLAUDE_CODE_MAX_CONTEXT_TOKENS` 为 1000000；国内文档 docs.bigmodel.cn 的 Coding Plan 页面同口径。国际站 docs.z.ai 同页目前仍写 `1000000`，两地文档不一致，按你所用站点的套餐选择。
+
+> `glm-5.4` 的模型名不加 `[1m]` 后缀（国内端点会报模型不存在，`[1m]` 是 5.2/5.3 时代的写法）；国内端点默认即 1M 上下文。
 
 > 如果 `settings.json` 中已有 `env` 字段，将上述变量合并进去，不要覆盖已有配置。
 
@@ -205,7 +211,7 @@ GLM 模型 ID（如 `glm-5.2[1m]`）不匹配 Claude Code 内置的模型模式�
 }
 ```
 
-> `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 是全局设置，不区分模型。切换到不带 `[1m]` 的模型（如 `glm-5.3`）时，把它调回默认值或该模型的实际窗口值（如 `200000`）；否则自动压缩阈值会超过真实上下文窗口，可能导致请求失败。Claude Code 会把该窗口上限压到模型上下文窗口，但无法识别第三方端点背后的真实限制。
+> `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 是全局环境变量，对客户端里所有模型生效，并且会压过逐模型设置。想给不同模型配不同压缩窗口时，改用 settings.json 的 `modelSettings.<模型>.autoCompactWindow`（在 Claude Code 里执行 `/autocompact 512k` 会自动存到该字段，最小值 100000），此时不要设 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`。按模型推荐值：`glm-5.4` 用 `512000`，glm-5.3 系与 `glm-5.2` 用 `1000000`。两处都不设时，Claude Code 用模型上下文窗口减约 33K 作为压缩点（1M 窗口约 967K，512K 窗口约 479K）。Claude Code 无法识别第三方端点背后的真实限制，别把窗口设得比模型实际窗口更大。
 
 ---
 
@@ -275,6 +281,20 @@ claude update     # 更新
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "showThinkingSummaries": true
+}
+```
+
+> 上面的示例按 `glm-5.2[1m]` 写，`1000000` 对 GLM-5.2 成立。若改用 `glm-5.4`（国内端点模型名不带 `[1m]` 后缀），把三个 `ANTHROPIC_DEFAULT_*_MODEL` 换成 `glm-5.4`，并把 `CLAUDE_CODE_AUTO_COMPACT_WINDOW` 改为 `512000`。
+
+> 需要按模型分别配置压缩窗口时，不要设 `CLAUDE_CODE_AUTO_COMPACT_WINDOW`（它会压过逐模型值），改用 settings.json 顶层的 `modelSettings`；在 Claude Code 里执行 `/autocompact 512k` 也会自动写入这里（最小值 100000）：
+
+```json
+{
+  "modelSettings": {
+    "glm-5.4": {
+      "autoCompactWindow": 512000
+    }
+  }
 }
 ```
 
