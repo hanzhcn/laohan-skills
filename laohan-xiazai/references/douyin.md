@@ -36,7 +36,7 @@ Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHT
 
 播放器源不可得时，按宿主现有网络能力抓aweme/detail响应：
 
-1. Playwright（ECC Playwright MCP `browser_navigate`；ECC 已于 2026-11-24 卸载，无此 MCP 时本步不可用）打开 `https://www.iesdouyin.com/share/video/{video_id}/`，页面自动跳转到 `www.douyin.com/video/{video_id}` 并渲染
+1. Playwright（ECC Playwright MCP `browser_navigate`；维护者本机已于 2026-11-24 卸载 ECC，无此 MCP 时本步不可用，改用 huashu-chrome 的 navigate）打开 `https://www.iesdouyin.com/share/video/{video_id}/`，页面自动跳转到 `www.douyin.com/video/{video_id}` 并渲染
 2. 页面自己调用 `https://www.douyin.com/aweme/v1/web/aweme/detail/?aweme_id={video_id}`——签名（a_bogus/msToken）由浏览器自动计算，无需关心
 3. 从 network 抓该请求的响应体（`browser_network_requests` 过滤 `aweme/detail` → `browser_network_request` 取 `response-body`）
 4. JSON 路径：`aweme_detail.video.play_addr.url_list[0]` → CDN直链；`bit_rate`数组含多码率备选。实际清晰度/编码以下载后的ffprobe为准，不保证都是1080p

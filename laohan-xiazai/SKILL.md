@@ -206,7 +206,7 @@ CDP 接管 → web-access（接管用户日常 Chrome，天然登录态）
 | gallery-dl | `pip3 install gallery-dl` 后 `gallery-dl <url>` | 图集/媒体站批量下载（Instagram/Twitter/Pixiv 等 100+ 站，2026-10 验证活跃 v1.32；多数站需登录 cookie） |
 | browser-use | `/open-source` skill | AI 自主操作浏览器，全新/未知页面 |
 | web-access | `/web-access` skill | CDP 接管已登录日常 Chrome（localhost:3456），覆盖：登录态内容、复杂交互（点击/翻页/表单/上传）、视频帧采样、本地书签历史检索 |
-| Playwright 手动 | ECC Playwright MCP（2026-11-24 起 ECC 已卸载，此路不可用，改用 huashu-chrome） | 精确手动控制，最后兜底 |
+| Playwright 手动 | ECC Playwright MCP（需 ECC 插件；维护者本机已于 2026-11-24 卸载 ECC，此路不可用，改用 huashu-chrome） | 精确手动控制，最后兜底 |
 
 ### web-access 调用要点（本机兜底：huashu-chrome 离线时的登录态方案）
 
