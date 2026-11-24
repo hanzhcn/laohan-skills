@@ -22,7 +22,7 @@ Jeffrey 2026-10-02指出开发中凭记忆判断外部行为会出错。本skill
 | 意图 | 归属 |
 |------|------|
 | 上网搜 / 搜索 / 搜教程 / 查心得 / 查证 / 查一下怎么用 | **本 skill**（其他搜索 skill 让位） |
-| 装软件 / 配置工具（claude-mem、ECC 等 5 个本地教程） | laohan-jiaocheng |
+| 装软件 / 配置工具（claude-mem 等 5 个本地教程；ECC 教程仅存档，2026-11-24 起维护者本机已卸载） | laohan-jiaocheng |
 | AI 资讯 / 日报 / 热点 | aihot |
 | 平台内容下载、评论、博主数据 | laohan-xiazai |
 | 视频号下载、JS 渲染/反爬抓取降级 | 见 `~/.claude/rules/cli-tools.md` 总路由 |

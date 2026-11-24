@@ -1,7 +1,7 @@
 ---
 name: laohan-jiaocheng
 version: 1.0
-description: 教程路由器，输入关键词加载对应配置教程并按步骤引导安装。覆盖 claude-mem、CLAUDE.md、Chrome Gemini 侧边栏、Claude Code + 智谱 GLM、ECC 插件安装维护。Use when 用户说"教程""怎么配置""安装教程""怎么装"或提到"claude-mem""ecc""glm""gemini侧边栏""CLAUDE.md"等具体工具名+配置需求。本 skill 只管上述 5 项本地工具的配置教程；联网搜教程/搜心得/查最佳实践让位 laohan-sousuo（Jeffrey 2026-10-02 拍板，冲突时 sousuo 优先）。
+description: 教程路由器，输入关键词加载对应配置教程并按步骤引导安装。覆盖 claude-mem、CLAUDE.md、Chrome Gemini 侧边栏、Claude Code + 智谱 GLM、ECC 插件安装维护（ECC 已于 2026-11-24 在维护者本机卸载，教程仅存档）。Use when 用户说"教程""怎么配置""安装教程""怎么装"或提到"claude-mem""ecc""glm""gemini侧边栏""CLAUDE.md"等具体工具名+配置需求。本 skill 只管上述 5 项本地工具的配置教程；联网搜教程/搜心得/查最佳实践让位 laohan-sousuo（Jeffrey 2026-10-02 拍板，冲突时 sousuo 优先）。
 argument-hint: [教程关键词，如 claude-mem / ecc / glm / gemini / claude-md]
 ---
 
@@ -27,7 +27,7 @@ argument-hint: [教程关键词，如 claude-mem / ecc / glm / gemini / claude-m
 | "CLAUDE.md"/"claude-md"/"配置指南"/"四个原则" | `references/claude-md-guide.md` | CLAUDE.md 四个核心原则（想清楚再动手/能50行别200行/只改该改的/目标驱动执行） |
 | "gemini"/"侧边栏"/"chrome gemini" | `references/gemini-sidebar-fix.md` | Chrome Gemini 侧边栏国内修复（Mac + Windows 双平台） |
 | "glm"/"智谱"/"claude-code-glm"/"国产模型" | `references/claude-code-glm.md` | Claude Code 接入智谱 GLM 作为后端 |
-| "ecc"/"插件"/"everything-claude-code" | `references/ecc-plugin-guide.md` | ECC 插件安装、rules 分发、hooks 加载机制 |
+| "ecc"/"插件"/"everything-claude-code" | `references/ecc-plugin-guide.md` | ECC 插件安装、rules 分发、hooks 加载机制；2026-11-24 起维护者本机已卸载 ECC，仅在用户明确要重装或排查旧引用时加载 |
 
 ## 执行逻辑
 

@@ -241,7 +241,7 @@ You: 抖音搜索 Claude Code / 帮我搜一下抖音上关于 xxx 的视频
 | 🌐 **laohan-sousuo** | Verify technical claims before asserting — 3-way retrieval (official docs / GitHub issues / community posts), with cited sources | "上网搜" "查证" "先查再说" | Prevents invented API behavior; conclusions carry `(verified: URL)`, and it says plainly when nothing was found |
 | 🔎 **laohan-shencha** | Technical doc deep audit — verify URLs, versions, params accuracy | "深度审查" | Read-only by default; verifies facts only and will not rewrite your templates or wording |
 | 🔄 **laohan-gengxin** | Tool version checker — npm/brew/pip/uv/GitHub/plugins/skills | "检查更新" | — |
-| 📖 **laohan-jiaocheng** | Tutorial router — claude-mem / GLM / ECC / Gemini (5 tutorials) | "教程" | — |
+| 📖 **laohan-jiaocheng** | Tutorial router — claude-mem / GLM / Gemini (5 tutorials; ECC guide archived) | "教程" | — |
 | ⚙️ **laohan-chushicodex** | Safe minimal Codex setup and verification loop | "初始化 Codex" | Read-only audit first; does not auto-upgrade or install dependencies |
 | 🧭 **laohan-bianpai** | Video workflow state router — inspect artifacts and gate the next step | "恢复 episode" "判断下一步" | Routes only — never calls other skills or publishes |
 | 📦 **laohan-sucai** | Search, download, and visually review B-roll against a source manifest | "配素材" "找 B-roll" | Optimizes for look and pacing, not for sourcing evidence per sentence |
@@ -305,7 +305,7 @@ Skills that commonly need no extra dependencies: laohan-xuanti · laohan-weigui 
 | [CLAUDE.md Configuration Guide: Four Principles to Reduce AI Coding Mistakes](./docs/claude-md-guide.md) | Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution |
 | [Chrome Gemini Sidebar Fix (China)](./docs/gemini-sidebar-fix.md) | Mac + Windows scripts to fix Chrome Gemini sidebar in China |
 | [Claude Code + ZhiPu GLM: Drive AI Coding with Domestic LLMs](./docs/claude-code-glm.md) | Full guide: env vars, thinking mode, timeout, model switching |
-| [ECC Plugin Install & Maintenance Guide](./docs/ecc-plugin-guide.md) | Rules distribution, hooks mechanism, upgrade checklist |
+| [ECC Plugin Install & Maintenance Guide](./docs/ecc-plugin-guide.md) | Rules distribution, hooks mechanism, upgrade checklist (archived: uninstalled on the maintainer machine 2026-11-24) |
 
 ---
 

@@ -254,7 +254,7 @@ laohan-xuanti → laohan-chuangzuo → laohan-weigui → laohan-jiaozhun → lao
 | 技能 | 作用 | 你说 | 注意事项 |
 |------|------|------|---------|
 | 🔄 **laohan-gengxin** | 工具版本检查更新——npm/brew/pip/uv/GitHub/plugins/skills | "检查更新" | — |
-| 📖 **laohan-jiaocheng** | 教程路由器——按关键词加载对应教程（claude-mem/GLM/ECC/Gemini 等） | "教程""怎么配置" | — |
+| 📖 **laohan-jiaocheng** | 教程路由器——按关键词加载对应教程（claude-mem/GLM/Gemini 等；ECC 教程仅存档） | "教程""怎么配置" | — |
 | ⚙️ **laohan-chushicodex** | 新装或待整顿 Codex 的安全最小配置与验证闭环 | "初始化 Codex" | 只读审计优先，不自动升级/装依赖 |
 
 ### 🎬 视频创作工作流（配套内容创作板块）
@@ -323,7 +323,7 @@ Mac + Windows 双平台安装包，装完直接用。基于 MITM 代理拦截视
 | [CLAUDE.md 配置四原则](./docs/claude-md-guide.md) | 想清楚再动手 / 能50行别200行 / 只改该改的 / 目标驱动 |
 | [Chrome Gemini 侧边栏修复](./docs/gemini-sidebar-fix.md) | Mac + Windows 双平台脚本 |
 | [Claude Code + 智谱 GLM 接入](./docs/claude-code-glm.md) | 环境变量、thinking、超时、模型切换 |
-| [ECC 插件安装维护指南](./docs/ecc-plugin-guide.md) | rules 分发、hooks 机制、升级清单 |
+| [ECC 插件安装维护指南](./docs/ecc-plugin-guide.md) | rules 分发、hooks 机制、升级清单（存档：2026-11-24 起维护者本机已卸载） |
 
 ---
 
