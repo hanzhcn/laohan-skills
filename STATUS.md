@@ -78,6 +78,8 @@ owner：Jeffrey / 当前执行窗口 Codex；目录 `/Users/hanzhmacbookair/Docu
 
 ## 近期流水
 
+**2026-11-26 · EP11 48h 评分回收的读数落点说明。** 成长项目 3f104dc2 在完成 EP11 48h 台账时发现，复盘记录将实测结果指向预评文件。本仓同一任务分支补明结果写数据快照、台账链接指向快照，保留预评的不可改规则。证据在成长项目 EP11_48H_20261126，评分脚本与计分规则沿用现有版本。
+
 **2026-11-23·CC-DEFAULT-GLM54-20261123 默认模型落点全量对齐 glm-5.4（跨仓治理任务，本仓仅派发模板一行）。** Jeffrey 报「CC 默认还不是 GLM5.4，检查后都改为 5.4」触发；本仓只改 `laohan-laowai/references/dispatch-template.md` 的模型行（claude/glm-5.3[1m]→claude/glm-5.4，并注明主力以 duomoxing.md 为准），未改方法、脚本、CLI 或其他模板。主力默认落点、审计门脚本 `model-default-audit.py`、规则真源与两腿复审回执统一归治理仓 `~/.agents/docs/handoff/2026-11-23-cc-default-glm54/`。未发布、未安装 skills、未新制作。
 
 **2026-11-08·DEVRULES-SKILLS-20261108 开发辅助技能优化已交付。** root唯一writer；chushicodex/shencha/sousuo及直接脚本/模板已审修，真实collector失败/隐私/恢复5项通过，治理四决议与最终Astra/GLM/官方DS对抗闭合。原审c7经正常上游合入进入main/push，TikTok他窗参考与其他制作/接受状态保留，三宿主既有入口同源读回；本任务WT/本地远端枝已清。不是内容制作/真实doctor/自然宿主验收。完整证据及最后纯meta Git见[本轮回执](docs/handoff/DEVRULES_DEVSKILLS_20261108.md)所指统一归档。
